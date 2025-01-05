@@ -4,16 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Phone Keypad Simulator</title>
+  <!-- Canvas Confetti Library -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
   <style>
     /* CSS Variables for Easy Customization */
     :root {
       --primary-color: #4A90E2;
       --secondary-color: #50E3C2;
       --button-color: #FFFFFF;
-      --button-active-color: #D1D8E0;
+      --button-active-color: #FFC0CB; /* Pink for active state */
       --button-hover-color: #E8F0FE;
       --text-color: #333333;
-      --display-bg: #F5F7FA;
+      --display-bg: rgba(245, 247, 250, 0.8);
       --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       --transition-speed: 0.2s;
     }
@@ -30,10 +32,19 @@
       align-items: center;
       justify-content: center;
       height: 100vh;
-      background: linear-gradient(135deg, #F5F7FA, #D3CCE3);
+      background: linear-gradient(270deg, #FFB6C1, #A7DBD8, #E0E4CC, #F38630, #FA6900, #69D2E7);
+      background-size: 1200% 1200%;
+      animation: swirlingBackground 60s ease infinite;
       font-family: var(--font-family);
       overflow: hidden;
       padding: 20px;
+      position: relative;
+    }
+
+    @keyframes swirlingBackground {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
 
     #display {
@@ -49,6 +60,7 @@
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       margin-bottom: 30px;
       word-wrap: break-word;
+      backdrop-filter: blur(10px);
     }
 
     #keypad {
@@ -70,6 +82,7 @@
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       transition: background-color var(--transition-speed), transform var(--transition-speed), box-shadow var(--transition-speed);
       position: relative;
+      user-select: none;
     }
 
     .button:hover {
@@ -115,17 +128,24 @@
     }
 
     #restart {
-      background-color: var(--secondary-color);
+      background-color: #FF5C5C; /* Red for restart */
       display: none; /* Hidden by default */
       position: fixed;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
       z-index: 100;
+      padding: 15px 30px;
+      font-size: 24px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: background-color var(--transition-speed), transform var(--transition-speed);
     }
 
-    #restart.show {
-      display: block;
+    #restart:hover {
+      background-color: #E04848;
     }
 
     /* Modal Overlay */
@@ -155,6 +175,17 @@
       max-width: 90%;
     }
 
+    /* Confetti Canvas */
+    #confetti-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 101;
+    }
+
     /* Responsive Design */
     @media (max-width: 500px) {
       #keypad {
@@ -177,10 +208,18 @@
         padding: 10px 20px;
         font-size: 20px;
       }
+
+      #restart {
+        padding: 10px 20px;
+        font-size: 20px;
+      }
     }
   </style>
 </head>
 <body>
+  <!-- Confetti Canvas -->
+  <canvas id="confetti-canvas"></canvas>
+
   <div id="display" aria-live="polite"></div>
   <div id="keypad">
     <button class="button" aria-label="1">1</button>
@@ -198,10 +237,12 @@
   </div>
   <div id="control-panel">
     <button id="call" class="control-button">Call</button>
-    <button id="restart" class="control-button">Restart</button>
   </div>
 
-  <!-- Modal Overlay for Restart Confirmation -->
+  <button id="restart">Restart</button>
+
+  <!-- Modal Overlay for Restart Confirmation (Optional) -->
+  <!-- You can remove this if you prefer not to have a confirmation modal -->
   <div class="modal-overlay" id="modal-overlay">
     <div class="modal-content">
       <p>Do you want to restart?</p>
@@ -218,9 +259,17 @@
     const modalOverlay = document.getElementById('modal-overlay');
     const confirmRestart = document.getElementById('confirm-restart');
     const cancelRestart = document.getElementById('cancel-restart');
+    const confettiCanvas = document.getElementById('confetti-canvas');
 
     let phoneNumber = '';
-    let correctNumber = '9544640593'; // Replace with desired correct number
+    const correctNumber = '9544640593'; // Replace with desired correct number
+    let isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+    // Initialize confetti
+    const confetti = window.confetti.create(confettiCanvas, {
+      resize: true,
+      useWorker: true
+    });
 
     // Function to update display
     function updateDisplay() {
@@ -229,8 +278,16 @@
 
     // Function to handle button press
     function handleButtonPress(e) {
+      e.preventDefault();
       const button = e.currentTarget;
       const value = button.textContent;
+
+      // Prevent duplicate events on touch devices
+      if (isTouchDevice && e.type === 'touchend') {
+        // Do nothing, as touchend will handle it
+      } else if (isTouchDevice && e.type === 'click') {
+        return;
+      }
 
       // Add active class for visual feedback
       button.classList.add('active');
@@ -251,34 +308,54 @@
 
     // Attach event listeners to buttons
     buttons.forEach(button => {
-      button.addEventListener('click', handleButtonPress);
-      button.addEventListener('touchend', handleButtonPress);
+      if (isTouchDevice) {
+        button.addEventListener('touchend', handleButtonPress);
+      } else {
+        button.addEventListener('click', handleButtonPress);
+      }
     });
 
     // Handle Call Button Click
     callButton.addEventListener('click', () => {
       if (phoneNumber === correctNumber) {
-        document.body.style.animation = 'pastelRainbow 3s infinite';
+        // Trigger confetti
+        confetti({
+          particleCount: 200,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+
+        // Change background to vibrant rainbow
+        document.body.style.animation = 'none'; // Stop swirling background
+        document.body.style.background = 'linear-gradient(270deg, #FFB6C1, #A7DBD8, #E0E4CC, #F38630, #FA6900, #69D2E7)';
+        document.body.style.backgroundSize = '1200% 1200%';
+        document.body.style.animation = 'rainbowBackground 10s ease infinite';
+
+        // Update display message
         display.textContent = 'Calling... 🎉';
       } else {
+        // Invalid number: Show Restart Button
         display.textContent = 'Invalid Number!';
-        document.body.style.backgroundColor = '#FFCDD2'; // Light red
-        setTimeout(() => {
-          document.body.style.backgroundColor = '';
-          updateDisplay();
-        }, 1500);
+        restartButton.style.display = 'block';
       }
-
-      // Show Restart Button
-      showRestartOption();
     });
 
-    // Show Restart Option with Modal
-    function showRestartOption() {
-      modalOverlay.classList.add('show');
-    }
+    // Define rainbow background animation
+    const styleSheet = document.styleSheets[0];
+    const rainbowKeyframes =
+      `@keyframes rainbowBackground {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }`;
+    styleSheet.insertRule(rainbowKeyframes, styleSheet.cssRules.length);
 
-    // Handle Restart Confirmation
+    // Handle Restart Button Click
+    restartButton.addEventListener('click', () => {
+      resetSimulator();
+    });
+
+    // Optional: Handle Modal Confirmation
     confirmRestart.addEventListener('click', () => {
       resetSimulator();
       modalOverlay.classList.remove('show');
@@ -288,18 +365,17 @@
       modalOverlay.classList.remove('show');
     });
 
-    // Restart Button Click (Alternative)
-    restartButton.addEventListener('click', () => {
-      resetSimulator();
-    });
-
     // Function to Reset Simulator
     function resetSimulator() {
       phoneNumber = '';
       updateDisplay();
-      document.body.style.animation = 'none';
-      document.body.style.backgroundColor = '';
-      modalOverlay.classList.remove('show');
+      // Reset background animation
+      document.body.style.animation = 'swirlingBackground 60s ease infinite';
+      document.body.style.background = 'linear-gradient(270deg, #FFB6C1, #A7DBD8, #E0E4CC, #F38630, #FA6900, #69D2E7)';
+      // Hide Restart Button
+      restartButton.style.display = 'none';
+      // Reset display style
+      display.style.color = '#333333';
     }
 
     // Prevent scrolling on touch devices
@@ -307,18 +383,12 @@
       e.preventDefault();
     }, { passive: false });
 
-    // Optional: Add pastelRainbow keyframes dynamically if not already present
-    const styleSheet = document.styleSheets[0];
-    const keyframes =
-      `@keyframes pastelRainbow {
-        0% { background-color: #FFB6C1; }
-        20% { background-color: #A7DBD8; }
-        40% { background-color: #E0E4CC; }
-        60% { background-color: #F38630; }
-        80% { background-color: #FA6900; }
-        100% { background-color: #69D2E7; }
-      }`;
-    styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
+    // Optional: Show Modal on Restart (Uncomment if using modal)
+    /*
+    restartButton.addEventListener('click', () => {
+      modalOverlay.classList.add('show');
+    });
+    */
   </script>
 </body>
 </html>
