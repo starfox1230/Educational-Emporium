@@ -1,131 +1,324 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Phone Keypad Simulator</title>
-<style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phone Keypad Simulator</title>
+  <style>
+    /* CSS Variables for Easy Customization */
+    :root {
+      --primary-color: #4A90E2;
+      --secondary-color: #50E3C2;
+      --button-color: #FFFFFF;
+      --button-active-color: #D1D8E0;
+      --button-hover-color: #E8F0FE;
+      --text-color: #333333;
+      --display-bg: #F5F7FA;
+      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      --transition-speed: 0.2s;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100vh;
-        margin: 0;
-        padding: 10px;
-        box-sizing: border-box;
-        font-family: Arial, sans-serif;
-        overflow: hidden; /* Prevent scrolling */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: linear-gradient(135deg, #F5F7FA, #D3CCE3);
+      font-family: var(--font-family);
+      overflow: hidden;
+      padding: 20px;
     }
-    .button {
-        width: 96px;
-        height: 96px;
-        border-radius: 50%;
-        border: 2px solid black;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        margin: 8px;
-        background-color: white;
-        color: black;
-        font-size: 38px;
-        cursor: pointer;
-        transition: background-color 0.3s, color 0.3s;
-    }
-    .button:hover {
-        background-color: #FFB6C1; /* Modern light pink color */
-        color: white;
-    }
+
     #display {
-        font-size: 38px;
-        margin-bottom: 20px;
-        padding: 0 16px; /* Add padding to ensure content does not touch the borders */
-        width: auto; /* Adjust width to be automatic based on content */
-        max-width: 95%; /* Prevent it from extending too wide on larger screens */
-        box-sizing: border-box; /* Include padding in width calculation */
-        text-align: center;
-        border: 1px solid black;
+      background-color: var(--display-bg);
+      border: 2px solid var(--primary-color);
+      border-radius: 10px;
+      padding: 20px 30px;
+      font-size: 32px;
+      color: var(--text-color);
+      width: 100%;
+      max-width: 400px;
+      text-align: right;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+      word-wrap: break-word;
     }
-    #keypad, #control-panel {
-        text-align: center;
+
+    #keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-gap: 15px;
+      margin-bottom: 30px;
     }
-    #call, #restart {
-        background-color: #FFB6C1; /* Pink button for restart */
-        color: white;
-        width: 160px;
-        height: 100px;
-        border-radius: 10px;
-        font-size: 32px;
-        margin-top: 20px;
+
+    .button {
+      width: 100px;
+      height: 100px;
+      border: none;
+      border-radius: 20px;
+      background-color: var(--button-color);
+      color: var(--primary-color);
+      font-size: 28px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: background-color var(--transition-speed), transform var(--transition-speed), box-shadow var(--transition-speed);
+      position: relative;
     }
+
+    .button:hover {
+      background-color: var(--button-hover-color);
+    }
+
+    .button:active,
+    .button.active {
+      background-color: var(--button-active-color);
+      transform: scale(0.95);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .button:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.5);
+    }
+
+    #control-panel {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .control-button {
+      padding: 15px 30px;
+      font-size: 24px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color var(--transition-speed), transform var(--transition-speed);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      color: #fff;
+    }
+
+    #call {
+      background-color: var(--primary-color);
+    }
+
+    #call:hover {
+      background-color: #357ABD;
+    }
+
     #restart {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        display: none; /* Hide by default */
-        z-index: 100;
+      background-color: var(--secondary-color);
+      display: none; /* Hidden by default */
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 100;
     }
-    @keyframes pastelRainbow {
+
+    #restart.show {
+      display: block;
+    }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 99;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      max-width: 90%;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 500px) {
+      #keypad {
+        grid-template-columns: repeat(3, 80px);
+        grid-gap: 10px;
+      }
+
+      .button {
+        width: 80px;
+        height: 80px;
+        font-size: 24px;
+      }
+
+      #display {
+        font-size: 28px;
+        padding: 15px 20px;
+      }
+
+      .control-button {
+        padding: 10px 20px;
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="display" aria-live="polite"></div>
+  <div id="keypad">
+    <button class="button" aria-label="1">1</button>
+    <button class="button" aria-label="2">2</button>
+    <button class="button" aria-label="3">3</button>
+    <button class="button" aria-label="4">4</button>
+    <button class="button" aria-label="5">5</button>
+    <button class="button" aria-label="6">6</button>
+    <button class="button" aria-label="7">7</button>
+    <button class="button" aria-label="8">8</button>
+    <button class="button" aria-label="9">9</button>
+    <button class="button" aria-label="Empty" disabled style="background: transparent; box-shadow: none; cursor: default;"></button>
+    <button class="button" aria-label="0">0</button>
+    <button class="button" aria-label="Backspace">⌫</button>
+  </div>
+  <div id="control-panel">
+    <button id="call" class="control-button">Call</button>
+    <button id="restart" class="control-button">Restart</button>
+  </div>
+
+  <!-- Modal Overlay for Restart Confirmation -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal-content">
+      <p>Do you want to restart?</p>
+      <button id="confirm-restart" class="control-button">Yes</button>
+      <button id="cancel-restart" class="control-button" style="background-color: #FF5C5C;">No</button>
+    </div>
+  </div>
+
+  <script>
+    const display = document.getElementById('display');
+    const buttons = document.querySelectorAll('.button');
+    const callButton = document.getElementById('call');
+    const restartButton = document.getElementById('restart');
+    const modalOverlay = document.getElementById('modal-overlay');
+    const confirmRestart = document.getElementById('confirm-restart');
+    const cancelRestart = document.getElementById('cancel-restart');
+
+    let phoneNumber = '';
+    let correctNumber = '9544640593'; // Replace with desired correct number
+
+    // Function to update display
+    function updateDisplay() {
+      display.textContent = phoneNumber;
+    }
+
+    // Function to handle button press
+    function handleButtonPress(e) {
+      const button = e.currentTarget;
+      const value = button.textContent;
+
+      // Add active class for visual feedback
+      button.classList.add('active');
+
+      if (value === '⌫') {
+        phoneNumber = phoneNumber.slice(0, -1);
+      } else if (!button.disabled) {
+        phoneNumber += value;
+      }
+
+      updateDisplay();
+
+      // Remove active class after short delay
+      setTimeout(() => {
+        button.classList.remove('active');
+      }, 100);
+    }
+
+    // Attach event listeners to buttons
+    buttons.forEach(button => {
+      button.addEventListener('click', handleButtonPress);
+      button.addEventListener('touchend', handleButtonPress);
+    });
+
+    // Handle Call Button Click
+    callButton.addEventListener('click', () => {
+      if (phoneNumber === correctNumber) {
+        document.body.style.animation = 'pastelRainbow 3s infinite';
+        display.textContent = 'Calling... 🎉';
+      } else {
+        display.textContent = 'Invalid Number!';
+        document.body.style.backgroundColor = '#FFCDD2'; // Light red
+        setTimeout(() => {
+          document.body.style.backgroundColor = '';
+          updateDisplay();
+        }, 1500);
+      }
+
+      // Show Restart Button
+      showRestartOption();
+    });
+
+    // Show Restart Option with Modal
+    function showRestartOption() {
+      modalOverlay.classList.add('show');
+    }
+
+    // Handle Restart Confirmation
+    confirmRestart.addEventListener('click', () => {
+      resetSimulator();
+      modalOverlay.classList.remove('show');
+    });
+
+    cancelRestart.addEventListener('click', () => {
+      modalOverlay.classList.remove('show');
+    });
+
+    // Restart Button Click (Alternative)
+    restartButton.addEventListener('click', () => {
+      resetSimulator();
+    });
+
+    // Function to Reset Simulator
+    function resetSimulator() {
+      phoneNumber = '';
+      updateDisplay();
+      document.body.style.animation = 'none';
+      document.body.style.backgroundColor = '';
+      modalOverlay.classList.remove('show');
+    }
+
+    // Prevent scrolling on touch devices
+    document.body.addEventListener('touchmove', function(e) {
+      e.preventDefault();
+    }, { passive: false });
+
+    // Optional: Add pastelRainbow keyframes dynamically if not already present
+    const styleSheet = document.styleSheets[0];
+    const keyframes =
+      `@keyframes pastelRainbow {
         0% { background-color: #FFB6C1; }
         20% { background-color: #A7DBD8; }
         40% { background-color: #E0E4CC; }
         60% { background-color: #F38630; }
         80% { background-color: #FA6900; }
         100% { background-color: #69D2E7; }
-    }
-</style>
-</head>
-<body>
-<div id="display"></div>
-<div id="keypad">
-    <div><span class="button">1</span><span class="button">2</span><span class="button">3</span></div>
-    <div><span class="button">4</span><span class="button">5</span><span class="button">6</span></div>
-    <div><span class="button">7</span><span class="button">8</span><span class="button">9</span></div>
-    <div><span class="button" style="visibility: hidden;">-</span><span class="button">0</span><span class="button" id="backspace">⌫</span></div>
-</div>
-<div id="control-panel">
-    <button id="call">Call</button>
-</div>
-<button id="restart">Restart</button>
-
-<script>
-    const display = document.getElementById('display');
-    const buttons = document.querySelectorAll('.button');
-    let phoneNumber = '';
-
-    buttons.forEach(button => {
-        button.addEventListener('click', function() {
-            if (this.textContent === '⌫') {
-                phoneNumber = phoneNumber.slice(0, -1);
-            } else {
-                phoneNumber += this.textContent;
-            }
-            display.textContent = phoneNumber;  // Update the display with the current phone number
-        });
-    });
-
-    document.getElementById('call').addEventListener('click', function() {
-        if (phoneNumber === '9544640593') {
-            document.body.style.animation = 'pastelRainbow 1s infinite'; // Pastel rainbow effect
-        } else {
-            document.body.style.backgroundColor = 'red';
-        }
-        document.getElementById('restart').style.display = 'block'; // Show the restart button as an overlay
-    });
-
-    document.getElementById('restart').addEventListener('click', function() {
-        document.body.style.background = 'none';
-        document.body.style.animation = 'none'; // Remove animation on restart
-        phoneNumber = '';
-        display.textContent = '';  // Clear display
-        this.style.display = 'none'; // Hide the restart button
-    });
-
-    // Prevent scrolling on touch devices
-    document.body.addEventListener('touchmove', function(e) {
-        e.preventDefault();  // Prevent the default scrolling behavior
-    }, { passive: false });
-</script>
+      }`;
+    styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
+  </script>
 </body>
 </html>
