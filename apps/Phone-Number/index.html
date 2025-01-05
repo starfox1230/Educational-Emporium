@@ -51,6 +51,12 @@
       100% { background-position: 0% 50%; }
     }
 
+    @keyframes rainbowBackground {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
     #display {
       background-color: var(--display-bg);
       border: 2px solid var(--primary-color);
@@ -165,33 +171,6 @@
       background-color: var(--restart-green-hover);
     }
 
-    /* Modal Overlay (Optional) */
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 99;
-    }
-
-    .modal-overlay.show {
-      display: flex;
-    }
-
-    .modal-content {
-      background-color: #fff;
-      padding: 30px;
-      border-radius: 15px;
-      text-align: center;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      max-width: 90%;
-    }
-
     /* Confetti Canvas */
     #confetti-canvas {
       position: absolute;
@@ -259,33 +238,19 @@
 
   <button id="restart-red" aria-label="Restart">Restart</button>
 
-  <!-- Modal Overlay for Restart Confirmation (Optional) -->
-  <div class="modal-overlay" id="modal-overlay">
-    <div class="modal-content">
-      <p>Do you want to restart?</p>
-      <button id="confirm-restart" class="control-button">Yes</button>
-      <button id="cancel-restart" class="control-button" style="background-color: var(--restart-red);">No</button>
-    </div>
-  </div>
-
   <script>
     const display = document.getElementById('display');
     const buttons = document.querySelectorAll('.button');
     const callButton = document.getElementById('call');
     const restartRedButton = document.getElementById('restart-red');
     const restartGreenButton = document.getElementById('restart-green');
-    const modalOverlay = document.getElementById('modal-overlay');
-    const confirmRestart = document.getElementById('confirm-restart');
-    const cancelRestart = document.getElementById('cancel-restart');
     const confettiCanvas = document.getElementById('confetti-canvas');
 
     let phoneNumber = '';
     const correctNumber = '9544640593'; // Replace with desired correct number
-    let isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    let touchHandled = false; // Flag to prevent duplicate events
 
     // Initialize confetti
-    const confetti = window.confetti.create(confettiCanvas, {
+    const confettiInstance = window.confetti.create(confettiCanvas, {
       resize: true,
       useWorker: true
     });
@@ -309,7 +274,7 @@
       // Reset display style
       display.style.color = '#333333';
       // Stop confetti if any
-      confetti.reset();
+      confettiInstance.reset();
     }
 
     // Function to handle button press
@@ -317,17 +282,6 @@
       e.preventDefault();
       const button = e.currentTarget;
       const value = button.textContent;
-
-      // Prevent duplicate events on touch devices
-      if (isTouchDevice) {
-        if (e.type === 'touchend') {
-          if (touchHandled) return;
-          touchHandled = true;
-          setTimeout(() => { touchHandled = false; }, 300); // Reset flag after delay
-        } else if (e.type === 'click') {
-          return;
-        }
-      }
 
       // Add active class for visual feedback
       button.classList.add('active');
@@ -346,20 +300,16 @@
       }, 100);
     }
 
-    // Attach event listeners to buttons
+    // Attach pointerup event listeners to buttons
     buttons.forEach(button => {
-      if (isTouchDevice) {
-        button.addEventListener('touchend', handleButtonPress);
-      } else {
-        button.addEventListener('click', handleButtonPress);
-      }
+      button.addEventListener('pointerup', handleButtonPress);
     });
 
     // Handle Call Button Click
     callButton.addEventListener('click', () => {
       if (phoneNumber === correctNumber) {
         // Trigger confetti
-        confetti({
+        confettiInstance({
           particleCount: 200,
           spread: 70,
           origin: { y: 0.6 }
@@ -383,16 +333,6 @@
       }
     });
 
-    // Define rainbow background animation
-    const styleSheet = document.styleSheets[0];
-    const rainbowKeyframes =
-      `@keyframes rainbowBackground {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-      }`;
-    styleSheet.insertRule(rainbowKeyframes, styleSheet.cssRules.length);
-
     // Handle Restart Red Button Click
     restartRedButton.addEventListener('click', () => {
       resetSimulator();
@@ -403,25 +343,10 @@
       resetSimulator();
     });
 
-    // Optional: Handle Modal Confirmation (If using modal)
-    confirmRestart.addEventListener('click', () => {
-      resetSimulator();
-      modalOverlay.classList.remove('show');
-    });
-
-    cancelRestart.addEventListener('click', () => {
-      modalOverlay.classList.remove('show');
-    });
-
     // Prevent scrolling on touch devices
     document.body.addEventListener('touchmove', function(e) {
       e.preventDefault();
     }, { passive: false });
-
-    // Ensure background animation resets properly on window resize or other events
-    window.addEventListener('resize', () => {
-      resetSimulator();
-    });
   </script>
 </body>
 </html>
