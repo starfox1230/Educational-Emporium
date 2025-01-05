@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WordGlow</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1,user-scalable=no">
+</head>
+<body>
+    <!-- Progress Bar at the top -->
+    <div id="progressContainer">
+        <div id="progressBar"></div>
+        <div id="progressText">0%</div>
+    </div>
+    <br><br>
+    <textarea id="storyArea" rows="10" cols="50"></textarea>
+    <br>
+    <button id="pasteStoryButton">Insert Story</button>
+    <div id="sentenceDisplay" style="display: none;"></div>
+    <div id="buttonWrapper">
+        <div id="buttons" style="display: none;">
+            <button id="prevWordButton">Previous</button>
+            <button id="nextWordButton">&nbsp;&nbsp;&nbsp;Next&nbsp;&nbsp;&nbsp;</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
