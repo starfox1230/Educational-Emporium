@@ -24,6 +24,7 @@
       flex-direction: column;
       align-items: center;
       color: #333333;
+      position: relative; /* For positioning the full-page button */
     }
 
     /* Header Styling */
@@ -121,6 +122,7 @@
       background: rgba(255, 255, 255, 0.8);
       width: 100%;
       box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+      position: relative; /* For positioning the full-page button */
     }
 
     footer p {
@@ -145,6 +147,39 @@
       border: none;
     }
 
+    /* Full-Page Open Button Styling */
+    .full-page-button {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background-color: #FFC1CC; /* Pastel Pink */
+      border: none;
+      border-radius: 50px;
+      padding: 10px 15px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.3s, transform 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 1em;
+    }
+
+    .full-page-button:hover {
+      background-color: #FFB6C1; /* Slightly darker pink */
+      transform: scale(1.05);
+    }
+
+    .full-page-button:disabled {
+      background-color: #E0E0E0;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .full-page-button span {
+      pointer-events: none; /* Prevents click events on the emoji */
+    }
+
     /* Responsive Design */
     @media (max-width: 600px) {
       .app-link {
@@ -162,6 +197,11 @@
 
       .iframe-container {
         height: 60vh;
+      }
+
+      .full-page-button {
+        padding: 8px 12px;
+        font-size: 0.9em;
       }
     }
 
@@ -240,14 +280,35 @@
   <!-- Footer -->
   <footer>
     <p>&copy; 2025 Educational Emporium. All rights reserved.</p>
+    
+    <!-- Open Full Page Button -->
+    <button id="open-full-page" class="full-page-button" disabled>
+      <span>🔗</span> Open Full Page
+    </button>
   </footer>
 
   <!-- Embedded JavaScript -->
   <script>
     // Function to load the selected app into the iframe
     function loadApp(appPath) {
-      document.getElementById('app-frame').src = appPath;
+      const iframe = document.getElementById('app-frame');
+      iframe.src = appPath;
+      currentApp = appPath;
+      updateFullPageButton();
     }
+
+    // Function to update the state of the full-page button
+    function updateFullPageButton() {
+      const button = document.getElementById('open-full-page');
+      if (currentApp) {
+        button.disabled = false;
+      } else {
+        button.disabled = true;
+      }
+    }
+
+    // Initialize currentApp variable
+    let currentApp = '';
 
     // Attach click event listeners to all app links
     const appLinks = document.querySelectorAll('.app-link');
@@ -257,6 +318,14 @@
         const appPath = this.getAttribute('href');
         loadApp(appPath);
       });
+    });
+
+    // Attach click event listener to the full-page button
+    const fullPageButton = document.getElementById('open-full-page');
+    fullPageButton.addEventListener('click', function() {
+      if (currentApp) {
+        window.open(currentApp, '_blank');
+      }
     });
 
     // Optionally, load the first app by default
