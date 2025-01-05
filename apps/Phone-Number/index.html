@@ -18,6 +18,10 @@
       --display-bg: rgba(245, 247, 250, 0.8);
       --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       --transition-speed: 0.2s;
+      --restart-green: #28a745;
+      --restart-green-hover: #218838;
+      --restart-red: #FF5C5C;
+      --restart-red-hover: #E04848;
     }
 
     * {
@@ -32,7 +36,7 @@
       align-items: center;
       justify-content: center;
       height: 100vh;
-      background: linear-gradient(270deg, #FFB6C1, #A7DBD8, #E0E4CC, #F38630, #FA6900, #69D2E7);
+      background: linear-gradient(270deg, #B19CD9, #77DD77, #FFD1DC, #FFB347);
       background-size: 1200% 1200%;
       animation: swirlingBackground 60s ease infinite;
       font-family: var(--font-family);
@@ -106,6 +110,7 @@
       gap: 20px;
       flex-wrap: wrap;
       justify-content: center;
+      align-items: center;
     }
 
     .control-button {
@@ -127,14 +132,9 @@
       background-color: #357ABD;
     }
 
-    #restart {
-      background-color: #FF5C5C; /* Red for restart */
+    #restart-red {
+      background-color: var(--restart-red); /* Red for incorrect restart */
       display: none; /* Hidden by default */
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 100;
       padding: 15px 30px;
       font-size: 24px;
       border: none;
@@ -144,11 +144,28 @@
       transition: background-color var(--transition-speed), transform var(--transition-speed);
     }
 
-    #restart:hover {
-      background-color: #E04848;
+    #restart-red:hover {
+      background-color: var(--restart-red-hover);
     }
 
-    /* Modal Overlay */
+    #restart-green {
+      background-color: var(--restart-green); /* Green for correct restart */
+      display: none; /* Hidden by default */
+      padding: 15px 30px;
+      font-size: 24px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: background-color var(--transition-speed), transform var(--transition-speed);
+      margin-left: 10px; /* Space between Call and Restart buttons */
+    }
+
+    #restart-green:hover {
+      background-color: var(--restart-green-hover);
+    }
+
+    /* Modal Overlay (Optional) */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -209,7 +226,7 @@
         font-size: 20px;
       }
 
-      #restart {
+      #restart-red, #restart-green {
         padding: 10px 20px;
         font-size: 20px;
       }
@@ -237,17 +254,17 @@
   </div>
   <div id="control-panel">
     <button id="call" class="control-button">Call</button>
+    <button id="restart-green" class="control-button" aria-label="Restart">&#8635;</button> <!-- Circular arrow symbol -->
   </div>
 
-  <button id="restart">Restart</button>
+  <button id="restart-red" aria-label="Restart">Restart</button>
 
   <!-- Modal Overlay for Restart Confirmation (Optional) -->
-  <!-- You can remove this if you prefer not to have a confirmation modal -->
   <div class="modal-overlay" id="modal-overlay">
     <div class="modal-content">
       <p>Do you want to restart?</p>
       <button id="confirm-restart" class="control-button">Yes</button>
-      <button id="cancel-restart" class="control-button" style="background-color: #FF5C5C;">No</button>
+      <button id="cancel-restart" class="control-button" style="background-color: var(--restart-red);">No</button>
     </div>
   </div>
 
@@ -255,7 +272,8 @@
     const display = document.getElementById('display');
     const buttons = document.querySelectorAll('.button');
     const callButton = document.getElementById('call');
-    const restartButton = document.getElementById('restart');
+    const restartRedButton = document.getElementById('restart-red');
+    const restartGreenButton = document.getElementById('restart-green');
     const modalOverlay = document.getElementById('modal-overlay');
     const confirmRestart = document.getElementById('confirm-restart');
     const cancelRestart = document.getElementById('cancel-restart');
@@ -264,6 +282,7 @@
     let phoneNumber = '';
     const correctNumber = '9544640593'; // Replace with desired correct number
     let isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    let touchHandled = false; // Flag to prevent duplicate events
 
     // Initialize confetti
     const confetti = window.confetti.create(confettiCanvas, {
@@ -276,6 +295,23 @@
       display.textContent = phoneNumber;
     }
 
+    // Function to reset the simulator
+    function resetSimulator() {
+      phoneNumber = '';
+      updateDisplay();
+      // Reset background animation
+      document.body.style.animation = 'swirlingBackground 60s ease infinite';
+      document.body.style.background = 'linear-gradient(270deg, #B19CD9, #77DD77, #FFD1DC, #FFB347)';
+      document.body.style.backgroundSize = '1200% 1200%';
+      // Hide Restart Buttons
+      restartRedButton.style.display = 'none';
+      restartGreenButton.style.display = 'none';
+      // Reset display style
+      display.style.color = '#333333';
+      // Stop confetti if any
+      confetti.reset();
+    }
+
     // Function to handle button press
     function handleButtonPress(e) {
       e.preventDefault();
@@ -283,10 +319,14 @@
       const value = button.textContent;
 
       // Prevent duplicate events on touch devices
-      if (isTouchDevice && e.type === 'touchend') {
-        // Do nothing, as touchend will handle it
-      } else if (isTouchDevice && e.type === 'click') {
-        return;
+      if (isTouchDevice) {
+        if (e.type === 'touchend') {
+          if (touchHandled) return;
+          touchHandled = true;
+          setTimeout(() => { touchHandled = false; }, 300); // Reset flag after delay
+        } else if (e.type === 'click') {
+          return;
+        }
       }
 
       // Add active class for visual feedback
@@ -327,16 +367,19 @@
 
         // Change background to vibrant rainbow
         document.body.style.animation = 'none'; // Stop swirling background
-        document.body.style.background = 'linear-gradient(270deg, #FFB6C1, #A7DBD8, #E0E4CC, #F38630, #FA6900, #69D2E7)';
+        document.body.style.background = 'linear-gradient(270deg, #B19CD9, #77DD77, #FFD1DC, #FFB347)';
         document.body.style.backgroundSize = '1200% 1200%';
         document.body.style.animation = 'rainbowBackground 10s ease infinite';
 
         // Update display message
         display.textContent = 'Calling... 🎉';
+
+        // Show green restart button
+        restartGreenButton.style.display = 'inline-block';
       } else {
-        // Invalid number: Show Restart Button
+        // Invalid number: Show red Restart Button
         display.textContent = 'Invalid Number!';
-        restartButton.style.display = 'block';
+        restartRedButton.style.display = 'inline-block';
       }
     });
 
@@ -350,12 +393,17 @@
       }`;
     styleSheet.insertRule(rainbowKeyframes, styleSheet.cssRules.length);
 
-    // Handle Restart Button Click
-    restartButton.addEventListener('click', () => {
+    // Handle Restart Red Button Click
+    restartRedButton.addEventListener('click', () => {
       resetSimulator();
     });
 
-    // Optional: Handle Modal Confirmation
+    // Handle Restart Green Button Click
+    restartGreenButton.addEventListener('click', () => {
+      resetSimulator();
+    });
+
+    // Optional: Handle Modal Confirmation (If using modal)
     confirmRestart.addEventListener('click', () => {
       resetSimulator();
       modalOverlay.classList.remove('show');
@@ -365,30 +413,15 @@
       modalOverlay.classList.remove('show');
     });
 
-    // Function to Reset Simulator
-    function resetSimulator() {
-      phoneNumber = '';
-      updateDisplay();
-      // Reset background animation
-      document.body.style.animation = 'swirlingBackground 60s ease infinite';
-      document.body.style.background = 'linear-gradient(270deg, #FFB6C1, #A7DBD8, #E0E4CC, #F38630, #FA6900, #69D2E7)';
-      // Hide Restart Button
-      restartButton.style.display = 'none';
-      // Reset display style
-      display.style.color = '#333333';
-    }
-
     // Prevent scrolling on touch devices
     document.body.addEventListener('touchmove', function(e) {
       e.preventDefault();
     }, { passive: false });
 
-    // Optional: Show Modal on Restart (Uncomment if using modal)
-    /*
-    restartButton.addEventListener('click', () => {
-      modalOverlay.classList.add('show');
+    // Ensure background animation resets properly on window resize or other events
+    window.addEventListener('resize', () => {
+      resetSimulator();
     });
-    */
   </script>
 </body>
 </html>
