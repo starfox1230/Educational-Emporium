@@ -29,12 +29,12 @@
     /* Header Styling */
     header {
       text-align: center;
-      padding: 50px 20px 20px 20px;
+      padding: 30px 20px 10px 20px;
     }
 
     header h1 {
-      font-size: 3em;
-      margin-bottom: 10px;
+      font-size: 2.5em;
+      margin-bottom: 5px;
       background: linear-gradient(90deg, #FF9A9E 0%, #FAD0C4 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -42,7 +42,7 @@
     }
 
     header p {
-      font-size: 1.2em;
+      font-size: 1em;
       color: #555555;
     }
 
@@ -55,47 +55,63 @@
 
     /* Navigation Styling */
     nav {
-      width: 90%;
-      max-width: 1200px;
-      margin: 20px 0;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 10px 0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
     }
 
     .app-list {
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 20px;
+      overflow-x: auto;
+      padding: 10px 20px;
+      gap: 15px;
       list-style: none;
+      justify-content: center;
     }
 
     .app-link {
-      background: rgba(255, 255, 255, 0.8);
+      background: #FFFFFF;
       border-radius: 15px;
-      padding: 20px;
-      width: 200px;
+      padding: 15px 20px;
+      min-width: 120px;
       text-align: center;
       text-decoration: none;
       color: #333333;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      transition: transform 0.3s, box-shadow 0.3s;
+      transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      white-space: nowrap;
     }
 
     .app-link:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+      transform: translateY(-5px);
+      box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
     }
 
-    .app-link img {
-      width: 80px;
-      height: 80px;
-      margin-bottom: 15px;
+    .app-link span.emoji {
+      font-size: 2em;
     }
 
-    .app-link span {
-      display: block;
-      font-size: 1.1em;
+    .app-link span.text {
+      font-size: 1em;
       font-weight: 700;
     }
+
+    /* Assign unique pastel colors to each app button */
+    .app-wordglow { background-color: #FFD1DC; }
+    .app-letterhunt { background-color: #C1E1C1; }
+    .app-colorgame { background-color: #FFECB3; }
+    .app-matiloise { background-color: #D1C4E9; }
+    .app-phonenumber { background-color: #B3E5FC; }
+    .app-gtlt { background-color: #FFCCBC; }
+    .app-plus1 { background-color: #C5CAE9; }
 
     /* Footer Styling */
     footer {
@@ -117,7 +133,7 @@
       max-width: 1200px;
       height: 80vh;
       border: none;
-      margin-bottom: 20px;
+      margin: 20px 0;
       border-radius: 15px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       overflow: hidden;
@@ -132,8 +148,31 @@
     /* Responsive Design */
     @media (max-width: 600px) {
       .app-link {
-        width: 100%;
+        min-width: 100px;
+        padding: 10px 15px;
       }
+
+      header h1 {
+        font-size: 2em;
+      }
+
+      header p {
+        font-size: 0.9em;
+      }
+
+      .iframe-container {
+        height: 60vh;
+      }
+    }
+
+    /* Hide scrollbar for app list */
+    .app-list::-webkit-scrollbar {
+      display: none;
+    }
+
+    .app-list {
+      -ms-overflow-style: none;  /* IE and Edge */
+      scrollbar-width: none;  /* Firefox */
     }
   </style>
 </head>
@@ -148,45 +187,45 @@
   <nav>
     <ul class="app-list">
       <li>
-        <a href="apps/WordGlow_1.0_EarlyReader/index.html" class="app-link">
-          <img src="https://www.verbatimmag.com/wp-content/uploads/2018/05/words-bg.png" alt="App 1 Icon">
-          <span>WordGlow 1.0</span>
+        <a href="apps/WordGlow_1.0_EarlyReader/index.html" class="app-link app-wordglow">
+          <span class="emoji">📖</span>
+          <span class="text">WordGlow 1.0</span>
         </a>
       </li>
       <li>
-        <a href="apps/Letter-Hunt/index.html" class="app-link">
-          <img src="https://via.placeholder.com/80" alt="App 2 Icon">
-          <span>Letter Hunt</span>
+        <a href="apps/Letter-Hunt/index.html" class="app-link app-letterhunt">
+          <span class="emoji">🔍</span>
+          <span class="text">Letter Hunt</span>
         </a>
       </li>
       <li>
-        <a href="apps/Color-Game/index.html" class="app-link">
-          <img src="https://via.placeholder.com/80" alt="App 2 Icon">
-          <span>Color Game</span>
+        <a href="apps/Color-Game/index.html" class="app-link app-colorgame">
+          <span class="emoji">🎨</span>
+          <span class="text">Color Game</span>
         </a>
       </li>
       <li>
-        <a href="apps/Matiloise-Competition/index.html" class="app-link">
-          <img src="https://via.placeholder.com/80" alt="App 2 Icon">
-          <span>Matiloise Competition</span>
+        <a href="apps/Matiloise-Competition/index.html" class="app-link app-matiloise">
+          <span class="emoji">🏆</span>
+          <span class="text">Matiloise Competition</span>
         </a>
       </li>
       <li>
-        <a href="apps/Phone-Number/index.html" class="app-link">
-          <img src="https://via.placeholder.com/80" alt="App 2 Icon">
-          <span>Phone Number</span>
+        <a href="apps/Phone-Number/index.html" class="app-link app-phonenumber">
+          <span class="emoji">📞</span>
+          <span class="text">Phone Number</span>
         </a>
       </li>
       <li>
-        <a href="apps/Greater-Than-Less-Than/index.html" class="app-link">
-          <img src="https://via.placeholder.com/80" alt="App 2 Icon">
-          <span>Greater Than / Less Than</span>
+        <a href="apps/Greater-Than-Less-Than/index.html" class="app-link app-gtlt">
+          <span class="emoji">🔢</span>
+          <span class="text">Greater/Less Than</span>
         </a>
       </li>
       <li>
-        <a href="apps/Plus-1/index.html" class="app-link">
-          <img src="https://via.placeholder.com/80" alt="App 2 Icon">
-          <span>+1</span>
+        <a href="apps/Plus-1/index.html" class="app-link app-plus1">
+          <span class="emoji">➕1</span>
+          <span class="text">+1</span>
         </a>
       </li>
       <!-- Add more apps as needed -->
