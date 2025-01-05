@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Addition Plus One Quiz</title>
+    <style>
+        /* Reset and Basic Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Container */
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            padding: 30px 20px 40px 20px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        /* Score */
+        .score {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #ffeb3b;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        /* Central Addition Box */
+        .addition-box {
+            background: #fff;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            font-size: 2.5em;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80px;
+            position: relative;
+        }
+
+        .addition-box .part {
+            margin: 0 5px;
+        }
+
+        /* Answer Slot */
+        .answer-slot {
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f9f9f9;
+            font-size: 2em;
+            margin-left: 10px;
+        }
+
+        .answer-slot.filled {
+            border-color: #2196F3;
+        }
+
+        .feedback {
+            font-size: 1.2em;
+            margin-top: 15px;
+            height: 24px;
+            color: #333;
+        }
+
+        /* Number Pad */
+        .number-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 60px);
+            grid-gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .number-pad button {
+            width: 60px;
+            height: 60px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.3s;
+        }
+
+        .number-pad button:hover {
+            background: #e0e0e0;
+            transform: scale(1.05);
+        }
+
+        .number-pad button.correct {
+            background: #4CAF50 !important;
+            color: white;
+        }
+
+        .number-pad button.wrong {
+            background: #f44336 !important;
+            color: white;
+        }
+
+        /* Start and Next Buttons */
+        .start-btn, .next-btn {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.3s;
+            margin-top: 20px;
+        }
+
+        .start-btn:hover, .next-btn:hover {
+            background: #388E3C;
+            transform: scale(1.05);
+        }
+
+        /* Celebration Animation */
+        .confetti-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            overflow: visible;
+        }
+
+        .confetti-piece {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #FFC107;
+            opacity: 0;
+            animation: confetti-fall 1.5s forwards;
+            border-radius: 50%;
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--translate-x), var(--translate-y)) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 500px) {
+            .addition-box {
+                font-size: 2em;
+                padding: 15px;
+            }
+
+            .answer-slot {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5em;
+                margin-left: 8px;
+            }
+
+            .number-pad {
+                grid-template-columns: repeat(3, 50px);
+                grid-gap: 10px;
+            }
+
+            .number-pad button {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2em;
+            }
+
+            .start-btn, .next-btn {
+                padding: 10px 20px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="score">Score: <span id="score">0</span></div>
+        <h1>Addition Plus One Quiz</h1>
+        <div class="addition-box">
+            <div class="part" id="operand1">?</div>
+            <div class="part">+</div>
+            <div class="part" id="operand2">?</div>
+            <div class="part">=</div>
+            <div class="answer-slot" id="answer-slot">?</div>
+        </div>
+        <div class="number-pad" id="number-pad">
+            <button>1</button>
+            <button>2</button>
+            <button>3</button>
+            <button>4</button>
+            <button>5</button>
+            <button>6</button>
+            <button>7</button>
+            <button>8</button>
+            <button>9</button>
+            <button id="zero-btn">0</button>
+            <button id="ten-btn" style="display: none;">10</button>
+        </div>
+        <div class="feedback" id="feedback"></div>
+        <button class="start-btn" id="start-btn">Start Quiz</button>
+        <button class="next-btn" id="next-btn" style="display: none;">Next Question</button>
+        <div class="confetti-container" id="confetti"></div>
+    </div>
+
+    <script>
+        const startBtn = document.getElementById('start-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const operand1El = document.getElementById('operand1');
+        const operand2El = document.getElementById('operand2');
+        const answerSlot = document.getElementById('answer-slot');
+        const numberPad = document.getElementById('number-pad');
+        const feedbackEl = document.getElementById('feedback');
+        const scoreEl = document.getElementById('score');
+        const confettiEl = document.getElementById('confetti');
+        const zeroBtn = document.getElementById('zero-btn');
+        const tenBtn = document.getElementById('ten-btn');
+
+        let score = 0;
+        let currentQuestion = {};
+        let acceptingAnswers = false;
+
+        // Generate a new question
+        function generateQuestion() {
+            let operand1, operand2, answer;
+
+            // Randomly decide if 1 is first or second operand
+            if (Math.random() < 0.5) {
+                operand1 = 1;
+                operand2 = Math.floor(Math.random() * 9) + 1; // 1-9
+            } else {
+                operand2 = 1;
+                operand1 = Math.floor(Math.random() * 9) + 1; // 1-9
+            }
+
+            answer = operand1 + operand2;
+
+            // Handle 10 as a separate option
+            if (answer === 10) {
+                tenBtn.style.display = 'inline-block';
+                zeroBtn.style.display = 'none';
+            } else {
+                tenBtn.style.display = 'none';
+                zeroBtn.style.display = 'inline-block';
+            }
+
+            currentQuestion = {
+                operand1: operand1,
+                operand2: operand2,
+                answer: answer
+            };
+        }
+
+        // Render the current question
+        function renderQuestion() {
+            operand1El.textContent = currentQuestion.operand1;
+            operand2El.textContent = currentQuestion.operand2;
+            answerSlot.textContent = '?';
+            answerSlot.classList.remove('filled');
+            feedbackEl.textContent = '';
+            nextBtn.style.display = 'none';
+            startBtn.style.display = 'none';
+            acceptingAnswers = true;
+
+            // Reset number pad buttons
+            const buttons = numberPad.querySelectorAll('button');
+            buttons.forEach(btn => {
+                btn.classList.remove('correct', 'wrong');
+                btn.disabled = false;
+                btn.style.cursor = 'pointer';
+            });
+        }
+
+        // Start the quiz
+        function startQuiz() {
+            score = 0;
+            scoreEl.textContent = score;
+            startBtn.style.display = 'none';
+            nextBtn.style.display = 'none';
+            generateQuestion();
+            renderQuestion();
+        }
+
+        // Proceed to the next question
+        function nextQuestion() {
+            generateQuestion();
+            renderQuestion();
+        }
+
+        // Handle correct answer
+        function handleCorrectAnswer(selectedBtn) {
+            score++;
+            scoreEl.textContent = score;
+            feedbackEl.textContent = "🎉 Correct! Well done! 🎉";
+            selectedBtn.classList.add('correct');
+            triggerConfetti();
+        }
+
+        // Handle incorrect answer
+        function handleIncorrectAnswer(selectedBtn) {
+            feedbackEl.textContent = "😕 Not quite. Try the next one!";
+            selectedBtn.classList.add('wrong');
+            // Highlight the correct answer
+            numberPad.querySelectorAll('button').forEach(btn => {
+                if (btn.textContent === currentQuestion.answer.toString()) {
+                    btn.classList.add('correct');
+                }
+            });
+        }
+
+        // Trigger confetti animation
+        function triggerConfetti() {
+            // Clear any existing confetti
+            confettiEl.innerHTML = '';
+
+            const colors = ['#FFC107', '#FF5722', '#8BC34A', '#03A9F4', '#E91E63', '#FFEB3B', '#9C27B0', '#00BCD4'];
+            const pieces = 100;
+
+            for (let i = 0; i < pieces; i++) {
+                const confettiPiece = document.createElement('div');
+                confettiPiece.classList.add('confetti-piece');
+                confettiPiece.style.background = colors[Math.floor(Math.random() * colors.length)];
+
+                // Randomize initial position around the center
+                const angle = Math.random() * 2 * Math.PI;
+                const radius = Math.random() * 100;
+                const translateX = radius * Math.cos(angle);
+                const translateY = radius * Math.sin(angle);
+
+                // Set custom properties for animation
+                confettiPiece.style.setProperty('--translate-x', `${translateX}px`);
+                confettiPiece.style.setProperty('--translate-y', `${translateY}px`);
+                confettiPiece.style.left = '0px';
+                confettiPiece.style.top = '0px';
+                confettiPiece.style.opacity = Math.random();
+
+                // Randomize animation duration and delay
+                confettiPiece.style.animationDuration = `${Math.random() * 1 + 1}s`;
+                confettiPiece.style.animationDelay = `${Math.random() * 0.5}s`;
+
+                confettiEl.appendChild(confettiPiece);
+
+                // Remove after animation
+                confettiPiece.addEventListener('animationend', () => {
+                    confettiEl.removeChild(confettiPiece);
+                });
+            }
+        }
+
+        // Handle number pad button clicks
+        function handleNumberClick(e) {
+            if (!acceptingAnswers) return;
+            acceptingAnswers = false;
+
+            const selectedBtn = e.target;
+            const selectedNumber = selectedBtn.textContent;
+
+            answerSlot.textContent = selectedNumber;
+            answerSlot.classList.add('filled');
+
+            if (parseInt(selectedNumber) === currentQuestion.answer) {
+                handleCorrectAnswer(selectedBtn);
+            } else {
+                handleIncorrectAnswer(selectedBtn);
+            }
+
+            // Disable all number pad buttons after selection
+            const buttons = numberPad.querySelectorAll('button');
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                btn.style.cursor = 'default';
+            });
+
+            nextBtn.style.display = 'inline-block';
+        }
+
+        // Reset Number Pad Buttons for Next Question
+        function resetNumberPad() {
+            const buttons = numberPad.querySelectorAll('button');
+            buttons.forEach(btn => {
+                btn.classList.remove('correct', 'wrong');
+                btn.disabled = false;
+                btn.style.cursor = 'pointer';
+            });
+        }
+
+        // Initialize the application
+        function init() {
+            // Attach event listeners to number pad buttons
+            numberPad.querySelectorAll('button').forEach(btn => {
+                btn.addEventListener('click', handleNumberClick);
+            });
+        }
+
+        // Initialize on page load
+        window.onload = init;
+
+        // Event Listeners
+        startBtn.addEventListener('click', startQuiz);
+        nextBtn.addEventListener('click', () => {
+            resetNumberPad();
+            nextQuestion();
+        });
+    </script>
+</body>
+</html>
