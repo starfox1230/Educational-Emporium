@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Matilda's Greater Than & Less Than Quiz</title>
+    <style>
+        /* Reset and Basic Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f06, #f79);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Container */
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            padding: 30px 20px 40px 20px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        /* Score */
+        .score {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #ffeb3b;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        /* Central Comparison Box */
+        .comparison-box {
+            background: #fff;
+            border: 2px dashed #ddd;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            font-size: 2.5em;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80px;
+            position: relative;
+        }
+
+        .number {
+            margin: 0 20px;
+        }
+
+        .operator-slot {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 10px;
+            background-color: #f9f9f9;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .operator-slot.filled {
+            border-style: solid;
+        }
+
+        .operator {
+            width: 60px;
+            height: 60px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 2em;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+            touch-action: manipulation;
+            transition: background 0.3s, transform 0.3s;
+        }
+
+        .operator:hover {
+            background: #1976D2;
+            transform: scale(1.05);
+        }
+
+        .operator.correct {
+            background: #4CAF50 !important;
+        }
+
+        .operator.wrong {
+            background: #f44336 !important;
+        }
+
+        .feedback {
+            font-size: 1.2em;
+            margin-top: 15px;
+            height: 24px;
+            color: #333;
+        }
+
+        /* Options */
+        .options {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* Start and Next Buttons */
+        .start-btn, .next-btn {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.3s;
+            margin-top: 20px;
+        }
+
+        .start-btn:hover, .next-btn:hover {
+            background: #388E3C;
+            transform: scale(1.05);
+        }
+
+        /* Celebration Animation */
+        .confetti-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            overflow: visible;
+        }
+
+        .confetti-piece {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #FFC107;
+            opacity: 0;
+            animation: confetti-fall 1.5s forwards;
+            border-radius: 50%;
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--translate-x), var(--translate-y)) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .comparison-box {
+                font-size: 2em;
+                padding: 15px;
+            }
+
+            .operator-slot {
+                width: 50px;
+                height: 50px;
+            }
+
+            .operator {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5em;
+            }
+
+            .start-btn, .next-btn {
+                padding: 10px 20px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="score">Score: <span id="score">0</span></div>
+        <h1>Greater Than & Less Than Quiz</h1>
+        <div class="comparison-box">
+            <div class="number" id="num1">?</div>
+            <div class="operator-slot" id="operator-slot">
+                <!-- Operator will appear here -->
+            </div>
+            <div class="number" id="num2">?</div>
+        </div>
+        <div class="options" id="options">
+            <button class="operator" id="less-than">&lt;</button>
+            <button class="operator" id="greater-than">&gt;</button>
+        </div>
+        <div class="feedback" id="feedback"></div>
+        <button class="start-btn" id="start-btn">Start Quiz</button>
+        <button class="next-btn" id="next-btn" style="display: none;">Next Question</button>
+        <div class="confetti-container" id="confetti"></div>
+    </div>
+
+    <script>
+        const startBtn = document.getElementById('start-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const num1El = document.getElementById('num1');
+        const num2El = document.getElementById('num2');
+        const operatorSlot = document.getElementById('operator-slot');
+        const optionsEl = document.getElementById('options');
+        const feedbackEl = document.getElementById('feedback');
+        const scoreEl = document.getElementById('score');
+        const confettiEl = document.getElementById('confetti');
+        const operators = document.querySelectorAll('.operator');
+
+        let score = 0;
+        let currentQuestion = {};
+        let acceptingAnswers = false;
+
+        // Generate a new question
+        function generateQuestion() {
+            let num1 = Math.floor(Math.random() * 9) + 1; // 1-9
+            let num2 = Math.floor(Math.random() * 9) + 1; // 1-9
+
+            // Ensure numbers are not equal
+            while (num1 === num2) {
+                num2 = Math.floor(Math.random() * 9) + 1;
+            }
+
+            // Determine correct operator
+            const correctSign = num1 > num2 ? '>' : '<';
+
+            currentQuestion = {
+                num1: num1,
+                num2: num2,
+                correct: correctSign
+            };
+        }
+
+        // Render the current question
+        function renderQuestion() {
+            num1El.textContent = currentQuestion.num1;
+            num2El.textContent = currentQuestion.num2;
+            operatorSlot.innerHTML = '';
+            operatorSlot.classList.remove('filled');
+            feedbackEl.textContent = '';
+            nextBtn.style.display = 'none';
+            startBtn.style.display = 'none';
+            acceptingAnswers = true;
+
+            // Reset operator buttons
+            operators.forEach(op => {
+                op.classList.remove('correct', 'wrong');
+                op.disabled = false;
+                op.style.cursor = 'pointer';
+            });
+        }
+
+        // Start the quiz
+        function startQuiz() {
+            score = 0;
+            scoreEl.textContent = score;
+            startBtn.style.display = 'none';
+            nextBtn.style.display = 'none';
+            generateQuestion();
+            renderQuestion();
+        }
+
+        // Proceed to the next question
+        function nextQuestion() {
+            generateQuestion();
+            renderQuestion();
+        }
+
+        // Handle correct answer
+        function handleCorrectAnswer(selectedBtn) {
+            score++;
+            scoreEl.textContent = score;
+            feedbackEl.textContent = "🎉 Correct! Well done! 🎉";
+            selectedBtn.classList.add('correct');
+            triggerConfetti();
+        }
+
+        // Handle incorrect answer
+        function handleIncorrectAnswer(selectedBtn) {
+            feedbackEl.textContent = "😕 Not quite. Try the next one!";
+            selectedBtn.classList.add('wrong');
+            // Highlight the correct operator
+            operators.forEach(op => {
+                if (op.textContent === currentQuestion.correct) {
+                    op.classList.add('correct');
+                }
+            });
+        }
+
+        // Trigger confetti animation
+        function triggerConfetti() {
+            // Clear any existing confetti
+            confettiEl.innerHTML = '';
+
+            const colors = ['#FFC107', '#FF5722', '#8BC34A', '#03A9F4', '#E91E63', '#FFEB3B', '#9C27B0', '#00BCD4'];
+            const pieces = 100;
+
+            for (let i = 0; i < pieces; i++) {
+                const confettiPiece = document.createElement('div');
+                confettiPiece.classList.add('confetti-piece');
+                confettiPiece.style.background = colors[Math.floor(Math.random() * colors.length)];
+
+                // Randomize initial position around the center
+                const angle = Math.random() * 2 * Math.PI;
+                const radius = Math.random() * 100;
+                const translateX = radius * Math.cos(angle);
+                const translateY = radius * Math.sin(angle);
+
+                // Set custom properties for animation
+                confettiPiece.style.setProperty('--translate-x', `${translateX}px`);
+                confettiPiece.style.setProperty('--translate-y', `${translateY}px`);
+                confettiPiece.style.left = '0px';
+                confettiPiece.style.top = '0px';
+                confettiPiece.style.opacity = Math.random();
+
+                // Randomize animation duration and delay
+                confettiPiece.style.animationDuration = `${Math.random() * 1 + 1}s`;
+                confettiPiece.style.animationDelay = `${Math.random() * 0.5}s`;
+
+                confettiEl.appendChild(confettiPiece);
+
+                // Remove after animation
+                confettiPiece.addEventListener('animationend', () => {
+                    confettiEl.removeChild(confettiPiece);
+                });
+            }
+        }
+
+        // Handle operator button clicks
+        function handleOperatorClick(e) {
+            if (!acceptingAnswers) return;
+            acceptingAnswers = false;
+
+            const selectedBtn = e.target;
+            const selectedOperator = selectedBtn.textContent;
+
+            operatorSlot.textContent = selectedOperator;
+            operatorSlot.classList.add('filled');
+
+            if (selectedOperator === currentQuestion.correct) {
+                handleCorrectAnswer(selectedBtn);
+            } else {
+                handleIncorrectAnswer(selectedBtn);
+            }
+
+            // Disable all operator buttons after selection
+            operators.forEach(op => {
+                op.disabled = true;
+                op.style.cursor = 'default';
+            });
+
+            nextBtn.style.display = 'inline-block';
+        }
+
+        // Reset Operator Buttons for Next Question
+        function resetOperators() {
+            operators.forEach(op => {
+                op.classList.remove('correct', 'wrong');
+                op.disabled = false;
+                op.style.cursor = 'pointer';
+            });
+        }
+
+        // Initialize the application
+        function init() {
+            // Attach event listeners to operator buttons
+            operators.forEach(op => {
+                op.addEventListener('click', handleOperatorClick);
+            });
+        }
+
+        // Initialize on page load
+        window.onload = init;
+
+        // Event Listeners
+        startBtn.addEventListener('click', startQuiz);
+        nextBtn.addEventListener('click', () => {
+            resetOperators();
+            nextQuestion();
+        });
+    </script>
+</body>
+</html>
