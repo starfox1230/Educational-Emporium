@@ -1,0 +1,133 @@
+/* Progress Bar Styles */
+#progressContainer {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background-color: #e0e0e0;
+    height: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+}
+
+#progressBar {
+    height: 100%;
+    width: 0%;
+    background-color: #4caf50;
+    border-radius: 10px;
+    transition: width 0.3s ease;
+}
+
+#progressText {
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    font-size: 12px;
+    color: #333;
+}
+
+/* General Styles */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    position: relative;
+    padding-bottom: 70px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow-y: hidden;
+}
+
+#buttonWrapper {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    padding: 5px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+}
+
+#buttons {
+    display: flex;
+    justify-content: space-between;
+}
+
+#sentenceDisplay {
+    font-size: 2em;
+    width: 90%;
+    margin: auto;
+    margin-top: 20px;
+    padding: 10px;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+    white-space: pre-wrap;
+    line-height: 1.6;
+    background-color: #fff;
+}
+
+textarea {
+    font-size: 1.2em;
+    padding: 10px;
+    width: 90%;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+button {
+    font-size: 1.7em;
+    padding: 28px;
+    margin: 0 5px;
+    border: none;
+    border-radius: 5px;
+    background-color: #0066ff;
+    color: #fff;
+}
+
+button:active {
+    background-color: #0052cc;
+}
+
+.highlight {
+    background-color: #ffeb3b;
+    color: #333;
+    transition: background-color 0.5s ease;
+}
+
+/* Wrong Answer Animation */
+.wrong-answer {
+    animation: pulseRed 1s forwards;
+}
+
+@keyframes pulseRed {
+    0% {
+        background-color: #ffeb3b;
+    }
+    50% {
+        background-color: #ff0000;
+    }
+    100% {
+        background-color: #ffeb3b;
+    }
+}
+
+/* Correct Answer Animation */
+.correct-answer {
+    animation: fadeGreen 0.5s forwards;
+}
+
+@keyframes fadeGreen {
+    0% {
+        background-color: #00ff00;
+    }
+    100% {
+        background-color: #ffeb3b;
+    }
+}
