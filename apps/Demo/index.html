@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Disable user scaling to prevent double-tap zoom on mobile devices -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Interactive Effects Demo</title>
+  
+  <!-- External Libraries via CDN -->
+  
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  
+  <!-- tsparticles for Particle Background -->
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.9.3/tsparticles.bundle.min.js"></script>
+  
+  <!-- Hover.css for Hover Effects -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hover.css/2.3.1/css/hover-min.css">
+  
+  <!-- Vanta.js for Animated Background -->
+  <script src="https://cdn.jsdelivr.net/npm/vanta/dist/vanta.waves.min.js"></script>
+  
+  <!-- LottieFiles for Lottie Animations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.4/lottie.min.js"></script>
+  
+  <!-- Typed.js for Typewriter Effect -->
+  <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+  
+  <!-- Font Awesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Reset and Base Styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f0f0f0;
+      overflow-x: hidden;
+      padding: 20px;
+      position: relative;
+      /* Prevent double-tap zoom by disabling user scaling */
+      touch-action: manipulation;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 40px;
+      color: #333;
+    }
+
+    .section {
+      background-color: #fff;
+      padding: 20px;
+      margin-bottom: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.3s;
+      position: relative;
+    }
+
+    .section:hover {
+      transform: translateY(-5px);
+    }
+
+    .section h2 {
+      margin-bottom: 20px;
+      color: #555;
+    }
+
+    .button {
+      padding: 15px 30px;
+      font-size: 24px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.3s;
+      color: #fff;
+      margin-bottom: 10px;
+      width: 200px;
+      text-align: center;
+    }
+
+    /* Specific Button Styles */
+    .confetti-btn { background-color: #FF5733; }
+    .particle-btn { background-color: #33FF57; }
+    .hover-btn { background-color: #3357FF; }
+    .ripple-btn { background-color: #F39C12; }
+    .vanta-btn { background-color: #9B59B6; }
+    .lottie-btn { background-color: #E74C3C; }
+    .typed-btn { background-color: #1ABC9C; }
+    .pulse-btn { background-color: #34495E; }
+    .glitch-btn { background-color: #8E44AD; }
+    .sound-btn { background-color: #D35400; }
+
+    /* Hover.css Classes */
+    .hvr-bounce-to-right:hover {
+      transform: translateX(10px);
+    }
+
+    /* Ripple Effect Styles */
+    .ripple-container {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+    }
+
+    .ripple-container::after {
+      content: "";
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      background-image: radial-gradient(circle, rgba(255,255,255,0.4) 10%, transparent 10.01%);
+      background-repeat: no-repeat;
+      background-position: 50%;
+      transform: scale(10,10);
+      opacity: 0;
+      transition: transform 0.5s, opacity 1s;
+    }
+
+    .ripple-container:active::after {
+      transform: scale(0,0);
+      opacity: 1;
+      transition: 0s;
+    }
+
+    /* Pulse Button Animation */
+    .pulse-btn:hover {
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    /* Glitch Text Effect */
+    .glitch-text {
+      position: relative;
+      color: #fff;
+      font-size: 24px;
+      margin-top: 10px;
+    }
+
+    .glitch-text::before,
+    .glitch-text::after {
+      content: attr(data-text);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: inherit;
+      color: inherit;
+      overflow: hidden;
+      clip: rect(0, 900px, 0px, 0);
+      animation: glitch 2s infinite;
+    }
+
+    .glitch-text::before {
+      left: 2px;
+      text-shadow: -2px 0 red;
+      animation-delay: -0.5s;
+    }
+
+    .glitch-text::after {
+      left: -2px;
+      text-shadow: 2px 0 blue;
+      animation-delay: -1s;
+    }
+
+    @keyframes glitch {
+      0% {
+        clip: rect(42px, 9999px, 44px, 0);
+        transform: skew(0.39deg);
+      }
+      5% {
+        clip: rect(85px, 9999px, 140px, 0);
+        transform: skew(0.43deg);
+      }
+      10% {
+        clip: rect(22px, 9999px, 98px, 0);
+        transform: skew(0.41deg);
+      }
+      15% {
+        clip: rect(95px, 9999px, 144px, 0);
+        transform: skew(0.42deg);
+      }
+      20% {
+        clip: rect(45px, 9999px, 60px, 0);
+        transform: skew(0.4deg);
+      }
+      /* Add more keyframes as needed */
+      100% {
+        clip: rect(0px, 9999px, 0px, 0);
+        transform: skew(0deg);
+      }
+    }
+
+    /* Lottie Animation Container */
+    #lottie-animation {
+      width: 200px;
+      height: 200px;
+      margin-bottom: 10px;
+    }
+
+    /* Typed.js Text Style */
+    #typed-text {
+      font-size: 24px;
+      color: #2C3E50;
+      margin-bottom: 10px;
+      min-height: 30px;
+    }
+
+    /* Style for Toggle Buttons */
+    .toggle-btn {
+      margin-bottom: 10px;
+    }
+
+  </style>
+</head>
+<body>
+
+  <h1>Interactive Effects Demo</h1>
+
+  <!-- 1. Confetti Explosion -->
+  <div class="section">
+    <h2>1. Confetti Explosion</h2>
+    <button class="button confetti-btn" onclick="launchConfetti()">Celebrate!</button>
+  </div>
+
+  <!-- 2. Particle Background -->
+  <div class="section">
+    <h2>2. Particle Background</h2>
+    <button class="button particle-btn toggle-btn" onclick="toggleParticles()">Toggle Particles</button>
+    <div id="tsparticles" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></div>
+  </div>
+
+  <!-- 3. Hover Effects -->
+  <div class="section">
+    <h2>3. Hover Effects</h2>
+    <button class="button hover-btn hvr-bounce-to-right">Hover Me!</button>
+  </div>
+
+  <!-- 4. Ripple Click Effect -->
+  <div class="section">
+    <h2>4. Ripple Click Effect</h2>
+    <div class="ripple-container">
+      <button class="button ripple-btn" onclick="buttonRipple(this)">Click Me!</button>
+    </div>
+  </div>
+
+  <!-- 5. Animated 3D Background (Vanta.js) -->
+  <div class="section" id="vanta-section">
+    <h2>5. Animated 3D Background</h2>
+    <button class="button vanta-btn toggle-btn" onclick="toggleVanta()">Toggle 3D Waves</button>
+  </div>
+
+  <!-- 6. Lottie Animation -->
+  <div class="section">
+    <h2>6. Lottie Animation</h2>
+    <button class="button lottie-btn toggle-btn" onclick="toggleLottie()">Play Animation</button>
+    <div id="lottie-animation"></div>
+  </div>
+
+  <!-- 7. Typewriter Text Effect -->
+  <div class="section">
+    <h2>7. Typewriter Text Effect</h2>
+    <button class="button typed-btn" onclick="startTyped()">Start Typing</button>
+    <div id="typed-text"></div>
+  </div>
+
+  <!-- 8. Pulse Button Effect -->
+  <div class="section">
+    <h2>8. Pulse Button Effect</h2>
+    <button class="button pulse-btn">Pulsing Button</button>
+  </div>
+
+  <!-- 9. Glitch Text Effect -->
+  <div class="section">
+    <h2>9. Glitch Text Effect</h2>
+    <button class="button glitch-btn">Glitch Text</button>
+    <div class="glitch-text" data-text="Glitchy!">Glitchy!</div>
+  </div>
+
+  <!-- 10. Button Click Sound -->
+  <div class="section">
+    <h2>10. Button Click Sound</h2>
+    <button class="button sound-btn" onclick="playClickSound()">Play Sound</button>
+  </div>
+
+  <!-- Audio Element for Click Sound -->
+  <audio id="click-sound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3" preload="auto"></audio>
+
+  <!-- Scripts for Interactive Effects -->
+  <script>
+    // 1. Confetti Explosion
+    function launchConfetti() {
+      confetti({
+        particleCount: 200,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+    }
+
+    // 2. Particle Background (tsparticles)
+    let particlesActive = false;
+    function toggleParticles() {
+      particlesActive = !particlesActive;
+      if (particlesActive) {
+        tsParticles.load("tsparticles", {
+          fpsLimit: 60,
+          interactivity: {
+            events: {
+              onHover: {
+                enable: true,
+                mode: "repulse"
+              },
+              resize: true
+            },
+            modes: {
+              repulse: {
+                distance: 100,
+                duration: 0.4
+              }
+            }
+          },
+          particles: {
+            color: { value: "#ffffff" },
+            links: {
+              color: "#ffffff",
+              distance: 150,
+              enable: true,
+              opacity: 0.5,
+              width: 1
+            },
+            collisions: { enable: true },
+            move: {
+              direction: "none",
+              enable: true,
+              outModes: { default: "bounce" },
+              random: false,
+              speed: 2,
+              straight: false
+            },
+            number: { density: { enable: true, area: 800 }, value: 80 },
+            opacity: { value: 0.5 },
+            shape: { type: "circle" },
+            size: { value: { min: 1, max: 5 } }
+          },
+          detectRetina: true
+        });
+      } else {
+        tsParticles.dom().forEach(instance => instance.destroy());
+      }
+    }
+
+    // 4. Ripple Click Effect
+    function buttonRipple(button) {
+      // The ripple effect is handled via CSS; no additional JS needed
+      // This function is kept for potential future enhancements
+    }
+
+    // 5. Animated 3D Background (Vanta.js)
+    let vantaEffect = null;
+    function toggleVanta() {
+      const vantaSection = document.getElementById('vanta-section');
+      if (vantaEffect === null) {
+        vantaEffect = VANTA.WAVES({
+          el: vantaSection,
+          mouseControls: true,
+          touchControls: true,
+          gyroControls: false,
+          minHeight: 200.00,
+          minWidth: 200.00,
+          scale: 1.00,
+          scaleMobile: 1.00,
+          color: 0xB19CD9,
+          shininess: 50.00,
+          waveHeight: 20.00,
+          waveSpeed: 1.00,
+          zoom: 0.50
+        });
+      } else {
+        vantaEffect.destroy();
+        vantaEffect = null;
+      }
+    }
+
+    // 6. Lottie Animation
+    let lottieAnimation = null;
+    let currentLottieIndex = 0;
+    const lottieAnimations = [
+      'https://assets8.lottiefiles.com/packages/lf20_touohxv0.json',
+      'https://assets5.lottiefiles.com/packages/lf20_usmfx6bp.json',
+      'https://assets8.lottiefiles.com/packages/lf20_jcikwtux.json',
+      'https://assets8.lottiefiles.com/packages/lf20_fcfjwiyb.json',
+      'https://assets10.lottiefiles.com/packages/lf20_4xwlJY.json',
+      'https://assets2.lottiefiles.com/packages/lf20_w51pcehl.json',
+      'https://assets3.lottiefiles.com/packages/lf20_jmgekqxd.json',
+      'https://assets6.lottiefiles.com/packages/lf20_puciaact.json',
+      'https://assets8.lottiefiles.com/packages/lf20_dgpqnxne.json',
+      'https://assets7.lottiefiles.com/packages/lf20_UJNc2t.json'
+    ];
+
+    function toggleLottie() {
+      const lottieContainer = document.getElementById('lottie-animation');
+      if (lottieAnimation === null) {
+        lottieAnimation = lottie.loadAnimation({
+          container: lottieContainer,
+          renderer: 'svg',
+          loop: true,
+          autoplay: true,
+          path: lottieAnimations[currentLottieIndex]
+        });
+        currentLottieIndex = (currentLottieIndex + 1) % lottieAnimations.length;
+      } else {
+        lottieAnimation.destroy();
+        lottieAnimation = null;
+      }
+    }
+
+    // 7. Typewriter Text Effect
+    let typedInstance = null;
+    function startTyped() {
+      if (typedInstance !== null) return; // Prevent multiple instances
+      typedInstance = new Typed('#typed-text', {
+        strings: ["Hello, World!", "Welcome to the Interactive Demo.", "Enjoy the effects!", "Explore and have fun!"],
+        typeSpeed: 50,
+        backSpeed: 25,
+        loop: true
+      });
+    }
+
+    // 10. Button Click Sound
+    function playClickSound() {
+      const sound = document.getElementById('click-sound');
+      sound.currentTime = 0;
+      sound.play().catch(error => {
+        console.error("Audio playback failed:", error);
+      });
+    }
+
+    // Additional: Ensure Vanta.js section has a background
+    window.addEventListener('load', () => {
+      // Optionally initialize Vanta.js on load
+      // toggleVanta();
+    });
+
+    // Optional: Prevent rapid double clicks from causing issues
+    document.addEventListener('DOMContentLoaded', () => {
+      const buttons = document.querySelectorAll('.button');
+      buttons.forEach(button => {
+        button.addEventListener('dblclick', (e) => {
+          e.preventDefault(); // Prevent default double-click actions
+        });
+      });
+    });
+
+  </script>
+</body>
+</html>
