@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phone Keypad Simulator</title>
+<style>
+    body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        padding: 10px;
+        box-sizing: border-box;
+        font-family: Arial, sans-serif;
+        overflow: hidden; /* Prevent scrolling */
+    }
+    .button {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        border: 2px solid black;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin: 8px;
+        background-color: white;
+        color: black;
+        font-size: 38px;
+        cursor: pointer;
+        transition: background-color 0.3s, color 0.3s;
+    }
+    .button:hover {
+        background-color: #FFB6C1; /* Modern light pink color */
+        color: white;
+    }
+    #display {
+        font-size: 38px;
+        margin-bottom: 20px;
+        padding: 0 16px; /* Add padding to ensure content does not touch the borders */
+        width: auto; /* Adjust width to be automatic based on content */
+        max-width: 95%; /* Prevent it from extending too wide on larger screens */
+        box-sizing: border-box; /* Include padding in width calculation */
+        text-align: center;
+        border: 1px solid black;
+    }
+    #keypad, #control-panel {
+        text-align: center;
+    }
+    #call, #restart {
+        background-color: #FFB6C1; /* Pink button for restart */
+        color: white;
+        width: 160px;
+        height: 100px;
+        border-radius: 10px;
+        font-size: 32px;
+        margin-top: 20px;
+    }
+    #restart {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: none; /* Hide by default */
+        z-index: 100;
+    }
+    @keyframes pastelRainbow {
+        0% { background-color: #FFB6C1; }
+        20% { background-color: #A7DBD8; }
+        40% { background-color: #E0E4CC; }
+        60% { background-color: #F38630; }
+        80% { background-color: #FA6900; }
+        100% { background-color: #69D2E7; }
+    }
+</style>
+</head>
+<body>
+<div id="display"></div>
+<div id="keypad">
+    <div><span class="button">1</span><span class="button">2</span><span class="button">3</span></div>
+    <div><span class="button">4</span><span class="button">5</span><span class="button">6</span></div>
+    <div><span class="button">7</span><span class="button">8</span><span class="button">9</span></div>
+    <div><span class="button" style="visibility: hidden;">-</span><span class="button">0</span><span class="button" id="backspace">⌫</span></div>
+</div>
+<div id="control-panel">
+    <button id="call">Call</button>
+</div>
+<button id="restart">Restart</button>
+
+<script>
+    const display = document.getElementById('display');
+    const buttons = document.querySelectorAll('.button');
+    let phoneNumber = '';
+
+    buttons.forEach(button => {
+        button.addEventListener('click', function() {
+            if (this.textContent === '⌫') {
+                phoneNumber = phoneNumber.slice(0, -1);
+            } else {
+                phoneNumber += this.textContent;
+            }
+            display.textContent = phoneNumber;  // Update the display with the current phone number
+        });
+    });
+
+    document.getElementById('call').addEventListener('click', function() {
+        if (phoneNumber === '9544640593') {
+            document.body.style.animation = 'pastelRainbow 1s infinite'; // Pastel rainbow effect
+        } else {
+            document.body.style.backgroundColor = 'red';
+        }
+        document.getElementById('restart').style.display = 'block'; // Show the restart button as an overlay
+    });
+
+    document.getElementById('restart').addEventListener('click', function() {
+        document.body.style.background = 'none';
+        document.body.style.animation = 'none'; // Remove animation on restart
+        phoneNumber = '';
+        display.textContent = '';  // Clear display
+        this.style.display = 'none'; // Hide the restart button
+    });
+
+    // Prevent scrolling on touch devices
+    document.body.addEventListener('touchmove', function(e) {
+        e.preventDefault();  // Prevent the default scrolling behavior
+    }, { passive: false });
+</script>
+</body>
+</html>
