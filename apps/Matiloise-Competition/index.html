@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -29,6 +29,8 @@
             overflow: hidden;
             height: 50px;
             position: relative;
+            user-select: none; /* Prevent text selection */
+            cursor: pointer; /* Optional: change cursor to pointer */
         }
 
         .progress-fill {
@@ -56,6 +58,7 @@
         .name {
             font-size: 24px;
             margin-bottom: 5px;
+            user-select: none; /* Optional: Prevent name text selection */
         }
 
         .matilda-name {
