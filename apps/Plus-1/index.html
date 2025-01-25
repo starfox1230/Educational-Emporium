@@ -2,58 +2,63 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Addition Plus One Quiz</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Princess Addition Quiz 👑</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Cherry+Swash&display=swap" rel="stylesheet">
     <style>
-        /* Reset and Basic Styles */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            touch-action: manipulation;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
-            height: 100vh;
+            font-family: 'Comic Neue', cursive;
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
+            padding: 10px;
         }
 
-        /* Container */
         .container {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-            padding: 30px 20px 40px 20px;
-            width: 90%;
+            box-shadow: 0 8px 24px rgba(255,105,180,0.2);
+            padding: 25px 15px 35px;
+            width: 100%;
             max-width: 400px;
             text-align: center;
+            margin: 10px;
             position: relative;
+            border: 3px solid #ffb6c1;
         }
 
         h1 {
-            font-size: 1.8em;
+            font-family: 'Cherry Swash', cursive;
+            font-size: 2rem;
             margin-bottom: 20px;
-            color: #333;
+            color: #e75480;
+            text-shadow: 2px 2px 0px #fff;
+            letter-spacing: 1px;
         }
 
-        /* Score */
         .score {
             position: absolute;
-            top: 20px;
-            right: 20px;
-            background: #ffeb3b;
-            padding: 8px 12px;
-            border-radius: 10px;
-            font-weight: bold;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            top: 15px;
+            right: 15px;
+            background: #ff69b4;
+            padding: 8px 15px;
+            border-radius: 15px;
+            font-size: 1rem;
+            color: white;
+            box-shadow: 0 4px 12px rgba(255,105,180,0.3);
         }
 
-        /* Central Addition Box */
         .addition-box {
-            background: #fff;
+            background: #fff5f7;
             border-radius: 15px;
             padding: 20px;
             margin: 20px 0;
@@ -61,161 +66,145 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 80px;
+            gap: 10px;
+            border: 2px dashed #ffb6c1;
             position: relative;
         }
 
         .addition-box .part {
             margin: 0 5px;
+            color: #e75480;
         }
 
-        /* Answer Slot */
         .answer-slot {
-            border: 2px solid #ccc;
-            border-radius: 10px;
-            width: 60px;
-            height: 60px;
+            border: 3px solid #ffb6c1;
+            border-radius: 12px;
+            width: 70px;
+            height: 70px;
             display: flex;
             justify-content: center;
             align-items: center;
-            background-color: #f9f9f9;
+            background-color: #fff0f5;
             font-size: 2em;
+            color: #e75480;
+            font-weight: bold;
             margin-left: 10px;
+            transition: all 0.3s ease;
         }
 
         .answer-slot.filled {
-            border-color: #2196F3;
+            border-color: #ff69b4;
+            background: #fff;
         }
 
         .feedback {
-            font-size: 1.2em;
-            margin-top: 15px;
-            height: 24px;
-            color: #333;
+            font-size: 1.3rem;
+            margin: 15px 0;
+            min-height: 24px;
+            color: #e75480;
         }
 
-        /* Number Pad */
         .number-pad {
             display: grid;
-            grid-template-columns: repeat(3, 60px);
-            grid-gap: 15px;
-            justify-content: center;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 0 15px;
             margin-top: 20px;
         }
 
         .number-pad button {
-            width: 60px;
-            height: 60px;
-            background: #f0f0f0;
+            aspect-ratio: 1;
+            background: #ffb6c1;
             border: none;
-            border-radius: 10px;
-            font-size: 1.5em;
+            border-radius: 15px;
+            font-size: 1.8rem;
+            color: white;
             cursor: pointer;
-            transition: background 0.3s, transform 0.3s;
+            transition: all 0.2s ease;
+            font-family: 'Comic Neue', cursive;
+            box-shadow: 0 4px 8px rgba(255,182,193,0.3);
         }
 
-        .number-pad button:hover {
-            background: #e0e0e0;
-            transform: scale(1.05);
+        .number-pad button:active {
+            transform: scale(0.95);
+            background: #ff69b4;
         }
 
         .number-pad button.correct {
-            background: #4CAF50 !important;
-            color: white;
+            background: #98fb98 !important;
+            color: #228b22;
         }
 
         .number-pad button.wrong {
-            background: #f44336 !important;
-            color: white;
+            background: #ff9999 !important;
+            color: #b22222;
         }
 
-        /* Start and Next Buttons */
         .start-btn, .next-btn {
-            background: #4CAF50;
+            width: 80%;
+            padding: 15px;
+            font-size: 1.2rem;
+            border-radius: 15px;
+            margin: 20px auto 0;
+            background: #ff69b4;
             color: white;
-            padding: 12px 25px;
             border: none;
-            border-radius: 10px;
-            font-size: 1em;
             cursor: pointer;
-            transition: background 0.3s, transform 0.3s;
-            margin-top: 20px;
+            transition: all 0.3s ease;
+            font-family: 'Cherry Swash', cursive;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 12px rgba(255,105,180,0.3);
         }
 
-        .start-btn:hover, .next-btn:hover {
-            background: #388E3C;
-            transform: scale(1.05);
-        }
-
-        /* Celebration Animation */
-        .confetti-container {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            pointer-events: none;
-            transform: translate(-50%, -50%);
-            overflow: visible;
+        .start-btn:active, .next-btn:active {
+            transform: scale(0.95);
+            background: #ff1493;
         }
 
         .confetti-piece {
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            background: #FFC107;
-            opacity: 0;
+            background: #ff69b4;
             animation: confetti-fall 1.5s forwards;
-            border-radius: 50%;
+        }
+
+        .confetti-piece:nth-child(2n) {
+            background: #ffb6c1;
+        }
+        
+        .confetti-piece:nth-child(3n) {
+            background: #98fb98;
         }
 
         @keyframes confetti-fall {
-            0% {
-                transform: translate(0, 0) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: translate(var(--translate-x), var(--translate-y)) rotate(720deg);
-                opacity: 0;
-            }
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
         }
 
-        /* Responsive */
-        @media (max-width: 500px) {
-            .addition-box {
-                font-size: 2em;
-                padding: 15px;
-            }
+        @media (max-width: 480px) {
+            h1 { font-size: 1.8rem; }
+            .addition-box { font-size: 2rem; }
+            .answer-slot { width: 60px; height: 60px; }
+            .number-pad button { font-size: 1.5rem; }
+        }
 
-            .answer-slot {
-                width: 50px;
-                height: 50px;
-                font-size: 1.5em;
-                margin-left: 8px;
-            }
+        .sparkle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #fff;
+            border-radius: 50%;
+            animation: sparkle 1s infinite;
+        }
 
-            .number-pad {
-                grid-template-columns: repeat(3, 50px);
-                grid-gap: 10px;
-            }
-
-            .number-pad button {
-                width: 50px;
-                height: 50px;
-                font-size: 1.2em;
-            }
-
-            .start-btn, .next-btn {
-                padding: 10px 20px;
-                font-size: 0.9em;
-            }
+        @keyframes sparkle {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(3); opacity: 0; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="score">Score: <span id="score">0</span></div>
-        <h1>Addition Plus One Quiz</h1>
+        <div class="score">🌟 Score: <span id="score">0</span></div>
+        <h1>Princess Addition Quiz 👸</h1>
         <div class="addition-box">
             <div class="part" id="operand1">?</div>
             <div class="part">+</div>
@@ -224,222 +213,142 @@
             <div class="answer-slot" id="answer-slot">?</div>
         </div>
         <div class="number-pad" id="number-pad">
-            <button>1</button>
-            <button>2</button>
-            <button>3</button>
-            <button>4</button>
-            <button>5</button>
-            <button>6</button>
-            <button>7</button>
-            <button>8</button>
-            <button>9</button>
+            <button>1</button><button>2</button><button>3</button>
+            <button>4</button><button>5</button><button>6</button>
+            <button>7</button><button>8</button><button>9</button>
             <button id="zero-btn">0</button>
             <button id="ten-btn" style="display: none;">10</button>
         </div>
         <div class="feedback" id="feedback"></div>
-        <button class="start-btn" id="start-btn">Start Quiz</button>
-        <button class="next-btn" id="next-btn" style="display: none;">Next Question</button>
+        <button class="start-btn" id="start-btn">Start Magic Quiz ✨</button>
+        <button class="next-btn" id="next-btn" style="display: none;">Next Question 🌸</button>
         <div class="confetti-container" id="confetti"></div>
     </div>
 
     <script>
-        const startBtn = document.getElementById('start-btn');
-        const nextBtn = document.getElementById('next-btn');
-        const operand1El = document.getElementById('operand1');
-        const operand2El = document.getElementById('operand2');
-        const answerSlot = document.getElementById('answer-slot');
-        const numberPad = document.getElementById('number-pad');
-        const feedbackEl = document.getElementById('feedback');
-        const scoreEl = document.getElementById('score');
-        const confettiEl = document.getElementById('confetti');
-        const zeroBtn = document.getElementById('zero-btn');
-        const tenBtn = document.getElementById('ten-btn');
+        // (Keep the JavaScript mostly the same from previous optimized version,
+        //  just update text strings to match new feminine theme)
+        const elements = {
+            startBtn: document.getElementById('start-btn'),
+            nextBtn: document.getElementById('next-btn'),
+            operand1: document.getElementById('operand1'),
+            operand2: document.getElementById('operand2'),
+            answerSlot: document.getElementById('answer-slot'),
+            numberPad: document.getElementById('number-pad'),
+            feedback: document.getElementById('feedback'),
+            score: document.getElementById('score'),
+            confetti: document.getElementById('confetti'),
+            zeroBtn: document.getElementById('zero-btn'),
+            tenBtn: document.getElementById('ten-btn')
+        };
 
-        let score = 0;
-        let currentQuestion = {};
-        let acceptingAnswers = false;
+        let state = {
+            score: 0,
+            currentQuestion: null,
+            acceptingAnswers: false
+        };
 
-        // Generate a new question
         function generateQuestion() {
-            let operand1, operand2, answer;
-
-            // Randomly decide if 1 is first or second operand
+            let operand1, operand2;
             if (Math.random() < 0.5) {
                 operand1 = 1;
-                operand2 = Math.floor(Math.random() * 9) + 1; // 1-9
+                operand2 = Math.floor(Math.random() * 9) + 1;
             } else {
                 operand2 = 1;
-                operand1 = Math.floor(Math.random() * 9) + 1; // 1-9
+                operand1 = Math.floor(Math.random() * 9) + 1;
             }
-
-            answer = operand1 + operand2;
-
-            // Handle 10 as a separate option
-            if (answer === 10) {
-                tenBtn.style.display = 'inline-block';
-                zeroBtn.style.display = 'none';
-            } else {
-                tenBtn.style.display = 'none';
-                zeroBtn.style.display = 'inline-block';
-            }
-
-            currentQuestion = {
-                operand1: operand1,
-                operand2: operand2,
-                answer: answer
+            
+            state.currentQuestion = {
+                operand1,
+                operand2,
+                answer: operand1 + operand2
             };
+
+            elements.tenBtn.style.display = state.currentQuestion.answer === 10 ? 'block' : 'none';
+            elements.zeroBtn.style.display = state.currentQuestion.answer === 10 ? 'none' : 'block';
         }
 
-        // Render the current question
         function renderQuestion() {
-            operand1El.textContent = currentQuestion.operand1;
-            operand2El.textContent = currentQuestion.operand2;
-            answerSlot.textContent = '?';
-            answerSlot.classList.remove('filled');
-            feedbackEl.textContent = '';
-            nextBtn.style.display = 'none';
-            startBtn.style.display = 'none';
-            acceptingAnswers = true;
+            const { operand1, operand2 } = state.currentQuestion;
+            elements.operand1.textContent = operand1;
+            elements.operand2.textContent = operand2;
+            elements.answerSlot.textContent = '?';
+            elements.answerSlot.classList.remove('filled');
+            elements.feedback.textContent = '';
+            elements.nextBtn.style.display = 'none';
+            elements.startBtn.style.display = 'none';
+            state.acceptingAnswers = true;
 
-            // Reset number pad buttons
-            const buttons = numberPad.querySelectorAll('button');
-            buttons.forEach(btn => {
+            document.querySelectorAll('.number-pad button').forEach(btn => {
                 btn.classList.remove('correct', 'wrong');
                 btn.disabled = false;
-                btn.style.cursor = 'pointer';
             });
         }
 
-        // Start the quiz
-        function startQuiz() {
-            score = 0;
-            scoreEl.textContent = score;
-            startBtn.style.display = 'none';
-            nextBtn.style.display = 'none';
-            generateQuestion();
-            renderQuestion();
-        }
+        function handleAnswer(selectedBtn) {
+            if (!state.acceptingAnswers) return;
+            state.acceptingAnswers = false;
 
-        // Proceed to the next question
-        function nextQuestion() {
-            generateQuestion();
-            renderQuestion();
-        }
+            const correct = parseInt(selectedBtn.textContent) === state.currentQuestion.answer;
+            elements.answerSlot.textContent = selectedBtn.textContent;
+            elements.answerSlot.classList.add('filled');
 
-        // Handle correct answer
-        function handleCorrectAnswer(selectedBtn) {
-            score++;
-            scoreEl.textContent = score;
-            feedbackEl.textContent = "🎉 Correct! Well done! 🎉";
-            selectedBtn.classList.add('correct');
-            triggerConfetti();
-        }
-
-        // Handle incorrect answer
-        function handleIncorrectAnswer(selectedBtn) {
-            feedbackEl.textContent = "😕 Not quite. Try the next one!";
-            selectedBtn.classList.add('wrong');
-            // Highlight the correct answer
-            numberPad.querySelectorAll('button').forEach(btn => {
-                if (btn.textContent === currentQuestion.answer.toString()) {
-                    btn.classList.add('correct');
-                }
-            });
-        }
-
-        // Trigger confetti animation
-        function triggerConfetti() {
-            // Clear any existing confetti
-            confettiEl.innerHTML = '';
-
-            const colors = ['#FFC107', '#FF5722', '#8BC34A', '#03A9F4', '#E91E63', '#FFEB3B', '#9C27B0', '#00BCD4'];
-            const pieces = 100;
-
-            for (let i = 0; i < pieces; i++) {
-                const confettiPiece = document.createElement('div');
-                confettiPiece.classList.add('confetti-piece');
-                confettiPiece.style.background = colors[Math.floor(Math.random() * colors.length)];
-
-                // Randomize initial position around the center
-                const angle = Math.random() * 2 * Math.PI;
-                const radius = Math.random() * 100;
-                const translateX = radius * Math.cos(angle);
-                const translateY = radius * Math.sin(angle);
-
-                // Set custom properties for animation
-                confettiPiece.style.setProperty('--translate-x', `${translateX}px`);
-                confettiPiece.style.setProperty('--translate-y', `${translateY}px`);
-                confettiPiece.style.left = '0px';
-                confettiPiece.style.top = '0px';
-                confettiPiece.style.opacity = Math.random();
-
-                // Randomize animation duration and delay
-                confettiPiece.style.animationDuration = `${Math.random() * 1 + 1}s`;
-                confettiPiece.style.animationDelay = `${Math.random() * 0.5}s`;
-
-                confettiEl.appendChild(confettiPiece);
-
-                // Remove after animation
-                confettiPiece.addEventListener('animationend', () => {
-                    confettiEl.removeChild(confettiPiece);
+            if (correct) {
+                state.score++;
+                elements.score.textContent = state.score;
+                elements.feedback.textContent = "🌈 Correct! Magical! 🌈";
+                selectedBtn.classList.add('correct');
+                triggerConfetti();
+            } else {
+                elements.feedback.textContent = "💔 Try again, Princess!";
+                selectedBtn.classList.add('wrong');
+                document.querySelectorAll('.number-pad button').forEach(btn => {
+                    if (parseInt(btn.textContent) === state.currentQuestion.answer) {
+                        btn.classList.add('correct');
+                    }
                 });
             }
+
+            document.querySelectorAll('.number-pad button').forEach(btn => btn.disabled = true);
+            elements.nextBtn.style.display = 'block';
         }
 
-        // Handle number pad button clicks
-        function handleNumberClick(e) {
-            if (!acceptingAnswers) return;
-            acceptingAnswers = false;
-
-            const selectedBtn = e.target;
-            const selectedNumber = selectedBtn.textContent;
-
-            answerSlot.textContent = selectedNumber;
-            answerSlot.classList.add('filled');
-
-            if (parseInt(selectedNumber) === currentQuestion.answer) {
-                handleCorrectAnswer(selectedBtn);
-            } else {
-                handleIncorrectAnswer(selectedBtn);
+        function triggerConfetti() {
+            elements.confetti.innerHTML = '';
+            const pieces = 60;
+            for (let i = 0; i < pieces; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti-piece';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.animationDelay = Math.random() * 1 + 's';
+                elements.confetti.appendChild(confetti);
+                confetti.addEventListener('animationend', () => confetti.remove());
             }
-
-            // Disable all number pad buttons after selection
-            const buttons = numberPad.querySelectorAll('button');
-            buttons.forEach(btn => {
-                btn.disabled = true;
-                btn.style.cursor = 'default';
-            });
-
-            nextBtn.style.display = 'inline-block';
         }
-
-        // Reset Number Pad Buttons for Next Question
-        function resetNumberPad() {
-            const buttons = numberPad.querySelectorAll('button');
-            buttons.forEach(btn => {
-                btn.classList.remove('correct', 'wrong');
-                btn.disabled = false;
-                btn.style.cursor = 'pointer';
-            });
-        }
-
-        // Initialize the application
-        function init() {
-            // Attach event listeners to number pad buttons
-            numberPad.querySelectorAll('button').forEach(btn => {
-                btn.addEventListener('click', handleNumberClick);
-            });
-        }
-
-        // Initialize on page load
-        window.onload = init;
 
         // Event Listeners
-        startBtn.addEventListener('click', startQuiz);
-        nextBtn.addEventListener('click', () => {
-            resetNumberPad();
-            nextQuestion();
+        document.querySelectorAll('.number-pad button').forEach(btn => {
+            btn.addEventListener('click', e => handleAnswer(e.target));
+            btn.addEventListener('touchend', e => {
+                e.preventDefault();
+                handleAnswer(e.target);
+            });
         });
+
+        elements.startBtn.addEventListener('click', () => {
+            state.score = 0;
+            elements.score.textContent = '0';
+            generateQuestion();
+            renderQuestion();
+        });
+
+        elements.nextBtn.addEventListener('click', () => {
+            generateQuestion();
+            renderQuestion();
+        });
+
+        // Initialize
+        generateQuestion();
     </script>
 </body>
 </html>
