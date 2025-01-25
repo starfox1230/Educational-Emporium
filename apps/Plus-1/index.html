@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Princess Addition Quiz 👑</title>
     <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&family=Cherry+Swash&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -16,18 +17,19 @@
         body {
             font-family: 'Comic Neue', cursive;
             background: linear-gradient(135deg, #ff9a9e, #fad0c4);
-            min-height: 100vh;
+            height: 100dvh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 10px;
+            overflow: hidden;
         }
 
         .container {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
             box-shadow: 0 8px 24px rgba(255,105,180,0.2);
-            padding: 20px 15px 25px;
+            padding: 75px 15px 25px;
             width: 100%;
             max-width: 380px;
             text-align: center;
@@ -39,26 +41,29 @@
 
         h1 {
             font-family: 'Cherry Swash', cursive;
-            font-size: 1.8rem;
+            font-size: 1.7rem;
             margin: 0 0 15px;
             color: #e75480;
             text-shadow: 2px 2px 0px #fff;
             letter-spacing: 1px;
             padding: 0 20px;
+            position: absolute;
+            top: 15px;
+            left: 0;
+            right: 0;
         }
 
         .score {
             position: absolute;
             top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
+            right: 10px;
             background: #ff69b4;
             padding: 6px 12px;
             border-radius: 15px;
             font-size: 0.9rem;
             color: white;
             box-shadow: 0 4px 12px rgba(255,105,180,0.3);
-            white-space: nowrap;
+            z-index: 1;
         }
 
         .addition-box {
@@ -66,7 +71,7 @@
             border-radius: 15px;
             padding: 15px;
             margin: 15px 0;
-            font-size: 2rem;
+            font-size: 1.8rem;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -74,31 +79,19 @@
             border: 2px dashed #ffb6c1;
         }
 
-        .addition-box .part {
-            color: #e75480;
-        }
-
         .answer-slot {
             border: 3px solid #ffb6c1;
             border-radius: 10px;
-            width: 55px;
-            height: 55px;
+            width: 50px;
+            height: 50px;
             display: flex;
             justify-content: center;
             align-items: center;
             background-color: #fff0f5;
-            font-size: 1.8em;
+            font-size: 1.5em;
             color: #e75480;
             font-weight: bold;
             margin-left: 8px;
-        }
-
-        .feedback {
-            font-size: 1.2rem;
-            margin: 12px 0;
-            min-height: 24px;
-            color: #e75480;
-            height: 32px;
         }
 
         .number-pad {
@@ -114,10 +107,9 @@
             background: #ffb6c1;
             border: none;
             border-radius: 12px;
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             color: white;
             cursor: pointer;
-            transition: all 0.2s ease;
             font-family: 'Comic Neue', cursive;
             box-shadow: 0 4px 8px rgba(255,182,193,0.3);
         }
@@ -135,43 +127,25 @@
             font-family: 'Cherry Swash', cursive;
         }
 
-        .confetti {
-            position: fixed;
-            width: 10px;
-            height: 10px;
-            background: #ff69b4;
-            pointer-events: none;
-            animation: confetti-fall 1.5s linear forwards;
-        }
-
-        @keyframes confetti-fall {
-            0% {
-                transform: translateY(-100vh) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(100vh) rotate(720deg);
-                opacity: 0;
-            }
-        }
-
-        @media (max-width: 380px) {
+        @media (max-height: 700px) {
             .container {
-                transform: scale(0.9);
-                margin: 5px;
+                transform: scale(0.85);
+                padding: 65px 15px 15px;
             }
+            h1 { font-size: 1.5rem; }
+            .addition-box { font-size: 1.6rem; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="score">🌟 Score: <span id="score">0</span></div>
         <h1>Princess Addition Quiz 👸</h1>
+        <div class="score">🌟 Score: <span id="score">0</span></div>
         <div class="addition-box">
-            <div class="part" id="operand1">?</div>
-            <div class="part">+</div>
-            <div class="part" id="operand2">?</div>
-            <div class="part">=</div>
+            <div id="operand1">?</div>
+            <div>+</div>
+            <div id="operand2">?</div>
+            <div>=</div>
             <div class="answer-slot" id="answer-slot">?</div>
         </div>
         <div class="number-pad" id="number-pad">
@@ -183,7 +157,7 @@
         </div>
         <div class="feedback" id="feedback"></div>
         <button class="start-btn" id="start-btn">Start Magic Quiz ✨</button>
-        <button class="next-btn" id="next-btn" style="display: none;">Next Question 🌸</button>
+        <button class="next-btn" id="next-btn" style="display: none;">Next 🌸</button>
     </div>
 
     <script>
@@ -206,6 +180,33 @@
             acceptingAnswers: false
         };
 
+        function triggerConfetti() {
+            const count = 200;
+            const defaults = {
+                origin: { y: 0.7 },
+                colors: ['#ff69b4', '#ffb6c1', '#ffffff', '#98fb98'],
+                particleCount: 100,
+                spread: 80,
+                startVelocity: 35
+            };
+
+            confetti({
+                ...defaults,
+                particleCount: count,
+                angle: 60,
+                spread: 55,
+                scalar: 0.8
+            });
+            
+            confetti({
+                ...defaults,
+                particleCount: count,
+                angle: 120,
+                spread: 55,
+                scalar: 0.8
+            });
+        }
+
         function generateQuestion() {
             let operand1, operand2;
             if (Math.random() < 0.5) {
@@ -226,35 +227,6 @@
             elements.zeroBtn.style.display = state.currentQuestion.answer === 10 ? 'none' : 'block';
         }
 
-        function renderQuestion() {
-            const { operand1, operand2 } = state.currentQuestion;
-            elements.operand1.textContent = operand1;
-            elements.operand2.textContent = operand2;
-            elements.answerSlot.textContent = '?';
-            elements.feedback.textContent = '';
-            elements.nextBtn.style.display = 'none';
-            elements.startBtn.style.display = 'none';
-            state.acceptingAnswers = true;
-
-            document.querySelectorAll('.number-pad button').forEach(btn => {
-                btn.classList.remove('correct', 'wrong');
-                btn.disabled = false;
-            });
-        }
-
-        function createConfetti() {
-            const colors = ['#ff69b4', '#ffb6c1', '#98fb98', '#ffdd00'];
-            for (let i = 0; i < 50; i++) {
-                const confetti = document.createElement('div');
-                confetti.className = 'confetti';
-                confetti.style.left = Math.random() * 100 + '%';
-                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
-                confetti.style.animationDelay = Math.random() * 1 + 's';
-                document.body.appendChild(confetti);
-                setTimeout(() => confetti.remove(), 1500);
-            }
-        }
-
         function handleAnswer(selectedBtn) {
             if (!state.acceptingAnswers) return;
             state.acceptingAnswers = false;
@@ -267,7 +239,7 @@
                 elements.score.textContent = state.score;
                 elements.feedback.textContent = "🌈 Magical! 🌈";
                 selectedBtn.classList.add('correct');
-                createConfetti();
+                triggerConfetti();
             } else {
                 elements.feedback.textContent = "💔 Try again!";
                 selectedBtn.classList.add('wrong');
@@ -302,6 +274,22 @@
             generateQuestion();
             renderQuestion();
         });
+
+        function renderQuestion() {
+            const { operand1, operand2 } = state.currentQuestion;
+            elements.operand1.textContent = operand1;
+            elements.operand2.textContent = operand2;
+            elements.answerSlot.textContent = '?';
+            elements.feedback.textContent = '';
+            elements.nextBtn.style.display = 'none';
+            elements.startBtn.style.display = 'none';
+            state.acceptingAnswers = true;
+
+            document.querySelectorAll('.number-pad button').forEach(btn => {
+                btn.classList.remove('correct', 'wrong');
+                btn.disabled = false;
+            });
+        }
 
         // Initialize
         generateQuestion();
