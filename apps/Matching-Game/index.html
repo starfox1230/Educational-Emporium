@@ -1,0 +1,21 @@
+                grid.appendChild(createCard(emoji, index));
+            });
+        }
+
+        // Initialize game
+        document.getElementById('resetBtn').onclick = resetGame;
+        resetGame();
+
+        // Add celebration animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fall {
+                to {
+                    transform: translateY(110vh) rotate(${Math.random() * 360}deg);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
