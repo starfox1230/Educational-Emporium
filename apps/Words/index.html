@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading Rainbow Game</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f0f9ff;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .progress-container {
+            height: 20px;
+            background: #fff;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, 
+                #ff0000 0%, 
+                #ff9900 20%, 
+                #ffff00 40%, 
+                #33ff00 60%, 
+                #0099ff 80%, 
+                #6633ff 100%);
+            transition: width 0.5s ease;
+        }
+
+        .progress-bar.pulse {
+            animation: pulse 0.5s ease;
+        }
+
+        .progress-bar.shake {
+            animation: shake 0.5s ease;
+            background: #ff0000;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(5px); }
+            50% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+            100% { transform: translateX(0); }
+        }
+
+        .score-board {
+            text-align: center;
+            font-size: 24px;
+            color: #4a90e2;
+            margin-bottom: 20px;
+        }
+
+        .word-display {
+            font-size: 48px;
+            text-align: center;
+            margin: 30px 0;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+        .emoji-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .emoji-button {
+            font-size: 48px;
+            padding: 20px;
+            border: 3px solid #ddd;
+            border-radius: 15px;
+            background: white;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .emoji-button:active {
+            transform: scale(0.95);
+        }
+
+        .feedback {
+            text-align: center;
+            font-size: 24px;
+            margin-top: 20px;
+            min-height: 30px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .feedback.visible {
+            opacity: 1;
+        }
+
+        .trophy-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            text-align: center;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <div class="score-board">Score: <span id="score">0</span></div>
+        <div class="word-display" id="current-word"></div>
+        <div class="emoji-options" id="emoji-options"></div>
+        <div class="feedback" id="feedback"></div>
+    </div>
+
+    <div class="trophy-modal" id="trophy-modal">
+        <h2>🎉 Amazing Job! 🎉</h2>
+        <p>Go see Daddy to get your unicorn dollar!</p>
+    </div>
+
+    <script>
+        const wordBank = [
+            { word: 'apple', emoji: '🍎' },
+            { word: 'baby', emoji: '👶' },
+            { word: 'bag', emoji: '👜' },
+            { word: 'ball', emoji: '⚽' },
+            { word: 'banana', emoji: '🍌' },
+            { word: 'bat', emoji: '🦇' },
+            { word: 'bed', emoji: '🛏️' },
+            { word: 'bee', emoji: '🐝' },
+            { word: 'bone', emoji: '🦴' },
+            { word: 'book', emoji: '📖' },
+            { word: 'boy', emoji: '👦' },
+            { word: 'bread', emoji: '🍞' },
+            { word: 'bubble', emoji: '🫧' },
+            { word: 'bus', emoji: '🚌' },
+            { word: 'cake', emoji: '🍰' },
+            { word: 'candy', emoji: '🍬' },
+            { word: 'car', emoji: '🚗' },
+            { word: 'cat', emoji: '🐱' },
+            { word: 'check', emoji: '✅' },
+            { word: 'cheese', emoji: '🧀' },
+            { word: 'chick', emoji: '🐣' },
+            { word: 'chocolate', emoji: '🍫' },
+            { word: 'clock', emoji: '⏰' },
+            { word: 'cloud', emoji: '☁️' },
+            { word: 'cookie', emoji: '🍪' },
+            { word: 'cop', emoji: '🚓' },
+            { word: 'corn', emoji: '🌽' },
+            { word: 'cow', emoji: '🐮' },
+            { word: 'cup', emoji: '☕' },
+            { word: 'dog', emoji: '🐶' },
+            { word: 'down', emoji: '⬇️' },
+            { word: 'drink', emoji: '🥤' },
+            { word: 'duck', emoji: '🦆' },
+            { word: 'egg', emoji: '🥚' },
+            { word: 'eye', emoji: '👁️' },
+            { word: 'fire', emoji: '🔥' },
+            { word: 'fish', emoji: '🐟' },
+            { word: 'flower', emoji: '🌸' },
+            { word: 'frog', emoji: '🐸' },
+            { word: 'girl', emoji: '👧' },
+            { word: 'gift', emoji: '🎁' },
+            { word: 'grapes', emoji: '🍇' },
+            { word: 'happy', emoji: '😊' },
+            { word: 'hat', emoji: '🎩' },
+            { word: 'hot dog', emoji: '🌭' },
+            { word: 'house', emoji: '🏠' },
+            { word: 'key', emoji: '🔑' },
+            { word: 'love', emoji: '❤️' },
+            { word: 'mad', emoji: '😠' },
+            { word: 'man', emoji: '👨' },
+            { word: 'mango', emoji: '🥭' },
+            { word: 'map', emoji: '🗺️' },
+            { word: 'milk', emoji: '🥛' },
+            { word: 'mom', emoji: '👩' },
+            { word: 'moon', emoji: '🌙' },
+            { word: 'owl', emoji: '🦉' },
+            { word: 'pants', emoji: '👖' },
+            { word: 'pen', emoji: '🖋️' },
+            { word: 'pig', emoji: '🐷' },
+            { word: 'rain', emoji: '🌧️' },
+            { word: 'red', emoji: '🟥' },
+            { word: 'sad', emoji: '😢' },
+            { word: 'school', emoji: '🏫' },
+            { word: 'sea', emoji: '🌊' },
+            { word: 'shoe', emoji: '👟' },
+            { word: 'shirt', emoji: '👕' },
+            { word: 'skunk', emoji: '🦨' },
+            { word: 'snow', emoji: '❄️' },
+            { word: 'star', emoji: '⭐' },
+            { word: 'stop', emoji: '🛑' },
+            { word: 'sun', emoji: '🌞' },
+            { word: 'taco', emoji: '🌮' },
+            { word: 'tree', emoji: '🌳' },
+            { word: 'toy', emoji: '🧸' },
+            { word: 'unicorn', emoji: '🦄' },
+            { word: 'up', emoji: '⬆️' },
+            { word: 'web', emoji: '🕸️' },
+            { word: 'wet', emoji: '💦' },
+            { word: 'win', emoji: '🏆' }
+        ].sort((a, b) => a.word.localeCompare(b.word));
+
+        let currentScore = 0;
+        let currentWord = null;
+        let feedbackTimeout = null;
+        const optionsContainer = document.getElementById('emoji-options');
+        const progressBar = document.getElementById('progress-bar');
+        const feedback = document.getElementById('feedback');
+
+        function updateProgressBar() {
+            const progress = Math.min((currentScore / 50) * 100, 100);
+            progressBar.style.width = `${progress}%`;
+        }
+
+        function initGame() {
+            currentWord = wordBank[Math.floor(Math.random() * wordBank.length)];
+            const displayCase = Math.random() > 0.5 ? 'upper' : 'lower';
+            const displayWord = displayCase === 'upper' 
+                ? currentWord.word.toUpperCase() 
+                : currentWord.word.toLowerCase();
+
+            document.getElementById('current-word').textContent = displayWord;
+            loadEmojis();
+        }
+
+        function loadEmojis() {
+            optionsContainer.innerHTML = '';
+            
+            const usedEmojis = new Set([currentWord.emoji]);
+            const wrongEmojis = [];
+            
+            while (wrongEmojis.length < 3) {
+                const randomWord = wordBank[Math.floor(Math.random() * wordBank.length)];
+                if (!usedEmojis.has(randomWord.emoji)) {
+                    wrongEmojis.push(randomWord.emoji);
+                    usedEmojis.add(randomWord.emoji);
+                }
+            }
+
+            const allEmojis = [currentWord.emoji, ...wrongEmojis];
+            shuffleArray(allEmojis);
+
+            allEmojis.forEach(emoji => {
+                const button = document.createElement('button');
+                button.className = 'emoji-button';
+                button.textContent = emoji;
+                button.onclick = () => handleAnswer(emoji === currentWord.emoji);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function handleAnswer(isCorrect) {
+            optionsContainer.style.pointerEvents = 'none';
+            feedback.classList.add('visible');
+
+            if (feedbackTimeout) clearTimeout(feedbackTimeout);
+
+            const prevScore = currentScore;
+            if (isCorrect) {
+                currentScore++;
+                feedback.textContent = '✅ Correct! Great job!';
+                confetti({ particleCount: 50, spread: 70 });
+                progressBar.classList.add('pulse');
+            } else {
+                currentScore = Math.max(0, currentScore - 1);
+                feedback.textContent = '❌ Try the next one!';
+                progressBar.classList.add('shake');
+            }
+
+            document.getElementById('score').textContent = currentScore;
+            updateProgressBar();
+
+            setTimeout(() => {
+                progressBar.classList.remove('pulse', 'shake');
+            }, 500);
+
+            feedbackTimeout = setTimeout(() => {
+                feedback.classList.remove('visible');
+            }, 2000);
+
+            if (currentScore >= 50) {
+                showTrophy();
+            } else {
+                setTimeout(() => {
+                    optionsContainer.style.pointerEvents = 'auto';
+                    initGame();
+                }, 1500);
+            }
+        }
+
+        function showTrophy() {
+            document.getElementById('trophy-modal').style.display = 'block';
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        initGame();
+    </script>
+</body>
+</html>
