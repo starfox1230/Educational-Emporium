@@ -27,97 +27,94 @@
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
             box-shadow: 0 8px 24px rgba(255,105,180,0.2);
-            padding: 25px 15px 35px;
+            padding: 20px 15px 25px;
             width: 100%;
-            max-width: 400px;
+            max-width: 380px;
             text-align: center;
             margin: 10px;
-            position: relative;
             border: 3px solid #ffb6c1;
+            position: relative;
+            transform: scale(0.95);
         }
 
         h1 {
             font-family: 'Cherry Swash', cursive;
-            font-size: 2rem;
-            margin-bottom: 20px;
+            font-size: 1.8rem;
+            margin: 0 0 15px;
             color: #e75480;
             text-shadow: 2px 2px 0px #fff;
             letter-spacing: 1px;
+            padding: 0 20px;
         }
 
         .score {
             position: absolute;
-            top: 15px;
-            right: 15px;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
             background: #ff69b4;
-            padding: 8px 15px;
+            padding: 6px 12px;
             border-radius: 15px;
-            font-size: 1rem;
+            font-size: 0.9rem;
             color: white;
             box-shadow: 0 4px 12px rgba(255,105,180,0.3);
+            white-space: nowrap;
         }
 
         .addition-box {
             background: #fff5f7;
             border-radius: 15px;
-            padding: 20px;
-            margin: 20px 0;
-            font-size: 2.5em;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 2rem;
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             border: 2px dashed #ffb6c1;
-            position: relative;
         }
 
         .addition-box .part {
-            margin: 0 5px;
             color: #e75480;
         }
 
         .answer-slot {
             border: 3px solid #ffb6c1;
-            border-radius: 12px;
-            width: 70px;
-            height: 70px;
+            border-radius: 10px;
+            width: 55px;
+            height: 55px;
             display: flex;
             justify-content: center;
             align-items: center;
             background-color: #fff0f5;
-            font-size: 2em;
+            font-size: 1.8em;
             color: #e75480;
             font-weight: bold;
-            margin-left: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .answer-slot.filled {
-            border-color: #ff69b4;
-            background: #fff;
+            margin-left: 8px;
         }
 
         .feedback {
-            font-size: 1.3rem;
-            margin: 15px 0;
+            font-size: 1.2rem;
+            margin: 12px 0;
             min-height: 24px;
             color: #e75480;
+            height: 32px;
         }
 
         .number-pad {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            padding: 0 15px;
-            margin-top: 20px;
+            gap: 8px;
+            padding: 0 10px;
+            margin: 10px 0;
         }
 
         .number-pad button {
             aspect-ratio: 1;
             background: #ffb6c1;
             border: none;
-            border-radius: 15px;
-            font-size: 1.8rem;
+            border-radius: 12px;
+            font-size: 1.5rem;
             color: white;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -125,79 +122,44 @@
             box-shadow: 0 4px 8px rgba(255,182,193,0.3);
         }
 
-        .number-pad button:active {
-            transform: scale(0.95);
-            background: #ff69b4;
-        }
-
-        .number-pad button.correct {
-            background: #98fb98 !important;
-            color: #228b22;
-        }
-
-        .number-pad button.wrong {
-            background: #ff9999 !important;
-            color: #b22222;
-        }
-
         .start-btn, .next-btn {
             width: 80%;
-            padding: 15px;
-            font-size: 1.2rem;
-            border-radius: 15px;
-            margin: 20px auto 0;
+            padding: 12px;
+            font-size: 1.1rem;
+            border-radius: 12px;
+            margin: 15px auto 0;
             background: #ff69b4;
             color: white;
             border: none;
             cursor: pointer;
-            transition: all 0.3s ease;
             font-family: 'Cherry Swash', cursive;
-            letter-spacing: 1px;
-            box-shadow: 0 4px 12px rgba(255,105,180,0.3);
         }
 
-        .start-btn:active, .next-btn:active {
-            transform: scale(0.95);
-            background: #ff1493;
-        }
-
-        .confetti-piece {
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
             background: #ff69b4;
-            animation: confetti-fall 1.5s forwards;
-        }
-
-        .confetti-piece:nth-child(2n) {
-            background: #ffb6c1;
-        }
-        
-        .confetti-piece:nth-child(3n) {
-            background: #98fb98;
+            pointer-events: none;
+            animation: confetti-fall 1.5s linear forwards;
         }
 
         @keyframes confetti-fall {
-            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
         }
 
-        @media (max-width: 480px) {
-            h1 { font-size: 1.8rem; }
-            .addition-box { font-size: 2rem; }
-            .answer-slot { width: 60px; height: 60px; }
-            .number-pad button { font-size: 1.5rem; }
-        }
-
-        .sparkle {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: #fff;
-            border-radius: 50%;
-            animation: sparkle 1s infinite;
-        }
-
-        @keyframes sparkle {
-            0% { transform: scale(0); opacity: 1; }
-            100% { transform: scale(3); opacity: 0; }
+        @media (max-width: 380px) {
+            .container {
+                transform: scale(0.9);
+                margin: 5px;
+            }
         }
     </style>
 </head>
@@ -222,12 +184,9 @@
         <div class="feedback" id="feedback"></div>
         <button class="start-btn" id="start-btn">Start Magic Quiz ✨</button>
         <button class="next-btn" id="next-btn" style="display: none;">Next Question 🌸</button>
-        <div class="confetti-container" id="confetti"></div>
     </div>
 
     <script>
-        // (Keep the JavaScript mostly the same from previous optimized version,
-        //  just update text strings to match new feminine theme)
         const elements = {
             startBtn: document.getElementById('start-btn'),
             nextBtn: document.getElementById('next-btn'),
@@ -237,7 +196,6 @@
             numberPad: document.getElementById('number-pad'),
             feedback: document.getElementById('feedback'),
             score: document.getElementById('score'),
-            confetti: document.getElementById('confetti'),
             zeroBtn: document.getElementById('zero-btn'),
             tenBtn: document.getElementById('ten-btn')
         };
@@ -273,7 +231,6 @@
             elements.operand1.textContent = operand1;
             elements.operand2.textContent = operand2;
             elements.answerSlot.textContent = '?';
-            elements.answerSlot.classList.remove('filled');
             elements.feedback.textContent = '';
             elements.nextBtn.style.display = 'none';
             elements.startBtn.style.display = 'none';
@@ -285,22 +242,34 @@
             });
         }
 
+        function createConfetti() {
+            const colors = ['#ff69b4', '#ffb6c1', '#98fb98', '#ffdd00'];
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = Math.random() * 1 + 's';
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 1500);
+            }
+        }
+
         function handleAnswer(selectedBtn) {
             if (!state.acceptingAnswers) return;
             state.acceptingAnswers = false;
 
             const correct = parseInt(selectedBtn.textContent) === state.currentQuestion.answer;
             elements.answerSlot.textContent = selectedBtn.textContent;
-            elements.answerSlot.classList.add('filled');
 
             if (correct) {
                 state.score++;
                 elements.score.textContent = state.score;
-                elements.feedback.textContent = "🌈 Correct! Magical! 🌈";
+                elements.feedback.textContent = "🌈 Magical! 🌈";
                 selectedBtn.classList.add('correct');
-                triggerConfetti();
+                createConfetti();
             } else {
-                elements.feedback.textContent = "💔 Try again, Princess!";
+                elements.feedback.textContent = "💔 Try again!";
                 selectedBtn.classList.add('wrong');
                 document.querySelectorAll('.number-pad button').forEach(btn => {
                     if (parseInt(btn.textContent) === state.currentQuestion.answer) {
@@ -311,19 +280,6 @@
 
             document.querySelectorAll('.number-pad button').forEach(btn => btn.disabled = true);
             elements.nextBtn.style.display = 'block';
-        }
-
-        function triggerConfetti() {
-            elements.confetti.innerHTML = '';
-            const pieces = 60;
-            for (let i = 0; i < pieces; i++) {
-                const confetti = document.createElement('div');
-                confetti.className = 'confetti-piece';
-                confetti.style.left = Math.random() * 100 + '%';
-                confetti.style.animationDelay = Math.random() * 1 + 's';
-                elements.confetti.appendChild(confetti);
-                confetti.addEventListener('animationend', () => confetti.remove());
-            }
         }
 
         // Event Listeners
@@ -349,6 +305,7 @@
 
         // Initialize
         generateQuestion();
+        renderQuestion();
     </script>
 </body>
 </html>
