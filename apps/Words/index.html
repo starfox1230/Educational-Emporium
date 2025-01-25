@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reading Rainbow Game</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
     <style>
         body {
             font-family: system-ui, sans-serif;
@@ -126,6 +127,13 @@
             text-align: center;
             z-index: 1000;
         }
+
+        .trophy-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
     </style>
 </head>
 <body>
@@ -140,12 +148,23 @@
     </div>
 
     <div class="trophy-modal" id="trophy-modal">
-        <h2>🎉 Amazing Job! 🎉</h2>
-        <p>Go see Daddy to get your unicorn dollar!</p>
+        <div class="trophy-content">
+            <dotlottie-player
+                src="https://lottie.host/70ec1dd8-1deb-4665-9766-939fa78082c9/aF5svsakol.lottie"
+                background="transparent"
+                speed="1"
+                style="width: 300px; height: 300px"
+                loop
+                autoplay
+            ></dotlottie-player>
+            <h2>🎉 Amazing Job! 🎉</h2>
+            <p>Go see Daddy to get your unicorn dollar!</p>
+        </div>
     </div>
 
     <script>
         const wordBank = [
+            // ... (word bank array remains exactly the same as previous version)
             { word: 'apple', emoji: '🍎' },
             { word: 'baby', emoji: '👶' },
             { word: 'bag', emoji: '👜' },
@@ -316,7 +335,15 @@
         }
 
         function showTrophy() {
-            document.getElementById('trophy-modal').style.display = 'block';
+            const modal = document.getElementById('trophy-modal');
+            modal.style.display = 'block';
+            
+            // Trigger the Lottie animation
+            const lottiePlayer = modal.querySelector('dotlottie-player');
+            if (lottiePlayer) {
+                lottiePlayer.seek(0);
+                lottiePlayer.play();
+            }
         }
 
         function shuffleArray(array) {
