@@ -13,11 +13,35 @@
             padding: 20px;
             background: #f0f9ff;
             min-height: 100vh;
+            position: relative;
         }
 
         .container {
             max-width: 600px;
             margin: 0 auto;
+        }
+
+        .mode-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .mode-button {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 2px solid #4a90e2;
+            background: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .mode-button.active {
+            background: #4a90e2;
+            color: white;
         }
 
         .progress-container {
@@ -137,6 +161,11 @@
     </style>
 </head>
 <body>
+    <div class="mode-toggle">
+        <button class="mode-button active" id="basic-btn" onclick="setMode('basic')">Basic</button>
+        <button class="mode-button" id="advanced-btn" onclick="setMode('advanced')">Advanced</button>
+    </div>
+
     <div class="container">
         <div class="progress-container">
             <div class="progress-bar" id="progress-bar"></div>
@@ -164,102 +193,112 @@
 
     <script>
         const wordBank = [
-            // ... (word bank array remains exactly the same as previous version)
-            { word: 'apple', emoji: '🍎' },
-            { word: 'baby', emoji: '👶' },
-            { word: 'bag', emoji: '👜' },
-            { word: 'ball', emoji: '⚽' },
-            { word: 'banana', emoji: '🍌' },
-            { word: 'bat', emoji: '🦇' },
-            { word: 'bed', emoji: '🛏️' },
-            { word: 'bee', emoji: '🐝' },
-            { word: 'bone', emoji: '🦴' },
-            { word: 'book', emoji: '📖' },
-            { word: 'boy', emoji: '👦' },
-            { word: 'bread', emoji: '🍞' },
-            { word: 'bubble', emoji: '🫧' },
-            { word: 'bus', emoji: '🚌' },
-            { word: 'cake', emoji: '🍰' },
-            { word: 'candy', emoji: '🍬' },
-            { word: 'car', emoji: '🚗' },
-            { word: 'cat', emoji: '🐱' },
-            { word: 'check', emoji: '✅' },
-            { word: 'cheese', emoji: '🧀' },
-            { word: 'chick', emoji: '🐣' },
-            { word: 'chocolate', emoji: '🍫' },
-            { word: 'clock', emoji: '⏰' },
-            { word: 'cloud', emoji: '☁️' },
-            { word: 'cookie', emoji: '🍪' },
-            { word: 'cop', emoji: '🚓' },
-            { word: 'corn', emoji: '🌽' },
-            { word: 'cow', emoji: '🐮' },
-            { word: 'cup', emoji: '☕' },
-            { word: 'dog', emoji: '🐶' },
-            { word: 'down', emoji: '⬇️' },
-            { word: 'drink', emoji: '🥤' },
-            { word: 'duck', emoji: '🦆' },
-            { word: 'egg', emoji: '🥚' },
-            { word: 'see', emoji: '👁️' },
-            { word: 'fire', emoji: '🔥' },
-            { word: 'fish', emoji: '🐟' },
-            { word: 'flower', emoji: '🌸' },
-            { word: 'frog', emoji: '🐸' },
-            { word: 'girl', emoji: '👧' },
-            { word: 'gift', emoji: '🎁' },
-            { word: 'grapes', emoji: '🍇' },
-            { word: 'happy', emoji: '😊' },
-            { word: 'hat', emoji: '🎩' },
-            { word: 'hot dog', emoji: '🌭' },
-            { word: 'house', emoji: '🏠' },
-            { word: 'key', emoji: '🔑' },
-            { word: 'love', emoji: '❤️' },
-            { word: 'mad', emoji: '😠' },
-            { word: 'man', emoji: '👨' },
-            { word: 'mango', emoji: '🥭' },
-            { word: 'map', emoji: '🗺️' },
-            { word: 'milk', emoji: '🥛' },
-            { word: 'mom', emoji: '👩' },
-            { word: 'moon', emoji: '🌙' },
-            { word: 'owl', emoji: '🦉' },
-            { word: 'pants', emoji: '👖' },
-            { word: 'pen', emoji: '🖋️' },
-            { word: 'pig', emoji: '🐷' },
-            { word: 'rain', emoji: '🌧️' },
-            { word: 'red', emoji: '🟥' },
-            { word: 'sad', emoji: '😢' },
-            { word: 'school', emoji: '🏫' },
-            { word: 'sea', emoji: '🌊' },
-            { word: 'shoe', emoji: '👟' },
-            { word: 'shirt', emoji: '👕' },
-            { word: 'skunk', emoji: '🦨' },
-            { word: 'snow', emoji: '❄️' },
-            { word: 'star', emoji: '⭐' },
-            { word: 'stop', emoji: '🛑' },
-            { word: 'sun', emoji: '🌞' },
-            { word: 'taco', emoji: '🌮' },
-            { word: 'tree', emoji: '🌳' },
-            { word: 'toy', emoji: '🧸' },
-            { word: 'unicorn', emoji: '🦄' },
-            { word: 'up', emoji: '⬆️' },
-            { word: 'web', emoji: '🕸️' },
-            { word: 'wet', emoji: '💦' },
-            { word: 'win', emoji: '🏆' }
-        ].sort((a, b) => a.word.localeCompare(b.word));
+            // Basic Words
+            { word: 'baby', emoji: '👶', category: 'basic' },
+            { word: 'bag', emoji: '👜', category: 'basic' },
+            { word: 'bed', emoji: '🛏️', category: 'basic' },
+            { word: 'bee', emoji: '🐝', category: 'basic' },
+            { word: 'bone', emoji: '🦴', category: 'basic' },
+            { word: 'bus', emoji: '🚌', category: 'basic' },
+            { word: 'cake', emoji: '🍰', category: 'basic' },
+            { word: 'candy', emoji: '🍬', category: 'basic' },
+            { word: 'car', emoji: '🚗', category: 'basic' },
+            { word: 'cat', emoji: '🐱', category: 'basic' },
+            { word: 'check', emoji: '✅', category: 'basic' },
+            { word: 'chick', emoji: '🐣', category: 'basic' },
+            { word: 'cow', emoji: '🐮', category: 'basic' },
+            { word: 'cup', emoji: '☕', category: 'basic' },
+            { word: 'dog', emoji: '🐶', category: 'basic' },
+            { word: 'duck', emoji: '🦆', category: 'basic' },
+            { word: 'egg', emoji: '🥚', category: 'basic' },
+            { word: 'see', emoji: '👁️', category: 'basic' },
+            { word: 'flower', emoji: '🌸', category: 'basic' },
+            { word: 'frog', emoji: '🐸', category: 'basic' },
+            { word: 'girl', emoji: '👧', category: 'basic' },
+            { word: 'gift', emoji: '🎁', category: 'basic' },
+            { word: 'hat', emoji: '🎩', category: 'basic' },
+            { word: 'home', emoji: '🏠', category: 'basic' },
+            { word: 'hot', emoji: '🔥', category: 'basic' },
+            { word: 'milk', emoji: '🥛', category: 'basic' },
+            { word: 'mom', emoji: '👩', category: 'basic' },
+            { word: 'owl', emoji: '🦉', category: 'basic' },
+            { word: 'pig', emoji: '🐷', category: 'basic' },
+            { word: 'rain', emoji: '🌧️', category: 'basic' },
+            { word: 'red', emoji: '🟥', category: 'basic' },
+            { word: 'sad', emoji: '😢', category: 'basic' },
+            { word: 'shoe', emoji: '👟', category: 'basic' },
+            { word: 'shirt', emoji: '👕', category: 'basic' },
+            { word: 'snow', emoji: '❄️', category: 'basic' },
+            { word: 'star', emoji: '⭐', category: 'basic' },
+            { word: 'sun', emoji: '🌞', category: 'basic' },
+            { word: 'toy', emoji: '🧸', category: 'basic' },
+            { word: 'unicorn', emoji: '🦄', category: 'basic' },
+            { word: 'up', emoji: '⬆️', category: 'basic' },
+            { word: 'wet', emoji: '💦', category: 'basic' },
+
+            // Advanced Words
+            { word: 'apple', emoji: '🍎', category: 'advanced' },
+            { word: 'ball', emoji: '⚽', category: 'advanced' },
+            { word: 'banana', emoji: '🍌', category: 'advanced' },
+            { word: 'book', emoji: '📖', category: 'advanced' },
+            { word: 'boy', emoji: '👦', category: 'advanced' },
+            { word: 'bread', emoji: '🍞', category: 'advanced' },
+            { word: 'bubble', emoji: '🫧', category: 'advanced' },
+            { word: 'chocolate', emoji: '🍫', category: 'advanced' },
+            { word: 'cloud', emoji: '☁️', category: 'advanced' },
+            { word: 'clock', emoji: '⏰', category: 'advanced' },
+            { word: 'cookie', emoji: '🍪', category: 'advanced' },
+            { word: 'corn', emoji: '🌽', category: 'advanced' },
+            { word: 'drink', emoji: '🥤', category: 'advanced' },
+            { word: 'grapes', emoji: '🍇', category: 'advanced' },
+            { word: 'happy', emoji: '😊', category: 'advanced' },
+            { word: 'key', emoji: '🔑', category: 'advanced' },
+            { word: 'love', emoji: '❤️', category: 'advanced' },
+            { word: 'moon', emoji: '🌙', category: 'advanced' },
+            { word: 'school', emoji: '🏫', category: 'advanced' },
+            { word: 'bat', emoji: '🦇', category: 'advanced' },
+            { word: 'cheese', emoji: '🧀', category: 'advanced' },
+            { word: 'down', emoji: '⬇️', category: 'advanced' },
+            { word: 'fire', emoji: '🔥', category: 'advanced' },
+            { word: 'fish', emoji: '🐟', category: 'advanced' },
+            { word: 'man', emoji: '👨', category: 'advanced' },
+            { word: 'mango', emoji: '🥭', category: 'advanced' },
+            { word: 'map', emoji: '🗺️', category: 'advanced' },
+            { word: 'pants', emoji: '👖', category: 'advanced' },
+            { word: 'pen', emoji: '🖋️', category: 'advanced' },
+            { word: 'sea', emoji: '🌊', category: 'advanced' },
+            { word: 'skunk', emoji: '🦨', category: 'advanced' },
+            { word: 'stop', emoji: '🛑', category: 'advanced' },
+            { word: 'taco', emoji: '🌮', category: 'advanced' },
+            { word: 'tree', emoji: '🌳', category: 'advanced' },
+            { word: 'web', emoji: '🕸️', category: 'advanced' },
+            { word: 'win', emoji: '🏆', category: 'advanced' }
+        ];
 
         let currentScore = 0;
         let currentWord = null;
+        let currentMode = 'basic';
         let feedbackTimeout = null;
         const optionsContainer = document.getElementById('emoji-options');
         const progressBar = document.getElementById('progress-bar');
         const feedback = document.getElementById('feedback');
 
+        function setMode(mode) {
+            currentMode = mode;
+            document.getElementById('basic-btn').classList.toggle('active', mode === 'basic');
+            document.getElementById('advanced-btn').classList.toggle('active', mode === 'advanced');
+            updateProgressBar();
+            initGame();
+        }
+
         function updateProgressBar() {
-            const progress = Math.min((currentScore / 50) * 100, 100);
+            const progress = Math.min((currentScore / 25) * 100, 100);
             progressBar.style.width = `${progress}%`;
         }
 
         function initGame() {
-            currentWord = wordBank[Math.floor(Math.random() * wordBank.length)];
+            const modeWords = wordBank.filter(word => word.category === currentMode);
+            currentWord = modeWords[Math.floor(Math.random() * modeWords.length)];
             const displayCase = Math.random() > 0.5 ? 'upper' : 'lower';
             const displayWord = displayCase === 'upper' 
                 ? currentWord.word.toUpperCase() 
@@ -274,9 +313,10 @@
             
             const usedEmojis = new Set([currentWord.emoji]);
             const wrongEmojis = [];
+            const modeWords = wordBank.filter(word => word.category === currentMode);
             
             while (wrongEmojis.length < 3) {
-                const randomWord = wordBank[Math.floor(Math.random() * wordBank.length)];
+                const randomWord = modeWords[Math.floor(Math.random() * modeWords.length)];
                 if (!usedEmojis.has(randomWord.emoji)) {
                     wrongEmojis.push(randomWord.emoji);
                     usedEmojis.add(randomWord.emoji);
@@ -324,7 +364,7 @@
                 feedback.classList.remove('visible');
             }, 2000);
 
-            if (currentScore >= 50) {
+            if (currentScore >= 25) {
                 showTrophy();
             } else {
                 setTimeout(() => {
@@ -337,8 +377,6 @@
         function showTrophy() {
             const modal = document.getElementById('trophy-modal');
             modal.style.display = 'block';
-            
-            // Trigger the Lottie animation
             const lottiePlayer = modal.querySelector('dotlottie-player');
             if (lottiePlayer) {
                 lottiePlayer.seek(0);
@@ -353,7 +391,8 @@
             }
         }
 
-        initGame();
+        // Initialize with basic mode
+        setMode('basic');
     </script>
 </body>
 </html>
