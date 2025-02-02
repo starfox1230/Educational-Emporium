@@ -20,6 +20,10 @@
       background: #121212;
       color: #e0e0e0;
     }
+    /* Lighter word display in night mode */
+    body.night-mode .word-display {
+      color: #e0e0e0;
+    }
     .container {
       max-width: 600px;
       margin: 0 auto;
@@ -31,6 +35,7 @@
       right: 20px;
       display: flex;
       gap: 10px;
+      z-index: 10;
     }
     .mode-button {
       padding: 8px 16px;
@@ -45,7 +50,6 @@
       background: #4a90e2;
       color: white;
     }
-    /* Night mode styles for buttons */
     body.night-mode .mode-button {
       background: #444;
       border-color: #666;
@@ -57,7 +61,7 @@
       border-radius: 10px;
       margin: 20px 0;
       overflow: hidden;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     body.night-mode .progress-container {
       background: #333;
@@ -65,15 +69,13 @@
     .progress-bar {
       height: 100%;
       width: 0%;
-      background: linear-gradient(
-        90deg,
-        #ff0000 0%,
-        #ff9900 20%,
-        #ffff00 40%,
-        #33ff00 60%,
-        #0099ff 80%,
-        #6633ff 100%
-      );
+      background: linear-gradient(90deg, 
+                #ff0000 0%, 
+                #ff9900 20%, 
+                #ffff00 40%, 
+                #33ff00 60%, 
+                #0099ff 80%, 
+                #6633ff 100%);
       transition: width 0.5s ease;
     }
     .progress-bar.pulse {
@@ -84,32 +86,16 @@
       background: #ff0000;
     }
     @keyframes pulse {
-      0% {
-        transform: scale(1);
-      }
-      50% {
-        transform: scale(1.05);
-      }
-      100% {
-        transform: scale(1);
-      }
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
     }
     @keyframes shake {
-      0% {
-        transform: translateX(0);
-      }
-      25% {
-        transform: translateX(5px);
-      }
-      50% {
-        transform: translateX(-5px);
-      }
-      75% {
-        transform: translateX(5px);
-      }
-      100% {
-        transform: translateX(0);
-      }
+      0% { transform: translateX(0); }
+      25% { transform: translateX(5px); }
+      50% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+      100% { transform: translateX(0); }
     }
     .score-board {
       text-align: center;
@@ -167,7 +153,7 @@
       background: white;
       padding: 30px;
       border-radius: 20px;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
       text-align: center;
       z-index: 1000;
     }
@@ -181,41 +167,46 @@
       align-items: center;
       gap: 20px;
     }
-    /* Wrapper for progress bar and night mode toggle */
     .progress-wrapper {
       position: relative;
     }
+    /* Smaller night mode toggle button */
     .night-toggle-btn {
       position: absolute;
       top: calc(100% + 10px);
       right: 0;
+      padding: 4px 8px;
+      font-size: 12px;
+      border-radius: 10px;
+      border: 1px solid #4a90e2;
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    body.night-mode .night-toggle-btn {
+      background: #444;
+      border-color: #666;
+      color: #e0e0e0;
     }
   </style>
 </head>
 <body>
+  <!-- Mode Toggle Buttons -->
   <div class="mode-toggle">
-    <button class="mode-button active" id="basic-btn" onclick="setMode('basic')">
-      Basic
-    </button>
-    <button class="mode-button" id="advanced-btn" onclick="setMode('advanced')">
-      Advanced
-    </button>
+    <button class="mode-button active" id="basic-btn" onclick="setMode('basic')">Basic</button>
+    <button class="mode-button" id="advanced-btn" onclick="setMode('advanced')">Advanced</button>
   </div>
 
   <div class="container">
-    <br /><br />
+    <br><br>
     <div class="progress-wrapper">
       <div class="progress-container">
         <div class="progress-bar" id="progress-bar"></div>
       </div>
-      <!-- Night Mode Toggle Button placed beneath the progress bar on the right -->
-      <button id="night-toggle-btn" class="mode-button night-toggle-btn">
-        Night Mode
-      </button>
+      <!-- Smaller Night Mode Toggle Button -->
+      <button id="night-toggle-btn" class="night-toggle-btn">Night Mode</button>
     </div>
-    <div class="score-board">
-      Score: <span id="score">0</span>
-    </div>
+    <div class="score-board">Score: <span id="score">0</span></div>
     <div class="word-display" id="current-word"></div>
     <div class="emoji-options" id="emoji-options"></div>
     <div class="feedback" id="feedback"></div>
@@ -237,7 +228,7 @@
   </div>
 
   <script>
-    // Word bank with all basic words grouped together, followed by advanced words.
+    // Word bank with basic words grouped together, then advanced words.
     const wordBank = [
       // Basic Words
       { word: 'ring', emoji: '💍', category: 'basic' },
@@ -352,25 +343,21 @@
     }
 
     function initGame() {
-      const modeWords = wordBank.filter((word) => word.category === currentMode);
+      const modeWords = wordBank.filter(word => word.category === currentMode);
       currentWord = modeWords[Math.floor(Math.random() * modeWords.length)];
       const displayCase = Math.random() > 0.5 ? 'upper' : 'lower';
-      const displayWord =
-        displayCase === 'upper'
+      const displayWord = displayCase === 'upper'
           ? currentWord.word.toUpperCase()
           : currentWord.word.toLowerCase();
-
       document.getElementById('current-word').textContent = displayWord;
       loadEmojis();
     }
 
     function loadEmojis() {
       optionsContainer.innerHTML = '';
-
       const usedEmojis = new Set([currentWord.emoji]);
       const wrongEmojis = [];
-      const modeWords = wordBank.filter((word) => word.category === currentMode);
-
+      const modeWords = wordBank.filter(word => word.category === currentMode);
       while (wrongEmojis.length < 3) {
         const randomWord = modeWords[Math.floor(Math.random() * modeWords.length)];
         if (!usedEmojis.has(randomWord.emoji)) {
@@ -378,11 +365,9 @@
           usedEmojis.add(randomWord.emoji);
         }
       }
-
       const allEmojis = [currentWord.emoji, ...wrongEmojis];
       shuffleArray(allEmojis);
-
-      allEmojis.forEach((emoji) => {
+      allEmojis.forEach(emoji => {
         const button = document.createElement('button');
         button.className = 'emoji-button';
         button.textContent = emoji;
@@ -394,9 +379,7 @@
     function handleAnswer(isCorrect) {
       optionsContainer.style.pointerEvents = 'none';
       feedback.classList.add('visible');
-
       if (feedbackTimeout) clearTimeout(feedbackTimeout);
-
       if (isCorrect) {
         currentScore++;
         feedback.textContent = '✅ Correct! Great job!';
@@ -407,18 +390,14 @@
         feedback.textContent = '❌ Try the next one!';
         progressBar.classList.add('shake');
       }
-
       document.getElementById('score').textContent = currentScore;
       updateProgressBar();
-
       setTimeout(() => {
         progressBar.classList.remove('pulse', 'shake');
       }, 500);
-
       feedbackTimeout = setTimeout(() => {
         feedback.classList.remove('visible');
       }, 2000);
-
       if (currentScore >= 25) {
         showTrophy();
       } else {
@@ -446,12 +425,12 @@
       }
     }
 
-    // Night mode toggle: toggles a class on the body element.
-    document.getElementById('night-toggle-btn').addEventListener('click', function () {
+    // Night mode toggle: make the button toggle the 'night-mode' class on the body.
+    document.getElementById('night-toggle-btn').addEventListener('click', function() {
       document.body.classList.toggle('night-mode');
     });
 
-    // Initialize with basic mode
+    // Initialize with basic mode.
     setMode('basic');
   </script>
 </body>
