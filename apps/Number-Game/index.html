@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <!-- Mobile-friendly meta tag -->
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Number Audio Quiz – Deep Purple Rounded Squares with Preloading</title>
+  <title>Number Audio Quiz – Deep Purple Rounded Squares with Web Audio</title>
   <!-- Confetti library for celebration effect on correct answer -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <style>
@@ -46,7 +46,6 @@
     #progress-bar {
       width: 0%;
       height: 100%;
-      /* A pastel gradient that runs from purplish to pinkish */
       background: linear-gradient(90deg, #d8b4fe, #fbcfe8, #fda4af, #fca5a5);
       transition: width 0.5s ease;
       box-shadow: 0 0 8px rgba(250,128,114,0.5);
@@ -67,14 +66,14 @@
       align-items: center;
       margin-bottom: 2rem;
     }
-    /* Updated Play Button: minimal style showing just the ▶️ emoji */
+    /* Updated Play Button: minimal style that shows just the ▶️ emoji */
     #play-audio {
       width: 80px;
       height: 80px;
       border-radius: 20px;
       font-size: 2rem;
       line-height: 80px;
-      background: linear-gradient(135deg, #6D28D9, #8B5CF6); /* Purple gradient */
+      background: linear-gradient(135deg, #6D28D9, #8B5CF6);
       color: #fff;
       margin-right: 1rem;
       border: none;
@@ -96,7 +95,7 @@
     #play-audio:focus {
       outline: none;
     }
-    /* Hide the number display so users only hear the audio */
+    /* Hide number display so users must listen to the audio */
     #number-display {
       display: none;
     }
@@ -138,7 +137,7 @@
     .new-btn:focus {
       outline: none;
     }
-    /* Ripple effect element inside buttons */
+    /* Ripple effect inside buttons */
     .new-btn .ripple {
       position: absolute;
       border-radius: 50%;
@@ -164,26 +163,34 @@
   </header>
   <main>
     <section id="prompt">
-      <!-- Play button with updated style: clicking replays the audio -->
+      <!-- Play button with new style -->
       <button id="play-audio" class="new-btn">▶️</button>
       <div id="number-display">?</div>
     </section>
     <section id="options">
-      <!-- Answer option buttons will be injected here -->
+      <!-- Answer buttons will be injected here -->
     </section>
   </main>
   <script>
-    // Global variables for quiz functionality
-    let score = 0;
-    let currentNumber = null;
-    const maxRounds = 25;
-    const audioFiles = {};
-    
-    // Preload audio files: all files (1.mp3, 2.mp3, …, 20.mp3) are in the "audio" folder
+    // Create an AudioContext for reliable low-latency playback in Chrome
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const audioBuffers = {}; // Store decoded audio buffers here
+
+    // Function to load an audio file as an AudioBuffer
+    async function loadAudioFile(num) {
+      try {
+        const response = await fetch(`audio/${num}.mp3`);
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        audioBuffers[num] = audioBuffer;
+      } catch (error) {
+        console.error(`Error loading audio/${num}.mp3:`, error);
+      }
+    }
+
+    // Preload all audio files (1.mp3 to 20.mp3)
     for (let i = 1; i <= 20; i++) {
-      const audio = new Audio(`audio/${i}.mp3`);
-      audio.preload = "auto";  // Preload the audio file
-      audioFiles[i] = audio;
+      loadAudioFile(i);
     }
     
     // DOM element references
@@ -192,6 +199,10 @@
     const progressBar = document.getElementById('progress-bar');
     const scoreDisplay = document.getElementById('score');
     
+    let score = 0;
+    let currentNumber = null;
+    const maxRounds = 25;
+    
     // Utility: Fisher-Yates shuffle algorithm
     function shuffle(array) {
       for (let i = array.length - 1; i > 0; i--) {
@@ -199,6 +210,18 @@
         [array[i], array[j]] = [array[j], array[i]];
       }
       return array;
+    }
+    
+    // Function to play an AudioBuffer using the Web Audio API
+    function playBuffer(num) {
+      if (audioBuffers[num]) {
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffers[num];
+        source.connect(audioContext.destination);
+        source.start(0);
+      } else {
+        console.warn(`Audio buffer for ${num}.mp3 not loaded yet.`);
+      }
     }
     
     // Function to create a ripple effect on a button when clicked
@@ -216,7 +239,7 @@
       }, 600);
     }
     
-    // Generate a new round/question
+    // Function to generate a new round/question
     function newRound() {
       // Clear previous answer options
       optionsContainer.innerHTML = "";
@@ -227,18 +250,18 @@
       // Automatically play the corresponding audio file when a new question loads
       playAudio();
       
-      // Determine answer options: if currentNumber is 1–10, options are 1–10; if 11–20, options are 11–20.
+      // Determine answer options: if currentNumber is between 1 and 10, options are 1–10; if between 11 and 20, options are 11–20.
       const [minOpt, maxOpt] = currentNumber <= 10 ? [1, 10] : [11, 20];
       const rangeNumbers = [];
       for (let i = minOpt; i <= maxOpt; i++) {
         rangeNumbers.push(i);
       }
       
-      // Choose three incorrect answers, add the correct answer, then shuffle the array
+      // Choose three incorrect answers, add the correct one, then shuffle the array
       const incorrectOptions = shuffle(rangeNumbers.filter(n => n !== currentNumber)).slice(0, 3);
       const allOptions = shuffle([currentNumber, ...incorrectOptions]);
       
-      // Create new answer option buttons using the updated design
+      // Create new answer option buttons using the new design
       allOptions.forEach(option => {
         const btn = document.createElement("button");
         btn.textContent = option;
@@ -252,11 +275,11 @@
       });
     }
     
-    // Function to play the audio corresponding to the current number
+    // Function to play audio corresponding to the current number
     function playAudio() {
-      if (currentNumber && audioFiles[currentNumber]) {
-        audioFiles[currentNumber].currentTime = 0;
-        audioFiles[currentNumber].play();
+      if (currentNumber) {
+        // Using Web Audio API to play the preloaded AudioBuffer
+        playBuffer(currentNumber);
       }
     }
     
@@ -265,21 +288,18 @@
       if (selectedNumber === currentNumber) {
         score++;
         scoreDisplay.textContent = `Score: ${score}`;
-        // Trigger a confetti effect on a correct answer
         confetti({
           particleCount: 100,
           spread: 70,
           origin: { y: 0.6 }
         });
       }
-      // Update the progress bar based on the score
       const progressPercentage = Math.min((score / maxRounds) * 100, 100);
       progressBar.style.width = progressPercentage + "%";
-      // Start a new round after a short delay
       setTimeout(newRound, 1000);
     }
     
-    // Attach a click listener to the play button so that it replays the audio when pressed
+    // Attach a click listener to the play button to replay the audio
     playButton.addEventListener("click", function(event) {
       createRipple(event, this);
       playAudio();
