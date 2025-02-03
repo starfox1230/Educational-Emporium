@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <!-- Mobile-friendly meta tag -->
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Number Audio Quiz – Deep Purple Rounded Squares with Audio</title>
+  <title>Number Audio Quiz – Deep Purple Rounded Squares with Audio Only</title>
   <!-- Confetti library for celebration effect on correct answer -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <style>
@@ -61,21 +61,20 @@
       align-items: center;
       justify-content: center;
     }
-    /* Prompt section: play button and number display */
+    /* Prompt section: play button and (hidden) number display */
     #prompt {
       display: flex;
       align-items: center;
       margin-bottom: 2rem;
     }
-    /* Updated Play Button: minimal style that shows just the ▶️ emoji.
-       Clicking it replays the audio for the current question. */
+    /* Updated Play Button: minimal style that shows just the ▶️ emoji */
     #play-audio {
       width: 80px;
       height: 80px;
       border-radius: 20px;
       font-size: 2rem;
       line-height: 80px;
-      background: linear-gradient(135deg, #6D28D9, #8B5CF6); /* Purple gradient */
+      background: linear-gradient(135deg, #6D28D9, #8B5CF6);
       color: #fff;
       margin-right: 1rem;
       border: none;
@@ -97,12 +96,9 @@
     #play-audio:focus {
       outline: none;
     }
-    /* Number display styling */
+    /* The number display is now hidden so users must listen to the audio */
     #number-display {
-      font-size: 4rem;
-      padding: 0.5rem 1rem;
-      color: #fda4af;
-      text-shadow: 0 0 8px rgba(253,164,175,0.8);
+      display: none;
     }
     /* Options grid for answer buttons: two columns of 100px buttons */
     #options {
@@ -118,7 +114,7 @@
       border: none;
       outline: none;
       cursor: pointer;
-      background: linear-gradient(135deg, #6D28D9, #8B5CF6); /* Purple gradient */
+      background: linear-gradient(135deg, #6D28D9, #8B5CF6);
       color: #fff;
       font-size: 2.5rem;
       width: 100px;
@@ -168,7 +164,7 @@
   </header>
   <main>
     <section id="prompt">
-      <!-- Play button with new style: clicking replays the audio -->
+      <!-- Play button with new style: clicking it plays/replays the audio -->
       <button id="play-audio" class="new-btn">▶️</button>
       <div id="number-display">?</div>
     </section>
@@ -183,19 +179,19 @@
     const maxRounds = 25;
     const audioFiles = {};
     
-    // Preload audio files: all files (1.mp3, 2.mp3, ..., 20.mp3) are in the "audio" folder
+    // Preload audio files: all files (1.mp3, 2.mp3, …, 20.mp3) should be in the "audio" folder
     for (let i = 1; i <= 20; i++) {
       audioFiles[i] = new Audio(`audio/${i}.mp3`);
     }
     
     // DOM element references
-    const numberDisplay = document.getElementById('number-display');
+    const numberDisplay = document.getElementById('number-display'); // remains hidden
     const playButton = document.getElementById('play-audio');
     const optionsContainer = document.getElementById('options');
     const progressBar = document.getElementById('progress-bar');
     const scoreDisplay = document.getElementById('score');
     
-    // Utility: Fisher-Yates shuffle to randomize arrays
+    // Utility: Shuffle array using Fisher-Yates algorithm
     function shuffle(array) {
       for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -219,30 +215,32 @@
       }, 600);
     }
     
-    // Function to generate a new round/question
+    // Generate a new round/question
     function newRound() {
       // Clear previous answer options
       optionsContainer.innerHTML = "";
       
       // Pick a random number between 1 and 20
       currentNumber = Math.floor(Math.random() * 20) + 1;
-      numberDisplay.textContent = currentNumber;
+      // Do NOT display the number (users must listen to the audio)
+      // numberDisplay.textContent = currentNumber; // Removed to hide answer
       
       // Automatically play the corresponding audio file when a new question loads
       playAudio();
       
-      // Determine answer range: if currentNumber is between 1 and 10, options are 1-10; if 11-20, options are 11-20.
+      // Determine answer options based on the current number:
+      // If currentNumber is between 1 and 10, options are 1–10; if 11–20, options are 11–20.
       const [minOpt, maxOpt] = currentNumber <= 10 ? [1, 10] : [11, 20];
       const rangeNumbers = [];
       for (let i = minOpt; i <= maxOpt; i++) {
         rangeNumbers.push(i);
       }
       
-      // Choose three incorrect answers, add the correct answer, then shuffle the array
+      // Choose three incorrect answers, add the correct answer, and shuffle them
       const incorrectOptions = shuffle(rangeNumbers.filter(n => n !== currentNumber)).slice(0, 3);
       const allOptions = shuffle([currentNumber, ...incorrectOptions]);
       
-      // Create answer option buttons using the new design
+      // Create new answer option buttons using the new design
       allOptions.forEach(option => {
         const btn = document.createElement("button");
         btn.textContent = option;
@@ -283,7 +281,7 @@
       setTimeout(newRound, 1000);
     }
     
-    // Attach click listener to the play button so that it replays the audio when pressed
+    // Attach a click listener to the play button to replay the audio
     playButton.addEventListener("click", function(event) {
       createRipple(event, this);
       playAudio();
