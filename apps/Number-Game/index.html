@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <!-- Mobile-friendly meta tag -->
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Number Audio Quiz – Deep Purple Rounded Squares with Audio Only</title>
+  <title>Number Audio Quiz – Deep Purple Rounded Squares with Preloading</title>
   <!-- Confetti library for celebration effect on correct answer -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <style>
@@ -61,13 +61,13 @@
       align-items: center;
       justify-content: center;
     }
-    /* Prompt section: now only includes the play button */
+    /* Prompt section: play button only */
     #prompt {
       display: flex;
       align-items: center;
       margin-bottom: 2rem;
     }
-    /* Updated Play Button: minimal style that shows just the ▶️ emoji */
+    /* Updated Play Button: minimal style showing just the ▶️ emoji */
     #play-audio {
       width: 80px;
       height: 80px;
@@ -95,6 +95,10 @@
     }
     #play-audio:focus {
       outline: none;
+    }
+    /* Hide the number display so users only hear the audio */
+    #number-display {
+      display: none;
     }
     /* Options grid for answer buttons: two columns of 100px buttons */
     #options {
@@ -160,8 +164,9 @@
   </header>
   <main>
     <section id="prompt">
-      <!-- Play button with new style: clicking it plays/replays the audio -->
+      <!-- Play button with updated style: clicking replays the audio -->
       <button id="play-audio" class="new-btn">▶️</button>
+      <div id="number-display">?</div>
     </section>
     <section id="options">
       <!-- Answer option buttons will be injected here -->
@@ -174,9 +179,11 @@
     const maxRounds = 25;
     const audioFiles = {};
     
-    // Preload audio files: all files (1.mp3, 2.mp3, …, 20.mp3) should be in the "audio" folder
+    // Preload audio files: all files (1.mp3, 2.mp3, …, 20.mp3) are in the "audio" folder
     for (let i = 1; i <= 20; i++) {
-      audioFiles[i] = new Audio(`audio/${i}.mp3`);
+      const audio = new Audio(`audio/${i}.mp3`);
+      audio.preload = "auto";  // Preload the audio file
+      audioFiles[i] = audio;
     }
     
     // DOM element references
@@ -209,7 +216,7 @@
       }, 600);
     }
     
-    // Function to generate a new round/question
+    // Generate a new round/question
     function newRound() {
       // Clear previous answer options
       optionsContainer.innerHTML = "";
@@ -231,7 +238,7 @@
       const incorrectOptions = shuffle(rangeNumbers.filter(n => n !== currentNumber)).slice(0, 3);
       const allOptions = shuffle([currentNumber, ...incorrectOptions]);
       
-      // Create new answer option buttons using the new style
+      // Create new answer option buttons using the updated design
       allOptions.forEach(option => {
         const btn = document.createElement("button");
         btn.textContent = option;
@@ -272,7 +279,7 @@
       setTimeout(newRound, 1000);
     }
     
-    // Attach a click listener to the play button so that it replays the audio
+    // Attach a click listener to the play button so that it replays the audio when pressed
     playButton.addEventListener("click", function(event) {
       createRipple(event, this);
       playAudio();
