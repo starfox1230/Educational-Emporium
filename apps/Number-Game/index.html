@@ -61,7 +61,7 @@
       align-items: center;
       justify-content: center;
     }
-    /* Prompt section: play button and (hidden) number display */
+    /* Prompt section: now only includes the play button */
     #prompt {
       display: flex;
       align-items: center;
@@ -74,7 +74,7 @@
       border-radius: 20px;
       font-size: 2rem;
       line-height: 80px;
-      background: linear-gradient(135deg, #6D28D9, #8B5CF6);
+      background: linear-gradient(135deg, #6D28D9, #8B5CF6); /* Purple gradient */
       color: #fff;
       margin-right: 1rem;
       border: none;
@@ -95,10 +95,6 @@
     }
     #play-audio:focus {
       outline: none;
-    }
-    /* The number display is now hidden so users must listen to the audio */
-    #number-display {
-      display: none;
     }
     /* Options grid for answer buttons: two columns of 100px buttons */
     #options {
@@ -166,7 +162,6 @@
     <section id="prompt">
       <!-- Play button with new style: clicking it plays/replays the audio -->
       <button id="play-audio" class="new-btn">▶️</button>
-      <div id="number-display">?</div>
     </section>
     <section id="options">
       <!-- Answer option buttons will be injected here -->
@@ -185,13 +180,12 @@
     }
     
     // DOM element references
-    const numberDisplay = document.getElementById('number-display'); // remains hidden
     const playButton = document.getElementById('play-audio');
     const optionsContainer = document.getElementById('options');
     const progressBar = document.getElementById('progress-bar');
     const scoreDisplay = document.getElementById('score');
     
-    // Utility: Shuffle array using Fisher-Yates algorithm
+    // Utility: Fisher-Yates shuffle algorithm
     function shuffle(array) {
       for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -215,32 +209,29 @@
       }, 600);
     }
     
-    // Generate a new round/question
+    // Function to generate a new round/question
     function newRound() {
       // Clear previous answer options
       optionsContainer.innerHTML = "";
       
       // Pick a random number between 1 and 20
       currentNumber = Math.floor(Math.random() * 20) + 1;
-      // Do NOT display the number (users must listen to the audio)
-      // numberDisplay.textContent = currentNumber; // Removed to hide answer
       
       // Automatically play the corresponding audio file when a new question loads
       playAudio();
       
-      // Determine answer options based on the current number:
-      // If currentNumber is between 1 and 10, options are 1–10; if 11–20, options are 11–20.
+      // Determine answer options: if currentNumber is 1–10, options are 1–10; if 11–20, options are 11–20.
       const [minOpt, maxOpt] = currentNumber <= 10 ? [1, 10] : [11, 20];
       const rangeNumbers = [];
       for (let i = minOpt; i <= maxOpt; i++) {
         rangeNumbers.push(i);
       }
       
-      // Choose three incorrect answers, add the correct answer, and shuffle them
+      // Choose three incorrect answers, add the correct answer, then shuffle the array
       const incorrectOptions = shuffle(rangeNumbers.filter(n => n !== currentNumber)).slice(0, 3);
       const allOptions = shuffle([currentNumber, ...incorrectOptions]);
       
-      // Create new answer option buttons using the new design
+      // Create new answer option buttons using the new style
       allOptions.forEach(option => {
         const btn = document.createElement("button");
         btn.textContent = option;
@@ -254,7 +245,7 @@
       });
     }
     
-    // Function to play audio corresponding to the current number
+    // Function to play the audio corresponding to the current number
     function playAudio() {
       if (currentNumber && audioFiles[currentNumber]) {
         audioFiles[currentNumber].currentTime = 0;
@@ -277,11 +268,11 @@
       // Update the progress bar based on the score
       const progressPercentage = Math.min((score / maxRounds) * 100, 100);
       progressBar.style.width = progressPercentage + "%";
-      // Start a new round after a brief delay
+      // Start a new round after a short delay
       setTimeout(newRound, 1000);
     }
     
-    // Attach a click listener to the play button to replay the audio
+    // Attach a click listener to the play button so that it replays the audio
     playButton.addEventListener("click", function(event) {
       createRipple(event, this);
       playAudio();
