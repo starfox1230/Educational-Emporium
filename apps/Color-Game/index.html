@@ -2,17 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Updated viewport to disable zooming -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Color Learning Game</title>
   <style>
-    /* Add text selection prevention */
-    body, h1, .color-box {
+    /* Prevent text selection and touch callouts on all elements */
+    * {
       -webkit-user-select: none; /* Safari */
       -ms-user-select: none; /* IE 10+ */
       user-select: none;
       -webkit-touch-callout: none; /* iOS Safari */
     }
-
+    
     body { 
       font-family: 'Arial', sans-serif; 
       text-align: center; 
@@ -54,7 +55,7 @@
       touch-action: manipulation; /* Prevent browser touch behaviors */
     }
 
-    /* Keep all previous animations and styles below */
+    /* Animations and additional styles */
     .highlight { 
       box-shadow: 0 0 20px 10px rgba(255, 255, 255, 0.8);
       transform: scale(1.1);
@@ -125,13 +126,12 @@
 <audio id="response-sound" src=""></audio>
 
 <script>
-  // Keep all JavaScript the same as before
+  // JavaScript remains the same
   let selectedIndex = 0;
   const colorBoxes = document.querySelectorAll('.color-box');
   const questionAudio = document.getElementById('question-sound');
   const responseAudio = document.getElementById('response-sound');
   const questionElement = document.getElementById('question');
-  const gridElement = document.getElementById('color-grid');
 
   const questions = [
     { question: "Which color is red?", answer: "red", questionAudio: "question_red.mp3", correctAudio: "correct_red.mp3", incorrectAudio: "wrong_red.mp3" },
@@ -235,6 +235,7 @@
         handleSelection(colorBoxes[selectedIndex].id);
         break;
       case 'ArrowRight':
+        // Assuming replayQuestionAudio() is defined elsewhere
         replayQuestionAudio();
         break;
     }
