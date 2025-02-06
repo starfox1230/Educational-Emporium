@@ -1,238 +1,246 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moonlight Memory Match</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.9.4/lottie.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <!-- Updated viewport to disable zooming -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Moonlight Memory Match</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.9.4/lottie.min.js"></script>
+  <style>
+    /* Disable text selection and touch callout globally */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      -moz-user-select: none;
+    }
+    
+    body {
+      background: #1A0933;
+      font-family: 'Arial Rounded MT Bold', sans-serif;
+      color: #FF94E3;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      -webkit-touch-callout: none; /* Disables callout on iOS */
+      touch-action: manipulation; /* Helps prevent double-tap zoom */
+    }
 
-        body {
-            background: #1A0933;
-            font-family: 'Arial Rounded MT Bold', sans-serif;
-            color: #FF94E3;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-        }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
 
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
+    .score-board {
+      font-size: 24px;
+      margin-bottom: 20px;
+      text-shadow: 0 0 10px #FF94E3;
+    }
 
-        .score-board {
-            font-size: 24px;
-            margin-bottom: 20px;
-            text-shadow: 0 0 10px #FF94E3;
-        }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      max-width: 500px;
+      width: 100%;
+      margin-bottom: 20px;
+    }
 
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            max-width: 500px;
-            width: 100%;
-            margin-bottom: 20px;
-        }
+    .card {
+      aspect-ratio: 1;
+      background: linear-gradient(145deg, #3D1255, #2B0A3A);
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      cursor: pointer;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+      position: relative;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
 
-        .card {
-            aspect-ratio: 1;
-            background: linear-gradient(145deg, #3D1255, #2B0A3A);
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 40px;
-            cursor: pointer;
-            transition: transform 0.6s;
-            transform-style: preserve-3d;
-            position: relative;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
+    .card.flipped {
+      transform: rotateY(180deg);
+      background: #A12568;
+    }
 
-        .card.flipped {
-            transform: rotateY(180deg);
-            background: #A12568;
-        }
+    .card.flipped::before {
+      content: attr(data-emoji);
+      transform: rotateY(180deg);
+    }
 
-        .card.flipped::before {
-            content: attr(data-emoji);
-            transform: rotateY(180deg);
-        }
+    .card.matched {
+      background: #00E3A3 !important;
+      transform: rotateY(180deg) scale(0.9);
+    }
 
-        .card.matched {
-            background: #00E3A3 !important;
-            transform: rotateY(180deg) scale(0.9);
-        }
+    #resetBtn {
+      display: none;
+      padding: 12px 30px;
+      background: #FF6BD6;
+      border: none;
+      border-radius: 25px;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(255,107,214,0.3);
+      position: relative;
+      z-index: 1001;
+    }
 
-        #resetBtn {
-            display: none;
-            padding: 12px 30px;
-            background: #FF6BD6;
-            border: none;
-            border-radius: 25px;
-            color: white;
-            font-size: 18px;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(255,107,214,0.3);
-            position: relative;
-            z-index: 1001;
-        }
+    #resetBtn:hover {
+      background: #FF8AE1;
+      transform: scale(1.05);
+    }
 
-        #resetBtn:hover {
-            background: #FF8AE1;
-            transform: scale(1.05);
-        }
+    .trophy-animation {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 300px;
+      height: 300px;
+      z-index: 1000;
+      display: none;
+    }
 
-        .trophy-animation {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 300px;
-            height: 300px;
-            z-index: 1000;
-            display: none;
-        }
-
-        @media (max-width: 500px) {
-            .card {
-                font-size: 30px;
-            }
-        }
-    </style>
+    @media (max-width: 500px) {
+      .card {
+        font-size: 30px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="header">
-        <div class="score-board">Matches: <span id="score">0</span></div>
-        <button id="resetBtn">Play Again!</button>
-    </div>
-    <div class="grid" id="grid"></div>
-    <div id="trophyAnimation" class="trophy-animation"></div>
+  <div class="header">
+    <div class="score-board">Matches: <span id="score">0</span></div>
+    <button id="resetBtn">Play Again!</button>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div id="trophyAnimation" class="trophy-animation"></div>
 
-    <script>
-        const emojis = ['🌙', '🌸', '🦄', '🎀', '🍭', '🌈'];
-        let gameGrid = [...emojis, ...emojis];
-        let flippedCards = [];
-        let score = 0;
-        let trophyAnimation = null;
+  <script>
+    const emojis = ['🌙', '🌸', '🦄', '🎀', '🍭', '🌈'];
+    let gameGrid = [...emojis, ...emojis];
+    let flippedCards = [];
+    let score = 0;
+    let trophyAnimation = null;
 
-        function createCard(emoji, index) {
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.dataset.emoji = emoji;
-            card.dataset.index = index;
-            card.onclick = () => handleClick(card);
-            card.ontouchstart = () => handleClick(card);
-            return card;
+    function createCard(emoji, index) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.emoji = emoji;
+      card.dataset.index = index;
+      card.onclick = () => handleClick(card);
+      card.ontouchstart = () => handleClick(card);
+      return card;
+    }
+
+    function handleClick(card) {
+      if (flippedCards.length < 2 && !card.classList.contains('flipped')) {
+        card.classList.add('flipped');
+        flippedCards.push(card);
+
+        if (flippedCards.length === 2) {
+          setTimeout(checkMatch, 600);
         }
+      }
+    }
 
-        function handleClick(card) {
-            if (flippedCards.length < 2 && !card.classList.contains('flipped')) {
-                card.classList.add('flipped');
-                flippedCards.push(card);
+    function checkMatch() {
+      const [card1, card2] = flippedCards;
+      const match = card1.dataset.emoji === card2.dataset.emoji;
 
-                if (flippedCards.length === 2) {
-                    setTimeout(checkMatch, 600);
-                }
-            }
-        }
+      if (match) {
+        card1.classList.add('matched');
+        card2.classList.add('matched');
+        score += 1;
+        createConfetti();
+      } else {
+        card1.classList.remove('flipped');
+        card2.classList.remove('flipped');
+      }
 
-        function checkMatch() {
-            const [card1, card2] = flippedCards;
-            const match = card1.dataset.emoji === card2.dataset.emoji;
+      flippedCards = [];
+      document.getElementById('score').textContent = score;
+      
+      if (document.querySelectorAll('.matched').length === gameGrid.length) {
+        document.getElementById('resetBtn').style.display = 'block';
+        showTrophyAnimation();
+      }
+    }
 
-            if (match) {
-                card1.classList.add('matched');
-                card2.classList.add('matched');
-                score += 1;
-                createConfetti();
-            } else {
-                card1.classList.remove('flipped');
-                card2.classList.remove('flipped');
-            }
-
-            flippedCards = [];
-            document.getElementById('score').textContent = score;
-            
-            if (document.querySelectorAll('.matched').length === gameGrid.length) {
-                document.getElementById('resetBtn').style.display = 'block';
-                showTrophyAnimation();
-            }
-        }
-
-        function createConfetti() {
-            const colors = ['#FF6BD6', '#00E3A3', '#FF94E3', '#B98AFF'];
-            for (let i = 0; i < 20; i++) {
-                const confetti = document.createElement('div');
-                confetti.style.cssText = `
-                    position: absolute;
-                    width: ${Math.random() * 10 + 5}px;
-                    height: ${Math.random() * 10 + 5}px;
-                    background: ${colors[Math.floor(Math.random() * colors.length)]};
-                    left: ${Math.random() * 100}%;
-                    top: -10px;
-                    animation: fall ${Math.random() * 3 + 2}s linear;
-                    border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
-                `;
-
-                document.body.appendChild(confetti);
-                setTimeout(() => confetti.remove(), 3000);
-            }
-        }
-
-        function showTrophyAnimation() {
-            const container = document.getElementById('trophyAnimation');
-            container.style.display = 'block';
-            
-            if(trophyAnimation) trophyAnimation.destroy();
-            
-            trophyAnimation = lottie.loadAnimation({
-                container: container,
-                renderer: 'svg',
-                loop: true,
-                autoplay: true,
-                path: 'https://assets8.lottiefiles.com/packages/lf20_touohxv0.json'
-            });
-        }
-
-        function resetGame() {
-            const grid = document.getElementById('grid');
-            grid.innerHTML = '';
-            score = 0;
-            document.getElementById('score').textContent = score;
-            document.getElementById('resetBtn').style.display = 'none';
-            document.getElementById('trophyAnimation').style.display = 'none';
-            if(trophyAnimation) trophyAnimation.destroy();
-            gameGrid = [...emojis, ...emojis].sort(() => Math.random() - 0.5);
-            gameGrid.forEach((emoji, index) => {
-                grid.appendChild(createCard(emoji, index));
-            });
-        }
-
-        // Initialize game
-        document.getElementById('resetBtn').onclick = resetGame;
-        resetGame();
-
-        // Add celebration animation
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes fall {
-                to {
-                    transform: translateY(110vh) rotate(${Math.random() * 360}deg);
-                }
-            }
+    function createConfetti() {
+      const colors = ['#FF6BD6', '#00E3A3', '#FF94E3', '#B98AFF'];
+      for (let i = 0; i < 20; i++) {
+        const confetti = document.createElement('div');
+        confetti.style.cssText = `
+          position: absolute;
+          width: ${Math.random() * 10 + 5}px;
+          height: ${Math.random() * 10 + 5}px;
+          background: ${colors[Math.floor(Math.random() * colors.length)]};
+          left: ${Math.random() * 100}%;
+          top: -10px;
+          animation: fall ${Math.random() * 3 + 2}s linear;
+          border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
         `;
-        document.head.appendChild(style);
-    </script>
+
+        document.body.appendChild(confetti);
+        setTimeout(() => confetti.remove(), 3000);
+      }
+    }
+
+    function showTrophyAnimation() {
+      const container = document.getElementById('trophyAnimation');
+      container.style.display = 'block';
+      
+      if(trophyAnimation) trophyAnimation.destroy();
+      
+      trophyAnimation = lottie.loadAnimation({
+        container: container,
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        path: 'https://assets8.lottiefiles.com/packages/lf20_touohxv0.json'
+      });
+    }
+
+    function resetGame() {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      score = 0;
+      document.getElementById('score').textContent = score;
+      document.getElementById('resetBtn').style.display = 'none';
+      document.getElementById('trophyAnimation').style.display = 'none';
+      if(trophyAnimation) trophyAnimation.destroy();
+      gameGrid = [...emojis, ...emojis].sort(() => Math.random() - 0.5);
+      gameGrid.forEach((emoji, index) => {
+        grid.appendChild(createCard(emoji, index));
+      });
+    }
+
+    // Initialize game
+    document.getElementById('resetBtn').onclick = resetGame;
+    resetGame();
+
+    // Add celebration animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes fall {
+        to {
+          transform: translateY(110vh) rotate(${Math.random() * 360}deg);
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
 </body>
 </html>
