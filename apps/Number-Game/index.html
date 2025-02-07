@@ -152,6 +152,22 @@
         opacity: 0;
       }
     }
+    /* Shake animation and error coloring for wrong answers */
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      20% { transform: translateX(-10px); }
+      40% { transform: translateX(10px); }
+      60% { transform: translateX(-10px); }
+      80% { transform: translateX(10px); }
+      100% { transform: translateX(0); }
+    }
+    .shake-red {
+      animation: shake 0.5s;
+      background: red !important;
+    }
+    .btn-wrong {
+      background: red !important;
+    }
   </style>
 </head>
 <body>
@@ -268,7 +284,8 @@
         btn.classList.add("new-btn");
         btn.addEventListener("click", function(event) {
           createRipple(event, this);
-          checkAnswer(option);
+          // Pass the button element to checkAnswer so we can change its style if wrong
+          checkAnswer(option, this);
           this.blur();
         });
         optionsContainer.appendChild(btn);
@@ -284,7 +301,7 @@
     }
     
     // Function to check if the selected answer is correct
-    function checkAnswer(selectedNumber) {
+    function checkAnswer(selectedNumber, btn) {
       if (selectedNumber === currentNumber) {
         score++;
         scoreDisplay.textContent = `Score: ${score}`;
@@ -293,10 +310,20 @@
           spread: 70,
           origin: { y: 0.6 }
         });
+      } else {
+        // Wrong answer: add error animations/styles
+        progressBar.classList.add("shake-red");
+        btn.classList.add("btn-wrong");
       }
+      // Update progress bar width based on score
       const progressPercentage = Math.min((score / maxRounds) * 100, 100);
       progressBar.style.width = progressPercentage + "%";
-      setTimeout(newRound, 1000);
+      
+      // After 1 second, remove error classes (if any) and move to next round
+      setTimeout(() => {
+        progressBar.classList.remove("shake-red");
+        newRound();
+      }, 1000);
     }
     
     // Attach a click listener to the play button to replay the audio
