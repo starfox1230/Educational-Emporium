@@ -125,23 +125,29 @@
     }
 
     // ----- Questions Data -----
+    // Note: Each question now only contains the files for the question prompt and the correct answer.
     const questions = [
-      { question: "Which color is red?", answer: "red", questionAudio: "question_red.mp3", correctAudio: "correct_red.mp3", incorrectAudio: "wrong_red.mp3" },
-      { question: "Which color is orange?", answer: "orange", questionAudio: "question_orange.mp3", correctAudio: "correct_orange.mp3", incorrectAudio: "wrong_orange.mp3" },
-      { question: "Which color is yellow?", answer: "yellow", questionAudio: "question_yellow.mp3", correctAudio: "correct_yellow.mp3", incorrectAudio: "wrong_yellow.mp3" },
-      { question: "Which color is green?", answer: "green", questionAudio: "question_green.mp3", correctAudio: "correct_green.mp3", incorrectAudio: "wrong_green.mp3" },
-      { question: "Which color is blue?", answer: "blue", questionAudio: "question_blue.mp3", correctAudio: "correct_blue.mp3", incorrectAudio: "wrong_blue.mp3" },
-      { question: "Which color is purple?", answer: "purple", questionAudio: "question_purple.mp3", correctAudio: "correct_purple.mp3", incorrectAudio: "wrong_purple.mp3" }
+      { question: "Which color is red?", answer: "red", questionAudio: "question_red.mp3", correctAudio: "correct_red.mp3" },
+      { question: "Which color is orange?", answer: "orange", questionAudio: "question_orange.mp3", correctAudio: "correct_orange.mp3" },
+      { question: "Which color is yellow?", answer: "yellow", questionAudio: "question_yellow.mp3", correctAudio: "correct_yellow.mp3" },
+      { question: "Which color is green?", answer: "green", questionAudio: "question_green.mp3", correctAudio: "correct_green.mp3" },
+      { question: "Which color is blue?", answer: "blue", questionAudio: "question_blue.mp3", correctAudio: "correct_blue.mp3" },
+      { question: "Which color is purple?", answer: "purple", questionAudio: "question_purple.mp3", correctAudio: "correct_purple.mp3" }
     ];
 
-    // Preload audio files for each question
+    // Preload the question and correct audio files for each question
     questions.forEach(q => {
       loadAudioFile(q.questionAudio, q.questionAudio);
       loadAudioFile(q.correctAudio, q.correctAudio);
-      loadAudioFile(q.incorrectAudio, q.incorrectAudio);
     });
 
-    // Play a preloaded audio buffer using its key
+    // Preload wrong audio files for all colors (assuming filenames follow the "wrong_<color>.mp3" naming convention)
+    const colors = ["red", "orange", "yellow", "green", "blue", "purple"];
+    colors.forEach(color => {
+      loadAudioFile("wrong_" + color, "wrong_" + color + ".mp3");
+    });
+
+    // Function to play a preloaded audio buffer given its key
     function playBuffer(key) {
       const buffer = audioBuffers[key];
       if (buffer) {
@@ -162,7 +168,7 @@
     let currentQuestion = 0;
     let gameActive = true;
 
-    // Shuffle questions to randomize their order
+    // Shuffle questions to randomize order
     function shuffleQuestions() {
       for (let i = questions.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -178,16 +184,16 @@
       }
     }
 
-    // When a user selects a color, play the corresponding audio cue
+    // When a user selects a color, determine whether it’s correct and play the corresponding audio cue.
     function handleSelection(selectedColor) {
       if (!gameActive) return;
       const correctColor = questions[currentQuestion].answer;
-
       if (selectedColor === correctColor) {
         playBuffer(questions[currentQuestion].correctAudio);
         showCorrectAnswerTransition();
       } else {
-        playBuffer(questions[currentQuestion].incorrectAudio);
+        // Play the wrong audio file for the color that was actually selected.
+        playBuffer("wrong_" + selectedColor);
         showWrongAnswerTransition();
       }
     }
@@ -196,7 +202,6 @@
       gameActive = false;
       const selectedBox = colorBoxes[selectedIndex];
       selectedBox.classList.add('wrong');
-
       setTimeout(() => {
         selectedBox.classList.remove('wrong');
         gameActive = true;
@@ -207,7 +212,6 @@
       gameActive = false;
       colorBoxes[selectedIndex].classList.add('correct');
       questionElement.classList.add('fade-out');
-
       setTimeout(() => {
         colorBoxes[selectedIndex].classList.remove('correct');
         questionElement.classList.remove('fade-out');
@@ -215,26 +219,22 @@
       }, 1500);
     }
 
-    // Reset the highlight and selected index for the next question
+    // When moving to the next question, clear any persistent highlights.
     function nextQuestion() {
       currentQuestion = (currentQuestion + 1) % questions.length;
       questionElement.textContent = questions[currentQuestion].question;
-
-      // Clear any persistent highlight
+      // Clear any highlight and reset the selected index.
       colorBoxes.forEach(box => box.classList.remove('highlight'));
-      selectedIndex = -1;  // Reset the selection
-
-      // Play the new question's audio cue
+      selectedIndex = -1;
       playBuffer(questions[currentQuestion].questionAudio);
       questionElement.classList.add('fade-in');
-
       setTimeout(() => {
         questionElement.classList.remove('fade-in');
         gameActive = true;
       }, 500);
     }
 
-    // Attach click handlers to each color box
+    // Attach click handlers to each color box.
     colorBoxes.forEach((box, index) => {
       box.addEventListener('click', function() {
         selectedIndex = index;
@@ -243,7 +243,7 @@
       });
     });
 
-    // Optional keyboard controls for selection and replaying question audio
+    // Optional keyboard controls for selection and replaying the question audio.
     document.addEventListener('keydown', function(event) {
       if (!gameActive) return;
       switch(event.code) {
@@ -259,19 +259,17 @@
           handleSelection(colorBoxes[selectedIndex].id);
           break;
         case 'ArrowRight':
-          // Replay the current question's audio cue
+          // Replay the current question's audio cue.
           playBuffer(questions[currentQuestion].questionAudio);
           break;
       }
     });
 
-    // Initialize game: shuffle questions, set the first question, and play its audio cue.
+    // Initialize the game.
     shuffleQuestions();
     questionElement.textContent = questions[currentQuestion].question;
-    playBuffer(questions[currentQuestion].questionAudio());
-    updateSelection();
-    // Alternatively, if the playBuffer call above causes an error because currentNumber isn’t set yet, use:
     playBuffer(questions[currentQuestion].questionAudio);
+    updateSelection();
   </script>
 </body>
 </html>
