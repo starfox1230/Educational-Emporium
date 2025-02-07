@@ -168,6 +168,10 @@
     .btn-wrong {
       background: #EF4444 !important;
     }
+    /* Correct answer button styling */
+    .btn-right {
+      background: #22C55E !important;
+    }
   </style>
 </head>
 <body>
@@ -284,7 +288,7 @@
         btn.classList.add("new-btn");
         btn.addEventListener("click", function(event) {
           createRipple(event, this);
-          // Pass the button element to checkAnswer so we can change its style if wrong
+          // Pass the button element to checkAnswer so we can change its style if correct or wrong
           checkAnswer(option, this);
           this.blur();
         });
@@ -305,6 +309,8 @@
       if (selectedNumber === currentNumber) {
         score++;
         scoreDisplay.textContent = `Score: ${score}`;
+        // Add the green style to the correct button
+        btn.classList.add("btn-right");
         confetti({
           particleCount: 100,
           spread: 70,
@@ -318,7 +324,7 @@
         progressBar.classList.add("shake-red");
         btn.classList.add("btn-wrong");
       }
-      // Update progress bar width based on score (ensure it does not go below 0)
+      // Update progress bar width based on score (ensure it does not exceed 100%)
       const progressPercentage = Math.min((score / maxRounds) * 100, 100);
       progressBar.style.width = progressPercentage + "%";
       
