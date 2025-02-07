@@ -2,16 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <!-- Updated viewport to disable zooming -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- Mobile-friendly meta tag with no zooming -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
   <title>Color Learning Game</title>
   <style>
-    /* Prevent text selection and touch callouts on all elements */
+    /* Global reset, disable text selection and touch callouts */
     * {
-      -webkit-user-select: none; /* Safari */
-      -ms-user-select: none; /* IE 10+ */
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-user-select: none;
+      -ms-user-select: none;
       user-select: none;
-      -webkit-touch-callout: none; /* iOS Safari */
+      -webkit-touch-callout: none;
     }
     
     body { 
@@ -41,7 +44,7 @@
       justify-content: center; 
       width: 90%; 
       margin: auto;
-      touch-action: manipulation; /* Improve touch responsiveness */
+      touch-action: manipulation;
     }
 
     .color-box { 
@@ -52,10 +55,9 @@
       transition: transform 0.5s ease, box-shadow 0.5s ease, background-color 0.5s ease;
       opacity: 1;
       cursor: pointer;
-      touch-action: manipulation; /* Prevent browser touch behaviors */
+      touch-action: manipulation;
     }
 
-    /* Animations and additional styles */
     .highlight { 
       box-shadow: 0 0 20px 10px rgba(255, 255, 255, 0.8);
       transform: scale(1.1);
@@ -81,12 +83,8 @@
     .purple { background-color: purple; }
 
     @media screen and (min-width: 768px) {
-      h1 {
-        font-size: 4em;
-      }
-      .color-box {
-        height: 200px;
-      }
+      h1 { font-size: 4em; }
+      .color-box { height: 200px; }
     }
 
     @keyframes shake {
@@ -95,158 +93,185 @@
       40%, 80% { transform: translateX(10px); }
     }
 
-    .fade-out {
-      opacity: 0;
-      transition: opacity 0.5s ease;
-    }
-
-    .fade-in {
-      opacity: 1;
-      transition: opacity 0.5s ease;
-    }
-
-    .disabled {
-      pointer-events: none;
-    }
+    .fade-out { opacity: 0; transition: opacity 0.5s ease; }
+    .fade-in { opacity: 1; transition: opacity 0.5s ease; }
+    .disabled { pointer-events: none; }
   </style>
 </head>
 <body>
+  <h1 id="question">Which color is?</h1>
+  <div id="color-grid">
+    <div class="color-box red" id="red"></div>
+    <div class="color-box orange" id="orange"></div>
+    <div class="color-box yellow" id="yellow"></div>
+    <div class="color-box green" id="green"></div>
+    <div class="color-box blue" id="blue"></div>
+    <div class="color-box purple" id="purple"></div>
+  </div>
+  <script>
+    // ----- Web Audio API Setup -----
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const audioBuffers = {}; // Holds decoded audio files
 
-<h1 id="question">Which color is?</h1>
-<div id="color-grid">
-  <div class="color-box red" id="red"></div>
-  <div class="color-box orange" id="orange"></div>
-  <div class="color-box yellow" id="yellow"></div>
-  <div class="color-box green" id="green"></div>
-  <div class="color-box blue" id="blue"></div>
-  <div class="color-box purple" id="purple"></div>
-</div>
-
-<audio id="question-sound" src=""></audio>
-<audio id="response-sound" src=""></audio>
-
-<script>
-  // JavaScript remains the same
-  let selectedIndex = 0;
-  const colorBoxes = document.querySelectorAll('.color-box');
-  const questionAudio = document.getElementById('question-sound');
-  const responseAudio = document.getElementById('response-sound');
-  const questionElement = document.getElementById('question');
-
-  const questions = [
-    { question: "Which color is red?", answer: "red", questionAudio: "question_red.mp3", correctAudio: "correct_red.mp3", incorrectAudio: "wrong_red.mp3" },
-    { question: "Which color is orange?", answer: "orange", questionAudio: "question_orange.mp3", correctAudio: "correct_orange.mp3", incorrectAudio: "wrong_orange.mp3" },
-    { question: "Which color is yellow?", answer: "yellow", questionAudio: "question_yellow.mp3", correctAudio: "correct_yellow.mp3", incorrectAudio: "wrong_yellow.mp3" },
-    { question: "Which color is green?", answer: "green", questionAudio: "question_green.mp3", correctAudio: "correct_green.mp3", incorrectAudio: "wrong_green.mp3" },
-    { question: "Which color is blue?", answer: "blue", questionAudio: "question_blue.mp3", correctAudio: "correct_blue.mp3", incorrectAudio: "wrong_blue.mp3" },
-    { question: "Which color is purple?", answer: "purple", questionAudio: "question_purple.mp3", correctAudio: "correct_purple.mp3", incorrectAudio: "wrong_purple.mp3" }
-  ];
-
-  let currentQuestion = 0;
-  let gameActive = true;
-
-  function shuffleQuestions() {
-    for (let i = questions.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [questions[i], questions[j]] = [questions[j], questions[i]];
+    async function loadAudioFile(key, url) {
+      try {
+        const response = await fetch(url);
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        audioBuffers[key] = audioBuffer;
+      } catch (error) {
+        console.error(`Error loading audio file ${url}:`, error);
+      }
     }
-  }
 
-  function updateSelection() {
-    colorBoxes.forEach(box => box.classList.remove('highlight'));
-    colorBoxes[selectedIndex].classList.add('highlight');
-  }
+    // ----- Questions Data -----
+    const questions = [
+      { question: "Which color is red?", answer: "red", questionAudio: "question_red.mp3", correctAudio: "correct_red.mp3", incorrectAudio: "wrong_red.mp3" },
+      { question: "Which color is orange?", answer: "orange", questionAudio: "question_orange.mp3", correctAudio: "correct_orange.mp3", incorrectAudio: "wrong_orange.mp3" },
+      { question: "Which color is yellow?", answer: "yellow", questionAudio: "question_yellow.mp3", correctAudio: "correct_yellow.mp3", incorrectAudio: "wrong_yellow.mp3" },
+      { question: "Which color is green?", answer: "green", questionAudio: "question_green.mp3", correctAudio: "correct_green.mp3", incorrectAudio: "wrong_green.mp3" },
+      { question: "Which color is blue?", answer: "blue", questionAudio: "question_blue.mp3", correctAudio: "correct_blue.mp3", incorrectAudio: "wrong_blue.mp3" },
+      { question: "Which color is purple?", answer: "purple", questionAudio: "question_purple.mp3", correctAudio: "correct_purple.mp3", incorrectAudio: "wrong_purple.mp3" }
+    ];
 
-  function playAudio(audioElement, src) {
-    audioElement.src = src;
-    audioElement.play();
-  }
-
-  function handleSelection(selectedColor) {
-    if (!gameActive) return;
-    const correctColor = questions[currentQuestion].answer;
-
-    if (selectedColor === correctColor) {
-      playAudio(responseAudio, questions[currentQuestion].correctAudio);
-      showCorrectAnswerTransition();
-    } else {
-      playAudio(responseAudio, questions[currentQuestion].incorrectAudio);
-      responseAudio.src = `No, that's ${correctColor}.`;
-      showWrongAnswerTransition();
-    }
-  }
-
-  function showWrongAnswerTransition() {
-    gameActive = false;
-    const selectedBox = colorBoxes[selectedIndex];
-    selectedBox.classList.add('wrong');
-
-    setTimeout(() => {
-      selectedBox.classList.remove('wrong');
-      gameActive = true;
-    }, 500);
-  }
-
-  function showCorrectAnswerTransition() {
-    gameActive = false;
-    colorBoxes[selectedIndex].classList.add('correct');
-    questionElement.classList.add('fade-out');
-    
-    setTimeout(() => {
-      colorBoxes[selectedIndex].classList.remove('correct');
-      questionElement.classList.remove('fade-out');
-      nextQuestion();
-    }, 1500);
-  }
-
-  function nextQuestion() {
-    currentQuestion = (currentQuestion + 1) % questions.length;
-    questionElement.textContent = questions[currentQuestion].question;
-    playAudio(questionAudio, questions[currentQuestion].questionAudio);
-    questionElement.classList.add('fade-in');
-    
-    setTimeout(() => {
-      questionElement.classList.remove('fade-in');
-      gameActive = true;
-    }, 500);
-  }
-
-  colorBoxes.forEach((box, index) => {
-    box.addEventListener('click', function() {
-      selectedIndex = index;
-      updateSelection();
-      handleSelection(box.id);
+    // Preload audio files for each question
+    questions.forEach(q => {
+      loadAudioFile(q.questionAudio, q.questionAudio);
+      loadAudioFile(q.correctAudio, q.correctAudio);
+      loadAudioFile(q.incorrectAudio, q.incorrectAudio);
     });
-  });
 
-  document.addEventListener('keydown', function(event) {
-    if (!gameActive) return;
-
-    switch(event.code) {
-      case 'F8':
-        selectedIndex = (selectedIndex === 0) ? colorBoxes.length - 1 : selectedIndex - 1;
-        updateSelection();
-        break;
-      case 'F11':
-        selectedIndex = (selectedIndex === colorBoxes.length - 1) ? 0 : selectedIndex + 1;
-        updateSelection();
-        break;
-      case 'F1':
-        handleSelection(colorBoxes[selectedIndex].id);
-        break;
-      case 'ArrowRight':
-        // Assuming replayQuestionAudio() is defined elsewhere
-        replayQuestionAudio();
-        break;
+    // Play a preloaded audio buffer using its key
+    function playBuffer(key) {
+      const buffer = audioBuffers[key];
+      if (buffer) {
+        const source = audioContext.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioContext.destination);
+        source.start(0);
+      } else {
+        console.warn(`Audio buffer for ${key} not loaded yet.`);
+      }
     }
-  });
 
-  shuffleQuestions();
-  questionElement.textContent = questions[currentQuestion].question;
-  playAudio(questionAudio, questions[currentQuestion].questionAudio);
-  updateSelection();
+    // ----- Game Logic -----
+    let selectedIndex = -1; // Start with no selection
+    const colorBoxes = document.querySelectorAll('.color-box');
+    const questionElement = document.getElementById('question');
 
-</script>
+    let currentQuestion = 0;
+    let gameActive = true;
 
+    // Shuffle questions to randomize their order
+    function shuffleQuestions() {
+      for (let i = questions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [questions[i], questions[j]] = [questions[j], questions[i]];
+      }
+    }
+
+    // Update the highlight based on selectedIndex (only if valid)
+    function updateSelection() {
+      colorBoxes.forEach(box => box.classList.remove('highlight'));
+      if (selectedIndex >= 0 && selectedIndex < colorBoxes.length) {
+        colorBoxes[selectedIndex].classList.add('highlight');
+      }
+    }
+
+    // When a user selects a color, play the corresponding audio cue
+    function handleSelection(selectedColor) {
+      if (!gameActive) return;
+      const correctColor = questions[currentQuestion].answer;
+
+      if (selectedColor === correctColor) {
+        playBuffer(questions[currentQuestion].correctAudio);
+        showCorrectAnswerTransition();
+      } else {
+        playBuffer(questions[currentQuestion].incorrectAudio);
+        showWrongAnswerTransition();
+      }
+    }
+
+    function showWrongAnswerTransition() {
+      gameActive = false;
+      const selectedBox = colorBoxes[selectedIndex];
+      selectedBox.classList.add('wrong');
+
+      setTimeout(() => {
+        selectedBox.classList.remove('wrong');
+        gameActive = true;
+      }, 500);
+    }
+
+    function showCorrectAnswerTransition() {
+      gameActive = false;
+      colorBoxes[selectedIndex].classList.add('correct');
+      questionElement.classList.add('fade-out');
+
+      setTimeout(() => {
+        colorBoxes[selectedIndex].classList.remove('correct');
+        questionElement.classList.remove('fade-out');
+        nextQuestion();
+      }, 1500);
+    }
+
+    // Reset the highlight and selected index for the next question
+    function nextQuestion() {
+      currentQuestion = (currentQuestion + 1) % questions.length;
+      questionElement.textContent = questions[currentQuestion].question;
+
+      // Clear any persistent highlight
+      colorBoxes.forEach(box => box.classList.remove('highlight'));
+      selectedIndex = -1;  // Reset the selection
+
+      // Play the new question's audio cue
+      playBuffer(questions[currentQuestion].questionAudio);
+      questionElement.classList.add('fade-in');
+
+      setTimeout(() => {
+        questionElement.classList.remove('fade-in');
+        gameActive = true;
+      }, 500);
+    }
+
+    // Attach click handlers to each color box
+    colorBoxes.forEach((box, index) => {
+      box.addEventListener('click', function() {
+        selectedIndex = index;
+        updateSelection();
+        handleSelection(box.id);
+      });
+    });
+
+    // Optional keyboard controls for selection and replaying question audio
+    document.addEventListener('keydown', function(event) {
+      if (!gameActive) return;
+      switch(event.code) {
+        case 'F8':
+          selectedIndex = (selectedIndex <= 0) ? colorBoxes.length - 1 : selectedIndex - 1;
+          updateSelection();
+          break;
+        case 'F11':
+          selectedIndex = (selectedIndex >= colorBoxes.length - 1) ? 0 : selectedIndex + 1;
+          updateSelection();
+          break;
+        case 'F1':
+          handleSelection(colorBoxes[selectedIndex].id);
+          break;
+        case 'ArrowRight':
+          // Replay the current question's audio cue
+          playBuffer(questions[currentQuestion].questionAudio);
+          break;
+      }
+    });
+
+    // Initialize game: shuffle questions, set the first question, and play its audio cue.
+    shuffleQuestions();
+    questionElement.textContent = questions[currentQuestion].question;
+    playBuffer(questions[currentQuestion].questionAudio());
+    updateSelection();
+    // Alternatively, if the playBuffer call above causes an error because currentNumber isn’t set yet, use:
+    playBuffer(questions[currentQuestion].questionAudio);
+  </script>
 </body>
 </html>
