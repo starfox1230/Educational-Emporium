@@ -163,10 +163,10 @@
     }
     .shake-red {
       animation: shake 0.5s;
-      background: red !important;
+      background: #EF4444 !important;
     }
     .btn-wrong {
-      background: red !important;
+      background: #EF4444 !important;
     }
   </style>
 </head>
@@ -311,11 +311,14 @@
           origin: { y: 0.6 }
         });
       } else {
+        // Decrease score on a wrong answer
+        score--;
+        scoreDisplay.textContent = `Score: ${score}`;
         // Wrong answer: add error animations/styles
         progressBar.classList.add("shake-red");
         btn.classList.add("btn-wrong");
       }
-      // Update progress bar width based on score
+      // Update progress bar width based on score (ensure it does not go below 0)
       const progressPercentage = Math.min((score / maxRounds) * 100, 100);
       progressBar.style.width = progressPercentage + "%";
       
