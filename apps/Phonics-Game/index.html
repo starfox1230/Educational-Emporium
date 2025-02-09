@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Letter Sound Quiz for Matilda</title>
+  <!-- Confetti library for celebration effects -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    /* Global Reset */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      background: #E3F2FD; /* a bright, pastel blue background */
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      padding: 1rem;
+      align-items: center;
+    }
+    
+    header {
+      width: 100%;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    
+    /* Progress Bar */
+    #progress-container {
+      width: 90%;
+      height: 12px;
+      background: #ccc;
+      border-radius: 6px;
+      overflow: hidden;
+      margin: 0 auto 0.5rem;
+    }
+    #progress-bar {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #4CAF50, #81C784);
+      transition: width 0.5s ease;
+    }
+    #score {
+      font-size: 1.2rem;
+    }
+    
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+    
+    /* Prompt Section */
+    #prompt {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    #play-audio {
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      font-size: 2rem;
+      background: linear-gradient(135deg, #FF7043, #FF8A65);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+      margin-bottom: 0.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    #play-audio:hover {
+      transform: scale(1.05);
+    }
+    #play-audio:active {
+      transform: scale(0.95);
+    }
+    /* If you want a “visual” mode that shows the letter instead of a question mark,
+       you can set #prompt-letter to display:block. For the audio-only mode, it stays hidden. */
+    #prompt-letter {
+      font-size: 3rem;
+      margin-top: 0.5rem;
+      display: none;
+    }
+    
+    /* Options Section */
+    #options {
+      width: 100%;
+      max-width: 400px;
+    }
+    .option-row {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .option-btn {
+      width: 100px;
+      height: 100px;
+      border: none;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #64B5F6, #42A5F5);
+      color: #fff;
+      font-size: 2rem;
+      cursor: pointer;
+      transition: transform 0.3s ease, background 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .option-btn:hover {
+      transform: scale(1.05);
+    }
+    .option-btn:active {
+      transform: scale(0.95);
+    }
+    /* Highlight when an option is selected */
+    .option-btn.selected {
+      box-shadow: 0 0 0 4px #FFEB3B;
+    }
+    /* Feedback for correct/wrong answers */
+    .option-btn.correct {
+      background: #66BB6A !important;
+    }
+    .option-btn.wrong {
+      background: #EF5350 !important;
+    }
+    
+    /* Submit Button */
+    #submit-btn {
+      padding: 0.5rem 1.5rem;
+      font-size: 1.5rem;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #AB47BC, #BA68C8);
+      color: #fff;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+    #submit-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    #submit-btn:hover:enabled {
+      transform: scale(1.05);
+    }
+    #submit-btn:active:enabled {
+      transform: scale(0.95);
+    }
+    
+    /* Ripple Effect for buttons */
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      transform: scale(0);
+      animation: ripple 0.6s linear;
+      pointer-events: none;
+    }
+    @keyframes ripple {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+    /* A helper class for buttons that need relative positioning */
+    .btn-container {
+      position: relative;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div id="progress-container">
+      <div id="progress-bar"></div>
+    </div>
+    <div id="score">Score: 0</div>
+  </header>
+  <main>
+    <section id="prompt">
+      <!-- Play Button: Clicking replays the sound -->
+      <button id="play-audio" class="btn-container">▶️</button>
+      <!-- In visual mode you might show the letter here; for audio-only mode we keep it hidden -->
+      <div id="prompt-letter">?</div>
+    </section>
+    <section id="options">
+      <!-- Fixed options: top row has P, D, B; bottom row has CK and CKS -->
+      <div class="option-row" id="top-options">
+        <button class="option-btn btn-container" data-letter="P">P</button>
+        <button class="option-btn btn-container" data-letter="D">D</button>
+        <button class="option-btn btn-container" data-letter="B">B</button>
+      </div>
+      <div class="option-row" id="bottom-options">
+        <button class="option-btn btn-container" data-letter="CK">CK</button>
+        <button class="option-btn btn-container" data-letter="CKS">CKS</button>
+      </div>
+    </section>
+    <section id="submit-section" style="margin-top:1rem;">
+      <button id="submit-btn" disabled>Submit</button>
+    </section>
+  </main>
+  
+  <script>
+    /********************************************************************
+     * Letter Sound Quiz: Audio Mode
+     * 
+     * This quiz randomly chooses one of the five letters (P, D, B, CK, CKS),
+     * plays its audio (which you can replay via the play button),
+     * and then lets Matilda select the corresponding letter from five fixed
+     * option buttons. After selecting an answer, she clicks "Submit" to see
+     * if she’s right.
+     *
+     * To extend this later, you could add a toggle to switch to a visual mode
+     * (where the prompt letter is displayed instead of “?” and audio is optional).
+     ********************************************************************/
+    
+    // The five letter sounds
+    const letters = ["P", "D", "B", "CK", "CKS"];
+    
+    // For storing decoded audio files
+    const audioBuffers = {};
+    
+    // Create an AudioContext for reliable playback
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // Load audio for a given letter from "audio/[letter].mp3"
+    async function loadAudio(letter) {
+      try {
+        const response = await fetch(`audio/${letter}.mp3`);
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        audioBuffers[letter] = audioBuffer;
+      } catch (error) {
+        console.error(`Error loading audio for ${letter}:`, error);
+      }
+    }
+    
+    // Preload each letter’s audio
+    letters.forEach(letter => loadAudio(letter));
+    
+    // DOM element references
+    const playButton    = document.getElementById('play-audio');
+    const submitButton  = document.getElementById('submit-btn');
+    const optionButtons = document.querySelectorAll('.option-btn');
+    const scoreDisplay  = document.getElementById('score');
+    const progressBar   = document.getElementById('progress-bar');
+    const promptLetter  = document.getElementById('prompt-letter');
+    
+    let score = 0;
+    let round = 0;
+    const maxRounds = 10;  // Adjust as desired
+    let currentLetter = null;   // The letter for the current round
+    let selectedAnswer = null;  // The user’s selection
+    
+    // Play the audio for a given letter
+    function playAudio(letter) {
+      if (audioBuffers[letter]) {
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffers[letter];
+        source.connect(audioContext.destination);
+        source.start(0);
+      } else {
+        console.warn(`Audio for ${letter} not loaded yet.`);
+      }
+    }
+    
+    // Create a ripple effect on button click
+    function createRipple(event, btn) {
+      const rect = btn.getBoundingClientRect();
+      const ripple = document.createElement("span");
+      ripple.classList.add("ripple");
+      const size = Math.max(rect.width, rect.height);
+      ripple.style.width = ripple.style.height = size + "px";
+      ripple.style.left = (event.clientX - rect.left - size/2) + "px";
+      ripple.style.top  = (event.clientY - rect.top - size/2) + "px";
+      btn.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    }
+    
+    // Start a new round: reset selection, choose a new letter, update progress, and play the sound.
+    function newRound() {
+      round++;
+      selectedAnswer = null;
+      submitButton.disabled = true;
+      
+      // Remove any previous selection or feedback from option buttons
+      optionButtons.forEach(btn => {
+        btn.classList.remove("selected", "correct", "wrong");
+      });
+      
+      // Randomly choose a letter from the five options
+      currentLetter = letters[Math.floor(Math.random() * letters.length)];
+      
+      // For audio mode, keep the prompt letter hidden (or show a "?" if desired)
+      promptLetter.style.display = "none";  // Change to "block" if you want to show the letter in a visual mode.
+      promptLetter.textContent = "?";
+      
+      // Automatically play the current letter’s audio after a short delay
+      setTimeout(() => {
+        playAudio(currentLetter);
+      }, 500);
+      
+      // Update progress bar (if you wish to show progress over rounds)
+      const progressPercentage = Math.min((round / maxRounds) * 100, 100);
+      progressBar.style.width = progressPercentage + "%";
+      
+      // Optionally, end the quiz after maxRounds
+      if (round > maxRounds) {
+        submitButton.disabled = true;
+        playButton.disabled = true;
+        optionButtons.forEach(btn => btn.disabled = true);
+        alert(`Quiz complete! Final Score: ${score}`);
+      }
+    }
+    
+    // When the play button is clicked, replay the current audio
+    playButton.addEventListener("click", function(event) {
+      createRipple(event, this);
+      playAudio(currentLetter);
+    });
+    
+    // When an option is clicked, mark it as selected and enable the submit button
+    optionButtons.forEach(btn => {
+      btn.addEventListener("click", function(event) {
+        createRipple(event, this);
+        optionButtons.forEach(b => b.classList.remove("selected"));
+        this.classList.add("selected");
+        selectedAnswer = this.getAttribute("data-letter");
+        submitButton.disabled = false;
+      });
+    });
+    
+    // When the submit button is clicked, check the answer and give feedback
+    submitButton.addEventListener("click", function() {
+      if (!selectedAnswer) return;
+      
+      if (selectedAnswer === currentLetter) {
+        // Correct answer: update score and show confetti
+        score++;
+        scoreDisplay.textContent = `Score: ${score}`;
+        document.querySelector(`.option-btn[data-letter="${selectedAnswer}"]`).classList.add("correct");
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      } else {
+        // Wrong answer: subtract a point (but not below zero) and show error styling
+        score = Math.max(score - 1, 0);
+        scoreDisplay.textContent = `Score: ${score}`;
+        document.querySelector(`.option-btn[data-letter="${selectedAnswer}"]`).classList.add("wrong");
+        // Optionally highlight the correct answer:
+        document.querySelector(`.option-btn[data-letter="${currentLetter}"]`).classList.add("correct");
+      }
+      
+      // After a short delay, begin the next round
+      setTimeout(newRound, 1000);
+    });
+    
+    // Start the first round when the page loads
+    newRound();
+  </script>
+</body>
+</html>
