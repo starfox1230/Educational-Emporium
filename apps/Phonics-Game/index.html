@@ -1,179 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Letter Sound Quiz for Matilda</title>
-  <!-- Confetti library for celebration effects -->
+  <title>letter sound quiz for matilda</title>
+  <!-- canvas-confetti library for confetti effects -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <style>
-    /* Global Reset */
+    /* global reset */
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    
+    /* dark, glowing background with neon pink and purple accents */
     body {
-      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-      background: #E3F2FD; /* a bright, pastel blue background */
-      color: #333;
+      font-family: "helvetica neue", helvetica, arial, sans-serif;
+      background: #1a001a;
+      color: #fff;
       display: flex;
       flex-direction: column;
+      align-items: center;
       min-height: 100vh;
       padding: 1rem;
-      align-items: center;
+      position: relative;
+      overflow: hidden;
     }
-    
     header {
       width: 100%;
       text-align: center;
       margin-bottom: 1rem;
     }
-    
-    /* Progress Bar */
+    /* progress bar container */
     #progress-container {
       width: 90%;
       height: 12px;
-      background: #ccc;
+      background: #444;
       border-radius: 6px;
       overflow: hidden;
       margin: 0 auto 0.5rem;
     }
+    /* progress bar with pink-purple gradient and a glow effect */
     #progress-bar {
       width: 0%;
       height: 100%;
-      background: linear-gradient(90deg, #4CAF50, #81C784);
+      background: linear-gradient(90deg, #ff6ec7, #7873f5);
+      box-shadow: 0 0 8px #ff6ec7;
       transition: width 0.5s ease;
     }
-    #score {
-      font-size: 1.2rem;
+    /* shake effect for wrong answers */
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      20% { transform: translateX(-10px); }
+      40% { transform: translateX(10px); }
+      60% { transform: translateX(-10px); }
+      80% { transform: translateX(10px); }
+      100% { transform: translateX(0); }
     }
-    
-    main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-    }
-    
-    /* Prompt Section */
-    #prompt {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: 2rem;
-    }
+    .shake-red { animation: shake 0.5s; background: #ef4444 !important; }
+    #score { font-size: 1.2rem; text-shadow: 0 0 10px #ff6ec7; margin-bottom: 0.5rem; }
+    main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; }
+    /* prompt section */
+    #prompt { display: flex; flex-direction: column; align-items: center; margin-bottom: 2rem; }
+    /* play button (for audio mode) */
     #play-audio {
-      width: 80px;
-      height: 80px;
-      border-radius: 20px;
-      font-size: 2rem;
-      background: linear-gradient(135deg, #FF7043, #FF8A65);
-      color: #fff;
-      border: none;
-      cursor: pointer;
-      transition: transform 0.3s ease;
-      margin-bottom: 0.5rem;
-      position: relative;
-      overflow: hidden;
+      width: 80px; height: 80px; border-radius: 20px; font-size: 2rem;
+      background: linear-gradient(135deg, #ff6ec7, #7873f5);
+      box-shadow: 0 0 10px rgba(255, 110, 199, 0.7);
+      color: #fff; border: none; cursor: pointer; transition: transform 0.3s ease;
+      margin-bottom: 0.5rem; position: relative; overflow: hidden;
     }
-    #play-audio:hover {
-      transform: scale(1.05);
-    }
-    #play-audio:active {
-      transform: scale(0.95);
-    }
-    /* If you want a “visual” mode that shows the letter instead of a question mark,
-       you can set #prompt-letter to display:block. For the audio-only mode, it stays hidden. */
-    #prompt-letter {
-      font-size: 3rem;
-      margin-top: 0.5rem;
-      display: none;
-    }
-    
-    /* Options Section */
-    #options {
-      width: 100%;
-      max-width: 400px;
-    }
-    .option-row {
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
+    #play-audio:hover { transform: scale(1.05); }
+    #play-audio:active { transform: scale(0.95); }
+    /* prompt letter (for visual mode) */
+    #prompt-letter { font-size: 3rem; margin-top: 0.5rem; }
+    /* options section */
+    #options { width: 100%; max-width: 400px; }
+    .option-row { display: flex; justify-content: center; gap: 1rem; margin-bottom: 1rem; }
     .option-btn {
-      width: 100px;
-      height: 100px;
-      border: none;
-      border-radius: 20px;
-      background: linear-gradient(135deg, #64B5F6, #42A5F5);
-      color: #fff;
-      font-size: 2rem;
-      cursor: pointer;
+      width: 100px; height: 100px; border: none; border-radius: 20px;
+      background: linear-gradient(135deg, #ff6ec7, #7873f5);
+      box-shadow: 0 0 10px rgba(255, 110, 199, 0.7);
+      color: #fff; font-size: 2rem; cursor: pointer;
       transition: transform 0.3s ease, background 0.3s ease;
-      position: relative;
-      overflow: hidden;
+      position: relative; overflow: hidden;
     }
-    .option-btn:hover {
-      transform: scale(1.05);
-    }
-    .option-btn:active {
-      transform: scale(0.95);
-    }
-    /* Highlight when an option is selected */
-    .option-btn.selected {
-      box-shadow: 0 0 0 4px #FFEB3B;
-    }
-    /* Feedback for correct/wrong answers */
-    .option-btn.correct {
-      background: #66BB6A !important;
-    }
-    .option-btn.wrong {
-      background: #EF5350 !important;
-    }
-    
-    /* Submit Button */
+    .option-btn:hover { transform: scale(1.05); }
+    .option-btn:active { transform: scale(0.95); }
+    .option-btn.selected { box-shadow: 0 0 0 4px #ffeb3b; }
+    .option-btn.correct { background: #66bb6a !important; box-shadow: 0 0 10px #66bb6a; }
+    .option-btn.wrong { background: #ef5350 !important; box-shadow: 0 0 10px #ef5350; }
+    /* submit button */
     #submit-btn {
-      padding: 0.5rem 1.5rem;
-      font-size: 1.5rem;
-      border: none;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #AB47BC, #BA68C8);
-      color: #fff;
-      cursor: pointer;
+      padding: 0.5rem 1.5rem; font-size: 1.5rem; border: none; border-radius: 10px;
+      background: linear-gradient(135deg, #ff6ec7, #7873f5);
+      box-shadow: 0 0 10px rgba(255, 110, 199, 0.7); color: #fff; cursor: pointer;
       transition: transform 0.3s ease;
     }
-    #submit-btn:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
-    #submit-btn:hover:enabled {
-      transform: scale(1.05);
-    }
-    #submit-btn:active:enabled {
-      transform: scale(0.95);
-    }
-    
-    /* Ripple Effect for buttons */
+    #submit-btn:disabled { background: #777; cursor: not-allowed; }
+    #submit-btn:hover:enabled { transform: scale(1.05); }
+    #submit-btn:active:enabled { transform: scale(0.95); }
+    /* ripple effect */
     .ripple {
-      position: absolute;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.5);
-      transform: scale(0);
-      animation: ripple 0.6s linear;
-      pointer-events: none;
+      position: absolute; border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5); transform: scale(0);
+      animation: ripple 0.6s linear; pointer-events: none;
     }
-    @keyframes ripple {
-      to {
-        transform: scale(4);
-        opacity: 0;
-      }
-    }
-    /* A helper class for buttons that need relative positioning */
-    .btn-container {
-      position: relative;
-      overflow: hidden;
-    }
+    @keyframes ripple { to { transform: scale(4); opacity: 0; } }
   </style>
 </head>
 <body>
@@ -181,56 +110,53 @@
     <div id="progress-container">
       <div id="progress-bar"></div>
     </div>
-    <div id="score">Score: 0</div>
+    <div id="score">score: 0</div>
   </header>
   <main>
     <section id="prompt">
-      <!-- Play Button: Clicking replays the sound -->
-      <button id="play-audio" class="btn-container">▶️</button>
-      <!-- In visual mode you might show the letter here; for audio-only mode we keep it hidden -->
-      <div id="prompt-letter">?</div>
+      <!-- In audio mode this button plays the sound; in visual mode it’s hidden -->
+      <button id="play-audio">▶️</button>
+      <!-- In visual mode the prompt letter is displayed -->
+      <div id="prompt-letter"></div>
     </section>
     <section id="options">
-      <!-- Fixed options: top row has P, D, B; bottom row has CK and CKS -->
+      <!-- Fixed-position option buttons -->
       <div class="option-row" id="top-options">
-        <button class="option-btn btn-container" data-letter="P">P</button>
-        <button class="option-btn btn-container" data-letter="D">D</button>
-        <button class="option-btn btn-container" data-letter="B">B</button>
+        <button class="option-btn" data-letter="p">p</button>
+        <button class="option-btn" data-letter="d">d</button>
+        <button class="option-btn" data-letter="b">b</button>
       </div>
       <div class="option-row" id="bottom-options">
-        <button class="option-btn btn-container" data-letter="CK">CK</button>
-        <button class="option-btn btn-container" data-letter="CKS">CKS</button>
+        <button class="option-btn" data-letter="ck">ck</button>
+        <button class="option-btn" data-letter="cks">cks</button>
       </div>
     </section>
     <section id="submit-section" style="margin-top:1rem;">
-      <button id="submit-btn" disabled>Submit</button>
+      <button id="submit-btn" disabled>submit</button>
     </section>
   </main>
   
   <script>
     /********************************************************************
-     * Letter Sound Quiz: Audio Mode
-     * 
-     * This quiz randomly chooses one of the five letters (P, D, B, CK, CKS),
-     * plays its audio (which you can replay via the play button),
-     * and then lets Matilda select the corresponding letter from five fixed
-     * option buttons. After selecting an answer, she clicks "Submit" to see
-     * if she’s right.
+     * letter sound quiz for matilda – no max rounds, max score 15,
+     * and creative celebration effects.
      *
-     * To extend this later, you could add a toggle to switch to a visual mode
-     * (where the prompt letter is displayed instead of “?” and audio is optional).
+     * In audio mode, the app plays the sound for a randomly chosen lower-case
+     * letter (p, d, b, ck, or cks) and the answer options show the corresponding
+     * letter. In visual mode, the prompt shows the letter and the options show a play icon.
+     * A wrong answer subtracts a point (but never below zero). When the score reaches 15,
+     * the quiz ends.
+     *
+     * When an answer is correct, randomCelebrate() picks one of 14 creative celebration styles.
      ********************************************************************/
     
-    // The five letter sounds
-    const letters = ["P", "D", "B", "CK", "CKS"];
+    // the five lower-case letter sounds
+    const letters = ["p", "d", "b", "ck", "cks"];
     
-    // For storing decoded audio files
+    // object for storing audio buffers
     const audioBuffers = {};
-    
-    // Create an AudioContext for reliable playback
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     
-    // Load audio for a given letter from "audio/[letter].mp3"
     async function loadAudio(letter) {
       try {
         const response = await fetch(`audio/${letter}.mp3`);
@@ -238,14 +164,226 @@
         const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
         audioBuffers[letter] = audioBuffer;
       } catch (error) {
-        console.error(`Error loading audio for ${letter}:`, error);
+        console.error(`error loading audio for ${letter}:`, error);
+      }
+    }
+    letters.forEach(letter => loadAudio(letter));
+    
+    // Helper: rain emojis from the top of the screen
+    function rainEmojis(emojis, count, duration) {
+      for (let i = 0; i < count; i++) {
+        const emoji = document.createElement("div");
+        emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        emoji.style.position = "fixed";
+        emoji.style.left = Math.random() * 100 + "vw";
+        emoji.style.top = "-50px";
+        emoji.style.fontSize = (Math.random() * 20 + 20) + "px";
+        emoji.style.zIndex = 9999;
+        emoji.style.pointerEvents = "none";
+        emoji.animate([
+          { transform: "translateY(0)", opacity: 1 },
+          { transform: `translateY(${window.innerHeight + 100}px)`, opacity: 0 }
+        ], { duration: duration, easing: "linear" }).onfinish = () => emoji.remove();
+        document.body.appendChild(emoji);
       }
     }
     
-    // Preload each letter’s audio
-    letters.forEach(letter => loadAudio(letter));
+    // Celebration Functions:
+    function multiLayerConfetti() {
+      // Two waves: one from the top, one from the left
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0 } });
+      confetti({ particleCount: 100, spread: 70, origin: { x: 0, y: 0.5 } });
+    }
     
-    // DOM element references
+    function swirlingConfetti() {
+      confetti({ particleCount: 150, angle: 60, spread: 360, startVelocity: 30, gravity: 0.5, decay: 0.9 });
+    }
+    
+    function fireworkConfetti() {
+      confetti({ particleCount: 150, spread: 120, origin: { x: 0.5, y: 0.5 } });
+    }
+    
+    function slowMotionConfetti() {
+      confetti({ particleCount: 100, spread: 80, startVelocity: 10, gravity: 0.2, ticks: 200 });
+    }
+    
+    function confettiWithTrails() {
+      for (let i = 0; i < 5; i++) {
+        setTimeout(() => {
+          confetti({ particleCount: 20, spread: 60, origin: { y: 0.7 } });
+        }, i * 100);
+      }
+    }
+    
+    function heartShapedConfetti() {
+      confetti({ particleCount: 100, spread: 70, shapes: ['heart'] });
+    }
+    
+    function emojiConfettiMix() {
+      rainEmojis(["🎉", "✨", "💥", "😃"], 15, 2500);
+      confetti({ particleCount: 50, spread: 80 });
+    }
+    
+    function emojiBounceParty() {
+      const emojis = ["🥳", "🎉", "💖"];
+      for (let i = 0; i < 5; i++) {
+        const emoji = document.createElement("div");
+        emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        emoji.style.position = "fixed";
+        emoji.style.left = Math.random() * 80 + "vw";
+        emoji.style.top = Math.random() * 80 + "vh";
+        emoji.style.fontSize = "50px";
+        emoji.style.zIndex = 10000;
+        emoji.style.pointerEvents = "none";
+        emoji.style.opacity = "0";
+        document.body.appendChild(emoji);
+        emoji.animate([
+          { transform: "translateY(0)", opacity: 0 },
+          { transform: "translateY(-50px)", opacity: 1 },
+          { transform: "translateY(0)", opacity: 1 }
+        ], { duration: 1000, easing: "ease-out" }).onfinish = () => emoji.remove();
+      }
+    }
+    
+    function rotatingEmojiExplosion() {
+      const emojis = ["😄", "😆", "😂", "😜", "🤩"];
+      for (let i = 0; i < 10; i++) {
+        const emoji = document.createElement("div");
+        emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        emoji.style.position = "fixed";
+        emoji.style.left = "50%";
+        emoji.style.top = "50%";
+        emoji.style.fontSize = "40px";
+        emoji.style.zIndex = 10000;
+        emoji.style.pointerEvents = "none";
+        document.body.appendChild(emoji);
+        const angle = Math.random() * 360;
+        const distance = Math.random() * 200 + 100;
+        emoji.animate([
+          { transform: "translate(0, 0) rotate(0deg)", opacity: 1 },
+          { transform: `translate(${distance * Math.cos(angle * Math.PI/180)}px, ${distance * Math.sin(angle * Math.PI/180)}px) rotate(360deg)`, opacity: 0 }
+        ], { duration: 1000, easing: "ease-out" }).onfinish = () => emoji.remove();
+      }
+    }
+    
+    function floatingEmojis() {
+      const emojis = ["🎈", "🎀", "🌟"];
+      for (let i = 0; i < 5; i++) {
+        const emoji = document.createElement("div");
+        emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        emoji.style.position = "fixed";
+        emoji.style.left = Math.random() * 80 + "vw";
+        emoji.style.bottom = "-50px";
+        emoji.style.fontSize = "60px";
+        emoji.style.zIndex = 10000;
+        emoji.style.pointerEvents = "none";
+        document.body.appendChild(emoji);
+        emoji.animate([
+          { transform: "translateY(0)", opacity: 1 },
+          { transform: "translateY(-100vh)", opacity: 0 }
+        ], { duration: 3000, easing: "linear" }).onfinish = () => emoji.remove();
+      }
+    }
+    
+    // Celebration text functions – now always appear near the top (top: 10%)
+    function shimmeringText() {
+      const text = document.createElement("div");
+      text.textContent = "good job!";
+      text.style.position = "fixed";
+      text.style.top = "10%";
+      text.style.left = "50%";
+      text.style.transform = "translate(-50%, -50%)";
+      text.style.fontSize = "50px";
+      text.style.fontWeight = "bold";
+      text.style.color = "#ff6ec7";
+      text.style.textShadow = "0 0 10px #ff6ec7";
+      text.style.zIndex = 10000;
+      document.body.appendChild(text);
+      text.animate([{ opacity: 0 }, { opacity: 1 }, { opacity: 0 }], { duration: 2000, easing: "ease-in-out" })
+          .onfinish = () => text.remove();
+    }
+    
+    function rainbowText() {
+      const text = document.createElement("div");
+      text.textContent = "you did it!";
+      text.style.position = "fixed";
+      text.style.top = "10%";
+      text.style.left = "50%";
+      text.style.transform = "translate(-50%, -50%)";
+      text.style.fontSize = "50px";
+      text.style.fontWeight = "bold";
+      text.style.zIndex = 10000;
+      text.style.background = "linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet)";
+      text.style.webkitBackgroundClip = "text";
+      text.style.webkitTextFillColor = "transparent";
+      document.body.appendChild(text);
+      text.animate([{ opacity: 0 }, { opacity: 1 }, { opacity: 0 }], { duration: 2500, easing: "ease-in-out" })
+          .onfinish = () => text.remove();
+    }
+    
+    function letterByLetterReveal() {
+      const message = "congratulations!";
+      const container = document.createElement("div");
+      container.style.position = "fixed";
+      container.style.top = "10%";
+      container.style.left = "50%";
+      container.style.transform = "translate(-50%, -50%)";
+      container.style.fontSize = "40px";
+      container.style.fontWeight = "bold";
+      container.style.zIndex = 10000;
+      document.body.appendChild(container);
+      let index = 0;
+      const interval = setInterval(() => {
+        container.textContent = message.slice(0, index);
+        index++;
+        if (index > message.length) {
+          clearInterval(interval);
+          setTimeout(() => container.remove(), 1000);
+        }
+      }, 150);
+    }
+    
+    function bouncingText() {
+      const text = document.createElement("div");
+      text.textContent = "amazing!";
+      text.style.position = "fixed";
+      text.style.top = "10%";
+      text.style.left = "50%";
+      text.style.transform = "translate(-50%, -50%)";
+      text.style.fontSize = "50px";
+      text.style.fontWeight = "bold";
+      text.style.color = "#ff69b4";
+      text.style.zIndex = 10000;
+      document.body.appendChild(text);
+      text.animate([
+        { transform: "translate(-50%, -50%) scale(0.5)" },
+        { transform: "translate(-50%, -50%) scale(1.2)" },
+        { transform: "translate(-50%, -50%) scale(1)" }
+      ], { duration: 1000, easing: "ease-out" }).onfinish = () => text.remove();
+    }
+    
+    // randomCelebrate randomly selects one of the 14 celebration functions
+    function randomCelebrate() {
+      const celebrations = [
+        multiLayerConfetti,
+        swirlingConfetti,
+        fireworkConfetti,
+        slowMotionConfetti,
+        confettiWithTrails,
+        heartShapedConfetti,
+        emojiConfettiMix,
+        emojiBounceParty,
+        rotatingEmojiExplosion,
+        floatingEmojis,
+        shimmeringText,
+        rainbowText,
+        letterByLetterReveal,
+        bouncingText
+      ];
+      celebrations[Math.floor(Math.random() * celebrations.length)]();
+    }
+    
+    // DOM references
     const playButton    = document.getElementById('play-audio');
     const submitButton  = document.getElementById('submit-btn');
     const optionButtons = document.querySelectorAll('.option-btn');
@@ -254,12 +392,12 @@
     const promptLetter  = document.getElementById('prompt-letter');
     
     let score = 0;
+    const maxScore = 15;  // Quiz ends when score reaches 15
     let round = 0;
-    const maxRounds = 10;  // Adjust as desired
-    let currentLetter = null;   // The letter for the current round
-    let selectedAnswer = null;  // The user’s selection
+    let currentLetter = null;
+    let selectedAnswer = null;
+    let currentMode = "audio";  // "audio" or "visual"
     
-    // Play the audio for a given letter
     function playAudio(letter) {
       if (audioBuffers[letter]) {
         const source = audioContext.createBufferSource();
@@ -267,11 +405,10 @@
         source.connect(audioContext.destination);
         source.start(0);
       } else {
-        console.warn(`Audio for ${letter} not loaded yet.`);
+        console.warn(`audio for ${letter} not loaded yet.`);
       }
     }
     
-    // Create a ripple effect on button click
     function createRipple(event, btn) {
       const rect = btn.getBoundingClientRect();
       const ripple = document.createElement("span");
@@ -284,52 +421,44 @@
       setTimeout(() => ripple.remove(), 600);
     }
     
-    // Start a new round: reset selection, choose a new letter, update progress, and play the sound.
     function newRound() {
-      round++;
-      selectedAnswer = null;
-      submitButton.disabled = true;
-      
-      // Remove any previous selection or feedback from option buttons
-      optionButtons.forEach(btn => {
-        btn.classList.remove("selected", "correct", "wrong");
-      });
-      
-      // Randomly choose a letter from the five options
-      currentLetter = letters[Math.floor(Math.random() * letters.length)];
-      
-      // For audio mode, keep the prompt letter hidden (or show a "?" if desired)
-      promptLetter.style.display = "none";  // Change to "block" if you want to show the letter in a visual mode.
-      promptLetter.textContent = "?";
-      
-      // Automatically play the current letter’s audio after a short delay
-      setTimeout(() => {
-        playAudio(currentLetter);
-      }, 500);
-      
-      // Update progress bar (if you wish to show progress over rounds)
-      const progressPercentage = Math.min((round / maxRounds) * 100, 100);
-      progressBar.style.width = progressPercentage + "%";
-      
-      // Optionally, end the quiz after maxRounds
-      if (round > maxRounds) {
+      if (score >= maxScore) {
         submitButton.disabled = true;
         playButton.disabled = true;
         optionButtons.forEach(btn => btn.disabled = true);
-        alert(`Quiz complete! Final Score: ${score}`);
+        alert(`quiz complete! final score: ${score}`);
+        return;
       }
+      round++;
+      selectedAnswer = null;
+      submitButton.disabled = true;
+      optionButtons.forEach(btn => { btn.classList.remove("selected", "correct", "wrong"); });
+      
+      currentLetter = letters[Math.floor(Math.random() * letters.length)];
+      currentMode = Math.random() < 0.5 ? "audio" : "visual";
+      
+      if (currentMode === "audio") {
+        promptLetter.style.display = "none";
+        playButton.style.display = "inline-block";
+        optionButtons.forEach(btn => { btn.textContent = btn.getAttribute("data-letter"); });
+        setTimeout(() => playAudio(currentLetter), 500);
+      } else {
+        promptLetter.style.display = "block";
+        promptLetter.textContent = currentLetter;
+        playButton.style.display = "none";
+        optionButtons.forEach(btn => { btn.textContent = "▶️"; });
+      }
+      
+      let progressPercentage = Math.min((score / maxScore) * 100, 100);
+      progressBar.style.width = progressPercentage + "%";
     }
     
-    // When the play button is clicked, replay the current audio
-    playButton.addEventListener("click", function(event) {
-      createRipple(event, this);
-      playAudio(currentLetter);
-    });
-    
-    // When an option is clicked, mark it as selected and enable the submit button
     optionButtons.forEach(btn => {
       btn.addEventListener("click", function(event) {
         createRipple(event, this);
+        if (currentMode === "visual") {
+          playAudio(this.getAttribute("data-letter"));
+        }
         optionButtons.forEach(b => b.classList.remove("selected"));
         this.classList.add("selected");
         selectedAnswer = this.getAttribute("data-letter");
@@ -337,34 +466,31 @@
       });
     });
     
-    // When the submit button is clicked, check the answer and give feedback
+    playButton.addEventListener("click", function(event) {
+      createRipple(event, this);
+      if (currentMode === "audio") { playAudio(currentLetter); }
+    });
+    
     submitButton.addEventListener("click", function() {
       if (!selectedAnswer) return;
-      
       if (selectedAnswer === currentLetter) {
-        // Correct answer: update score and show confetti
         score++;
-        scoreDisplay.textContent = `Score: ${score}`;
+        scoreDisplay.textContent = `score: ${score}`;
         document.querySelector(`.option-btn[data-letter="${selectedAnswer}"]`).classList.add("correct");
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 }
-        });
+        randomCelebrate();
       } else {
-        // Wrong answer: subtract a point (but not below zero) and show error styling
-        score = Math.max(score - 1, 0);
-        scoreDisplay.textContent = `Score: ${score}`;
+        score = Math.max(0, score - 1);
+        scoreDisplay.textContent = `score: ${score}`;
+        progressBar.classList.add("shake-red");
+        setTimeout(() => progressBar.classList.remove("shake-red"), 500);
         document.querySelector(`.option-btn[data-letter="${selectedAnswer}"]`).classList.add("wrong");
-        // Optionally highlight the correct answer:
         document.querySelector(`.option-btn[data-letter="${currentLetter}"]`).classList.add("correct");
       }
-      
-      // After a short delay, begin the next round
+      let progressPercentage = Math.min((score / maxScore) * 100, 100);
+      progressBar.style.width = progressPercentage + "%";
       setTimeout(newRound, 1000);
     });
     
-    // Start the first round when the page loads
     newRound();
   </script>
 </body>
