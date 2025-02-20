@@ -113,13 +113,13 @@
   <div id="selectionOptions">
     <label>
       <input type="checkbox" id="rangeModeCheckbox">
-      Range Mode (m.png to next checked)
+      Range Mode (check two or more to create a continuous range)
     </label>
   </div>
 
   <!-- The list of images with checkboxes -->
   <script>
-    // The new ordered list of filenames:
+    // The ordered list of filenames (adjust to match your actual files):
     var imageFilenames = [
       "m.png",
       "short_a.png",
@@ -186,13 +186,15 @@
   const rangeModeCheckbox = document.getElementById('rangeModeCheckbox');
 
   // Build the list of checkboxes
-  imageFilenames.forEach(function(filename) {
+  const checkboxes = [];
+  imageFilenames.forEach(function(filename, index) {
     const div = document.createElement('div');
     div.className = 'imageCheckbox';
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.value = filename;
+    checkbox.dataset.index = index; // store the index in the dataset for easy reference
 
     // Create an <img> preview
     const img = document.createElement('img');
@@ -201,56 +203,61 @@
     const label = document.createElement('label');
     label.textContent = filename;
 
+    // Add "change" event to handle range logic
+    checkbox.addEventListener('change', function() {
+      if (rangeModeCheckbox.checked) {
+        applyRangeSelection();
+      }
+    });
+
     div.appendChild(checkbox);
     div.appendChild(img);
     div.appendChild(label);
 
     imagesList.appendChild(div);
+    checkboxes.push(checkbox);
   });
+
+  // If "range mode" is on, automatically select a continuous range from the
+  // earliest checked index to the latest checked index.
+  function applyRangeSelection() {
+    // Gather all checked indices
+    let checkedIndices = [];
+    checkboxes.forEach(cb => {
+      if (cb.checked) {
+        checkedIndices.push(parseInt(cb.dataset.index, 10));
+      }
+    });
+
+    if (checkedIndices.length < 2) {
+      // If there's only one or zero checked boxes, do nothing special
+      return;
+    }
+
+    // Find min and max index
+    let minIndex = Math.min(...checkedIndices);
+    let maxIndex = Math.max(...checkedIndices);
+
+    // Uncheck everything first
+    checkboxes.forEach(cb => {
+      cb.checked = false;
+    });
+
+    // Check everything in [minIndex, maxIndex]
+    for (let i = minIndex; i <= maxIndex; i++) {
+      checkboxes[i].checked = true;
+    }
+  }
 
   // Handle the "Start Game" button
   startButton.addEventListener('click', function() {
-    // Gather selected images
+    // Gather selected images (i.e., checkboxes that are checked)
     let selectedFilenames = [];
-
-    if (rangeModeCheckbox.checked) {
-      // Range Mode: everything from "m.png" up to (and including) the next checked item
-      // 1) find "m.png" index
-      const mIndex = imageFilenames.indexOf('m.png');
-      if (mIndex === -1) {
-        alert("m.png not found in the array. Check your filenames.");
-        return;
+    checkboxes.forEach((cb) => {
+      if (cb.checked) {
+        selectedFilenames.push(cb.value);
       }
-
-      // 2) find the next checked item after m.png
-      let endIndex = -1;
-      const checkboxes = imagesList.querySelectorAll('input[type="checkbox"]');
-      checkboxes.forEach((cb, i) => {
-        if (cb.checked) {
-          const thisIndex = imageFilenames.indexOf(cb.value);
-          if (thisIndex > mIndex && (endIndex === -1 || thisIndex < endIndex)) {
-            endIndex = thisIndex;
-          }
-        }
-      });
-
-      if (endIndex === -1) {
-        alert("You haven't selected any image after m.png in Range Mode.");
-        return;
-      }
-
-      // 3) select everything from mIndex to endIndex
-      selectedFilenames = imageFilenames.slice(mIndex, endIndex + 1);
-
-    } else {
-      // Individual selection mode
-      const checkboxes = imagesList.querySelectorAll('input[type="checkbox"]');
-      checkboxes.forEach((cb) => {
-        if (cb.checked) {
-          selectedFilenames.push(cb.value);
-        }
-      });
-    }
+    });
 
     if (selectedFilenames.length === 0) {
       alert("No images selected. Please select at least one.");
@@ -278,12 +285,4 @@
   // When user taps/clicks anywhere in the #gameScreen, show a new random image
   gameScreen.addEventListener('click', showRandomImage);
 
-  // Also handle touchstart for mobile
-  gameScreen.addEventListener('touchstart', function(e) {
-    e.preventDefault(); // Prevent highlighting or zoom
-    showRandomImage();
-  }, {passive: false});
-</script>
-
-</body>
-</html>
+  // Also handle touchstart
