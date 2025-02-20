@@ -118,45 +118,53 @@
   </div>
 
   <!-- The list of images with checkboxes -->
-  <!-- Adjust this array to match exactly the filenames in your folder and their desired order. -->
   <script>
-    // The ordered list of filenames:
+    // The new ordered list of filenames:
     var imageFilenames = [
       "m.png",
       "short_a.png",
       "s.png",
+      "long_e.png",
       "t.png",
-      "p.png",
       "r.png",
       "d.png",
       "short_i.png",
-      "n.png",
-      "h.png",
-      "f.png",
-      "g.png",
-      "short_u.png",
-      "b.png",
+      "th.png",
+      "c.png",
       "short_o.png",
-      "k.png",
+      "n.png",
+      "f.png",
+      "short_u.png",
       "l.png",
+      "w.png",
+      "g.png",
+      "word_i.png",
+      "sh.png",
+      "long_a.png",
+      "h.png",
+      "k.png",
+      "long_o.png",
+      "v.png",
+      "p.png",
+      "ar.png",
+      "ch.png",
       "short_e.png",
+      "b.png",
+      "ing.png",
+      "long_i.png",
+      "y.png",
+      "er.png",
+      "long_oo.png",
+      "j.png",
+      "wh.png",
+      "long_y.png",
+      "long_u.png",
+      "qu.png",
       "x.png",
       "z.png",
-      "ca.png",
+      "ea.png",
       "ai.png",
-      "ch.png",
-      "ar.png",
-      "er.png",
-      "ing.png",
-      "i_ng.png",
-      "short_oo.png",
-      "long_oo.png",
-      "or.png",
-      "ou.png",
-      "qu.png",
-      "word_i.png",
-      "long_a.png"
-      // Add or remove filenames as needed, ensuring they match what's in your images folder.
+      "ou.png"
     ];
   </script>
 
@@ -270,9 +278,9 @@
   // When user taps/clicks anywhere in the #gameScreen, show a new random image
   gameScreen.addEventListener('click', showRandomImage);
 
-  // Also handle touchstart for mobile (optional)
+  // Also handle touchstart for mobile
   gameScreen.addEventListener('touchstart', function(e) {
-    e.preventDefault(); // Prevent any highlighting or zoom
+    e.preventDefault(); // Prevent highlighting or zoom
     showRandomImage();
   }, {passive: false});
 </script>
