@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Phonics Randomizer</title>
+  <!-- Prevent zooming and highlighting on mobile -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <style>
+    /* Basic reset and mobile-friendly styling */
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      /* Prevent text selection, double-tap zoom, etc. */
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: manipulation;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      background: #f5f5f5;
+    }
+
+    /* Container for the selection screen */
+    #selectionScreen {
+      width: 90%;
+      max-width: 600px;
+      margin: 10px auto;
+    }
+
+    #selectionOptions {
+      margin-bottom: 10px;
+      padding: 10px;
+      background: #ddd;
+      border-radius: 5px;
+    }
+
+    #selectionOptions label {
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .imageCheckbox {
+      display: flex;
+      align-items: center;
+      margin: 5px 0;
+    }
+
+    .imageCheckbox img {
+      width: 48px;
+      height: auto;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    .imageCheckbox input[type="checkbox"] {
+      transform: scale(1.3);
+      margin-right: 8px;
+      cursor: pointer;
+    }
+
+    #startButton {
+      display: inline-block;
+      margin: 10px 0;
+      padding: 10px 20px;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #startButton:hover {
+      background: #0056b3;
+    }
+
+    /* Game screen styling */
+    #gameScreen {
+      display: none;
+      width: 100%;
+      height: 100vh; /* Fill screen for easy tapping */
+      background: #f5f5f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    #randomImage {
+      max-width: 60%;
+      height: auto;
+      margin: 0 auto;
+    }
+
+    /* Prevent highlight on tap in some browsers */
+    body, button, input, label, select, textarea {
+      -webkit-tap-highlight-color: transparent;
+    }
+  </style>
+</head>
+<body>
+
+<div id="selectionScreen">
+  <div id="selectionOptions">
+    <label>
+      <input type="checkbox" id="rangeModeCheckbox">
+      Range Mode (m.png to next checked)
+    </label>
+  </div>
+
+  <!-- The list of images with checkboxes -->
+  <!-- Adjust this array to match exactly the filenames in your folder and their desired order. -->
+  <script>
+    // The ordered list of filenames:
+    var imageFilenames = [
+      "m.png",
+      "short_a.png",
+      "s.png",
+      "t.png",
+      "p.png",
+      "r.png",
+      "d.png",
+      "short_i.png",
+      "n.png",
+      "h.png",
+      "f.png",
+      "g.png",
+      "short_u.png",
+      "b.png",
+      "short_o.png",
+      "k.png",
+      "l.png",
+      "short_e.png",
+      "x.png",
+      "z.png",
+      "ca.png",
+      "ai.png",
+      "ch.png",
+      "ar.png",
+      "er.png",
+      "ing.png",
+      "i_ng.png",
+      "short_oo.png",
+      "long_oo.png",
+      "or.png",
+      "ou.png",
+      "qu.png",
+      "word_i.png",
+      "long_a.png"
+      // Add or remove filenames as needed, ensuring they match what's in your images folder.
+    ];
+  </script>
+
+  <div id="imagesList"></div>
+
+  <button id="startButton">Start Game</button>
+</div>
+
+<div id="gameScreen">
+  <img id="randomImage" src="" alt="Random Image">
+</div>
+
+<script>
+  const selectionScreen = document.getElementById('selectionScreen');
+  const gameScreen = document.getElementById('gameScreen');
+  const imagesList = document.getElementById('imagesList');
+  const startButton = document.getElementById('startButton');
+  const randomImage = document.getElementById('randomImage');
+  const rangeModeCheckbox = document.getElementById('rangeModeCheckbox');
+
+  // Build the list of checkboxes
+  imageFilenames.forEach(function(filename) {
+    const div = document.createElement('div');
+    div.className = 'imageCheckbox';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.value = filename;
+
+    // Create an <img> preview
+    const img = document.createElement('img');
+    img.src = 'images/' + filename;
+
+    const label = document.createElement('label');
+    label.textContent = filename;
+
+    div.appendChild(checkbox);
+    div.appendChild(img);
+    div.appendChild(label);
+
+    imagesList.appendChild(div);
+  });
+
+  // Handle the "Start Game" button
+  startButton.addEventListener('click', function() {
+    // Gather selected images
+    let selectedFilenames = [];
+
+    if (rangeModeCheckbox.checked) {
+      // Range Mode: everything from "m.png" up to (and including) the next checked item
+      // 1) find "m.png" index
+      const mIndex = imageFilenames.indexOf('m.png');
+      if (mIndex === -1) {
+        alert("m.png not found in the array. Check your filenames.");
+        return;
+      }
+
+      // 2) find the next checked item after m.png
+      let endIndex = -1;
+      const checkboxes = imagesList.querySelectorAll('input[type="checkbox"]');
+      checkboxes.forEach((cb, i) => {
+        if (cb.checked) {
+          const thisIndex = imageFilenames.indexOf(cb.value);
+          if (thisIndex > mIndex && (endIndex === -1 || thisIndex < endIndex)) {
+            endIndex = thisIndex;
+          }
+        }
+      });
+
+      if (endIndex === -1) {
+        alert("You haven't selected any image after m.png in Range Mode.");
+        return;
+      }
+
+      // 3) select everything from mIndex to endIndex
+      selectedFilenames = imageFilenames.slice(mIndex, endIndex + 1);
+
+    } else {
+      // Individual selection mode
+      const checkboxes = imagesList.querySelectorAll('input[type="checkbox"]');
+      checkboxes.forEach((cb) => {
+        if (cb.checked) {
+          selectedFilenames.push(cb.value);
+        }
+      });
+    }
+
+    if (selectedFilenames.length === 0) {
+      alert("No images selected. Please select at least one.");
+      return;
+    }
+
+    // Hide the selection screen, show the game screen
+    selectionScreen.style.display = 'none';
+    gameScreen.style.display = 'flex';
+
+    // We'll store the selected images in a global array
+    window.selectedImages = selectedFilenames;
+
+    // Show an initial random image
+    showRandomImage();
+  });
+
+  // Function to show a random image
+  function showRandomImage() {
+    if (!window.selectedImages || window.selectedImages.length === 0) return;
+    const randomIndex = Math.floor(Math.random() * window.selectedImages.length);
+    randomImage.src = 'images/' + window.selectedImages[randomIndex];
+  }
+
+  // When user taps/clicks anywhere in the #gameScreen, show a new random image
+  gameScreen.addEventListener('click', showRandomImage);
+
+  // Also handle touchstart for mobile (optional)
+  gameScreen.addEventListener('touchstart', function(e) {
+    e.preventDefault(); // Prevent any highlighting or zoom
+    showRandomImage();
+  }, {passive: false});
+</script>
+
+</body>
+</html>
