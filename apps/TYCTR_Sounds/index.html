@@ -117,57 +117,7 @@
     </label>
   </div>
 
-  <!-- The list of images with checkboxes -->
-  <script>
-    // The ordered list of filenames (adjust to match your actual files):
-    var imageFilenames = [
-      "m.png",
-      "short_a.png",
-      "s.png",
-      "long_e.png",
-      "t.png",
-      "r.png",
-      "d.png",
-      "short_i.png",
-      "th.png",
-      "c.png",
-      "short_o.png",
-      "n.png",
-      "f.png",
-      "short_u.png",
-      "l.png",
-      "w.png",
-      "g.png",
-      "word_i.png",
-      "sh.png",
-      "long_a.png",
-      "h.png",
-      "k.png",
-      "long_o.png",
-      "v.png",
-      "p.png",
-      "ar.png",
-      "ch.png",
-      "short_e.png",
-      "b.png",
-      "ing.png",
-      "long_i.png",
-      "y.png",
-      "er.png",
-      "long_oo.png",
-      "j.png",
-      "wh.png",
-      "long_y.png",
-      "long_u.png",
-      "qu.png",
-      "x.png",
-      "z.png",
-      "ea.png",
-      "ai.png",
-      "ou.png"
-    ];
-  </script>
-
+  <!-- Where the image checkboxes will appear -->
   <div id="imagesList"></div>
 
   <button id="startButton">Start Game</button>
@@ -178,6 +128,59 @@
 </div>
 
 <script>
+  /*****************************************************************
+   * 1) Define the filenames in the desired order
+   *****************************************************************/
+  const imageFilenames = [
+    "m.png",
+    "short_a.png",
+    "s.png",
+    "long_e.png",
+    "t.png",
+    "r.png",
+    "d.png",
+    "short_i.png",
+    "th.png",
+    "c.png",
+    "short_o.png",
+    "n.png",
+    "f.png",
+    "short_u.png",
+    "l.png",
+    "w.png",
+    "g.png",
+    "word_i.png",
+    "sh.png",
+    "long_a.png",
+    "h.png",
+    "k.png",
+    "long_o.png",
+    "v.png",
+    "p.png",
+    "ar.png",
+    "ch.png",
+    "short_e.png",
+    "b.png",
+    "ing.png",
+    "long_i.png",
+    "y.png",
+    "er.png",
+    "long_oo.png",
+    "j.png",
+    "wh.png",
+    "long_y.png",
+    "long_u.png",
+    "qu.png",
+    "x.png",
+    "z.png",
+    "ea.png",
+    "ai.png",
+    "ou.png"
+  ];
+
+  /*****************************************************************
+   * 2) Grab references to our elements
+   *****************************************************************/
   const selectionScreen = document.getElementById('selectionScreen');
   const gameScreen = document.getElementById('gameScreen');
   const imagesList = document.getElementById('imagesList');
@@ -185,31 +188,39 @@
   const randomImage = document.getElementById('randomImage');
   const rangeModeCheckbox = document.getElementById('rangeModeCheckbox');
 
-  // Build the list of checkboxes
+  // We'll keep an array of checkbox elements
   const checkboxes = [];
+
+  /*****************************************************************
+   * 3) Build the list of checkboxes + image previews
+   *****************************************************************/
   imageFilenames.forEach(function(filename, index) {
+    // Create container
     const div = document.createElement('div');
     div.className = 'imageCheckbox';
 
+    // The checkbox
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.value = filename;
-    checkbox.dataset.index = index; // store the index in the dataset for easy reference
+    checkbox.dataset.index = index; // store the index for range logic
 
-    // Create an <img> preview
+    // The image preview
     const img = document.createElement('img');
-    img.src = 'images/' + filename;
+    img.src = 'images/' + filename; // Ensure the 'images' folder has this file
 
+    // A text label
     const label = document.createElement('label');
     label.textContent = filename;
 
-    // Add "change" event to handle range logic
+    // Add change listener for range mode logic
     checkbox.addEventListener('change', function() {
       if (rangeModeCheckbox.checked) {
         applyRangeSelection();
       }
     });
 
+    // Append everything
     div.appendChild(checkbox);
     div.appendChild(img);
     div.appendChild(label);
@@ -218,42 +229,45 @@
     checkboxes.push(checkbox);
   });
 
-  // If "range mode" is on, automatically select a continuous range from the
-  // earliest checked index to the latest checked index.
+  /*****************************************************************
+   * 4) Range Mode logic
+   *    If range mode is on, we find the min and max index of checked
+   *    boxes and re-check everything in between (for a continuous range).
+   *****************************************************************/
   function applyRangeSelection() {
-    // Gather all checked indices
-    let checkedIndices = [];
+    // Gather indices of all currently checked boxes
+    const checkedIndices = [];
     checkboxes.forEach(cb => {
       if (cb.checked) {
         checkedIndices.push(parseInt(cb.dataset.index, 10));
       }
     });
 
+    // If fewer than 2 boxes are checked, do nothing special
     if (checkedIndices.length < 2) {
-      // If there's only one or zero checked boxes, do nothing special
       return;
     }
 
-    // Find min and max index
-    let minIndex = Math.min(...checkedIndices);
-    let maxIndex = Math.max(...checkedIndices);
+    // Find the min and max among checked indices
+    const minIndex = Math.min(...checkedIndices);
+    const maxIndex = Math.max(...checkedIndices);
 
-    // Uncheck everything first
-    checkboxes.forEach(cb => {
-      cb.checked = false;
-    });
+    // Uncheck everything
+    checkboxes.forEach(cb => (cb.checked = false));
 
-    // Check everything in [minIndex, maxIndex]
+    // Check everything from minIndex up to maxIndex
     for (let i = minIndex; i <= maxIndex; i++) {
       checkboxes[i].checked = true;
     }
   }
 
-  // Handle the "Start Game" button
+  /*****************************************************************
+   * 5) Start Game button: gather selected, show game screen
+   *****************************************************************/
   startButton.addEventListener('click', function() {
-    // Gather selected images (i.e., checkboxes that are checked)
-    let selectedFilenames = [];
-    checkboxes.forEach((cb) => {
+    // Gather selected images
+    const selectedFilenames = [];
+    checkboxes.forEach(cb => {
       if (cb.checked) {
         selectedFilenames.push(cb.value);
       }
@@ -268,21 +282,33 @@
     selectionScreen.style.display = 'none';
     gameScreen.style.display = 'flex';
 
-    // We'll store the selected images in a global array
+    // Store the selected images globally
     window.selectedImages = selectedFilenames;
 
     // Show an initial random image
     showRandomImage();
   });
 
-  // Function to show a random image
+  /*****************************************************************
+   * 6) Random image display
+   *****************************************************************/
   function showRandomImage() {
     if (!window.selectedImages || window.selectedImages.length === 0) return;
     const randomIndex = Math.floor(Math.random() * window.selectedImages.length);
     randomImage.src = 'images/' + window.selectedImages[randomIndex];
   }
 
-  // When user taps/clicks anywhere in the #gameScreen, show a new random image
+  /*****************************************************************
+   * 7) On click/tap in the game screen, show a new random image
+   *****************************************************************/
   gameScreen.addEventListener('click', showRandomImage);
 
-  // Also handle touchstart
+  // Also handle touchstart for mobile to avoid highlight
+  gameScreen.addEventListener('touchstart', function(e) {
+    e.preventDefault(); // Prevent highlighting or zoom
+    showRandomImage();
+  }, {passive: false});
+</script>
+
+</body>
+</html>
