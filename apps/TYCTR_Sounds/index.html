@@ -95,10 +95,12 @@
       position: relative;
     }
 
+    /* The image in the game screen */
     #randomImage {
       max-width: 60%;
       height: auto;
       margin: 0 auto;
+      /* alt is empty so it won't show any placeholder text */
     }
 
     /* Prevent highlight on tap in some browsers */
@@ -113,7 +115,7 @@
   <div id="selectionOptions">
     <label>
       <input type="checkbox" id="rangeModeCheckbox">
-      Range Mode (check two or more to create a continuous range)
+      Range Mode (select two or more to include everything in between)
     </label>
   </div>
 
@@ -124,7 +126,8 @@
 </div>
 
 <div id="gameScreen">
-  <img id="randomImage" src="" alt="Random Image">
+  <!-- alt is empty to avoid placeholder text -->
+  <img id="randomImage" src="">
 </div>
 
 <script>
@@ -209,10 +212,6 @@
     const img = document.createElement('img');
     img.src = 'images/' + filename; // Ensure the 'images' folder has this file
 
-    // A text label
-    const label = document.createElement('label');
-    label.textContent = filename;
-
     // Add change listener for range mode logic
     checkbox.addEventListener('change', function() {
       if (rangeModeCheckbox.checked) {
@@ -220,10 +219,9 @@
       }
     });
 
-    // Append everything
+    // Append checkbox and image (no text label)
     div.appendChild(checkbox);
     div.appendChild(img);
-    div.appendChild(label);
 
     imagesList.appendChild(div);
     checkboxes.push(checkbox);
