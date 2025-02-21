@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <style>
+    :root {
+      --cell-size: 20px;
+    }
+    /* Night mode background and text color */
+    body {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+      background: #121212;
+      color: #e0e0e0;
+    }
+    #canvas-container {
+      margin: 20px 0;
+    }
+    /* The canvas itself does not have a solid background so that export transparency works */
+    canvas {
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      touch-action: none;
+    }
+    /* Controls above the palette */
+    #controls {
+      margin: 16px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      background: #6200ee;
+      color: white;
+      cursor: pointer;
+    }
+    /* Palette styling */
+    #color-palette {
+      display: flex;
+      flex-wrap: wrap;
+      width: 90%;
+      max-width: 600px;
+      overflow-x: auto;
+      padding: 8px;
+      background: #1e1e1e;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      margin-bottom: 12px;
+    }
+    .color-btn {
+      width: 40px;
+      height: 40px;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.1s;
+      flex: 0 0 auto;
+      margin: 4px;
+      background-size: 8px 8px;
+    }
+    .color-btn.selected {
+      border-color: #e0e0e0;
+      transform: scale(1.1);
+    }
+    /* Brightness slider container beneath the palette */
+    #brightness-container {
+      width: 90%;
+      max-width: 600px;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    #brightness-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 12px; /* Thicker track */
+      background: #444;
+      outline: none;
+      border-radius: 6px;
+      margin-top: 8px;
+    }
+    #brightness-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 24px; /* Bigger thumb */
+      height: 24px;
+      background: #6200ee;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    #brightness-slider::-moz-range-thumb {
+      width: 24px;
+      height: 24px;
+      background: #6200ee;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    /* Toggle container for "Depict Clear as Black" */
+    #clear-toggle-container {
+      width: 90%;
+      max-width: 600px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    /* Extra spacing so slider/toggle aren't flush with bottom */
+    .bottom-spacing {
+      margin-bottom: 40px;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <canvas id="pixel-canvas"></canvas>
+  </div>
+
+  <!-- Controls above the palette -->
+  <div id="controls">
+    <button id="clear-btn">Clear</button>
+    <button id="undo-btn">Undo</button>
+    <button id="redo-btn">Redo</button>
+    <button id="toggle-grid-btn">Toggle Grid</button>
+    <button id="save-btn">Save</button>
+  </div>
+
+  <!-- Color palette -->
+  <div id="color-palette"></div>
+
+  <!-- Brightness slider (no label text) -->
+  <div id="brightness-container">
+    <input type="range" id="brightness-slider" min="-50" max="50" value="0">
+  </div>
+
+  <!-- "Depict Clear as Black" toggle -->
+  <div id="clear-toggle-container">
+    <label>
+      <input type="checkbox" id="clear-toggle">
+      Depict Clear as Black
+    </label>
+  </div>
+  
+  <div class="bottom-spacing"></div>
+  
+  <script>
+    // Special constant for clear.
+    const CLEAR = "clear";
+    // Global brightness offset (range -50 to 50, default 0)
+    let brightnessOffset = 0;
+    // Global flag: if true, display clear cells as black on-screen.
+    let depictClearAsBlack = false;
+    // Palette definition:
+    // Index 0: CLEAR (should display as checkered pattern)
+    // Index 1: fixed black ("#000000")
+    // Index 2: fixed white ("#FFFFFF")
+    // Index 3: dynamic gray (hsl(0, 0%, (50 + brightnessOffset)%))
+    // Index 4 and onward: rainbow colors (from base hues with lightness = 50+brightnessOffset)
+    const TOTAL_RAINBOW_COLORS = 64;
+    const baseRainbowHues = [];
+    for (let i = 0; i < TOTAL_RAINBOW_COLORS; i++) {
+      baseRainbowHues.push(i * (360 / TOTAL_RAINBOW_COLORS));
+    }
+    function getPaletteColor(index) {
+      if (index === 0) {
+        return CLEAR;
+      } else if (index === 1) {
+        return "#000000";
+      } else if (index === 2) {
+        return "#FFFFFF";
+      } else if (index === 3) {
+        let lightness = Math.min(100, Math.max(0, 50 + brightnessOffset));
+        return `hsl(0, 0%, ${lightness}%)`;
+      } else {
+        let j = index - 4;
+        let lightness = Math.min(100, Math.max(0, 50 + brightnessOffset));
+        return `hsl(${baseRainbowHues[j]}, 100%, ${lightness}%)`;
+      }
+    }
+    // Build palette array.
+    function buildPalette() {
+      const palette = [];
+      const totalCount = 4 + baseRainbowHues.length; // 4 fixed + rainbow
+      for (let i = 0; i < totalCount; i++){
+        palette.push(getPaletteColor(i));
+      }
+      return palette;
+    }
+    const canvas = document.getElementById('pixel-canvas');
+    const ctx = canvas.getContext('2d');
+    // Default selected color: fixed black (index 1)
+    let selectedColor = 1;
+    let isDrawing = false;
+    let showGrid = true;
+    // 16x16 grid: each cell stores an actual color string.
+    // Initialize every cell to CLEAR.
+    let grid = Array(16).fill().map(() => Array(16).fill(CLEAR));
+    let undoStack = [];
+    let redoStack = [];
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    function saveState() {
+      undoStack.push(grid.map(row => row.slice()));
+      redoStack = [];
+    }
+    // Draw a checkered pattern within a cell.
+    function drawCheckerboard(context, x, y, w, h) {
+      const halfW = w / 2, halfH = h / 2;
+      context.fillStyle = "#ccc";
+      context.fillRect(x, y, halfW, halfH);
+      context.fillRect(x + halfW, y + halfH, halfW, halfH);
+      context.fillStyle = "#999";
+      context.fillRect(x + halfW, y, halfW, halfH);
+      context.fillRect(x, y + halfH, halfW, halfH);
+    }
+    // Draw the cells. For CLEAR cells, if not in export mode:
+    //   - If depictClearAsBlack is true, fill with black.
+    //   - Otherwise, draw the checkered pattern.
+    function drawArtwork(context, can, exportMode = false) {
+      const cellWidth = can.width / 16, cellHeight = can.height / 16;
+      for (let y = 0; y < 16; y++) {
+        for (let x = 0; x < 16; x++) {
+          const cellColor = grid[y][x];
+          if (cellColor === CLEAR) {
+            if (!exportMode) {
+              if (depictClearAsBlack) {
+                context.fillStyle = "#000000";
+                context.fillRect(x * cellWidth, y * cellHeight, cellWidth, cellHeight);
+              } else {
+                drawCheckerboard(context, x * cellWidth, y * cellHeight, cellWidth, cellHeight);
+              }
+            }
+            // In export mode, leave it transparent.
+          } else {
+            context.fillStyle = cellColor;
+            context.fillRect(x * cellWidth, y * cellHeight, cellWidth, cellHeight);
+          }
+        }
+      }
+    }
+    // Draw gridlines over the canvas if enabled.
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawArtwork(ctx, canvas, false);
+      if (showGrid) {
+        ctx.strokeStyle = '#444444';
+        ctx.lineWidth = 2;
+        const cellWidth = canvas.width / 16, cellHeight = canvas.height / 16;
+        for (let i = 0; i <= 16; i++) {
+          const posX = i * cellWidth, posY = i * cellHeight;
+          ctx.beginPath();
+          ctx.moveTo(posX, 0);
+          ctx.lineTo(posX, canvas.height);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(0, posY);
+          ctx.lineTo(canvas.width, posY);
+          ctx.stroke();
+        }
+      }
+    }
+    function getGridPosition(clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
+      return {
+        x: Math.floor((clientX - rect.left) * scaleX / (canvas.width / 16)),
+        y: Math.floor((clientY - rect.top) * scaleY / (canvas.height / 16))
+      };
+    }
+    // When drawing, store the color string computed at that moment.
+    function startDrawing(e) {
+      if (!isDrawing) { saveState(); }
+      isDrawing = true;
+      const pos = getGridPosition(e.clientX, e.clientY);
+      if (pos.x >= 0 && pos.x < 16 && pos.y >= 0 && pos.y < 16) {
+        grid[pos.y][pos.x] = getPaletteColor(selectedColor);
+        draw();
+      }
+    }
+    function drawEvent(e) {
+      if (!isDrawing) return;
+      const pos = getGridPosition(e.clientX, e.clientY);
+      if (pos.x >= 0 && pos.x < 16 && pos.y >= 0 && pos.y < 16) {
+        grid[pos.y][pos.x] = getPaletteColor(selectedColor);
+        draw();
+      }
+    }
+    function stopDrawing() { isDrawing = false; }
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', drawEvent);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseleave', stopDrawing);
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      startDrawing(e.touches[0]);
+    });
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      drawEvent(e.touches[0]);
+    });
+    canvas.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      stopDrawing();
+    });
+    document.getElementById('clear-btn').addEventListener('click', () => {
+      grid = Array(16).fill().map(() => Array(16).fill(CLEAR));
+      saveState();
+      draw();
+    });
+    document.getElementById('undo-btn').addEventListener('click', () => {
+      if (undoStack.length > 0) {
+        redoStack.push(grid.map(row => row.slice()));
+        grid = undoStack.pop();
+        draw();
+      }
+    });
+    document.getElementById('redo-btn').addEventListener('click', () => {
+      if (redoStack.length > 0) {
+        undoStack.push(grid.map(row => row.slice()));
+        grid = redoStack.pop();
+        draw();
+      }
+    });
+    document.getElementById('toggle-grid-btn').addEventListener('click', () => {
+      showGrid = !showGrid;
+      draw();
+    });
+    document.getElementById('save-btn').addEventListener('click', () => {
+      const exportCanvas = document.createElement('canvas');
+      exportCanvas.width = 256;
+      exportCanvas.height = 256;
+      const exportCtx = exportCanvas.getContext('2d');
+      // In export mode, do not fill a background so that clear cells remain transparent.
+      drawArtwork(exportCtx, exportCanvas, true);
+      const randomStr = Math.random().toString(36).substring(2, 7);
+      const link = document.createElement('a');
+      link.download = `pixel-art-${randomStr}.png`;
+      link.href = exportCanvas.toDataURL();
+      link.click();
+    });
+    function selectColor(index) {
+      selectedColor = index;
+      document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('selected'));
+      document.querySelector(`[data-color="${index}"]`).classList.add('selected');
+    }
+    // Initialize or update the palette buttons.
+    function initPalette() {
+      const paletteContainer = document.getElementById('color-palette');
+      const currentPalette = buildPalette();
+      if (paletteContainer.childElementCount === 0) {
+        currentPalette.forEach((color, index) => {
+          const btn = document.createElement('button');
+          btn.className = 'color-btn';
+          btn.dataset.color = index;
+          if (color === CLEAR) {
+            // For the clear option, set a checkered background.
+            btn.style.backgroundImage = "linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)";
+            btn.style.backgroundSize = "8px 8px";
+          } else {
+            btn.style.backgroundColor = color;
+          }
+          btn.addEventListener('click', () => selectColor(index));
+          if (index === 1) btn.classList.add('selected'); // default: fixed black
+          paletteContainer.appendChild(btn);
+        });
+      } else {
+        Array.from(paletteContainer.children).forEach((btn, index) => {
+          const color = getPaletteColor(index);
+          if (color === CLEAR) {
+            btn.style.backgroundImage = "linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)";
+            btn.style.backgroundSize = "8px 8px";
+            btn.style.backgroundColor = ""; // clear any solid background
+          } else {
+            btn.style.backgroundImage = "";
+            btn.style.backgroundColor = color;
+          }
+        });
+      }
+    }
+    // Handle brightness slider changes.
+    document.getElementById('brightness-slider').addEventListener('input', (e) => {
+      brightnessOffset = parseInt(e.target.value);
+      initPalette();
+      draw();
+    });
+    // Handle "Depict Clear as Black" toggle.
+    document.getElementById('clear-toggle').addEventListener('change', (e) => {
+      depictClearAsBlack = e.target.checked;
+      draw();
+    });
+    // Resize canvas (separately from palette initialization)
+    function updateCanvasSize() {
+      const containerWidth = document.documentElement.clientWidth - 20;
+      const cellSize = Math.floor(containerWidth / 16);
+      const canvasSize = cellSize * 16;
+      canvas.width = canvasSize;
+      canvas.height = canvasSize;
+      canvas.style.width = `${canvasSize}px`;
+      canvas.style.height = `${canvasSize}px`;
+      draw();
+    }
+    function initAll() {
+      updateCanvasSize();
+      initPalette();
+      draw();
+    }
+    initAll();
+    window.addEventListener('resize', () => {
+      updateCanvasSize();
+    });
+  </script>
+</body>
+</html>
