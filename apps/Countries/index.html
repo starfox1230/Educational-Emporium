@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <!-- Ensure proper scaling on mobile devices -->
+  <!-- Ensures proper scaling on mobile devices -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Geography Quiz</title>
   <style>
@@ -186,7 +186,7 @@
         <button class="btn continent-btn" data-continent="Oceania">Oceania</button>
         <button class="btn continent-btn" data-continent="Antarctica">Antarctica</button>
       </div>
-      <!-- The selection list is now grouped -->
+      <!-- The selection list is now grouped into three sections -->
       <div id="selection-list">
         <!-- Countries Grouped by Continent -->
         <div id="countries-section">
@@ -204,7 +204,7 @@
             <div class="group-items"></div>
           </div>
         </div>
-        <!-- Others Section (for non-country, non-continent items) -->
+        <!-- Others Section (non-country, non-continent items) -->
         <div id="others-section">
           <h2>Others</h2>
           <div id="others-group" class="group-container">
@@ -224,7 +224,7 @@
       <h2 id="question-count">Question 1</h2>
       <img id="quiz-image" src="" alt="Quiz Image">
       <div class="options" id="options-container">
-        <!-- Options buttons go here -->
+        <!-- Multiple-choice options will appear here -->
       </div>
       <div style="margin-top: 1rem;">
         <button id="next-btn" class="btn" style="display: none;">Next</button>
@@ -240,7 +240,7 @@
   </div>
 
   <script>
-    // Full quizData array – each entry has file, answer, group, and if applicable, continent (or region).
+    // Full quizData array – each entry has file, answer, group, and if applicable, continent (or region)
     const quizData = [
       { file: "ug-map-abkhazia.png", answer: "Abkhazia", group: "country", continent: "Europe" },
       { file: "ug-map-adriatic_sea.png", answer: "Adriatic Sea", group: "water" },
@@ -565,7 +565,7 @@
 
     /* --- Update Group Counters --- */
     function updateGroupCounters() {
-      // Update each collapsible group in the Countries section
+      // Update each group in the Countries section
       const groups = document.querySelectorAll('#countries-groups .group-container');
       groups.forEach(group => {
         const items = group.querySelectorAll('.item-checkbox');
@@ -613,7 +613,7 @@
           countryGroups[item.continent].push(item);
         }
       });
-      // Create collapsible sections for each continent group (for countries)
+      // Create collapsible sections for each continent group (Countries)
       Object.keys(countryGroups).sort().forEach(continent => {
         const container = document.createElement('div');
         container.className = "group-container";
@@ -625,7 +625,7 @@
         countryGroups[continent].sort((a, b) => a.answer.localeCompare(b.answer)).forEach(item => {
           const label = document.createElement('label');
           label.className = "item-label";
-          // Countries: checkbox unchecked by default.
+          // Countries: checkboxes unchecked by default.
           label.innerHTML = `<input type="checkbox" class="item-checkbox" data-continent="${continent}" data-answer="${item.answer}" data-index="${quizData.indexOf(item)}"> ${item.answer}`;
           label.querySelector('input').addEventListener('change', updateGroupCounters);
           itemsDiv.appendChild(label);
@@ -640,17 +640,17 @@
         countriesGroupsContainer.appendChild(container);
       });
 
-      // Build a separate Continents section (for items where group === "continent")
+      // Build the Continents section (items with group "continent")
       const continents = quizData.filter(item => item.group === "continent");
       continents.sort((a, b) => a.answer.localeCompare(b.answer)).forEach(item => {
         const label = document.createElement('label');
         label.className = "item-label";
-        // Add data-continent attribute so continent toggles affect these as well.
+        // Include data-continent so toggles work on these too.
         label.innerHTML = `<input type="checkbox" class="item-checkbox" data-continent="${item.continent}" data-answer="${item.answer}" data-index="${quizData.indexOf(item)}"> ${item.answer}`;
         label.querySelector('input').addEventListener('change', updateGroupCounters);
         continentsGroupContainer.appendChild(label);
       });
-      // Add a click event to the Continents header to toggle the group
+      // Enable toggle for the Continents header
       const continentsHeader = document.querySelector('#continents-group .group-header');
       continentsHeader.addEventListener('click', () => {
         const itemsDiv = document.querySelector('#continents-group .group-items');
@@ -659,7 +659,7 @@
         arrow.innerHTML = itemsDiv.classList.contains("visible") ? "&#x25BC;" : "&#x25B6;";
       });
 
-      // Build the Others section (non-country and non-continent items)
+      // Build the Others section (non-country, non-continent items)
       const others = quizData.filter(item => item.group !== "country" && item.group !== "continent");
       others.sort((a, b) => a.answer.localeCompare(b.answer)).forEach(item => {
         const label = document.createElement('label');
@@ -685,7 +685,7 @@
           label.style.display = "none";
         }
       });
-      // When a search query is active, expand all groups.
+      // Expand all groups when a search query is active.
       const groupItems = document.querySelectorAll('.group-items');
       if (query.trim() !== "") {
         groupItems.forEach(div => div.classList.add("visible"));
