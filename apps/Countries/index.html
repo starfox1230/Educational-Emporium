@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <!-- Ensures proper scaling on mobile devices -->
+  <!-- Ensure proper scaling on mobile devices -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Geography Quiz</title>
   <style>
@@ -193,7 +193,18 @@
           <h2>Countries</h2>
           <div id="countries-groups"></div>
         </div>
-        <!-- Others (Water, Continent maps, Regions) -->
+        <!-- Continents Section -->
+        <div id="continents-section">
+          <h2>Continents</h2>
+          <div id="continents-group" class="group-container">
+            <div class="group-header">
+              <span>Continents <span class="counter">(0/0)</span></span>
+              <span>&#x25B6;</span>
+            </div>
+            <div class="group-items"></div>
+          </div>
+        </div>
+        <!-- Others Section (for non-country, non-continent items) -->
         <div id="others-section">
           <h2>Others</h2>
           <div id="others-group" class="group-container">
@@ -554,7 +565,7 @@
 
     /* --- Update Group Counters --- */
     function updateGroupCounters() {
-      // For each collapsible group in the countries section
+      // Update each collapsible group in the Countries section
       const groups = document.querySelectorAll('#countries-groups .group-container');
       groups.forEach(group => {
         const items = group.querySelectorAll('.item-checkbox');
@@ -565,7 +576,15 @@
           counterSpan.textContent = `(${checkedCount}/${total})`;
         }
       });
-      // For the Others section
+      // Update the Continents section
+      const continentsItems = document.querySelectorAll('#continents-group .item-checkbox');
+      const continentsChecked = Array.from(continentsItems).filter(cb => cb.checked).length;
+      const continentsTotal = continentsItems.length;
+      const continentsCounter = document.querySelector('#continents-group .counter');
+      if (continentsCounter) {
+        continentsCounter.textContent = `(${continentsChecked}/${continentsTotal})`;
+      }
+      // Update the Others section
       const othersItems = document.querySelectorAll('#others-group .item-checkbox');
       const othersChecked = Array.from(othersItems).filter(cb => cb.checked).length;
       const othersTotal = othersItems.length;
@@ -578,8 +597,10 @@
     /* --- Build the Selection List Using Groups --- */
     function populateSelection() {
       const countriesGroupsContainer = document.getElementById('countries-groups');
+      const continentsGroupContainer = document.querySelector('#continents-group .group-items');
       const othersGroupContainer = document.querySelector('#others-group .group-items');
       countriesGroupsContainer.innerHTML = "";
+      continentsGroupContainer.innerHTML = "";
       othersGroupContainer.innerHTML = "";
 
       // Group countries by continent
@@ -592,7 +613,7 @@
           countryGroups[item.continent].push(item);
         }
       });
-      // Create collapsible sections for each continent group
+      // Create collapsible sections for each continent group (for countries)
       Object.keys(countryGroups).sort().forEach(continent => {
         const container = document.createElement('div');
         container.className = "group-container";
@@ -604,7 +625,7 @@
         countryGroups[continent].sort((a, b) => a.answer.localeCompare(b.answer)).forEach(item => {
           const label = document.createElement('label');
           label.className = "item-label";
-          // All checkboxes are unchecked by default.
+          // Countries: checkbox unchecked by default.
           label.innerHTML = `<input type="checkbox" class="item-checkbox" data-continent="${continent}" data-answer="${item.answer}" data-index="${quizData.indexOf(item)}"> ${item.answer}`;
           label.querySelector('input').addEventListener('change', updateGroupCounters);
           itemsDiv.appendChild(label);
@@ -619,8 +640,27 @@
         countriesGroupsContainer.appendChild(container);
       });
 
-      // Group others (non-countries)
-      const others = quizData.filter(item => item.group !== "country");
+      // Build a separate Continents section (for items where group === "continent")
+      const continents = quizData.filter(item => item.group === "continent");
+      continents.sort((a, b) => a.answer.localeCompare(b.answer)).forEach(item => {
+        const label = document.createElement('label');
+        label.className = "item-label";
+        // Add data-continent attribute so continent toggles affect these as well.
+        label.innerHTML = `<input type="checkbox" class="item-checkbox" data-continent="${item.continent}" data-answer="${item.answer}" data-index="${quizData.indexOf(item)}"> ${item.answer}`;
+        label.querySelector('input').addEventListener('change', updateGroupCounters);
+        continentsGroupContainer.appendChild(label);
+      });
+      // Add a click event to the Continents header to toggle the group
+      const continentsHeader = document.querySelector('#continents-group .group-header');
+      continentsHeader.addEventListener('click', () => {
+        const itemsDiv = document.querySelector('#continents-group .group-items');
+        itemsDiv.classList.toggle("visible");
+        const arrow = continentsHeader.querySelector("span:last-child");
+        arrow.innerHTML = itemsDiv.classList.contains("visible") ? "&#x25BC;" : "&#x25B6;";
+      });
+
+      // Build the Others section (non-country and non-continent items)
+      const others = quizData.filter(item => item.group !== "country" && item.group !== "continent");
       others.sort((a, b) => a.answer.localeCompare(b.answer)).forEach(item => {
         const label = document.createElement('label');
         label.className = "item-label";
@@ -645,7 +685,7 @@
           label.style.display = "none";
         }
       });
-      // Expand all groups when a search query is active.
+      // When a search query is active, expand all groups.
       const groupItems = document.querySelectorAll('.group-items');
       if (query.trim() !== "") {
         groupItems.forEach(div => div.classList.add("visible"));
@@ -668,7 +708,7 @@
     document.querySelectorAll('.continent-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const continent = btn.getAttribute('data-continent');
-        // Toggle all checkboxes with matching data-continent attribute in both countries and others.
+        // Toggle all checkboxes with matching data-continent attribute (across all sections).
         const checkboxes = document.querySelectorAll(`.item-checkbox[data-continent="${continent}"]`);
         const allChecked = Array.from(checkboxes).every(cb => cb.checked);
         checkboxes.forEach(cb => cb.checked = !allChecked);
