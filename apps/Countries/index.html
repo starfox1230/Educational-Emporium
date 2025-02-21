@@ -669,6 +669,14 @@
         label.querySelector('input').addEventListener('change', updateGroupCounters);
         othersGroupContainer.appendChild(label);
       });
+      // Enable toggle for the Others header
+      const othersHeader = document.querySelector('#others-group .group-header');
+      othersHeader.addEventListener('click', () => {
+        const itemsDiv = document.querySelector('#others-group .group-items');
+        itemsDiv.classList.toggle("visible");
+        const arrow = othersHeader.querySelector("span:last-child");
+        arrow.innerHTML = itemsDiv.classList.contains("visible") ? "&#x25BC;" : "&#x25B6;";
+      });
 
       updateGroupCounters();
     }
