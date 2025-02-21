@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Geography Quiz</title>
+  <style>
+    /* Global styles */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #e0eafc, #cfdef3);
+      color: #333;
+    }
+    .container {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 1rem;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1, h2 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    /* Selection Screen */
+    #selection-screen ul {
+      list-style: none;
+      padding: 0;
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+    }
+    #selection-screen li {
+      padding: 0.5rem;
+      border-bottom: 1px solid #eee;
+    }
+    #selection-screen li:last-child {
+      border-bottom: none;
+    }
+    .btn {
+      display: inline-block;
+      padding: 0.6rem 1.2rem;
+      margin: 0.5rem 0;
+      background-color: #0077cc;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .btn:hover {
+      background-color: #005fa3;
+    }
+    /* Quiz Screen */
+    #quiz-screen {
+      text-align: center;
+    }
+    #quiz-image {
+      max-width: 100%;
+      height: auto;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+    }
+    .options {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+    }
+    .option-btn {
+      flex: 1 1 calc(45% - 1rem);
+      max-width: 45%;
+      padding: 0.8rem;
+      background-color: #f0f0f0;
+      border: 2px solid transparent;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s, border-color 0.3s;
+    }
+    .option-btn:hover {
+      background-color: #e0e0e0;
+    }
+    .correct {
+      background-color: #c8e6c9 !important;
+      border-color: #2e7d32 !important;
+    }
+    .wrong {
+      background-color: #ffcdd2 !important;
+      border-color: #c62828 !important;
+    }
+    /* Result Screen */
+    #result-screen {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Selection Screen -->
+    <div id="selection-screen">
+      <h1>Select Quiz Items</h1>
+      <p>Check the items you want to include in your quiz.</p>
+      <ul id="item-list">
+        <!-- Dynamically filled -->
+      </ul>
+      <button id="start-quiz" class="btn">Start Quiz</button>
+    </div>
+    
+    <!-- Quiz Screen -->
+    <div id="quiz-screen" style="display: none;">
+      <h2 id="question-count">Question 1</h2>
+      <img id="quiz-image" src="" alt="Quiz Image">
+      <div class="options" id="options-container">
+        <!-- Options buttons go here -->
+      </div>
+      <div style="margin-top: 1rem;">
+        <button id="next-btn" class="btn" style="display: none;">Next</button>
+      </div>
+    </div>
+    
+    <!-- Result Screen -->
+    <div id="result-screen" style="display: none;">
+      <h2>Quiz Completed!</h2>
+      <p id="final-score"></p>
+      <button id="restart-btn" class="btn">Restart Quiz</button>
+    </div>
+  </div>
+
+  <script>
+    // Sample data – add all your image entries here following this pattern.
+    // For each item: file (image file name), answer (display name), group (either "country", "water", or "continent"), and, if a country, a continent.
+    const quizData = [
+      { file: "ug-map-afghanistan.png", answer: "Afghanistan", group: "country", continent: "Asia" },
+      { file: "ug-map-albania.png", answer: "Albania", group: "country", continent: "Europe" },
+      { file: "ug-map-adriatic_sea.png", answer: "Adriatic Sea", group: "water" },
+      { file: "ug-map-aegean_sea.png", answer: "Aegean Sea", group: "water" },
+      { file: "ug-map-algeria.png", answer: "Algeria", group: "country", continent: "Africa" },
+      { file: "ug-map-american_samoa.png", answer: "American Samoa", group: "country", continent: "Oceania" }
+      // ... add the remaining items here ...
+    ];
+
+    let selectedItems = [];
+    let quizItems = [];
+    let currentQuestionIndex = 0;
+    let score = 0;
+
+    const selectionScreen = document.getElementById('selection-screen');
+    const itemList = document.getElementById('item-list');
+    const startQuizBtn = document.getElementById('start-quiz');
+    const quizScreen = document.getElementById('quiz-screen');
+    const quizImage = document.getElementById('quiz-image');
+    const optionsContainer = document.getElementById('options-container');
+    const questionCountEl = document.getElementById('question-count');
+    const nextBtn = document.getElementById('next-btn');
+    const resultScreen = document.getElementById('result-screen');
+    const finalScoreEl = document.getElementById('final-score');
+    const restartBtn = document.getElementById('restart-btn');
+
+    // Populate the selection list
+    function populateSelection() {
+      // Sort items alphabetically by answer
+      const sortedData = quizData.slice().sort((a,b) => a.answer.localeCompare(b.answer));
+      sortedData.forEach((item, index) => {
+        const li = document.createElement('li');
+        li.innerHTML = `<label>
+          <input type="checkbox" value="${index}" checked> ${item.answer}
+        </label>`;
+        itemList.appendChild(li);
+      });
+    }
+
+    // Start quiz: gather selected items and randomize quiz order
+    function startQuiz() {
+      const checkboxes = itemList.querySelectorAll('input[type="checkbox"]');
+      selectedItems = [];
+      checkboxes.forEach((checkbox, index) => {
+        if (checkbox.checked) {
+          // We use the sorted order as in populateSelection()
+          selectedItems.push(quizData.sort((a,b) => a.answer.localeCompare(b.answer))[index]);
+        }
+      });
+      if (selectedItems.length < 1) {
+        alert("Please select at least one item to start the quiz.");
+        return;
+      }
+      // Randomize order of questions
+      quizItems = shuffleArray(selectedItems.slice());
+      currentQuestionIndex = 0;
+      score = 0;
+      selectionScreen.style.display = "none";
+      resultScreen.style.display = "none";
+      quizScreen.style.display = "block";
+      showQuestion();
+    }
+
+    // Display the current question
+    function showQuestion() {
+      nextBtn.style.display = "none";
+      optionsContainer.innerHTML = "";
+      const currentItem = quizItems[currentQuestionIndex];
+      questionCountEl.textContent = `Question ${currentQuestionIndex + 1} of ${quizItems.length}`;
+      quizImage.src = currentItem.file;
+      quizImage.alt = currentItem.answer;
+      // Generate answer options
+      const options = generateOptions(currentItem);
+      options.forEach(option => {
+        const btn = document.createElement('button');
+        btn.className = "option-btn";
+        btn.textContent = option;
+        btn.onclick = () => selectOption(btn, option, currentItem.answer);
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    // When an option is selected
+    function selectOption(btn, selectedAnswer, correctAnswer) {
+      // Disable all option buttons
+      Array.from(optionsContainer.children).forEach(button => {
+        button.disabled = true;
+      });
+      if (selectedAnswer === correctAnswer) {
+        btn.classList.add("correct");
+        score++;
+      } else {
+        btn.classList.add("wrong");
+        // Also highlight the correct answer
+        Array.from(optionsContainer.children).forEach(button => {
+          if (button.textContent === correctAnswer) {
+            button.classList.add("correct");
+          }
+        });
+      }
+      nextBtn.style.display = "inline-block";
+    }
+
+    // Generate options: include the correct answer plus three distractors
+    function generateOptions(currentItem) {
+      const options = [currentItem.answer];
+      // For countries, try to pick from the same continent; for water items, pick from group "water".
+      let pool = quizData.filter(item => {
+        if (item.answer === currentItem.answer) return false;
+        if (currentItem.group === "country") {
+          return item.group === "country" && item.continent === currentItem.continent;
+        } else {
+          return item.group === currentItem.group;
+        }
+      });
+      // If there are not enough items in the filtered pool, broaden the pool
+      if (pool.length < 3) {
+        pool = quizData.filter(item => item.answer !== currentItem.answer && item.group === currentItem.group);
+      }
+      pool = shuffleArray(pool);
+      for (let i = 0; i < pool.length && options.length < 4; i++) {
+        options.push(pool[i].answer);
+      }
+      // In case there still aren’t enough distractors, add random ones
+      if (options.length < 4) {
+        const extraPool = quizData.filter(item => item.answer !== currentItem.answer);
+        extraPool.forEach(item => {
+          if (options.length < 4 && !options.includes(item.answer)) {
+            options.push(item.answer);
+          }
+        });
+      }
+      return shuffleArray(options);
+    }
+
+    // Utility: Shuffle an array
+    function shuffleArray(array) {
+      let currentIndex = array.length, randomIndex;
+      // While there remain elements to shuffle…
+      while (currentIndex !== 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+        [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+      }
+      return array;
+    }
+
+    // Next question or finish quiz
+    nextBtn.addEventListener('click', () => {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < quizItems.length) {
+        showQuestion();
+      } else {
+        showResult();
+      }
+    });
+
+    // Display the final result
+    function showResult() {
+      quizScreen.style.display = "none";
+      resultScreen.style.display = "block";
+      finalScoreEl.textContent = `Your score: ${score} out of ${quizItems.length}`;
+    }
+
+    // Restart quiz
+    restartBtn.addEventListener('click', () => {
+      // Reset to selection screen
+      resultScreen.style.display = "none";
+      selectionScreen.style.display = "block";
+    });
+
+    startQuizBtn.addEventListener('click', startQuiz);
+    populateSelection();
+
+    /* 
+      Research-backed enhancements included:
+      - Immediate feedback: Answers are highlighted green/red immediately.
+      - Randomized question order to promote learning.
+      - Distractor answers are chosen from similar groups (or same continent for countries) to challenge recognition.
+      - A clean, modern, responsive UI with clear typography and subtle animations.
+      - Separation of concerns: selection, quiz, and result screens, allowing focus and reducing cognitive load.
+      - Error checking: Preventing a quiz start with zero selections.
+      
+      To fully support your complete set of images, simply add the remaining items to the quizData array, ensuring each has an appropriate group and, for countries, continent information.
+    */
+  </script>
+</body>
+</html>
