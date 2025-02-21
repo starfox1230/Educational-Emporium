@@ -18,33 +18,66 @@
       user-select: none;
       -webkit-touch-callout: none;
       touch-action: manipulation;
-    }
-
-    body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
       background: #f5f5f5;
     }
 
-    /* Container for the selection screen */
+    /* Container for everything on the selection screen */
     #selectionScreen {
       width: 90%;
       max-width: 600px;
-      margin: 10px auto;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
     }
 
-    #selectionOptions {
-      margin-bottom: 10px;
-      padding: 10px;
+    /************************************************
+     * Sticky top bar with Range Mode + Start button
+     ************************************************/
+    #topBar {
+      position: sticky;
+      top: 0;
+      z-index: 10; /* ensure it stays on top while scrolling */
       background: #ddd;
-      border-radius: 5px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-radius: 0 0 5px 5px;
     }
 
-    #selectionOptions label {
+    #rangeModeContainer {
+      display: flex;
+      align-items: center;
+    }
+
+    #rangeModeContainer label {
       cursor: pointer;
       font-weight: bold;
+      margin-left: 8px;
+    }
+
+    #startButton {
+      margin-left: 20px;
+      padding: 10px 20px;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      flex-shrink: 0; /* Keep button from shrinking */
+    }
+    #startButton:hover {
+      background: #0056b3;
+    }
+
+    /************************************************
+     * Images list area
+     ************************************************/
+    #imagesList {
+      margin-top: 10px;
+      padding-bottom: 20px;
     }
 
     .imageCheckbox {
@@ -66,23 +99,9 @@
       cursor: pointer;
     }
 
-    #startButton {
-      display: inline-block;
-      margin: 10px 0;
-      padding: 10px 20px;
-      background: #007bff;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    #startButton:hover {
-      background: #0056b3;
-    }
-
-    /* Game screen styling */
+    /************************************************
+     * Game screen styling
+     ************************************************/
     #gameScreen {
       display: none;
       width: 100%;
@@ -100,7 +119,6 @@
       max-width: 60%;
       height: auto;
       margin: 0 auto;
-      /* alt is empty so it won't show any placeholder text */
     }
 
     /* Prevent highlight on tap in some browsers */
@@ -111,22 +129,25 @@
 </head>
 <body>
 
+<!-- Selection Screen -->
 <div id="selectionScreen">
-  <div id="selectionOptions">
-    <label>
+
+  <!-- Sticky Top Bar: Range Mode + Start Button -->
+  <div id="topBar">
+    <div id="rangeModeContainer">
       <input type="checkbox" id="rangeModeCheckbox">
-      Range Mode (select two or more to include everything in between)
-    </label>
+      <label for="rangeModeCheckbox">Range Mode</label>
+    </div>
+    <button id="startButton">Start Game</button>
   </div>
 
   <!-- Where the image checkboxes will appear -->
   <div id="imagesList"></div>
 
-  <button id="startButton">Start Game</button>
 </div>
 
+<!-- Game Screen -->
 <div id="gameScreen">
-  <!-- alt is empty to avoid placeholder text -->
   <img id="randomImage" src="">
 </div>
 
