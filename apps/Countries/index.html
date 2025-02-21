@@ -24,27 +24,23 @@
       text-align: center;
       margin-bottom: 1rem;
     }
-    /* Selection Screen */
-    #selection-screen ul {
-      list-style: none;
-      padding: 0;
-      max-height: 400px;
-      overflow-y: auto;
-      border: 1px solid #ddd;
-      border-radius: 4px;
+    /* Selection Controls */
+    #selection-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
       margin-bottom: 1rem;
     }
-    #selection-screen li {
+    #selection-controls input[type="text"] {
       padding: 0.5rem;
-      border-bottom: 1px solid #eee;
-    }
-    #selection-screen li:last-child {
-      border-bottom: none;
+      font-size: 1rem;
+      flex: 1 1 250px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
     }
     .btn {
-      display: inline-block;
-      padding: 0.6rem 1.2rem;
-      margin: 0.5rem 0;
+      padding: 0.5rem 1rem;
       background-color: #0077cc;
       color: #fff;
       border: none;
@@ -54,6 +50,43 @@
     }
     .btn:hover {
       background-color: #005fa3;
+    }
+    #continent-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+    /* Collapsible groups */
+    .group-container {
+      margin-bottom: 1rem;
+    }
+    .group-header {
+      background-color: #f0f0f0;
+      padding: 0.5rem;
+      cursor: pointer;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .group-header:hover {
+      background-color: #e0e0e0;
+    }
+    .group-items {
+      padding: 0.5rem 1rem;
+      border: 1px solid #ddd;
+      border-top: none;
+      display: none;
+    }
+    .group-items.visible {
+      display: block;
+    }
+    .item-label {
+      display: block;
+      margin: 0.3rem 0;
     }
     /* Quiz Screen */
     #quiz-screen {
@@ -104,11 +137,41 @@
     <!-- Selection Screen -->
     <div id="selection-screen">
       <h1>Select Quiz Items</h1>
-      <p>Check the items you want to include in your quiz.</p>
-      <ul id="item-list">
-        <!-- Dynamically filled -->
-      </ul>
-      <button id="start-quiz" class="btn">Start Quiz</button>
+      <div id="selection-controls">
+        <input type="text" id="search-box" placeholder="Search...">
+        <button id="select-all" class="btn">Select All</button>
+        <button id="deselect-all" class="btn">Deselect All</button>
+        <button id="smart-suggest" class="btn">Smart Suggest</button>
+      </div>
+      <div id="continent-buttons">
+        <button class="btn continent-btn" data-continent="Africa">Africa</button>
+        <button class="btn continent-btn" data-continent="Asia">Asia</button>
+        <button class="btn continent-btn" data-continent="Europe">Europe</button>
+        <button class="btn continent-btn" data-continent="North America">North America</button>
+        <button class="btn continent-btn" data-continent="South America">South America</button>
+        <button class="btn continent-btn" data-continent="Oceania">Oceania</button>
+        <button class="btn continent-btn" data-continent="Antarctica">Antarctica</button>
+      </div>
+      <!-- The selection list is now grouped -->
+      <div id="selection-list">
+        <!-- Countries Grouped by Continent -->
+        <div id="countries-section">
+          <h2>Countries</h2>
+          <div id="countries-groups"></div>
+        </div>
+        <!-- Others (Water, Continent maps, Regions) -->
+        <div id="others-section">
+          <h2>Others</h2>
+          <div id="others-group" class="group-container">
+            <div class="group-header">
+              <span>Other Items</span>
+              <span>&#x25BC;</span>
+            </div>
+            <div class="group-items"></div>
+          </div>
+        </div>
+      </div>
+      <button id="start-quiz" class="btn" style="margin-top: 1rem;">Start Quiz</button>
     </div>
     
     <!-- Quiz Screen -->
@@ -132,7 +195,7 @@
   </div>
 
   <script>
-    // Full quizData array with all image files, their display names, groups, and continents (if applicable)
+    // Full quizData array (each entry has file, answer, group, and if country, continent)
     const quizData = [
       { file: "ug-map-abkhazia.png", answer: "Abkhazia", group: "country", continent: "Europe" },
       { file: "ug-map-adriatic_sea.png", answer: "Adriatic Sea", group: "water" },
@@ -455,64 +518,130 @@
       { file: "ug-map-zimbabwe.png", answer: "Zimbabwe", group: "country", continent: "Africa" }
     ];
 
-    let selectedItems = [];
-    let quizItems = [];
-    let currentQuestionIndex = 0;
-    let score = 0;
-
-    const selectionScreen = document.getElementById('selection-screen');
-    const itemList = document.getElementById('item-list');
-    const startQuizBtn = document.getElementById('start-quiz');
-    const quizScreen = document.getElementById('quiz-screen');
-    const quizImage = document.getElementById('quiz-image');
-    const optionsContainer = document.getElementById('options-container');
-    const questionCountEl = document.getElementById('question-count');
-    const nextBtn = document.getElementById('next-btn');
-    const resultScreen = document.getElementById('result-screen');
-    const finalScoreEl = document.getElementById('final-score');
-    const restartBtn = document.getElementById('restart-btn');
-
-    // Populate the selection list (sorted alphabetically by answer)
+    // Build the selection list using groups.
     function populateSelection() {
-      const sortedData = quizData.slice().sort((a, b) => a.answer.localeCompare(b.answer));
-      sortedData.forEach((item, index) => {
-        const li = document.createElement('li');
-        li.innerHTML = `<label>
-          <input type="checkbox" value="${index}" checked> ${item.answer}
-        </label>`;
-        itemList.appendChild(li);
+      const countriesGroupsContainer = document.getElementById('countries-groups');
+      const othersGroupContainer = document.querySelector('#others-group .group-items');
+      countriesGroupsContainer.innerHTML = "";
+      othersGroupContainer.innerHTML = "";
+
+      // Group countries by continent
+      const countryGroups = {};
+      quizData.forEach(item => {
+        if (item.group === "country") {
+          if (!countryGroups[item.continent]) {
+            countryGroups[item.continent] = [];
+          }
+          countryGroups[item.continent].push(item);
+        }
+      });
+      // Create collapsible sections for each continent group
+      Object.keys(countryGroups).sort().forEach(continent => {
+        const container = document.createElement('div');
+        container.className = "group-container";
+        const header = document.createElement('div');
+        header.className = "group-header";
+        header.innerHTML = `<span>${continent}</span><span>&#x25BC;</span>`;
+        const itemsDiv = document.createElement('div');
+        itemsDiv.className = "group-items";
+        countryGroups[continent].sort((a,b)=> a.answer.localeCompare(b.answer)).forEach((item, idx) => {
+          const label = document.createElement('label');
+          label.className = "item-label";
+          label.innerHTML = `<input type="checkbox" class="item-checkbox" data-continent="${continent}" data-answer="${item.answer}" data-index="${quizData.indexOf(item)}" checked> ${item.answer}`;
+          itemsDiv.appendChild(label);
+        });
+        header.addEventListener('click', () => {
+          itemsDiv.classList.toggle("visible");
+          header.querySelector("span:last-child").innerHTML = itemsDiv.classList.contains("visible") ? "&#x25BC;" : "&#x25B6;";
+        });
+        container.appendChild(header);
+        container.appendChild(itemsDiv);
+        countriesGroupsContainer.appendChild(container);
+      });
+
+      // Group others (non-countries)
+      const others = quizData.filter(item => item.group !== "country");
+      others.sort((a, b) => a.answer.localeCompare(b.answer)).forEach(item => {
+        const label = document.createElement('label');
+        label.className = "item-label";
+        label.innerHTML = `<input type="checkbox" class="item-checkbox" data-answer="${item.answer}" data-index="${quizData.indexOf(item)}" checked> ${item.answer}`;
+        othersGroupContainer.appendChild(label);
       });
     }
 
-    // Start quiz: gather selected items and randomize quiz order
-    function startQuiz() {
-      const checkboxes = itemList.querySelectorAll('input[type="checkbox"]');
-      selectedItems = [];
-      const sortedData = quizData.slice().sort((a, b) => a.answer.localeCompare(b.answer));
-      checkboxes.forEach((checkbox, index) => {
-        if (checkbox.checked) {
-          selectedItems.push(sortedData[index]);
+    // Filtering functionality: search bar
+    document.getElementById('search-box').addEventListener('input', function() {
+      const query = this.value.toLowerCase();
+      const labels = document.querySelectorAll('.item-label');
+      labels.forEach(label => {
+        if (label.textContent.toLowerCase().includes(query)) {
+          label.style.display = "block";
+        } else {
+          label.style.display = "none";
         }
       });
-      if (selectedItems.length < 1) {
+    });
+
+    // Select All / Deselect All buttons
+    document.getElementById('select-all').addEventListener('click', () => {
+      document.querySelectorAll('.item-checkbox').forEach(cb => cb.checked = true);
+    });
+    document.getElementById('deselect-all').addEventListener('click', () => {
+      document.querySelectorAll('.item-checkbox').forEach(cb => cb.checked = false);
+    });
+
+    // Continent buttons: toggle selection for country checkboxes in that continent
+    document.querySelectorAll('.continent-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const continent = btn.getAttribute('data-continent');
+        const checkboxes = document.querySelectorAll(`.item-checkbox[data-continent="${continent}"]`);
+        // Determine if all are checked
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        checkboxes.forEach(cb => cb.checked = !allChecked);
+      });
+    });
+
+    // Smart Suggest: for demonstration, randomly select about 50% of the checkboxes.
+    document.getElementById('smart-suggest').addEventListener('click', () => {
+      document.querySelectorAll('.item-checkbox').forEach(cb => cb.checked = false);
+      document.querySelectorAll('.item-checkbox').forEach(cb => {
+        if (Math.random() < 0.5) {
+          cb.checked = true;
+        }
+      });
+    });
+
+    // Start Quiz: build quizItems from selected checkboxes
+    function startQuiz() {
+      const checkboxes = document.querySelectorAll('.item-checkbox');
+      let selectedIndices = [];
+      checkboxes.forEach(cb => {
+        if (cb.checked) {
+          selectedIndices.push(parseInt(cb.getAttribute('data-index')));
+        }
+      });
+      if (selectedIndices.length < 1) {
         alert("Please select at least one item to start the quiz.");
         return;
       }
+      // Use the original order from quizData for selected items then randomize quiz order.
+      selectedItems = selectedIndices.map(i => quizData[i]);
       quizItems = shuffleArray(selectedItems.slice());
       currentQuestionIndex = 0;
       score = 0;
-      selectionScreen.style.display = "none";
-      resultScreen.style.display = "none";
-      quizScreen.style.display = "block";
+      document.getElementById('selection-screen').style.display = "none";
+      document.getElementById('result-screen').style.display = "none";
+      document.getElementById('quiz-screen').style.display = "block";
       showQuestion();
     }
 
-    // Display the current question
+    // Display the current quiz question
     function showQuestion() {
-      nextBtn.style.display = "none";
-      optionsContainer.innerHTML = "";
+      document.getElementById('next-btn').style.display = "none";
+      document.getElementById('options-container').innerHTML = "";
       const currentItem = quizItems[currentQuestionIndex];
-      questionCountEl.textContent = `Question ${currentQuestionIndex + 1} of ${quizItems.length}`;
+      document.getElementById('question-count').textContent = `Question ${currentQuestionIndex + 1} of ${quizItems.length}`;
+      const quizImage = document.getElementById('quiz-image');
       quizImage.src = "images/" + currentItem.file;
       quizImage.alt = currentItem.answer;
       const options = generateOptions(currentItem);
@@ -521,13 +650,13 @@
         btn.className = "option-btn";
         btn.textContent = option;
         btn.onclick = () => selectOption(btn, option, currentItem.answer);
-        optionsContainer.appendChild(btn);
+        document.getElementById('options-container').appendChild(btn);
       });
     }
 
     // When an option is selected
     function selectOption(btn, selectedAnswer, correctAnswer) {
-      Array.from(optionsContainer.children).forEach(button => {
+      Array.from(document.getElementById('options-container').children).forEach(button => {
         button.disabled = true;
       });
       if (selectedAnswer === correctAnswer) {
@@ -535,16 +664,16 @@
         score++;
       } else {
         btn.classList.add("wrong");
-        Array.from(optionsContainer.children).forEach(button => {
+        Array.from(document.getElementById('options-container').children).forEach(button => {
           if (button.textContent === correctAnswer) {
             button.classList.add("correct");
           }
         });
       }
-      nextBtn.style.display = "inline-block";
+      document.getElementById('next-btn').style.display = "inline-block";
     }
 
-    // Generate options: correct answer plus three distractors from the same group/continent (or water)
+    // Generate options for the current question
     function generateOptions(currentItem) {
       const options = [currentItem.answer];
       let pool = quizData.filter(item => {
@@ -573,7 +702,7 @@
       return shuffleArray(options);
     }
 
-    // Utility: Shuffle an array
+    // Utility: shuffle an array
     function shuffleArray(array) {
       let currentIndex = array.length, randomIndex;
       while (currentIndex !== 0) {
@@ -584,7 +713,13 @@
       return array;
     }
 
-    nextBtn.addEventListener('click', () => {
+    let selectedItems = [];
+    let quizItems = [];
+    let currentQuestionIndex = 0;
+    let score = 0;
+
+    document.getElementById('start-quiz').addEventListener('click', startQuiz);
+    document.getElementById('next-btn').addEventListener('click', () => {
       currentQuestionIndex++;
       if (currentQuestionIndex < quizItems.length) {
         showQuestion();
@@ -592,20 +727,18 @@
         showResult();
       }
     });
-
-    // Display final result
-    function showResult() {
-      quizScreen.style.display = "none";
-      resultScreen.style.display = "block";
-      finalScoreEl.textContent = `Your score: ${score} out of ${quizItems.length}`;
-    }
-
-    restartBtn.addEventListener('click', () => {
-      resultScreen.style.display = "none";
-      selectionScreen.style.display = "block";
+    document.getElementById('restart-btn').addEventListener('click', () => {
+      document.getElementById('result-screen').style.display = "none";
+      document.getElementById('selection-screen').style.display = "block";
     });
 
-    startQuizBtn.addEventListener('click', startQuiz);
+    function showResult() {
+      document.getElementById('quiz-screen').style.display = "none";
+      document.getElementById('result-screen').style.display = "block";
+      document.getElementById('final-score').textContent = `Your score: ${score} out of ${quizItems.length}`;
+    }
+
+    // Initialize selection screen on load
     populateSelection();
   </script>
 </body>
