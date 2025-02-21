@@ -2,389 +2,818 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <!-- Mobile Optimization -->
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Geography Quiz Web App</title>
+  <title>Geography Quiz</title>
   <style>
-    /* Global Styles */
+    /* Global styles */
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
       padding: 0;
+      background: linear-gradient(135deg, #e0eafc, #cfdef3);
       color: #333;
+    }
+    .container {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 1rem;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      width: 90%;
     }
     h1, h2 {
       text-align: center;
-      margin: 10px 0;
+      margin-bottom: 1rem;
     }
-    /* Container */
-    .container {
-      max-width: 900px;
-      margin: 10px auto;
-      background: #fff;
-      border-radius: 8px;
-      padding: 15px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    /* Selection Controls */
+    #selection-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-bottom: 1rem;
     }
-    /* Selection Screen Styles */
-    #selectionScreen {
-      text-align: center;
-    }
-    #searchBox {
-      width: 90%;
-      max-width: 400px;
-      padding: 10px;
-      font-size: 16px;
-      margin: 10px auto;
-      display: block;
+    #selection-controls input[type="text"] {
+      padding: 0.5rem;
+      font-size: 1rem;
+      flex: 1 1 250px;
       border: 1px solid #ddd;
       border-radius: 4px;
     }
-    .section {
-      margin: 10px 0;
-      text-align: left;
+    .btn {
+      padding: 0.5rem 1rem;
+      background-color: #0077cc;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
     }
-    .section-header {
+    .btn:hover {
+      background-color: #005fa3;
+    }
+    #continent-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+    /* Collapsible groups */
+    .group-container {
+      margin-bottom: 1rem;
+    }
+    .group-header {
+      background-color: #f0f0f0;
+      padding: 0.5rem;
+      cursor: pointer;
+      border: 1px solid #ddd;
+      border-radius: 4px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: #e0e0e0;
-      padding: 10px;
-      cursor: pointer;
-      border-radius: 5px;
-      font-size: 16px;
-      font-weight: bold;
     }
-    .section-header span.counter {
-      font-size: 14px;
-      font-weight: normal;
+    .group-header:hover {
+      background-color: #e0e0e0;
     }
-    .selection-list {
-      display: none;
-      padding: 10px 15px;
-      background: #fafafa;
+    .group-items {
+      padding: 0.5rem 1rem;
       border: 1px solid #ddd;
       border-top: none;
-      border-radius: 0 0 5px 5px;
-    }
-    .selection-list label {
-      display: block;
-      margin: 5px 0;
-      font-size: 14px;
-    }
-    /* Buttons */
-    .btn {
-      display: inline-block;
-      padding: 10px 15px;
-      font-size: 16px;
-      margin: 10px 5px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      color: #fff;
-    }
-    .btn-primary { background: #007BFF; }
-    .btn-primary:hover { background: #0056b3; }
-    .btn-secondary { background: #6c757d; }
-    .btn-secondary:hover { background: #545b62; }
-    /* Quiz Screen */
-    #quizScreen, #resultScreen {
       display: none;
+    }
+    .group-items.visible {
+      display: block;
+    }
+    .item-label {
+      display: block;
+      margin: 0.3rem 0;
+      font-size: 0.95rem;
+    }
+    /* Quiz Screen */
+    #quiz-screen {
       text-align: center;
     }
-    .quiz-image {
-      display: block;
-      margin: 20px auto;
+    #quiz-image {
       max-width: 100%;
+      height: auto;
       border: 2px solid #ddd;
-      border-radius: 8px;
+      border-radius: 4px;
+      margin-bottom: 1rem;
     }
     .options {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 10px;
-      margin-top: 20px;
+      gap: 1rem;
     }
-    .option-button {
-      background: #4CAF50;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      font-size: 16px;
+    .option-btn {
+      flex: 1 1 calc(45% - 1rem);
+      max-width: 45%;
+      padding: 0.8rem;
+      background-color: #f0f0f0;
+      border: 2px solid transparent;
+      border-radius: 4px;
       cursor: pointer;
-      transition: background 0.3s;
+      transition: background-color 0.3s, border-color 0.3s;
     }
-    .option-button:hover { background: #45a049; }
-    .option-button.correct { background: #4CAF50 !important; }
-    .option-button.wrong { background: #f44336 !important; }
-    /* Score Display */
-    #scoreDisplay {
+    .option-btn:hover {
+      background-color: #e0e0e0;
+    }
+    .correct {
+      background-color: #c8e6c9 !important;
+      border-color: #2e7d32 !important;
+    }
+    .wrong {
+      background-color: #ffcdd2 !important;
+      border-color: #c62828 !important;
+    }
+    /* Result Screen */
+    #result-screen {
       text-align: center;
-      font-size: 18px;
-      margin-top: 10px;
+    }
+    /* Responsive adjustments for mobile */
+    @media (max-width: 600px) {
+      .container {
+        margin: 1rem auto;
+        padding: 10px;
+      }
+      #selection-controls input[type="text"] {
+        flex: 1 1 100%;
+      }
+      .option-btn {
+        flex: 1 1 100%;
+        max-width: 100%;
+      }
+      .group-header, .item-label {
+        font-size: 0.9rem;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <!-- Selection Screen -->
-    <div id="selectionScreen">
-      <h1>Geography Quiz - Select Items</h1>
-      <input type="text" id="searchBox" placeholder="Search locations...">
-      <div id="selectionForm">
-        <!-- Sections populated dynamically -->
+    <div id="selection-screen">
+      <h1>Select Quiz Items</h1>
+      <div id="selection-controls">
+        <input type="text" id="search-box" placeholder="Search...">
+        <button id="select-all" class="btn">Select All</button>
+        <button id="deselect-all" class="btn">Deselect All</button>
+        <button id="smart-suggest" class="btn">Smart Suggest</button>
       </div>
-      <button id="startQuizButton" class="btn btn-primary">Start Quiz</button>
+      <div id="continent-buttons">
+        <button class="btn continent-btn" data-continent="Africa">Africa</button>
+        <button class="btn continent-btn" data-continent="Asia">Asia</button>
+        <button class="btn continent-btn" data-continent="Europe">Europe</button>
+        <button class="btn continent-btn" data-continent="North America">North America</button>
+        <button class="btn continent-btn" data-continent="South America">South America</button>
+        <button class="btn continent-btn" data-continent="Oceania">Oceania</button>
+        <button class="btn continent-btn" data-continent="Antarctica">Antarctica</button>
+      </div>
+      <!-- The selection list is now grouped -->
+      <div id="selection-list">
+        <!-- Countries Grouped by Continent -->
+        <div id="countries-section">
+          <h2>Countries</h2>
+          <div id="countries-groups"></div>
+        </div>
+        <!-- Others (Water, Continent maps, Regions) -->
+        <div id="others-section">
+          <h2>Others</h2>
+          <div id="others-group" class="group-container">
+            <div class="group-header">
+              <span>Other Items <span class="counter">(0/0)</span></span>
+              <span>&#x25B6;</span>
+            </div>
+            <div class="group-items"></div>
+          </div>
+        </div>
+      </div>
+      <button id="start-quiz" class="btn" style="margin-top: 1rem;">Start Quiz</button>
     </div>
-
+    
     <!-- Quiz Screen -->
-    <div id="quizScreen">
-      <h2>Guess the Name</h2>
-      <img id="quizImage" class="quiz-image" src="" alt="Geographical Image">
-      <div id="optionsContainer" class="options"></div>
-      <button id="nextButton" class="btn btn-secondary" style="display:none;">Next Question</button>
-      <div id="scoreDisplay"></div>
+    <div id="quiz-screen" style="display: none;">
+      <h2 id="question-count">Question 1</h2>
+      <img id="quiz-image" src="" alt="Quiz Image">
+      <div class="options" id="options-container">
+        <!-- Options buttons go here -->
+      </div>
+      <div style="margin-top: 1rem;">
+        <button id="next-btn" class="btn" style="display: none;">Next</button>
+      </div>
     </div>
-
+    
     <!-- Result Screen -->
-    <div id="resultScreen">
+    <div id="result-screen" style="display: none;">
       <h2>Quiz Completed!</h2>
-      <p id="finalScore"></p>
-      <button id="restartQuizButton" class="btn btn-primary">Restart Quiz</button>
+      <p id="final-score"></p>
+      <button id="restart-btn" class="btn">Restart Quiz</button>
     </div>
   </div>
 
   <script>
-    /* --- Data Definitions --- */
-    // Example geoItems. Add additional entries following the same format.
-    const geoItems = [
-      { id: "afghanistan", file: "ug-map-afghanistan.png", name: "Afghanistan", type: "country", continent: "Asia" },
-      { id: "adriatic_sea", file: "ug-map-adriatic_sea.png", name: "Adriatic Sea", type: "sea", region: "Europe" },
-      { id: "aegean_sea", file: "ug-map-aegean_sea.png", name: "Aegean Sea", type: "sea", region: "Europe" },
-      { id: "albania", file: "ug-map-albania.png", name: "Albania", type: "country", continent: "Europe" },
-      { id: "algeria", file: "ug-map-algeria.png", name: "Algeria", type: "country", continent: "Africa" }
-      // ... add more entries as needed
+    // Full quizData array – each entry has file, answer, group, and if applicable, continent (or region).
+    const quizData = [
+      { file: "ug-map-abkhazia.png", answer: "Abkhazia", group: "country", continent: "Europe" },
+      { file: "ug-map-adriatic_sea.png", answer: "Adriatic Sea", group: "water" },
+      { file: "ug-map-aegean_sea.png", answer: "Aegean Sea", group: "water" },
+      { file: "ug-map-afghanistan.png", answer: "Afghanistan", group: "country", continent: "Asia" },
+      { file: "ug-map-africa-nobox.png", answer: "Africa", group: "continent", continent: "Africa" },
+      { file: "ug-map-akrotiri_and_dhekelia.png", answer: "Akrotiri and Dhekelia", group: "country", continent: "Europe" },
+      { file: "ug-map-aland_islands.png", answer: "Åland Islands", group: "country", continent: "Europe" },
+      { file: "ug-map-alaska.png", answer: "Alaska", group: "country", continent: "North America" },
+      { file: "ug-map-albania.png", answer: "Albania", group: "country", continent: "Europe" },
+      { file: "ug-map-algeria.png", answer: "Algeria", group: "country", continent: "Africa" },
+      { file: "ug-map-american_samoa.png", answer: "American Samoa", group: "country", continent: "Oceania" },
+      { file: "ug-map-andorra.png", answer: "Andorra", group: "country", continent: "Europe" },
+      { file: "ug-map-angola.png", answer: "Angola", group: "country", continent: "Africa" },
+      { file: "ug-map-anguilla.png", answer: "Anguilla", group: "country", continent: "North America" },
+      { file: "ug-map-antarctica-nobox.png", answer: "Antarctica", group: "continent", continent: "Antarctica" },
+      { file: "ug-map-antigua_and_barbuda.png", answer: "Antigua and Barbuda", group: "country", continent: "North America" },
+      { file: "ug-map-arabian_sea.png", answer: "Arabian Sea", group: "water" },
+      { file: "ug-map-aral_sea.png", answer: "Aral Sea", group: "water" },
+      { file: "ug-map-arctic_ocean-nobox.png", answer: "Arctic Ocean", group: "water" },
+      { file: "ug-map-argentina.png", answer: "Argentina", group: "country", continent: "South America" },
+      { file: "ug-map-armenia.png", answer: "Armenia", group: "country", continent: "Asia" },
+      { file: "ug-map-aruba.png", answer: "Aruba", group: "country", continent: "North America" },
+      { file: "ug-map-asia-nobox.png", answer: "Asia", group: "continent", continent: "Asia" },
+      { file: "ug-map-atlantic_ocean-nobox.png", answer: "Atlantic Ocean", group: "water" },
+      { file: "ug-map-australia.png", answer: "Australia", group: "country", continent: "Oceania" },
+      { file: "ug-map-austria.png", answer: "Austria", group: "country", continent: "Europe" },
+      { file: "ug-map-azerbaijan.png", answer: "Azerbaijan", group: "country", continent: "Asia" },
+      { file: "ug-map-azores.png", answer: "Azores", group: "country", continent: "Europe" },
+      { file: "ug-map-bahrain.png", answer: "Bahrain", group: "country", continent: "Asia" },
+      { file: "ug-map-bali.png", answer: "Bali", group: "country", continent: "Asia" },
+      { file: "ug-map-balkan_peninsula.png", answer: "Balkan Peninsula", group: "region", continent: "Europe" },
+      { file: "ug-map-baltic_sea.png", answer: "Baltic Sea", group: "water" },
+      { file: "ug-map-banda_sea.png", answer: "Banda Sea", group: "water" },
+      { file: "ug-map-bangladesh.png", answer: "Bangladesh", group: "country", continent: "Asia" },
+      { file: "ug-map-barbados.png", answer: "Barbados", group: "country", continent: "North America" },
+      { file: "ug-map-barents_sea.png", answer: "Barents Sea", group: "water" },
+      { file: "ug-map-bay_of_bengal.png", answer: "Bay of Bengal", group: "water" },
+      { file: "ug-map-bay_of_biscay.png", answer: "Bay of Biscay", group: "water" },
+      { file: "ug-map-belarus.png", answer: "Belarus", group: "country", continent: "Europe" },
+      { file: "ug-map-belgium.png", answer: "Belgium", group: "country", continent: "Europe" },
+      { file: "ug-map-belize.png", answer: "Belize", group: "country", continent: "North America" },
+      { file: "ug-map-benin.png", answer: "Benin", group: "country", continent: "Africa" },
+      { file: "ug-map-bering_strait.png", answer: "Bering Strait", group: "water" },
+      { file: "ug-map-bermuda.png", answer: "Bermuda", group: "country", continent: "North America" },
+      { file: "ug-map-bhutan.png", answer: "Bhutan", group: "country", continent: "Asia" },
+      { file: "ug-map-black_sea.png", answer: "Black Sea", group: "water" },
+      { file: "ug-map-bolivia.png", answer: "Bolivia", group: "country", continent: "South America" },
+      { file: "ug-map-bosnia_and_herzegovina.png", answer: "Bosnia and Herzegovina", group: "country", continent: "Europe" },
+      { file: "ug-map-botswana.png", answer: "Botswana", group: "country", continent: "Africa" },
+      { file: "ug-map-bougainville.png", answer: "Bougainville", group: "country", continent: "Oceania" },
+      { file: "ug-map-brazil.png", answer: "Brazil", group: "country", continent: "South America" },
+      { file: "ug-map-british_virgin_islands.png", answer: "British Virgin Islands", group: "country", continent: "North America" },
+      { file: "ug-map-brunei.png", answer: "Brunei", group: "country", continent: "Asia" },
+      { file: "ug-map-bulgaria.png", answer: "Bulgaria", group: "country", continent: "Europe" },
+      { file: "ug-map-burkina_faso.png", answer: "Burkina Faso", group: "country", continent: "Africa" },
+      { file: "ug-map-burundi.png", answer: "Burundi", group: "country", continent: "Africa" },
+      { file: "ug-map-cambodia.png", answer: "Cambodia", group: "country", continent: "Asia" },
+      { file: "ug-map-cameroon.png", answer: "Cameroon", group: "country", continent: "Africa" },
+      { file: "ug-map-canada.png", answer: "Canada", group: "country", continent: "North America" },
+      { file: "ug-map-canary_islands.png", answer: "Canary Islands", group: "country", continent: "Europe" },
+      { file: "ug-map-cape_verde.png", answer: "Cape Verde", group: "country", continent: "Africa" },
+      { file: "ug-map-caribbean_sea.png", answer: "Caribbean Sea", group: "water" },
+      { file: "ug-map-caspian_sea.png", answer: "Caspian Sea", group: "water" },
+      { file: "ug-map-cayman_islands.png", answer: "Cayman Islands", group: "country", continent: "North America" },
+      { file: "ug-map-celebes_sea.png", answer: "Celebes Sea", group: "water" },
+      { file: "ug-map-celtic_sea.png", answer: "Celtic Sea", group: "water" },
+      { file: "ug-map-central_african_republic.png", answer: "Central African Republic", group: "country", continent: "Africa" },
+      { file: "ug-map-chad.png", answer: "Chad", group: "country", continent: "Africa" },
+      { file: "ug-map-chile.png", answer: "Chile", group: "country", continent: "South America" },
+      { file: "ug-map-china.png", answer: "China", group: "country", continent: "Asia" },
+      { file: "ug-map-colombia.png", answer: "Colombia", group: "country", continent: "South America" },
+      { file: "ug-map-comoros.png", answer: "Comoros", group: "country", continent: "Africa" },
+      { file: "ug-map-cook_islands.png", answer: "Cook Islands", group: "country", continent: "Oceania" },
+      { file: "ug-map-coral_sea.png", answer: "Coral Sea", group: "water" },
+      { file: "ug-map-corsica.png", answer: "Corsica", group: "country", continent: "Europe" },
+      { file: "ug-map-costa_rica.png", answer: "Costa Rica", group: "country", continent: "North America" },
+      { file: "ug-map-croatia.png", answer: "Croatia", group: "country", continent: "Europe" },
+      { file: "ug-map-cuba.png", answer: "Cuba", group: "country", continent: "North America" },
+      { file: "ug-map-curacao.png", answer: "Curaçao", group: "country", continent: "North America" },
+      { file: "ug-map-cyprus.png", answer: "Cyprus", group: "country", continent: "Asia" },
+      { file: "ug-map-czech_republic.png", answer: "Czech Republic", group: "country", continent: "Europe" },
+      { file: "ug-map-dead_sea.png", answer: "Dead Sea", group: "water" },
+      { file: "ug-map-democratic_republic_of_the_congo.png", answer: "Democratic Republic of the Congo", group: "country", continent: "Africa" },
+      { file: "ug-map-denmark.png", answer: "Denmark", group: "country", continent: "Europe" },
+      { file: "ug-map-denmark_strait.png", answer: "Denmark Strait", group: "water" },
+      { file: "ug-map-djibouti.png", answer: "Djibouti", group: "country", continent: "Africa" },
+      { file: "ug-map-dominica.png", answer: "Dominica", group: "country", continent: "North America" },
+      { file: "ug-map-dominican_republic.png", answer: "Dominican Republic", group: "country", continent: "North America" },
+      { file: "ug-map-east_china_sea.png", answer: "East China Sea", group: "water" },
+      { file: "ug-map-east_siberian_sea.png", answer: "East Siberian Sea", group: "water" },
+      { file: "ug-map-east_timor.png", answer: "East Timor", group: "country", continent: "Asia" },
+      { file: "ug-map-ecuador.png", answer: "Ecuador", group: "country", continent: "South America" },
+      { file: "ug-map-egypt.png", answer: "Egypt", group: "country", continent: "Africa" },
+      { file: "ug-map-el_salvador.png", answer: "El Salvador", group: "country", continent: "North America" },
+      { file: "ug-map-england.png", answer: "England", group: "country", continent: "Europe" },
+      { file: "ug-map-english_channel.png", answer: "English Channel", group: "water" },
+      { file: "ug-map-equatorial_guinea.png", answer: "Equatorial Guinea", group: "country", continent: "Africa" },
+      { file: "ug-map-eritrea.png", answer: "Eritrea", group: "country", continent: "Africa" },
+      { file: "ug-map-estonia.png", answer: "Estonia", group: "country", continent: "Europe" },
+      { file: "ug-map-eswatini.png", answer: "Eswatini", group: "country", continent: "Africa" },
+      { file: "ug-map-ethiopia.png", answer: "Ethiopia", group: "country", continent: "Africa" },
+      { file: "ug-map-europe-nobox.png", answer: "Europe", group: "continent", continent: "Europe" },
+      { file: "ug-map-european_union.png", answer: "European Union", group: "region", continent: "Europe" },
+      { file: "ug-map-falkland_islands.png", answer: "Falkland Islands", group: "country", continent: "South America" },
+      { file: "ug-map-faroe_islands.png", answer: "Faroe Islands", group: "country", continent: "Europe" },
+      { file: "ug-map-federated_states_of_micronesia.png", answer: "Federated States of Micronesia", group: "country", continent: "Oceania" },
+      { file: "ug-map-fiji.png", answer: "Fiji", group: "country", continent: "Oceania" },
+      { file: "ug-map-finland.png", answer: "Finland", group: "country", continent: "Europe" },
+      { file: "ug-map-france.png", answer: "France", group: "country", continent: "Europe" },
+      { file: "ug-map-french_guiana.png", answer: "French Guiana", group: "country", continent: "South America" },
+      { file: "ug-map-french_polynesia.png", answer: "French Polynesia", group: "country", continent: "Oceania" },
+      { file: "ug-map-gabon.png", answer: "Gabon", group: "country", continent: "Africa" },
+      { file: "ug-map-georgia.png", answer: "Georgia", group: "country", continent: "Asia" },
+      { file: "ug-map-germany.png", answer: "Germany", group: "country", continent: "Europe" },
+      { file: "ug-map-ghana.png", answer: "Ghana", group: "country", continent: "Africa" },
+      { file: "ug-map-gibraltar.png", answer: "Gibraltar", group: "country", continent: "Europe" },
+      { file: "ug-map-greece.png", answer: "Greece", group: "country", continent: "Europe" },
+      { file: "ug-map-greenland.png", answer: "Greenland", group: "country", continent: "North America" },
+      { file: "ug-map-grenada.png", answer: "Grenada", group: "country", continent: "North America" },
+      { file: "ug-map-guadeloupe.png", answer: "Guadeloupe", group: "country", continent: "North America" },
+      { file: "ug-map-guam.png", answer: "Guam", group: "country", continent: "Oceania" },
+      { file: "ug-map-guatemala.png", answer: "Guatemala", group: "country", continent: "North America" },
+      { file: "ug-map-guernsey.png", answer: "Guernsey", group: "country", continent: "Europe" },
+      { file: "ug-map-guinea-bissau.png", answer: "Guinea-Bissau", group: "country", continent: "Africa" },
+      { file: "ug-map-guinea.png", answer: "Guinea", group: "country", continent: "Africa" },
+      { file: "ug-map-gulf_of_alaska.png", answer: "Gulf of Alaska", group: "water" },
+      { file: "ug-map-gulf_of_california.png", answer: "Gulf of California", group: "water" },
+      { file: "ug-map-gulf_of_carpentaria.png", answer: "Gulf of Carpentaria", group: "water" },
+      { file: "ug-map-gulf_of_guinea.png", answer: "Gulf of Guinea", group: "water" },
+      { file: "ug-map-gulf_of_mexico.png", answer: "Gulf of Mexico", group: "water" },
+      { file: "ug-map-gulf_of_thailand.png", answer: "Gulf of Thailand", group: "water" },
+      { file: "ug-map-guyana.png", answer: "Guyana", group: "country", continent: "South America" },
+      { file: "ug-map-haiti.png", answer: "Haiti", group: "country", continent: "North America" },
+      { file: "ug-map-hawaii.png", answer: "Hawaii", group: "country", continent: "North America" },
+      { file: "ug-map-honduras.png", answer: "Honduras", group: "country", continent: "North America" },
+      { file: "ug-map-hong_kong.png", answer: "Hong Kong", group: "country", continent: "Asia" },
+      { file: "ug-map-hudson_bay.png", answer: "Hudson Bay", group: "water" },
+      { file: "ug-map-hungary.png", answer: "Hungary", group: "country", continent: "Europe" },
+      { file: "ug-map-iceland.png", answer: "Iceland", group: "country", continent: "Europe" },
+      { file: "ug-map-india.png", answer: "India", group: "country", continent: "Asia" },
+      { file: "ug-map-indian_ocean-nobox.png", answer: "Indian Ocean", group: "water" },
+      { file: "ug-map-indonesia.png", answer: "Indonesia", group: "country", continent: "Asia" },
+      { file: "ug-map-iran.png", answer: "Iran", group: "country", continent: "Asia" },
+      { file: "ug-map-iraq.png", answer: "Iraq", group: "country", continent: "Asia" },
+      { file: "ug-map-ireland.png", answer: "Ireland", group: "country", continent: "Europe" },
+      { file: "ug-map-isle_of_man.png", answer: "Isle of Man", group: "country", continent: "Europe" },
+      { file: "ug-map-israel.png", answer: "Israel", group: "country", continent: "Asia" },
+      { file: "ug-map-italy.png", answer: "Italy", group: "country", continent: "Europe" },
+      { file: "ug-map-ivory_coast.png", answer: "Ivory Coast", group: "country", continent: "Africa" },
+      { file: "ug-map-jamaica.png", answer: "Jamaica", group: "country", continent: "North America" },
+      { file: "ug-map-japan.png", answer: "Japan", group: "country", continent: "Asia" },
+      { file: "ug-map-java.png", answer: "Java", group: "country", continent: "Asia" },
+      { file: "ug-map-jeju.png", answer: "Jeju", group: "country", continent: "Asia" },
+      { file: "ug-map-jersey.png", answer: "Jersey", group: "country", continent: "Europe" },
+      { file: "ug-map-jordan.png", answer: "Jordan", group: "country", continent: "Asia" },
+      { file: "ug-map-kaliningrad_oblast.png", answer: "Kaliningrad Oblast", group: "country", continent: "Europe" },
+      { file: "ug-map-kazakhstan.png", answer: "Kazakhstan", group: "country", continent: "Asia" },
+      { file: "ug-map-kenya.png", answer: "Kenya", group: "country", continent: "Africa" },
+      { file: "ug-map-kiribati.png", answer: "Kiribati", group: "country", continent: "Oceania" },
+      { file: "ug-map-kosovo.png", answer: "Kosovo", group: "country", continent: "Europe" },
+      { file: "ug-map-kuwait.png", answer: "Kuwait", group: "country", continent: "Asia" },
+      { file: "ug-map-kyrgyzstan.png", answer: "Kyrgyzstan", group: "country", continent: "Asia" },
+      { file: "ug-map-labrador_sea.png", answer: "Labrador Sea", group: "water" },
+      { file: "ug-map-laos.png", answer: "Laos", group: "country", continent: "Asia" },
+      { file: "ug-map-latvia.png", answer: "Latvia", group: "country", continent: "Europe" },
+      { file: "ug-map-lebanon.png", answer: "Lebanon", group: "country", continent: "Asia" },
+      { file: "ug-map-lesotho.png", answer: "Lesotho", group: "country", continent: "Africa" },
+      { file: "ug-map-liberia.png", answer: "Liberia", group: "country", continent: "Africa" },
+      { file: "ug-map-libya.png", answer: "Libya", group: "country", continent: "Africa" },
+      { file: "ug-map-liechtenstein.png", answer: "Liechtenstein", group: "country", continent: "Europe" },
+      { file: "ug-map-lithuania.png", answer: "Lithuania", group: "country", continent: "Europe" },
+      { file: "ug-map-luxembourg.png", answer: "Luxembourg", group: "country", continent: "Europe" },
+      { file: "ug-map-macau.png", answer: "Macau", group: "country", continent: "Asia" },
+      { file: "ug-map-madagascar.png", answer: "Madagascar", group: "country", continent: "Africa" },
+      { file: "ug-map-madeira.png", answer: "Madeira", group: "country", continent: "Europe" },
+      { file: "ug-map-malawi.png", answer: "Malawi", group: "country", continent: "Africa" },
+      { file: "ug-map-malaysia.png", answer: "Malaysia", group: "country", continent: "Asia" },
+      { file: "ug-map-maldives.png", answer: "Maldives", group: "country", continent: "Asia" },
+      { file: "ug-map-mali.png", answer: "Mali", group: "country", continent: "Africa" },
+      { file: "ug-map-malta.png", answer: "Malta", group: "country", continent: "Europe" },
+      { file: "ug-map-marshall_islands.png", answer: "Marshall Islands", group: "country", continent: "Oceania" },
+      { file: "ug-map-martinique.png", answer: "Martinique", group: "country", continent: "North America" },
+      { file: "ug-map-mauritania.png", answer: "Mauritania", group: "country", continent: "Africa" },
+      { file: "ug-map-mauritius.png", answer: "Mauritius", group: "country", continent: "Africa" },
+      { file: "ug-map-mayotte.png", answer: "Mayotte", group: "country", continent: "Africa" },
+      { file: "ug-map-mediterranean_sea.png", answer: "Mediterranean Sea", group: "water" },
+      { file: "ug-map-melanesia.png", answer: "Melanesia", group: "region", continent: "Oceania" },
+      { file: "ug-map-mexico.png", answer: "Mexico", group: "country", continent: "North America" },
+      { file: "ug-map-micronesia.png", answer: "Micronesia", group: "country", continent: "Oceania" },
+      { file: "ug-map-moldova.png", answer: "Moldova", group: "country", continent: "Europe" },
+      { file: "ug-map-monaco.png", answer: "Monaco", group: "country", continent: "Europe" },
+      { file: "ug-map-mongolia.png", answer: "Mongolia", group: "country", continent: "Asia" },
+      { file: "ug-map-montenegro.png", answer: "Montenegro", group: "country", continent: "Europe" },
+      { file: "ug-map-morocco.png", answer: "Morocco", group: "country", continent: "Africa" },
+      { file: "ug-map-mozambique.png", answer: "Mozambique", group: "country", continent: "Africa" },
+      { file: "ug-map-myanmar.png", answer: "Myanmar", group: "country", continent: "Asia" },
+      { file: "ug-map-namibia.png", answer: "Namibia", group: "country", continent: "Africa" },
+      { file: "ug-map-nauru.png", answer: "Nauru", group: "country", continent: "Oceania" },
+      { file: "ug-map-nepal.png", answer: "Nepal", group: "country", continent: "Asia" },
+      { file: "ug-map-netherlands.png", answer: "Netherlands", group: "country", continent: "Europe" },
+      { file: "ug-map-new_caledonia.png", answer: "New Caledonia", group: "country", continent: "Oceania" },
+      { file: "ug-map-new_zealand.png", answer: "New Zealand", group: "country", continent: "Oceania" },
+      { file: "ug-map-nicaragua.png", answer: "Nicaragua", group: "country", continent: "North America" },
+      { file: "ug-map-niger.png", answer: "Niger", group: "country", continent: "Africa" },
+      { file: "ug-map-nigeria.png", answer: "Nigeria", group: "country", continent: "Africa" },
+      { file: "ug-map-niue.png", answer: "Niue", group: "country", continent: "Oceania" },
+      { file: "ug-map-northern_cyprus.png", answer: "Northern Cyprus", group: "country", continent: "Asia" },
+      { file: "ug-map-northern_ireland.png", answer: "Northern Ireland", group: "country", continent: "Europe" },
+      { file: "ug-map-northern_mariana_islands.png", answer: "Northern Mariana Islands", group: "country", continent: "Oceania" },
+      { file: "ug-map-north_america-nobox.png", answer: "North America", group: "continent", continent: "North America" },
+      { file: "ug-map-north_korea.png", answer: "North Korea", group: "country", continent: "Asia" },
+      { file: "ug-map-north_macedonia.png", answer: "North Macedonia", group: "country", continent: "Europe" },
+      { file: "ug-map-north_sea.png", answer: "North Sea", group: "water" },
+      { file: "ug-map-norway.png", answer: "Norway", group: "country", continent: "Europe" },
+      { file: "ug-map-norwegian_sea.png", answer: "Norwegian Sea", group: "water" },
+      { file: "ug-map-oceania-nobox.png", answer: "Oceania", group: "continent", continent: "Oceania" },
+      { file: "ug-map-oman.png", answer: "Oman", group: "country", continent: "Asia" },
+      { file: "ug-map-pacific_ocean-nobox.png", answer: "Pacific Ocean", group: "water" },
+      { file: "ug-map-pakistan.png", answer: "Pakistan", group: "country", continent: "Asia" },
+      { file: "ug-map-palau.png", answer: "Palau", group: "country", continent: "Oceania" },
+      { file: "ug-map-palestine.png", answer: "Palestine", group: "country", continent: "Asia" },
+      { file: "ug-map-panama.png", answer: "Panama", group: "country", continent: "North America" },
+      { file: "ug-map-papua_new_guinea.png", answer: "Papua New Guinea", group: "country", continent: "Oceania" },
+      { file: "ug-map-paraguay.png", answer: "Paraguay", group: "country", continent: "South America" },
+      { file: "ug-map-persian_gulf.png", answer: "Persian Gulf", group: "water" },
+      { file: "ug-map-peru.png", answer: "Peru", group: "country", continent: "South America" },
+      { file: "ug-map-philippines.png", answer: "Philippines", group: "country", continent: "Asia" },
+      { file: "ug-map-philippine_sea.png", answer: "Philippine Sea", group: "water" },
+      { file: "ug-map-poland.png", answer: "Poland", group: "country", continent: "Europe" },
+      { file: "ug-map-polynesia.png", answer: "Polynesia", group: "region", continent: "Oceania" },
+      { file: "ug-map-portugal.png", answer: "Portugal", group: "country", continent: "Europe" },
+      { file: "ug-map-puerto_rico.png", answer: "Puerto Rico", group: "country", continent: "North America" },
+      { file: "ug-map-qatar.png", answer: "Qatar", group: "country", continent: "Asia" },
+      { file: "ug-map-red_sea.png", answer: "Red Sea", group: "water" },
+      { file: "ug-map-republic_of_the_congo.png", answer: "Republic of the Congo", group: "country", continent: "Africa" },
+      { file: "ug-map-reunion.png", answer: "Réunion", group: "country", continent: "Africa" },
+      { file: "ug-map-romania.png", answer: "Romania", group: "country", continent: "Europe" },
+      { file: "ug-map-russia.png", answer: "Russia", group: "country", continent: "Asia" },
+      { file: "ug-map-rwanda.png", answer: "Rwanda", group: "country", continent: "Africa" },
+      { file: "ug-map-sahrawi_arab_democratic_republic.png", answer: "Sahrawi Arab Democratic Republic", group: "country", continent: "Africa" },
+      { file: "ug-map-saint_kitts_and_nevis.png", answer: "Saint Kitts and Nevis", group: "country", continent: "North America" },
+      { file: "ug-map-saint_lucia.png", answer: "Saint Lucia", group: "country", continent: "North America" },
+      { file: "ug-map-saint_martin.png", answer: "Saint Martin", group: "country", continent: "North America" },
+      { file: "ug-map-saint_vincent_and_the_grenadines.png", answer: "Saint Vincent and the Grenadines", group: "country", continent: "North America" },
+      { file: "ug-map-samoa.png", answer: "Samoa", group: "country", continent: "Oceania" },
+      { file: "ug-map-san_marino.png", answer: "San Marino", group: "country", continent: "Europe" },
+      { file: "ug-map-sao_tome_and_principe.png", answer: "São Tomé and Príncipe", group: "country", continent: "Africa" },
+      { file: "ug-map-sardinia.png", answer: "Sardinia", group: "country", continent: "Europe" },
+      { file: "ug-map-saudi_arabia.png", answer: "Saudi Arabia", group: "country", continent: "Asia" },
+      { file: "ug-map-scandinavia.png", answer: "Scandinavia", group: "region", continent: "Europe" },
+      { file: "ug-map-scotland.png", answer: "Scotland", group: "country", continent: "Europe" },
+      { file: "ug-map-sea_of_galilee.png", answer: "Sea of Galilee", group: "water" },
+      { file: "ug-map-sea_of_japan.png", answer: "Sea of Japan", group: "water" },
+      { file: "ug-map-sea_of_okhotsk.png", answer: "Sea of Okhotsk", group: "water" },
+      { file: "ug-map-senegal.png", answer: "Senegal", group: "country", continent: "Africa" },
+      { file: "ug-map-serbia.png", answer: "Serbia", group: "country", continent: "Europe" },
+      { file: "ug-map-seychelles.png", answer: "Seychelles", group: "country", continent: "Africa" },
+      { file: "ug-map-sicily.png", answer: "Sicily", group: "country", continent: "Europe" },
+      { file: "ug-map-sierra_leone.png", answer: "Sierra Leone", group: "country", continent: "Africa" },
+      { file: "ug-map-singapore.png", answer: "Singapore", group: "country", continent: "Asia" },
+      { file: "ug-map-sint_maarten.png", answer: "Sint Maarten", group: "country", continent: "North America" },
+      { file: "ug-map-slovakia.png", answer: "Slovakia", group: "country", continent: "Europe" },
+      { file: "ug-map-slovenia.png", answer: "Slovenia", group: "country", continent: "Europe" },
+      { file: "ug-map-solomon_islands.png", answer: "Solomon Islands", group: "country", continent: "Oceania" },
+      { file: "ug-map-somalia.png", answer: "Somalia", group: "country", continent: "Africa" },
+      { file: "ug-map-somaliland.png", answer: "Somaliland", group: "country", continent: "Africa" },
+      { file: "ug-map-southern_ocean-nobox.png", answer: "Southern Ocean", group: "water" },
+      { file: "ug-map-south_africa.png", answer: "South Africa", group: "country", continent: "Africa" },
+      { file: "ug-map-south_america-nobox.png", answer: "South America", group: "continent", continent: "South America" },
+      { file: "ug-map-south_china_sea.png", answer: "South China Sea", group: "water" },
+      { file: "ug-map-south_korea.png", answer: "South Korea", group: "country", continent: "Asia" },
+      { file: "ug-map-south_ossetia.png", answer: "South Ossetia", group: "country", continent: "Asia" },
+      { file: "ug-map-south_sudan.png", answer: "South Sudan", group: "country", continent: "Africa" },
+      { file: "ug-map-spain.png", answer: "Spain", group: "country", continent: "Europe" },
+      { file: "ug-map-sri_lanka.png", answer: "Sri Lanka", group: "country", continent: "Asia" },
+      { file: "ug-map-sudan.png", answer: "Sudan", group: "country", continent: "Africa" },
+      { file: "ug-map-sumatra.png", answer: "Sumatra", group: "country", continent: "Asia" },
+      { file: "ug-map-suriname.png", answer: "Suriname", group: "country", continent: "South America" },
+      { file: "ug-map-svalbard.png", answer: "Svalbard", group: "country", continent: "Europe" },
+      { file: "ug-map-sweden.png", answer: "Sweden", group: "country", continent: "Europe" },
+      { file: "ug-map-switzerland.png", answer: "Switzerland", group: "country", continent: "Europe" },
+      { file: "ug-map-syria.png", answer: "Syria", group: "country", continent: "Asia" },
+      { file: "ug-map-taiwan.png", answer: "Taiwan", group: "country", continent: "Asia" },
+      { file: "ug-map-tajikistan.png", answer: "Tajikistan", group: "country", continent: "Asia" },
+      { file: "ug-map-tanzania.png", answer: "Tanzania", group: "country", continent: "Africa" },
+      { file: "ug-map-tasman_sea.png", answer: "Tasman Sea", group: "water" },
+      { file: "ug-map-thailand.png", answer: "Thailand", group: "country", continent: "Asia" },
+      { file: "ug-map-the_bahamas.png", answer: "The Bahamas", group: "country", continent: "North America" },
+      { file: "ug-map-the_gambia.png", answer: "The Gambia", group: "country", continent: "Africa" },
+      { file: "ug-map-timor_sea.png", answer: "Timor Sea", group: "water" },
+      { file: "ug-map-togo.png", answer: "Togo", group: "country", continent: "Africa" },
+      { file: "ug-map-tonga.png", answer: "Tonga", group: "country", continent: "Oceania" },
+      { file: "ug-map-transnistria.png", answer: "Transnistria", group: "country", continent: "Europe" },
+      { file: "ug-map-trinidad_and_tobago.png", answer: "Trinidad and Tobago", group: "country", continent: "North America" },
+      { file: "ug-map-tunisia.png", answer: "Tunisia", group: "country", continent: "Africa" },
+      { file: "ug-map-turkey.png", answer: "Turkey", group: "country", continent: "Asia" },
+      { file: "ug-map-turkmenistan.png", answer: "Turkmenistan", group: "country", continent: "Asia" },
+      { file: "ug-map-turks_and_caicos_islands.png", answer: "Turks and Caicos Islands", group: "country", continent: "North America" },
+      { file: "ug-map-tuvalu.png", answer: "Tuvalu", group: "country", continent: "Oceania" },
+      { file: "ug-map-uganda.png", answer: "Uganda", group: "country", continent: "Africa" },
+      { file: "ug-map-ukraine.png", answer: "Ukraine", group: "country", continent: "Europe" },
+      { file: "ug-map-united_arab_emirates.png", answer: "United Arab Emirates", group: "country", continent: "Asia" },
+      { file: "ug-map-united_kingdom.png", answer: "United Kingdom", group: "country", continent: "Europe" },
+      { file: "ug-map-united_states_of_america.png", answer: "United States of America", group: "country", continent: "North America" },
+      { file: "ug-map-united_states_virgin_islands.png", answer: "United States Virgin Islands", group: "country", continent: "North America" },
+      { file: "ug-map-uruguay.png", answer: "Uruguay", group: "country", continent: "South America" },
+      { file: "ug-map-uzbekistan.png", answer: "Uzbekistan", group: "country", continent: "Asia" },
+      { file: "ug-map-vanuatu.png", answer: "Vanuatu", group: "country", continent: "Oceania" },
+      { file: "ug-map-vatican_city.png", answer: "Vatican City", group: "country", continent: "Europe" },
+      { file: "ug-map-venezuela.png", answer: "Venezuela", group: "country", continent: "South America" },
+      { file: "ug-map-vietnam.png", answer: "Vietnam", group: "country", continent: "Asia" },
+      { file: "ug-map-wales.png", answer: "Wales", group: "country", continent: "Europe" },
+      { file: "ug-map-wallis_and_futuna.png", answer: "Wallis and Futuna", group: "country", continent: "Oceania" },
+      { file: "ug-map-white_sea.png", answer: "White Sea", group: "water" },
+      { file: "ug-map-yellow_sea.png", answer: "Yellow Sea", group: "water" },
+      { file: "ug-map-yemen.png", answer: "Yemen", group: "country", continent: "Asia" },
+      { file: "ug-map-zambia.png", answer: "Zambia", group: "country", continent: "Africa" },
+      { file: "ug-map-zanzibar.png", answer: "Zanzibar", group: "country", continent: "Africa" },
+      { file: "ug-map-zimbabwe.png", answer: "Zimbabwe", group: "country", continent: "Africa" }
     ];
 
-    /* --- Global Quiz Variables --- */
-    let selectedItems = [];
-    let quizQuestions = [];
-    let currentQuestion = 0;
-    let score = 0;
-
-    /* --- Populate Selection Form --- */
-    const selectionForm = document.getElementById("selectionForm");
-
-    // Group items by region key: use continent if available; otherwise, region.
-    function groupItems() {
-      const groups = {};
-      geoItems.forEach(item => {
-        const key = item.continent || item.region;
-        if (!groups[key]) groups[key] = [];
-        groups[key].push(item);
-      });
-      return groups;
-    }
-
-    function createSelectionSections() {
-      const groups = groupItems();
-      selectionForm.innerHTML = ""; // Clear any previous content
-      Object.keys(groups).sort().forEach(region => {
-        // Create section container
-        const section = document.createElement("div");
-        section.className = "section";
-
-        // Create header with live counter (default: 0 selected)
-        const header = document.createElement("div");
-        header.className = "section-header";
-        header.innerHTML = `${region} <span class="counter" id="counter-${region}">(0/${groups[region].length})</span>`;
-        // Clicking header toggles section visibility
-        header.addEventListener("click", () => {
-          const list = document.getElementById(`list-${region}`);
-          list.classList.toggle("visible");
-        });
-        section.appendChild(header);
-
-        // Create list container for checkboxes
-        const list = document.createElement("div");
-        list.className = "selection-list";
-        list.id = `list-${region}`;
-        // By default, we leave sections collapsed.
-        groups[region].sort((a, b) => a.name.localeCompare(b.name)).forEach(item => {
-          const label = document.createElement("label");
-          // Default state: unchecked
-          label.innerHTML = `<input type="checkbox" class="item-checkbox" data-region="${region}" value="${item.id}" onchange="updateCounter('${region}')"> ${item.name}`;
-          list.appendChild(label);
-        });
-        section.appendChild(list);
-        selectionForm.appendChild(section);
-      });
-    }
-
-    // Update live counter for a given region
-    function updateCounter(region) {
-      const total = document.querySelectorAll(`.item-checkbox[data-region="${region}"]`).length;
-      const selected = document.querySelectorAll(`.item-checkbox[data-region="${region}"]:checked`).length;
-      document.getElementById(`counter-${region}`).textContent = `(${selected}/${total})`;
-    }
-
-    // Expand sections during search so matching items are visible.
-    document.getElementById("searchBox").addEventListener("input", function () {
-      const query = this.value.toLowerCase();
-      // For each section, check if any label contains the query.
-      document.querySelectorAll(".section").forEach(section => {
-        let hasMatch = false;
-        section.querySelectorAll("label").forEach(label => {
-          if (label.textContent.toLowerCase().includes(query)) {
-            label.style.display = "block";
-            hasMatch = true;
-          } else {
-            label.style.display = "none";
-          }
-        });
-        // If there is a match, expand the section; otherwise, collapse it.
-        const list = section.querySelector(".selection-list");
-        if (hasMatch) {
-          list.classList.add("visible");
+    /* --- Update Group Counters --- */
+    function updateGroupCounters() {
+      // For each collapsible group in the countries section
+      const groups = document.querySelectorAll('#countries-groups .group-container');
+      groups.forEach(group => {
+        const items = group.querySelectorAll('.item-checkbox');
+        const checkedCount = Array.from(items).filter(cb => cb.checked).length;
+        const total = items.length;
+        const counterSpan = group.querySelector('.counter');
+        if (counterSpan) {
+          counterSpan.textContent = `(${checkedCount}/${total})`;
         } else {
-          list.classList.remove("visible");
+          // If not present in header, append it
+          const headerSpan = group.querySelector('.group-header span');
+          headerSpan.textContent += ` (${checkedCount}/${total})`;
         }
       });
+      // For the Others section
+      const othersItems = document.querySelectorAll('#others-group .item-checkbox');
+      const othersChecked = Array.from(othersItems).filter(cb => cb.checked).length;
+      const othersTotal = othersItems.length;
+      const othersCounter = document.querySelector('#others-group .counter');
+      if (othersCounter) {
+        othersCounter.textContent = `(${othersChecked}/${othersTotal})`;
+      }
+    }
+
+    /* --- Build the Selection List Using Groups --- */
+    function populateSelection() {
+      const countriesGroupsContainer = document.getElementById('countries-groups');
+      const othersGroupContainer = document.querySelector('#others-group .group-items');
+      countriesGroupsContainer.innerHTML = "";
+      othersGroupContainer.innerHTML = "";
+
+      // Group countries by continent
+      const countryGroups = {};
+      quizData.forEach(item => {
+        if (item.group === "country") {
+          if (!countryGroups[item.continent]) {
+            countryGroups[item.continent] = [];
+          }
+          countryGroups[item.continent].push(item);
+        }
+      });
+      // Create collapsible sections for each continent group
+      Object.keys(countryGroups).sort().forEach(continent => {
+        const container = document.createElement('div');
+        container.className = "group-container";
+        const header = document.createElement('div');
+        header.className = "group-header";
+        // Create a span for the title and counter
+        header.innerHTML = `<span>${continent} <span class="counter">(0/${countryGroups[continent].length})</span></span><span>&#x25B6;</span>`;
+        const itemsDiv = document.createElement('div');
+        itemsDiv.className = "group-items";
+        countryGroups[continent].sort((a, b) => a.answer.localeCompare(b.answer)).forEach(item => {
+          const label = document.createElement('label');
+          label.className = "item-label";
+          // Default is unchecked now.
+          label.innerHTML = `<input type="checkbox" class="item-checkbox" data-continent="${continent}" data-answer="${item.answer}" data-index="${quizData.indexOf(item)}"> ${item.answer}`;
+          // Update group counter on change
+          label.querySelector('input').addEventListener('change', updateGroupCounters);
+          itemsDiv.appendChild(label);
+        });
+        header.addEventListener('click', () => {
+          itemsDiv.classList.toggle("visible");
+          const arrow = header.querySelector("span:last-child");
+          arrow.innerHTML = itemsDiv.classList.contains("visible") ? "&#x25BC;" : "&#x25B6;";
+        });
+        container.appendChild(header);
+        container.appendChild(itemsDiv);
+        countriesGroupsContainer.appendChild(container);
+      });
+
+      // Group others (non-countries)
+      const others = quizData.filter(item => item.group !== "country");
+      others.sort((a, b) => a.answer.localeCompare(b.answer)).forEach(item => {
+        const label = document.createElement('label');
+        label.className = "item-label";
+        label.innerHTML = `<input type="checkbox" class="item-checkbox" data-answer="${item.answer}" data-index="${quizData.indexOf(item)}"> ${item.answer}`;
+        label.querySelector('input').addEventListener('change', updateGroupCounters);
+        othersGroupContainer.appendChild(label);
+      });
+
+      // Update counters after building list.
+      updateGroupCounters();
+    }
+
+    /* --- Filtering Functionality --- */
+    const searchBox = document.getElementById('search-box');
+    searchBox.addEventListener('input', function() {
+      const query = this.value.toLowerCase();
+      const labels = document.querySelectorAll('.item-label');
+      labels.forEach(label => {
+        if (label.textContent.toLowerCase().includes(query)) {
+          label.style.display = "block";
+        } else {
+          label.style.display = "none";
+        }
+      });
+      // If query is not empty, expand all groups so user can see matching items.
+      const groupItems = document.querySelectorAll('.group-items');
+      if (query.trim() !== "") {
+        groupItems.forEach(div => div.classList.add("visible"));
+        // Also update the arrow indicator.
+        const headers = document.querySelectorAll('.group-header');
+        headers.forEach(header => header.querySelector("span:last-child").innerHTML = "&#x25BC;");
+      }
     });
 
-    createSelectionSections();
+    /* --- Select All / Deselect All Buttons --- */
+    document.getElementById('select-all').addEventListener('click', () => {
+      document.querySelectorAll('.item-checkbox').forEach(cb => cb.checked = true);
+      updateGroupCounters();
+    });
+    document.getElementById('deselect-all').addEventListener('click', () => {
+      document.querySelectorAll('.item-checkbox').forEach(cb => cb.checked = false);
+      updateGroupCounters();
+    });
+
+    /* --- Continent Buttons: Toggle selection for that continent --- */
+    document.querySelectorAll('.continent-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const continent = btn.getAttribute('data-continent');
+        const checkboxes = document.querySelectorAll(`.item-checkbox[data-continent="${continent}"]`);
+        // Determine if all are checked
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        checkboxes.forEach(cb => cb.checked = !allChecked);
+        updateGroupCounters();
+      });
+    });
+
+    /* --- Smart Suggest --- */
+    document.getElementById('smart-suggest').addEventListener('click', () => {
+      document.querySelectorAll('.item-checkbox').forEach(cb => cb.checked = false);
+      document.querySelectorAll('.item-checkbox').forEach(cb => {
+        if (Math.random() < 0.5) {
+          cb.checked = true;
+        }
+      });
+      updateGroupCounters();
+    });
 
     /* --- Quiz Logic --- */
-    // Shuffle array (Fisher–Yates)
-    function shuffleArray(array) {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-      }
-      return array;
-    }
+    let selectedItems = [];
+    let quizItems = [];
+    let currentQuestionIndex = 0;
+    let score = 0;
 
-    // Generate multiple choice options for the current question.
-    function generateOptions(correctItem) {
-      let options = [];
-      // Filter potential distractors: same type and same region key.
-      let potential = geoItems.filter(item => {
-        if (item.id === correctItem.id) return false;
-        if (item.type !== correctItem.type) return false;
-        const key1 = correctItem.continent || correctItem.region;
-        const key2 = item.continent || item.region;
-        return key1 === key2;
+    // Start Quiz: build quizItems from selected checkboxes.
+    function startQuiz() {
+      const checkboxes = document.querySelectorAll('.item-checkbox');
+      let selectedIndices = [];
+      checkboxes.forEach(cb => {
+        if (cb.checked) {
+          selectedIndices.push(parseInt(cb.getAttribute('data-index')));
+        }
       });
-      potential = shuffleArray(potential);
-      options = potential.slice(0, 3);
-      // If not enough distractors, add random ones of the same type.
-      if (options.length < 3) {
-        let additional = geoItems.filter(item => item.id !== correctItem.id && item.type === correctItem.type && !options.includes(item));
-        additional = shuffleArray(additional);
-        options = options.concat(additional.slice(0, 3 - options.length));
-      }
-      // Append the correct item.
-      options.push(correctItem);
-      return shuffleArray(options);
-    }
-
-    // Start Quiz Event Handler
-    document.getElementById("startQuizButton").addEventListener("click", () => {
-      // Get all checked items
-      const checkedBoxes = document.querySelectorAll(".item-checkbox:checked");
-      if (checkedBoxes.length === 0) {
-        alert("Please select at least one item for the quiz.");
+      if (selectedIndices.length < 1) {
+        alert("Please select at least one item to start the quiz.");
         return;
       }
-      selectedItems = [];
-      checkedBoxes.forEach(box => {
-        const id = box.value;
-        const item = geoItems.find(i => i.id === id);
-        if (item) selectedItems.push(item);
-      });
-      quizQuestions = shuffleArray(selectedItems.slice());
-      currentQuestion = 0;
+      selectedItems = selectedIndices.map(i => quizData[i]);
+      quizItems = shuffleArray(selectedItems.slice());
+      currentQuestionIndex = 0;
       score = 0;
-
-      document.getElementById("selectionScreen").style.display = "none";
-      document.getElementById("resultScreen").style.display = "none";
-      document.getElementById("quizScreen").style.display = "block";
+      document.getElementById('selection-screen').style.display = "none";
+      document.getElementById('result-screen').style.display = "none";
+      document.getElementById('quiz-screen').style.display = "block";
       showQuestion();
-    });
+    }
 
-    // Show current question
+    // Display the current quiz question.
     function showQuestion() {
-      if (currentQuestion >= quizQuestions.length) {
-        displayResults();
-        return;
-      }
-      const currentItem = quizQuestions[currentQuestion];
-      const quizImage = document.getElementById("quizImage");
+      document.getElementById('next-btn').style.display = "none";
+      document.getElementById('options-container').innerHTML = "";
+      const currentItem = quizItems[currentQuestionIndex];
+      document.getElementById('question-count').textContent = `Question ${currentQuestionIndex + 1} of ${quizItems.length}`;
+      const quizImage = document.getElementById('quiz-image');
       quizImage.src = "images/" + currentItem.file;
-      quizImage.alt = currentItem.name;
-      const optionsContainer = document.getElementById("optionsContainer");
-      optionsContainer.innerHTML = "";
+      quizImage.alt = currentItem.answer;
       const options = generateOptions(currentItem);
       options.forEach(option => {
-        const btn = document.createElement("button");
-        btn.className = "option-button";
-        btn.textContent = option.name;
-        btn.addEventListener("click", () => selectAnswer(option, btn));
-        optionsContainer.appendChild(btn);
+        const btn = document.createElement('button');
+        btn.className = "option-btn";
+        btn.textContent = option;
+        btn.onclick = () => selectOption(btn, option, currentItem.answer);
+        document.getElementById('options-container').appendChild(btn);
       });
-      document.getElementById("nextButton").style.display = "none";
-      updateScoreDisplay();
     }
 
-    // Handle answer selection
-    function selectAnswer(selectedOption, btn) {
-      document.querySelectorAll(".option-button").forEach(button => button.disabled = true);
-      const currentItem = quizQuestions[currentQuestion];
-      if (selectedOption.id === currentItem.id) {
-        score++;
+    // When an option is selected.
+    function selectOption(btn, selectedAnswer, correctAnswer) {
+      Array.from(document.getElementById('options-container').children).forEach(button => {
+        button.disabled = true;
+      });
+      if (selectedAnswer === correctAnswer) {
         btn.classList.add("correct");
+        score++;
       } else {
         btn.classList.add("wrong");
-        // Highlight the correct answer.
-        document.querySelectorAll(".option-button").forEach(button => {
-          if (button.textContent === currentItem.name) {
+        Array.from(document.getElementById('options-container').children).forEach(button => {
+          if (button.textContent === correctAnswer) {
             button.classList.add("correct");
           }
         });
       }
-      document.getElementById("nextButton").style.display = "block";
-      updateScoreDisplay();
+      document.getElementById('next-btn').style.display = "inline-block";
     }
 
-    // Update score display with question counter
-    function updateScoreDisplay() {
-      document.getElementById("scoreDisplay").textContent =
-        `Question ${currentQuestion + 1} of ${quizQuestions.length} | Score: ${score}`;
+    // Generate multiple-choice options for the current question.
+    function generateOptions(currentItem) {
+      const options = [currentItem.answer];
+      let pool = quizData.filter(item => {
+        if (item.answer === currentItem.answer) return false;
+        if (currentItem.group === "country") {
+          return item.group === "country" && item.continent === currentItem.continent;
+        } else {
+          return item.group === currentItem.group;
+        }
+      });
+      if (pool.length < 3) {
+        pool = quizData.filter(item => item.answer !== currentItem.answer && item.group === currentItem.group);
+      }
+      pool = shuffleArray(pool);
+      for (let i = 0; i < pool.length && options.length < 4; i++) {
+        options.push(pool[i].answer);
+      }
+      if (options.length < 4) {
+        const extraPool = quizData.filter(item => item.answer !== currentItem.answer);
+        extraPool.forEach(item => {
+          if (options.length < 4 && !options.includes(item.answer)) {
+            options.push(item.answer);
+          }
+        });
+      }
+      return shuffleArray(options);
     }
 
-    // Next Question button handler
-    document.getElementById("nextButton").addEventListener("click", () => {
-      currentQuestion++;
-      showQuestion();
+    // Utility: Shuffle an array using Fisher-Yates.
+    function shuffleArray(array) {
+      let currentIndex = array.length, randomIndex;
+      while (currentIndex !== 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+        [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+      }
+      return array;
+    }
+
+    // Next Question button handler.
+    document.getElementById('next-btn').addEventListener('click', () => {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < quizItems.length) {
+        showQuestion();
+      } else {
+        showResult();
+      }
     });
 
-    // Display final results
-    function displayResults() {
-      document.getElementById("quizScreen").style.display = "none";
-      document.getElementById("resultScreen").style.display = "block";
-      document.getElementById("finalScore").textContent =
-        `You scored ${score} out of ${quizQuestions.length}!`;
+    // Display final results.
+    function showResult() {
+      document.getElementById('quiz-screen').style.display = "none";
+      document.getElementById('result-screen').style.display = "block";
+      document.getElementById('final-score').textContent = `Your score: ${score} out of ${quizItems.length}`;
     }
 
-    // Restart Quiz button handler
-    document.getElementById("restartQuizButton").addEventListener("click", () => {
-      document.getElementById("selectionScreen").style.display = "block";
-      document.getElementById("quizScreen").style.display = "none";
-      document.getElementById("resultScreen").style.display = "none";
+    // Restart Quiz: Return to selection screen.
+    document.getElementById('restart-btn').addEventListener('click', () => {
+      document.getElementById('result-screen').style.display = "none";
+      document.getElementById('selection-screen').style.display = "block";
     });
+
+    // Start quiz button.
+    document.getElementById('start-quiz').addEventListener('click', startQuiz);
+
+    // Initialize selection screen on load.
+    populateSelection();
   </script>
 </body>
 </html>
