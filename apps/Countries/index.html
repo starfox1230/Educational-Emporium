@@ -7,6 +7,7 @@
     /* Global styles */
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 18px;
       margin: 0;
       padding: 0;
       background: linear-gradient(135deg, #e0eafc, #cfdef3);
@@ -14,40 +15,42 @@
     }
     .container {
       max-width: 900px;
+      width: 95%;
       margin: 2rem auto;
-      padding: 1rem;
+      padding: 1.5rem;
       background: #fff;
       border-radius: 8px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      width: 90%;
     }
     h1, h2 {
       text-align: center;
       margin-bottom: 1rem;
+      font-size: 2rem;
     }
     /* Selection Controls */
     #selection-controls {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.5rem;
+      gap: 0.75rem;
       justify-content: center;
       margin-bottom: 1rem;
     }
     #selection-controls input[type="text"] {
-      padding: 0.5rem;
-      font-size: 1rem;
+      padding: 0.75rem;
+      font-size: 1.2rem;
       flex: 1 1 250px;
       border: 1px solid #ddd;
       border-radius: 4px;
     }
     .btn {
-      padding: 0.5rem 1rem;
+      padding: 0.75rem 1.25rem;
       background-color: #0077cc;
       color: #fff;
       border: none;
       border-radius: 4px;
       cursor: pointer;
       transition: background-color 0.3s;
+      font-size: 1.1rem;
     }
     .btn:hover {
       background-color: #005fa3;
@@ -55,29 +58,30 @@
     #continent-buttons {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.5rem;
+      gap: 0.75rem;
       justify-content: center;
       margin-bottom: 1rem;
     }
     /* Collapsible groups */
     .group-container {
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
     }
     .group-header {
       background-color: #f0f0f0;
-      padding: 0.5rem;
+      padding: 0.75rem;
       cursor: pointer;
       border: 1px solid #ddd;
       border-radius: 4px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      font-size: 1.1rem;
     }
     .group-header:hover {
       background-color: #e0e0e0;
     }
     .group-items {
-      padding: 0.5rem 1rem;
+      padding: 0.75rem 1rem;
       border: 1px solid #ddd;
       border-top: none;
       display: none;
@@ -87,8 +91,8 @@
     }
     .item-label {
       display: block;
-      margin: 0.3rem 0;
-      font-size: 0.95rem;
+      margin: 0.5rem 0;
+      font-size: 1.1rem;
     }
     /* Quiz Screen */
     #quiz-screen {
@@ -99,23 +103,25 @@
       height: auto;
       border: 2px solid #ddd;
       border-radius: 4px;
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
     }
     .options {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
       gap: 1rem;
+      margin-top: 1rem;
     }
     .option-btn {
       flex: 1 1 calc(45% - 1rem);
       max-width: 45%;
-      padding: 0.8rem;
+      padding: 1rem;
       background-color: #f0f0f0;
       border: 2px solid transparent;
       border-radius: 4px;
       cursor: pointer;
       transition: background-color 0.3s, border-color 0.3s;
+      font-size: 1.1rem;
     }
     .option-btn:hover {
       background-color: #e0e0e0;
@@ -131,22 +137,29 @@
     /* Result Screen */
     #result-screen {
       text-align: center;
+      font-size: 1.2rem;
     }
     /* Responsive adjustments for mobile */
     @media (max-width: 600px) {
       .container {
         margin: 1rem auto;
-        padding: 10px;
+        padding: 1rem;
       }
       #selection-controls input[type="text"] {
         flex: 1 1 100%;
+        font-size: 1.1rem;
+      }
+      .btn {
+        font-size: 1.1rem;
+        padding: 0.75rem;
       }
       .option-btn {
         flex: 1 1 100%;
         max-width: 100%;
+        font-size: 1.1rem;
       }
       .group-header, .item-label {
-        font-size: 0.9rem;
+        font-size: 1rem;
       }
     }
   </style>
@@ -548,10 +561,6 @@
         const counterSpan = group.querySelector('.counter');
         if (counterSpan) {
           counterSpan.textContent = `(${checkedCount}/${total})`;
-        } else {
-          // If not present in header, append it
-          const headerSpan = group.querySelector('.group-header span');
-          headerSpan.textContent += ` (${checkedCount}/${total})`;
         }
       });
       // For the Others section
@@ -587,16 +596,14 @@
         container.className = "group-container";
         const header = document.createElement('div');
         header.className = "group-header";
-        // Create a span for the title and counter
         header.innerHTML = `<span>${continent} <span class="counter">(0/${countryGroups[continent].length})</span></span><span>&#x25B6;</span>`;
         const itemsDiv = document.createElement('div');
         itemsDiv.className = "group-items";
         countryGroups[continent].sort((a, b) => a.answer.localeCompare(b.answer)).forEach(item => {
           const label = document.createElement('label');
           label.className = "item-label";
-          // Default is unchecked now.
+          // All checkboxes are now unchecked by default.
           label.innerHTML = `<input type="checkbox" class="item-checkbox" data-continent="${continent}" data-answer="${item.answer}" data-index="${quizData.indexOf(item)}"> ${item.answer}`;
-          // Update group counter on change
           label.querySelector('input').addEventListener('change', updateGroupCounters);
           itemsDiv.appendChild(label);
         });
@@ -615,12 +622,13 @@
       others.sort((a, b) => a.answer.localeCompare(b.answer)).forEach(item => {
         const label = document.createElement('label');
         label.className = "item-label";
-        label.innerHTML = `<input type="checkbox" class="item-checkbox" data-answer="${item.answer}" data-index="${quizData.indexOf(item)}"> ${item.answer}`;
+        // If the item has a continent property, include it as a data attribute for toggle purposes.
+        const continentAttr = item.continent ? ` data-continent="${item.continent}"` : "";
+        label.innerHTML = `<input type="checkbox" class="item-checkbox"${continentAttr} data-answer="${item.answer}" data-index="${quizData.indexOf(item)}"> ${item.answer}`;
         label.querySelector('input').addEventListener('change', updateGroupCounters);
         othersGroupContainer.appendChild(label);
       });
 
-      // Update counters after building list.
       updateGroupCounters();
     }
 
@@ -636,11 +644,10 @@
           label.style.display = "none";
         }
       });
-      // If query is not empty, expand all groups so user can see matching items.
+      // When a search query is entered, expand all groups.
       const groupItems = document.querySelectorAll('.group-items');
       if (query.trim() !== "") {
         groupItems.forEach(div => div.classList.add("visible"));
-        // Also update the arrow indicator.
         const headers = document.querySelectorAll('.group-header');
         headers.forEach(header => header.querySelector("span:last-child").innerHTML = "&#x25BC;");
       }
@@ -660,8 +667,9 @@
     document.querySelectorAll('.continent-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const continent = btn.getAttribute('data-continent');
+        // Toggle all checkboxes that have the matching data-continent attribute,
+        // whether from the countries section or the others section.
         const checkboxes = document.querySelectorAll(`.item-checkbox[data-continent="${continent}"]`);
-        // Determine if all are checked
         const allChecked = Array.from(checkboxes).every(cb => cb.checked);
         checkboxes.forEach(cb => cb.checked = !allChecked);
         updateGroupCounters();
@@ -685,7 +693,6 @@
     let currentQuestionIndex = 0;
     let score = 0;
 
-    // Start Quiz: build quizItems from selected checkboxes.
     function startQuiz() {
       const checkboxes = document.querySelectorAll('.item-checkbox');
       let selectedIndices = [];
@@ -708,7 +715,6 @@
       showQuestion();
     }
 
-    // Display the current quiz question.
     function showQuestion() {
       document.getElementById('next-btn').style.display = "none";
       document.getElementById('options-container').innerHTML = "";
@@ -727,7 +733,6 @@
       });
     }
 
-    // When an option is selected.
     function selectOption(btn, selectedAnswer, correctAnswer) {
       Array.from(document.getElementById('options-container').children).forEach(button => {
         button.disabled = true;
@@ -746,7 +751,6 @@
       document.getElementById('next-btn').style.display = "inline-block";
     }
 
-    // Generate multiple-choice options for the current question.
     function generateOptions(currentItem) {
       const options = [currentItem.answer];
       let pool = quizData.filter(item => {
@@ -775,7 +779,6 @@
       return shuffleArray(options);
     }
 
-    // Utility: Shuffle an array using Fisher-Yates.
     function shuffleArray(array) {
       let currentIndex = array.length, randomIndex;
       while (currentIndex !== 0) {
@@ -786,7 +789,6 @@
       return array;
     }
 
-    // Next Question button handler.
     document.getElementById('next-btn').addEventListener('click', () => {
       currentQuestionIndex++;
       if (currentQuestionIndex < quizItems.length) {
@@ -796,20 +798,17 @@
       }
     });
 
-    // Display final results.
     function showResult() {
       document.getElementById('quiz-screen').style.display = "none";
       document.getElementById('result-screen').style.display = "block";
       document.getElementById('final-score').textContent = `Your score: ${score} out of ${quizItems.length}`;
     }
 
-    // Restart Quiz: Return to selection screen.
     document.getElementById('restart-btn').addEventListener('click', () => {
       document.getElementById('result-screen').style.display = "none";
       document.getElementById('selection-screen').style.display = "block";
     });
 
-    // Start quiz button.
     document.getElementById('start-quiz').addEventListener('click', startQuiz);
 
     // Initialize selection screen on load.
