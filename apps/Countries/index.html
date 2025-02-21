@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <!-- Ensures proper scaling on mobile devices -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Geography Quiz</title>
   <style>
     /* Global styles */
@@ -602,7 +604,7 @@
         countryGroups[continent].sort((a, b) => a.answer.localeCompare(b.answer)).forEach(item => {
           const label = document.createElement('label');
           label.className = "item-label";
-          // All checkboxes are now unchecked by default.
+          // All checkboxes are unchecked by default.
           label.innerHTML = `<input type="checkbox" class="item-checkbox" data-continent="${continent}" data-answer="${item.answer}" data-index="${quizData.indexOf(item)}"> ${item.answer}`;
           label.querySelector('input').addEventListener('change', updateGroupCounters);
           itemsDiv.appendChild(label);
@@ -622,7 +624,6 @@
       others.sort((a, b) => a.answer.localeCompare(b.answer)).forEach(item => {
         const label = document.createElement('label');
         label.className = "item-label";
-        // If the item has a continent property, include it as a data attribute for toggle purposes.
         const continentAttr = item.continent ? ` data-continent="${item.continent}"` : "";
         label.innerHTML = `<input type="checkbox" class="item-checkbox"${continentAttr} data-answer="${item.answer}" data-index="${quizData.indexOf(item)}"> ${item.answer}`;
         label.querySelector('input').addEventListener('change', updateGroupCounters);
@@ -644,7 +645,7 @@
           label.style.display = "none";
         }
       });
-      // When a search query is entered, expand all groups.
+      // Expand all groups when a search query is active.
       const groupItems = document.querySelectorAll('.group-items');
       if (query.trim() !== "") {
         groupItems.forEach(div => div.classList.add("visible"));
@@ -667,8 +668,7 @@
     document.querySelectorAll('.continent-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const continent = btn.getAttribute('data-continent');
-        // Toggle all checkboxes that have the matching data-continent attribute,
-        // whether from the countries section or the others section.
+        // Toggle all checkboxes with matching data-continent attribute in both countries and others.
         const checkboxes = document.querySelectorAll(`.item-checkbox[data-continent="${continent}"]`);
         const allChecked = Array.from(checkboxes).every(cb => cb.checked);
         checkboxes.forEach(cb => cb.checked = !allChecked);
