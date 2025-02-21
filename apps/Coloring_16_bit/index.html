@@ -78,7 +78,7 @@
       flex-direction: row;
       flex-wrap: nowrap;
       overflow-x: auto;
-      padding: 8px 4px; /* slight horizontal padding */
+      padding: 8px 4px;
       background: #1e1e1e;
       border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.5);
@@ -209,7 +209,7 @@
         return `hsl(${baseRainbowHues[j]}, 100%, ${lightness}%)`;
       }
     }
-    // Build palette for the scrollable portion (indices 1 and up)
+    // Build palette array for the scrollable portion (indices 1 and up)
     function buildPaletteScrollable() {
       const palette = [];
       const totalCount = 4 + baseRainbowHues.length;
@@ -360,7 +360,7 @@
       exportCanvas.width = 256;
       exportCanvas.height = 256;
       const exportCtx = exportCanvas.getContext('2d');
-      // In export mode, do not fill background so CLEAR cells remain transparent.
+      // In export mode, do not fill a background so that CLEAR cells remain transparent.
       drawArtwork(exportCtx, exportCanvas, true);
       const randomStr = Math.random().toString(36).substring(2, 7);
       const link = document.createElement('a');
@@ -370,47 +370,50 @@
     });
     function selectColor(index) {
       selectedColor = index;
-      // Remove selection from all buttons.
       document.querySelectorAll('.clear-btn, .color-btn').forEach(btn => btn.classList.remove('selected'));
-      // Select the button with matching data-color.
       document.querySelector(`[data-color="${index}"]`).classList.add('selected');
     }
-    // Initialize palette buttons.
+    // Initialize or update the palette buttons.
     function initPalette() {
+      // Save current scroll position.
+      const scrollableContainer = document.getElementById('color-palette');
+      const scrollPos = scrollableContainer ? scrollableContainer.scrollLeft : 0;
       // Fixed clear button.
-      const fixedClearContainer = document.getElementById('palette-container');
-      // Clear palette-container children and then rebuild.
-      fixedClearContainer.innerHTML = "";
+      const paletteContainer = document.getElementById('palette-container');
+      // Clear the container.
+      paletteContainer.innerHTML = "";
       // Create fixed clear button.
       const clearBtn = document.createElement('button');
       clearBtn.className = 'clear-btn';
       clearBtn.dataset.color = "0";
       clearBtn.addEventListener('click', () => selectColor(0));
       if (selectedColor == 0) clearBtn.classList.add('selected');
-      fixedClearContainer.appendChild(clearBtn);
+      paletteContainer.appendChild(clearBtn);
       // Create scrollable palette container.
-      const scrollableContainer = document.createElement('div');
-      scrollableContainer.id = "color-palette";
-      scrollableContainer.style.flexGrow = "1";
-      scrollableContainer.style.overflowX = "auto";
-      scrollableContainer.style.display = "flex";
-      scrollableContainer.style.flexDirection = "row";
-      scrollableContainer.style.flexWrap = "nowrap";
-      scrollableContainer.style.padding = "8px 4px";
-      scrollableContainer.style.background = "#1e1e1e";
-      scrollableContainer.style.borderRadius = "12px";
-      scrollableContainer.style.boxShadow = "0 2px 8px rgba(0,0,0,0.5)";
-      const scrollablePalette = buildPaletteScrollable();
-      scrollablePalette.forEach((color, idx) => {
+      const scrollablePalette = document.createElement('div');
+      scrollablePalette.id = "color-palette";
+      scrollablePalette.style.flexGrow = "1";
+      scrollablePalette.style.overflowX = "auto";
+      scrollablePalette.style.display = "flex";
+      scrollablePalette.style.flexDirection = "row";
+      scrollablePalette.style.flexWrap = "nowrap";
+      scrollablePalette.style.padding = "8px 4px";
+      scrollablePalette.style.background = "#1e1e1e";
+      scrollablePalette.style.borderRadius = "12px";
+      scrollablePalette.style.boxShadow = "0 2px 8px rgba(0,0,0,0.5)";
+      const scrollableColors = buildPaletteScrollable();
+      scrollableColors.forEach((color, idx) => {
         const btn = document.createElement('button');
         btn.className = 'color-btn';
         btn.dataset.color = idx + 1;
         btn.style.backgroundColor = color;
         btn.addEventListener('click', () => selectColor(idx + 1));
         if (selectedColor == idx + 1) btn.classList.add('selected');
-        scrollableContainer.appendChild(btn);
+        scrollablePalette.appendChild(btn);
       });
-      fixedClearContainer.appendChild(scrollableContainer);
+      paletteContainer.appendChild(scrollablePalette);
+      // Restore previous scroll position.
+      scrollablePalette.scrollLeft = scrollPos;
     }
     // Handle brightness slider changes.
     document.getElementById('brightness-slider').addEventListener('input', (e) => {
