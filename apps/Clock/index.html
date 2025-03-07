@@ -158,7 +158,7 @@
         <button class="num-key" data-key="7" tabindex="7">7</button>
         <button class="num-key" data-key="8" tabindex="8">8</button>
         <button class="num-key" data-key="9" tabindex="9">9</button>
-        <!-- Toggle button shows the opposite period -->
+        <!-- Toggle button always shows the alternative period -->
         <button class="num-key" data-key="toggle" tabindex="10"></button>
         <button class="num-key" data-key="0" tabindex="11">0</button>
         <button class="num-key" data-key="back" tabindex="12">&larr;</button>
@@ -274,9 +274,10 @@
       }, 1000);
     }
     
-    // Custom keypad logic
+    // Custom keypad logic with auto-leading zero behavior
     let customTimeInput = "";
     let ampm = "AM";
+    let waitingForSecondHourDigit = false;
     
     // Update the displayed time with a colon between hours and minutes.
     // Also update the toggle button to show the opposite period.
@@ -284,20 +285,22 @@
       let padded = customTimeInput.padEnd(4, "_");
       let formatted = padded.slice(0,2) + ":" + padded.slice(2);
       document.getElementById("timeDisplay").textContent = formatted + " " + ampm;
-      // Always display the alternative period on the toggle button.
       document.querySelector('[data-key="toggle"]').textContent = (ampm === "AM") ? "PM" : "AM";
     }
     
     function handleKey(key) {
       if (key === "back") {
-        customTimeInput = customTimeInput.slice(0, -1);
-      } else if (key === "toggle") {
-        ampm = (ampm === "AM") ? "PM" : "AM";
-      } else if (key === "enter") {
-        // Stop the rainbow cycle (if active) before setting a new time.
-        if (rainbowCycleActive) {
-          stopRainbowCycle();
+        if (waitingForSecondHourDigit) {
+          waitingForSecondHourDigit = false;
         }
+        customTimeInput = customTimeInput.slice(0, -1);
+      } 
+      else if (key === "toggle") {
+        ampm = (ampm === "AM") ? "PM" : "AM";
+      } 
+      else if (key === "enter") {
+        // Stop the rainbow cycle if active
+        if (rainbowCycleActive) stopRainbowCycle();
         let timeStr = customTimeInput.padStart(4, "0");
         const inputHours = parseInt(timeStr.substring(0, 2), 10);
         const inputMinutes = parseInt(timeStr.substring(2, 4), 10);
@@ -316,38 +319,54 @@
         }
         targetTime = newTarget;
         startTime = now;
-        const options = { hour: '2-digit', minute: '2-digit' };
-        document.getElementById("targetDisplay").textContent = targetTime.toLocaleTimeString([], options);
-        // Clear keypad input, reset period, and hide the modal.
+        document.getElementById("targetDisplay").textContent = targetTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         customTimeInput = "";
         setDefaultPeriod();
         updateTimeDisplay();
         document.getElementById("timePadModal").style.display = "none";
-      } else {
-        if (customTimeInput.length < 4) {
+      } 
+      else {
+        // Handle first digit logic
+        if (customTimeInput.length === 0) {
+          if (key === "1" || key === "0") {
+            waitingForSecondHourDigit = true;
+            customTimeInput += key;
+          } else {
+            // Auto-prepend '0' for 2-9 (e.g., pressing 7 becomes 07)
+            customTimeInput += "0" + key;
+          }
+        } 
+        else if (customTimeInput.length === 1 && waitingForSecondHourDigit) {
           customTimeInput += key;
+          waitingForSecondHourDigit = false;
+        } 
+        else {
+          if (customTimeInput.length < 4) {
+            customTimeInput += key;
+          }
         }
       }
       updateTimeDisplay();
     }
     
-    // Set the default period (AM or PM) based on the current time.
+    // Set the default period (AM or PM) based on current time.
     function setDefaultPeriod() {
       const now = new Date();
       ampm = (now.getHours() < 12) ? "AM" : "PM";
     }
     
-    // Attach event listeners to each keypad button.
+    // Attach event listeners to keypad buttons.
     document.querySelectorAll(".num-key").forEach(button => {
       button.addEventListener("click", () => {
         handleKey(button.getAttribute("data-key"));
       });
     });
     
-    // Clicking the target display opens the modal, resets the keypad, and defaults the period.
+    // Clicking the target display opens the modal, resets input state, and sets default period.
     document.getElementById("targetDisplay").addEventListener("click", () => {
       setDefaultPeriod();
       customTimeInput = "";
+      waitingForSecondHourDigit = false;
       updateTimeDisplay();
       document.getElementById("timePadModal").style.display = "flex";
     });
