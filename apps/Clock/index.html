@@ -5,6 +5,14 @@
   <title>Time Progress App with Persistent Rainbow Background</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
+    /* New container to simulate 250% zoom */
+    .zoom-container {
+      transform: scale(2.5);
+      transform-origin: top left;
+      /* Adjust width and height so that the scaled content fills the viewport */
+      width: calc(100% / 2.5);
+      height: calc(100% / 2.5);
+    }
     /* Fullscreen, transparent body background */
     html, body {
       margin: 0;
@@ -103,19 +111,22 @@
   </style>
 </head>
 <body>
-  <!-- Vanta.js background container -->
-  <div id="vanta-bg"></div>
-  
-  <!-- Main content container -->
-  <div class="container">
-    <div class="progress-container">
-      <div class="progress-bar" id="progressBar"></div>
-    </div>
-    <div class="target-display" id="targetDisplay">No target set</div>
-    <div class="clock" id="clock">00:00</div>
-    <div class="target-picker">
-      <input type="time" id="timeInput">
-      <button id="setTargetBtn">Set Target Time</button>
+  <!-- Zoom container to simulate 250% zoom at 100% browser zoom -->
+  <div class="zoom-container">
+    <!-- Vanta.js background container -->
+    <div id="vanta-bg"></div>
+    
+    <!-- Main content container -->
+    <div class="container">
+      <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="target-display" id="targetDisplay">No target set</div>
+      <div class="clock" id="clock">00:00</div>
+      <div class="target-picker">
+        <input type="time" id="timeInput">
+        <button id="setTargetBtn">Set Target Time</button>
+      </div>
     </div>
   </div>
   
@@ -252,7 +263,6 @@
       targetTime = newTarget;
       startTime = now;
       const options = { hour: '2-digit', minute: '2-digit' };
-      // Now only the time is displayed (no "Target Time:" prefix)
       document.getElementById("targetDisplay").textContent = targetTime.toLocaleTimeString([], options);
     }
     
