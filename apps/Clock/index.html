@@ -55,11 +55,16 @@
     .target-display:focus {
       outline: 2px solid #ffaa00;
     }
+    /* When the target time is reached, only the target display turns green with pulsing */
+    .target-reached {
+      background-color: #4caf50; /* Pleasant green */
+      animation: flash 1s ease-out infinite;
+    }
     .clock {
       font-size: 80px;
       letter-spacing: 5px;
       margin-top: 60px;
-      /* Using a text shadow to enhance readability */
+      /* Live clock: using 'numeric' for hour so no leading zero appears */
       text-shadow: 
         0 0 10px rgba(0, 0, 0, 0.8),
         0 0 20px rgba(0, 0, 0, 0.7),
@@ -115,10 +120,6 @@
       grid-column: span 3;
       background-color: #ffaa00;
     }
-    /* Flash animation when target time is reached */
-    .time-reached {
-      animation: flash 1s ease-out;
-    }
     @keyframes flash {
       0% { transform: scale(1); opacity: 1; }
       50% { transform: scale(1.2); opacity: 0.7; }
@@ -165,36 +166,30 @@
     // --- Clock Functionality ---
     let targetTime = null;
     let startTime = null;
+    let targetReached = false;
     
     function updateClock() {
       const now = new Date();
       const clockEl = document.getElementById("clock");
-      // Use 'numeric' for hour to avoid leading zero
+      // Display live clock without leading zero.
       clockEl.textContent = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
       
       if (targetTime && startTime) {
         const totalDuration = targetTime - startTime;
         const elapsed = now - startTime;
-        const progressPercent = Math.min((elapsed / totalDuration) * 100, 100);
-        document.getElementById("progressBar").style.width = progressPercent + "%";
-        if (elapsed >= totalDuration) {
-          triggerTargetReached();
+        if (!targetReached) {
+          if (elapsed >= totalDuration) {
+            targetReached = true;
+            // Set progress bar to 100% and add pulsing green to target display.
+            document.getElementById("progressBar").style.width = "100%";
+            document.getElementById("targetDisplay").classList.add("target-reached");
+          } else {
+            document.getElementById("progressBar").style.width = Math.min((elapsed / totalDuration) * 100, 100) + "%";
+          }
+        } else {
+          document.getElementById("progressBar").style.width = "100%";
         }
       }
-    }
-    
-    function triggerTargetReached() {
-      const clockEl = document.getElementById("clock");
-      clockEl.classList.add("time-reached");
-      setTimeout(() => {
-        clockEl.classList.remove("time-reached");
-        targetTime = null;
-        startTime = null;
-        document.getElementById("progressBar").style.width = "0%";
-        customTimeInput = "";
-        setDefaultPeriod();
-        updateTimeDisplay();
-      }, 1000);
     }
     
     // --- Custom Keypad Logic with Auto-Leading Zero ---
@@ -202,12 +197,12 @@
     let ampm = "AM";
     let waitingForSecondHourDigit = false;
     
-    // updateTimeDisplay() now removes the leading zero from the hour if fully entered.
+    // updateTimeDisplay() removes the leading zero from the hour if fully entered.
     function updateTimeDisplay() {
       let padded = customTimeInput.padEnd(4, "_");
       let hourPart = padded.slice(0, 2);
       let minutePart = padded.slice(2);
-      // If hour is fully entered (no underscores) and starts with "0", remove the 0.
+      // Remove leading zero from hour if fully entered.
       if (hourPart.indexOf("_") === -1 && hourPart[0] === "0") {
         hourPart = hourPart.substring(1);
       }
@@ -246,7 +241,10 @@
         }
         targetTime = newTarget;
         startTime = now;
-        // Display target time without a leading zero.
+        targetReached = false;
+        // Remove pulsing green when setting a new target.
+        document.getElementById("targetDisplay").classList.remove("target-reached");
+        // Display new target time without leading zero.
         document.getElementById("targetDisplay").textContent = targetTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
         customTimeInput = "";
         setDefaultPeriod();
@@ -254,7 +252,7 @@
         document.getElementById("timePadModal").style.display = "none";
       } 
       else {
-        // Handle first digit logic
+        // Handle first digit logic.
         if (customTimeInput.length === 0) {
           if (key === "1" || key === "0") {
             waitingForSecondHourDigit = true;
@@ -289,7 +287,7 @@
       });
     });
     
-    // Clicking the target display opens the modal, resets input, and defaults the period.
+    // Clicking the target display opens the modal and resets input.
     document.getElementById("targetDisplay").addEventListener("click", () => {
       setDefaultPeriod();
       customTimeInput = "";
@@ -298,7 +296,7 @@
       document.getElementById("timePadModal").style.display = "flex";
     });
     
-    // Initialize default period on page load.
+    // Initialize on page load.
     setDefaultPeriod();
     updateTimeDisplay();
     updateClock();
