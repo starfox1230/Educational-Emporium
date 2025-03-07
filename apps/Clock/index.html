@@ -2,18 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Time Progress App with Persistent Rainbow Background</title>
+  <title>Time Progress App with Custom Keypad</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    /* New container to simulate 250% zoom */
+    /* Simulate 250% zoom when browser is at 100% */
     .zoom-container {
       transform: scale(2.5);
       transform-origin: top left;
-      /* Adjust width and height so that the scaled content fills the viewport */
       width: calc(100% / 2.5);
       height: calc(100% / 2.5);
     }
-    /* Fullscreen, transparent body background */
     html, body {
       margin: 0;
       padding: 0;
@@ -42,7 +40,6 @@
       justify-content: center;
       align-items: center;
     }
-    /* Progress bar container */
     .progress-container {
       position: absolute;
       top: 20px;
@@ -58,7 +55,6 @@
       background: linear-gradient(90deg, #00aaff, #ffaa00);
       transition: width 1s linear;
     }
-    /* Target time display: right-justified under progress bar with shadowed background */
     .target-display {
       position: absolute;
       top: 50px;
@@ -69,7 +65,6 @@
       border-radius: 4px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
     }
-    /* Digital clock styling with hazy text-shadow for enhanced readability */
     .clock {
       font-size: 80px;
       letter-spacing: 5px;
@@ -79,25 +74,43 @@
         0 0 20px rgba(0, 0, 0, 0.7),
         0 0 30px rgba(0, 0, 0, 0.6);
     }
-    /* Time picker styling */
-    .target-picker {
+    /* Custom numeric keypad styles */
+    #customTimePad {
       position: absolute;
       bottom: 40px;
-      display: flex;
-      gap: 10px;
-      align-items: center;
+      background-color: rgba(0, 0, 0, 0.75);
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+      text-align: center;
     }
-    button {
-      padding: 8px 16px;
-      font-size: 16px;
+    #timeDisplay {
+      font-size: 32px;
+      margin-bottom: 10px;
+      min-width: 200px;
+    }
+    .num-pad {
+      display: grid;
+      grid-template-columns: repeat(3, 60px);
+      grid-gap: 10px;
+      justify-content: center;
+    }
+    .num-key {
+      font-size: 24px;
+      padding: 10px;
+      background-color: #00aaff;
       border: none;
       border-radius: 4px;
-      background-color: #00aaff;
       color: #fff;
       cursor: pointer;
     }
-    button:hover {
-      background-color: #0088cc;
+    .num-key:focus {
+      outline: 2px solid #ffaa00;
+    }
+    /* Make the Enter key span all three columns */
+    .enter-key {
+      grid-column: span 3;
+      background-color: #ffaa00;
     }
     /* Flash animation when target time is reached */
     .time-reached {
@@ -111,21 +124,33 @@
   </style>
 </head>
 <body>
-  <!-- Zoom container to simulate 250% zoom at 100% browser zoom -->
   <div class="zoom-container">
-    <!-- Vanta.js background container -->
     <div id="vanta-bg"></div>
-    
-    <!-- Main content container -->
     <div class="container">
       <div class="progress-container">
         <div class="progress-bar" id="progressBar"></div>
       </div>
       <div class="target-display" id="targetDisplay">No target set</div>
       <div class="clock" id="clock">00:00</div>
-      <div class="target-picker">
-        <input type="time" id="timeInput">
-        <button id="setTargetBtn">Set Target Time</button>
+      
+      <!-- Custom Numeric Keypad Interface -->
+      <div id="customTimePad">
+        <div id="timeDisplay">____ AM</div>
+        <div class="num-pad">
+          <button class="num-key" data-key="1" tabindex="1">1</button>
+          <button class="num-key" data-key="2" tabindex="2">2</button>
+          <button class="num-key" data-key="3" tabindex="3">3</button>
+          <button class="num-key" data-key="4" tabindex="4">4</button>
+          <button class="num-key" data-key="5" tabindex="5">5</button>
+          <button class="num-key" data-key="6" tabindex="6">6</button>
+          <button class="num-key" data-key="7" tabindex="7">7</button>
+          <button class="num-key" data-key="8" tabindex="8">8</button>
+          <button class="num-key" data-key="9" tabindex="9">9</button>
+          <button class="num-key" data-key="toggle" tabindex="10">AM/PM</button>
+          <button class="num-key" data-key="0" tabindex="11">0</button>
+          <button class="num-key" data-key="back" tabindex="12">&larr;</button>
+          <button class="num-key enter-key" data-key="enter" tabindex="13">Enter</button>
+        </div>
       </div>
     </div>
   </div>
@@ -134,21 +159,20 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.fog.min.js"></script>
   <script>
-    // Global variables for Vanta and rainbow cycle control
+    // Global variables for Vanta effect and rainbow cycle control
     let rainbowCycleActive = false;
     let rainbowCycleId = null;
-
-    // Default Vanta options (dark purple/pink)
+    
     function setDefaultVantaColors() {
       window.vantaEffect.setOptions({
-        highlightColor: 0x8e44ad,  // Dark purple (#8e44ad)
-        midtoneColor: 0xff69b4,    // Pink (#ff69b4)
-        lowlightColor: 0x8e44ad,   // Dark purple
-        baseColor: 0x000000        // Black
+        highlightColor: 0x8e44ad,
+        midtoneColor: 0xff69b4,
+        lowlightColor: 0x8e44ad,
+        baseColor: 0x000000
       });
     }
-
-    // Initialize Vanta.FOG with default colors
+    
+    // Initialize Vanta.FOG background
     window.vantaEffect = VANTA.FOG({
       el: "#vanta-bg",
       mouseControls: true,
@@ -162,19 +186,17 @@
       speed: 0.75,
       zoom: 1.0
     });
-
-    // Resize listener for Vanta effect
+    
     window.addEventListener('resize', function() {
       if (window.vantaEffect && typeof window.vantaEffect.resize === "function") {
         window.vantaEffect.resize();
       }
     });
-
+    
     // Clock functionality variables
     let targetTime = null;
     let startTime = null;
-
-    // Update clock and progress bar every second
+    
     function updateClock() {
       const now = new Date();
       const clockEl = document.getElementById("clock");
@@ -191,16 +213,14 @@
       }
     }
     
-    // Sine-wave based function to compute a color (number) from time and phase.
     function cycleColor(time, phase) {
-      const frequency = 0.002; // adjust to change cycling speed
+      const frequency = 0.002;
       const r = Math.floor(Math.sin(frequency * time + phase) * 127 + 128);
       const g = Math.floor(Math.sin(frequency * time + phase + 2) * 127 + 128);
       const b = Math.floor(Math.sin(frequency * time + phase + 4) * 127 + 128);
       return (r << 16) | (g << 8) | b;
     }
     
-    // Start rainbow cycle animation loop
     function startRainbowCycle() {
       rainbowCycleActive = true;
       let startCycleTime = Date.now();
@@ -218,55 +238,90 @@
       cycle();
     }
     
-    // Stop rainbow cycle (if active)
     function stopRainbowCycle() {
       rainbowCycleActive = false;
       if (rainbowCycleId !== null) {
         cancelAnimationFrame(rainbowCycleId);
         rainbowCycleId = null;
       }
-      // Reset background to default colors
       setDefaultVantaColors();
     }
     
-    // Trigger when target time is reached: flash clock and start persistent rainbow cycle.
     function triggerTargetReached() {
       const clockEl = document.getElementById("clock");
       clockEl.classList.add("time-reached");
-      
-      // Start rainbow cycle; this will persist until a new target time is chosen.
       startRainbowCycle();
-      
-      // Flash animation, then clear target time (but keep rainbow active)
       setTimeout(() => {
         clockEl.classList.remove("time-reached");
         targetTime = null;
         startTime = null;
         document.getElementById("progressBar").style.width = "0%";
-        document.getElementById("timeInput").value = "";
+        // Reset custom keypad input after reaching target
+        customTimeInput = "";
+        ampm = "AM";
+        updateTimeDisplay();
       }, 1000);
     }
     
-    // Set new target time. If a rainbow cycle is active, stop it.
-    function setTargetTime() {
-      if (rainbowCycleActive) {
-        stopRainbowCycle();
-      }
-      const timeInput = document.getElementById("timeInput").value;
-      if (!timeInput) return;
-      const now = new Date();
-      const [inputHours, inputMinutes] = timeInput.split(":").map(Number);
-      let newTarget = new Date(now.getFullYear(), now.getMonth(), now.getDate(), inputHours, inputMinutes);
-      if (newTarget <= now) {
-        newTarget.setDate(newTarget.getDate() + 1);
-      }
-      targetTime = newTarget;
-      startTime = now;
-      const options = { hour: '2-digit', minute: '2-digit' };
-      document.getElementById("targetDisplay").textContent = targetTime.toLocaleTimeString([], options);
+    // Custom Keypad Logic
+    let customTimeInput = "";  // Stores up to 4 digits as a string
+    let ampm = "AM";           // Default AM/PM
+    
+    function updateTimeDisplay() {
+      // Display underscores for missing digits (e.g. "12__" if only 2 digits entered)
+      let displayDigits = customTimeInput.padEnd(4, "_");
+      document.getElementById("timeDisplay").textContent = displayDigits + " " + ampm;
     }
     
-    document.getElementById("setTargetBtn").addEventListener("click", setTargetTime);
+    function handleKey(key) {
+      if (key === "back") {
+        customTimeInput = customTimeInput.slice(0, -1);
+      } else if (key === "toggle") {
+        ampm = (ampm === "AM") ? "PM" : "AM";
+      } else if (key === "enter") {
+        // Pad with leading zeros if fewer than 4 digits have been entered.
+        let timeStr = customTimeInput.padStart(4, "0");
+        const inputHours = parseInt(timeStr.substring(0, 2), 10);
+        const inputMinutes = parseInt(timeStr.substring(2, 4), 10);
+        if (inputHours > 12 || inputMinutes > 59) {
+          alert("Invalid time. Please enter a valid time (HHMM).");
+          return;
+        }
+        // Convert to 24-hour format.
+        let hours24 = inputHours % 12;
+        if (ampm === "PM") {
+          hours24 += 12;
+        }
+        const now = new Date();
+        let newTarget = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours24, inputMinutes);
+        // If the time has already passed, schedule it for tomorrow.
+        if (newTarget <= now) {
+          newTarget.setDate(newTarget.getDate() + 1);
+        }
+        targetTime = newTarget;
+        startTime = now;
+        const options = { hour: '2-digit', minute: '2-digit' };
+        document.getElementById("targetDisplay").textContent = targetTime.toLocaleTimeString([], options);
+        // Clear keypad input after setting the target.
+        customTimeInput = "";
+        ampm = "AM";
+      } else {
+        // It is a digit (0-9). Only add if we haven't reached 4 digits.
+        if (customTimeInput.length < 4) {
+          customTimeInput += key;
+        }
+      }
+      updateTimeDisplay();
+    }
+    
+    // Attach click events to each keypad button.
+    document.querySelectorAll(".num-key").forEach(button => {
+      button.addEventListener("click", () => {
+        handleKey(button.getAttribute("data-key"));
+      });
+    });
+    
+    // Start the clock update loop.
     updateClock();
     setInterval(updateClock, 1000);
   </script>
