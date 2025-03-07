@@ -15,7 +15,6 @@
       font-family: Arial, sans-serif;
       color: #fff;
     }
-    /* Removed Vanta.js container */
     /* Main content container */
     .container {
       position: relative;
@@ -160,9 +159,9 @@
     </div>
   </div>
   
-  <!-- Scripts (Vanta.js removed) -->
+  <!-- Scripts -->
   <script>
-    // Clock functionality
+    // --- Clock Functionality ---
     let targetTime = null;
     let startTime = null;
     
@@ -185,7 +184,7 @@
     function triggerTargetReached() {
       const clockEl = document.getElementById("clock");
       clockEl.classList.add("time-reached");
-      // In night mode, no rainbow cycle—just the default background.
+      // No rainbow cycle in night mode; just flash.
       setTimeout(() => {
         clockEl.classList.remove("time-reached");
         targetTime = null;
@@ -197,15 +196,23 @@
       }, 1000);
     }
     
-    // Custom keypad logic with auto-leading zero behavior
+    // --- Custom Keypad Logic with Auto-Leading Zero ---
     let customTimeInput = "";
     let ampm = "AM";
     let waitingForSecondHourDigit = false;
     
+    // updateTimeDisplay() now removes the leading zero from hour if fully entered.
     function updateTimeDisplay() {
       let padded = customTimeInput.padEnd(4, "_");
-      let formatted = padded.slice(0,2) + ":" + padded.slice(2);
+      let hourPart = padded.slice(0, 2);
+      // If hour is fully entered (no underscores) and starts with "0", remove the 0.
+      if (!hourPart.includes("_") && hourPart[0] === "0") {
+        hourPart = hourPart.substring(1);
+      }
+      let minutePart = padded.slice(2);
+      let formatted = hourPart + ":" + minutePart;
       document.getElementById("timeDisplay").textContent = formatted + " " + ampm;
+      // Toggle button shows only the alternative period.
       document.querySelector('[data-key="toggle"]').textContent = (ampm === "AM") ? "PM" : "AM";
     }
     
@@ -220,7 +227,6 @@
         ampm = (ampm === "AM") ? "PM" : "AM";
       } 
       else if (key === "enter") {
-        // No rainbow cycle to stop in night mode.
         let timeStr = customTimeInput.padStart(4, "0");
         const inputHours = parseInt(timeStr.substring(0, 2), 10);
         const inputMinutes = parseInt(timeStr.substring(2, 4), 10);
@@ -239,14 +245,15 @@
         }
         targetTime = newTarget;
         startTime = now;
-        document.getElementById("targetDisplay").textContent = targetTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        // Display target time without leading zero using 'numeric' for hour.
+        document.getElementById("targetDisplay").textContent = targetTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
         customTimeInput = "";
         setDefaultPeriod();
         updateTimeDisplay();
         document.getElementById("timePadModal").style.display = "none";
       } 
       else {
-        // Auto-leading zero handling for the first digit.
+        // Handle first digit logic
         if (customTimeInput.length === 0) {
           if (key === "1" || key === "0") {
             waitingForSecondHourDigit = true;
@@ -274,14 +281,14 @@
       ampm = (now.getHours() < 12) ? "AM" : "PM";
     }
     
-    // Attach event listeners to keypad buttons.
+    // --- Event Listeners ---
     document.querySelectorAll(".num-key").forEach(button => {
       button.addEventListener("click", () => {
         handleKey(button.getAttribute("data-key"));
       });
     });
     
-    // Open modal when clicking the target display.
+    // When clicking the target display, open the modal, reset input, and default period.
     document.getElementById("targetDisplay").addEventListener("click", () => {
       setDefaultPeriod();
       customTimeInput = "";
@@ -290,6 +297,9 @@
       document.getElementById("timePadModal").style.display = "flex";
     });
     
+    // Initialize default period on page load.
+    setDefaultPeriod();
+    updateTimeDisplay();
     updateClock();
     setInterval(updateClock, 1000);
   </script>
