@@ -5,13 +5,13 @@
   <title>Time Progress App - Night Mode</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    /* Night mode background: dark gradient */
+    /* Deep purple–pink gradient background for a modern night mode feel */
     html, body {
       margin: 0;
       padding: 0;
       height: 100%;
       overflow: hidden;
-      background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
+      background: linear-gradient(to bottom, #4a00e0, #8e2de2, #ff0080);
       font-family: Arial, sans-serif;
       color: #fff;
     }
@@ -184,7 +184,6 @@
     function triggerTargetReached() {
       const clockEl = document.getElementById("clock");
       clockEl.classList.add("time-reached");
-      // No rainbow cycle in night mode; just flash.
       setTimeout(() => {
         clockEl.classList.remove("time-reached");
         targetTime = null;
@@ -201,15 +200,19 @@
     let ampm = "AM";
     let waitingForSecondHourDigit = false;
     
-    // updateTimeDisplay() now removes the leading zero from hour if fully entered.
+    // updateTimeDisplay() removes the leading zero from the hour if fully entered.
     function updateTimeDisplay() {
       let padded = customTimeInput.padEnd(4, "_");
       let hourPart = padded.slice(0, 2);
-      // If hour is fully entered (no underscores) and starts with "0", remove the 0.
-      if (!hourPart.includes("_") && hourPart[0] === "0") {
-        hourPart = hourPart.substring(1);
-      }
       let minutePart = padded.slice(2);
+      // If hourPart is complete and starts with "0", remove the leading zero.
+      if (hourPart.indexOf("_") === -1 && hourPart[0] === "0") {
+        hourPart = hourPart.substring(1);
+      } 
+      // If only one digit is entered and it is "0", display "_" instead.
+      else if (customTimeInput.length === 1 && customTimeInput === "0") {
+        hourPart = "_";
+      }
       let formatted = hourPart + ":" + minutePart;
       document.getElementById("timeDisplay").textContent = formatted + " " + ampm;
       // Toggle button shows only the alternative period.
@@ -245,7 +248,7 @@
         }
         targetTime = newTarget;
         startTime = now;
-        // Display target time without leading zero using 'numeric' for hour.
+        // Display target time without a leading zero (using 'numeric' for hour)
         document.getElementById("targetDisplay").textContent = targetTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
         customTimeInput = "";
         setDefaultPeriod();
@@ -288,7 +291,7 @@
       });
     });
     
-    // When clicking the target display, open the modal, reset input, and default period.
+    // Clicking the target display opens the modal, resets input, and defaults the period.
     document.getElementById("targetDisplay").addEventListener("click", () => {
       setDefaultPeriod();
       customTimeInput = "";
