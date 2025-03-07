@@ -5,13 +5,13 @@
   <title>Time Progress App - Night Mode</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    /* Deep purple–pink gradient background for a modern night mode feel */
+    /* Deep purple–pink gradient background with a darker pink tone */
     html, body {
       margin: 0;
       padding: 0;
       height: 100%;
       overflow: hidden;
-      background: linear-gradient(to bottom, #4a00e0, #8e2de2, #ff0080);
+      background: linear-gradient(to bottom, #4a00e0, #8e2de2, #c2185b);
       font-family: Arial, sans-serif;
       color: #fff;
     }
@@ -59,6 +59,7 @@
       font-size: 80px;
       letter-spacing: 5px;
       margin-top: 60px;
+      /* Using a text shadow to enhance readability */
       text-shadow: 
         0 0 10px rgba(0, 0, 0, 0.8),
         0 0 20px rgba(0, 0, 0, 0.7),
@@ -168,7 +169,8 @@
     function updateClock() {
       const now = new Date();
       const clockEl = document.getElementById("clock");
-      clockEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      // Use 'numeric' for hour to avoid leading zero
+      clockEl.textContent = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
       
       if (targetTime && startTime) {
         const totalDuration = targetTime - startTime;
@@ -200,18 +202,14 @@
     let ampm = "AM";
     let waitingForSecondHourDigit = false;
     
-    // updateTimeDisplay() removes the leading zero from the hour if fully entered.
+    // updateTimeDisplay() now removes the leading zero from the hour if fully entered.
     function updateTimeDisplay() {
       let padded = customTimeInput.padEnd(4, "_");
       let hourPart = padded.slice(0, 2);
       let minutePart = padded.slice(2);
-      // If hourPart is complete and starts with "0", remove the leading zero.
+      // If hour is fully entered (no underscores) and starts with "0", remove the 0.
       if (hourPart.indexOf("_") === -1 && hourPart[0] === "0") {
         hourPart = hourPart.substring(1);
-      } 
-      // If only one digit is entered and it is "0", display "_" instead.
-      else if (customTimeInput.length === 1 && customTimeInput === "0") {
-        hourPart = "_";
       }
       let formatted = hourPart + ":" + minutePart;
       document.getElementById("timeDisplay").textContent = formatted + " " + ampm;
@@ -248,7 +246,7 @@
         }
         targetTime = newTarget;
         startTime = now;
-        // Display target time without a leading zero (using 'numeric' for hour)
+        // Display target time without a leading zero.
         document.getElementById("targetDisplay").textContent = targetTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
         customTimeInput = "";
         setDefaultPeriod();
