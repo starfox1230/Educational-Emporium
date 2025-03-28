@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Radionuclide Flashcards</title>
+<style>
+  body {
+    background: #121212;
+    color: #39ff14;
+    font-family: 'Orbitron', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+  }
+  #container {
+    text-align: center;
+    max-width: 600px;
+    padding: 2rem;
+    border: 2px solid #39ff14;
+    border-radius: 12px;
+    box-shadow: 0 0 20px #39ff14;
+  }
+  h1 { margin-bottom: 1rem; }
+  button {
+    background: transparent;
+    border: 2px solid #39ff14;
+    border-radius: 8px;
+    padding: .5rem 1rem;
+    margin: .5rem;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 0 10px #39ff14;
+    transition: transform .1s;
+  }
+  button:hover { transform: scale(1.05); }
+  #answer { margin-top: 1rem; font-size: 1.2rem; }
+  #hint img { max-width: 100%; display: none; margin-top: 1rem; }
+</style>
+</head>
+<body>
+<div id="container">
+  <h1>Radionuclide Flashcards</h1>
+  <div id="question">Loading...</div>
+  <button onclick="showAnswer()">Show Answer</button>
+  <button onclick="toggleHint()">Show Hint</button>
+  <button onclick="nextQuestion()">Next Question</button>
+  <div id="answer"></div>
+  <div id="hint"><img id="hint-img" alt="Hint Image"></div>
+</div>
+
+<script>
+const data = [
+  {name:"Chromium-51", file:"cr-51.png", production:"Nuclear reactor (neutron activation)", decay:"Electron capture (100%)", photons:"320 keV", halfLife:"27.8 days"},
+  {name:"Cobalt-57", file:"co-57.png", production:"Cyclotron", decay:"Electron capture (100%)", photons:"122, 136 keV", halfLife:"271 days"},
+  {name:"Fluorine-18", file:"f-18.png", production:"Cyclotron", decay:"Beta⁺ (97%), EC (3%)", photons:"511 keV (annihilation)", halfLife:"110 minutes"},
+  {name:"Gallium-67", file:"ga-67.png", production:"Cyclotron", decay:"Electron capture (100%)", photons:"93, 184, 300, 393 keV", halfLife:"78 hours"},
+  {name:"Gallium-68", file:"ga-68.png", production:"Eluted from a Ge‑68/Ga‑68 generator", decay:"Positron emission (β+, ~89%) and electron capture (~11%) to stable Zn‑68", photons:"511 keV (annihilation photons)", halfLife:"68 minutes"},
+  {name:"Indium-111", file:"in-111.png", production:"Cyclotron", decay:"Electron capture (100%)", photons:"171, 245 keV", halfLife:"2.8 days"},
+  {name:"Iodine-123", file:"i-123.png", production:"Cyclotron", decay:"Electron capture (100%)", photons:"159 keV", halfLife:"13.2 hours"},
+  {name:"Iodine-125", file:"i-125.png", production:"Nuclear reactor (neutron activation)", decay:"Electron capture (100%)", photons:"35–31 keV", halfLife:"60.2 days"},
+  {name:"Iodine-131", file:"i-131.png", production:"Nuclear reactor (U‑235 fission)", decay:"Beta⁻ (100%)", photons:"284, 364, 637 keV", halfLife:"8 days"},
+  {name:"Krypton-81m", file:"kr-81m.png", production:"Generator product", decay:"Isomeric transition (100%)", photons:"190 keV", halfLife:"13 seconds"},
+  {name:"Molybdenum-99", file:"mo-99.png", production:"Nuclear reactor (U‑235 fission)", decay:"Beta⁻ (100%)", photons:"181, 740, 780 keV", halfLife:"67 hours"},
+  {name:"Phosphorus-32", file:"p-32.png", production:"Nuclear reactor (neutron activation)", decay:"Beta⁻ (100%)", photons:"N/A", halfLife:"14.3 days"},
+  {name:"Samarium-153", file:"sm-153.png", production:"Nuclear reactor (U‑235 fission)", decay:"Beta⁻ (100%)", photons:"103 keV", halfLife:"46 hours"},
+  {name:"Strontium-89", file:"sr-89.png", production:"Nuclear reactor (U‑235 fission)", decay:"Beta⁻ (100%)", photons:"910 keV", halfLife:"50.5 days"},
+  {name:"Technetium-99m", file:"tc-99m.png", production:"Generator product", decay:"Isomeric transition (100%)", photons:"140 keV", halfLife:"6.02 hours"},
+  {name:"Thallium-201", file:"tl-201.png", production:"Cyclotron", decay:"Electron capture (100%)", photons:"69–80, 167 keV", halfLife:"73.1 hours"},
+  {name:"Xenon-133", file:"xe-133.png", production:"Nuclear reactor (U‑235 fission)", decay:"Beta⁻ (100%)", photons:"81 keV", halfLife:"5.3 days"}
+];
+
+const questions = [];
+data.forEach(i=>{
+  questions.push({q:`What is the method of production of ${i.name}?`, a:i.production, img:i.file});
+  questions.push({q:`What is the mode of decay of ${i.name}?`, a:i.decay, img:i.file});
+  questions.push({q:`What is the principal imaging photon energy (keV) of ${i.name}?`, a:i.photons, img:i.file});
+  questions.push({q:`What is the half-life of ${i.name}?`, a:i.halfLife, img:i.file});
+});
+
+let current;
+function nextQuestion(){
+  current = questions[Math.floor(Math.random()*questions.length)];
+  document.getElementById("question").textContent = current.q;
+  document.getElementById("answer").textContent = "";
+  const img = document.getElementById("hint-img");
+  img.src = current.img;
+  img.style.display = "none";
+}
+function showAnswer(){
+  const ans = document.getElementById("answer");
+  ans.textContent = ans.textContent ? "" : current.a;
+}
+function toggleHint(){
+  const img = document.getElementById("hint-img");
+  img.style.display = img.style.display==="none" ? "block" : "none";
+}
+
+window.onload = nextQuestion;
+</script>
+</body>
+</html>
