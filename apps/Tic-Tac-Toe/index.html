@@ -11,7 +11,6 @@
         :root {
             --matilda-color: #ff69b4; /* Hot Pink */
             --dad-color: #00bfff;     /* Deep Sky Blue */
-            /* Sharper Glow Effect */
             --matilda-glow: 0 0 3px var(--matilda-color), 0 0 7px var(--matilda-color);
             --dad-glow: 0 0 3px var(--dad-color), 0 0 7px var(--dad-color);
             --bg-color: #121212;
@@ -74,10 +73,12 @@
         }
 
         .player-score {
-            padding: 8px 15px; /* Slightly more padding for pulse effect */
+            padding: 8px 15px;
             border-radius: 5px;
-            transition: text-shadow 0.3s ease, transform 0.4s ease; /* Add transform transition */
-            transform-origin: center center; /* Pulse from center */
+            transition: text-shadow 0.3s ease, transform 0.4s ease;
+            transform-origin: center center;
+            /* Default no underline */
+            text-decoration: none;
         }
 
         .matilda-score {
@@ -94,258 +95,82 @@
             margin-right: 8px;
         }
 
-        /* --- NEW: Pulse Animation for Active Turn --- */
+        /* Pulse Animation for Active Turn */
         @keyframes pulseTurn {
-          0%, 100% {
-            transform: scale(1);
-            /* Optional: Slightly adjust brightness/shadow if desired */
-            /* Example: filter: brightness(1); */
-          }
-          50% {
-            transform: scale(1.05); /* Subtle scale increase */
-            /* Example: filter: brightness(1.1); */
-          }
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
         }
 
+        /* --- MODIFIED: Active Turn Styling (Pulse + Underline) --- */
         .player-score.active-turn {
-          animation: pulseTurn 1.5s infinite ease-in-out; /* Apply the animation */
+          animation: pulseTurn 1.5s infinite ease-in-out;
+          /* Add Underline */
+          text-decoration: underline;
+          text-decoration-color: inherit; /* Use the player's text color */
+          text-decoration-thickness: 2px; /* Make it slightly thicker */
+          text-underline-offset: 4px; /* Optional: Adjust distance from text */
         }
-        /* --- End of Pulse Animation --- */
+        /* --- End of Active Turn Styling --- */
 
         /* Game Grid */
-        .game-container {
-            position: relative;
-            margin-bottom: 20px;
-        }
-
+        .game-container { position: relative; margin-bottom: 20px; }
         .grid {
             display: grid;
             grid-template-columns: repeat(3, 100px);
             grid-template-rows: repeat(3, 100px);
             gap: 10px;
             background-color: #1a1a1a;
-            padding: 15px;
-            border-radius: 10px;
+            padding: 15px; border-radius: 10px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
         }
-
         .cell {
-            background-color: var(--cell-bg);
-            border: 1px solid var(--cell-border);
-            border-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 3.5em;
-            font-weight: bold;
-            cursor: pointer;
+            background-color: var(--cell-bg); border: 1px solid var(--cell-border);
+            border-radius: 8px; display: flex; justify-content: center; align-items: center;
+            font-size: 3.5em; font-weight: bold; cursor: pointer;
             transition: background-color 0.3s ease, transform 0.2s ease-out;
             user-select: none;
         }
-
-        .cell:not(.x):not(.o):hover {
-            background-color: var(--cell-hover-bg);
-            transform: scale(1.05);
-        }
-
+        .cell:not(.x):not(.o):hover { background-color: var(--cell-hover-bg); transform: scale(1.05); }
         .cell.x, .cell.o {
-            cursor: not-allowed;
-            font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
-            transform: scale(1);
-            animation: popIn 0.3s ease-out;
+            cursor: not-allowed; font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
+            transform: scale(1); animation: popIn 0.3s ease-out;
         }
-
-        @keyframes popIn {
-            0% { transform: scale(0.5); opacity: 0; }
-            80% { transform: scale(1.1); opacity: 1; }
-            100% { transform: scale(1); opacity: 1; }
-        }
+        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 80% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
 
         /* Modals */
-        .modal {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background-color: var(--modal-bg);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.4s ease, visibility 0s linear 0.4s;
-        }
-
-        .modal.active {
-            opacity: 1;
-            visibility: visible;
-            transition: opacity 0.4s ease, visibility 0s linear 0s;
-        }
-
-        .modal-content {
-            background-color: var(--modal-content-bg);
-            padding: 30px 40px;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.6);
-            transform: scale(0.8) translateY(20px);
-            transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-        }
-
-        .modal.active .modal-content {
-            transform: scale(1) translateY(0);
-        }
-
-        .modal h2 {
-            margin-top: 0;
-            margin-bottom: 25px;
-            color: #f0f0f0;
-            font-size: 1.8em;
-        }
-
-        .button-container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .modal button {
-            padding: 12px 25px;
-            font-size: 1.1em;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.3s ease, background-color 0.3s ease;
-            font-weight: 600;
-            min-width: 180px;
-            color: var(--bg-color);
-        }
-
-        .modal button:hover {
-            transform: translateY(-3px) scale(1.03);
-        }
-
-        .matilda-button {
-            background-color: var(--matilda-color);
-            box-shadow: 0 0 10px var(--matilda-color), inset 0 0 5px rgba(255, 255, 255, 0.3);
-        }
-        .matilda-button:hover {
-            box-shadow: 0 0 15px var(--matilda-color), 0 0 20px var(--matilda-color), inset 0 0 8px rgba(255, 255, 255, 0.4);
-        }
-
-        .dad-button {
-            background-color: var(--dad-color);
-            box-shadow: 0 0 10px var(--dad-color), inset 0 0 5px rgba(255, 255, 255, 0.3);
-        }
-         .dad-button:hover {
-            box-shadow: 0 0 15px var(--dad-color), 0 0 20px var(--dad-color), inset 0 0 8px rgba(255, 255, 255, 0.4);
-        }
-
-        #play-again-button {
-            background-color: #555;
-            color: var(--text-color);
-            margin-top: 15px;
-            box-shadow: 0 0 8px #888;
-        }
-        #play-again-button:hover {
-             background-color: #666;
-             box-shadow: 0 0 12px #aaa;
-         }
-
-        #win-message.matilda-win {
-            color: var(--matilda-color);
-            text-shadow: var(--matilda-glow);
-        }
-        #win-message.dad-win {
-            color: var(--dad-color);
-            text-shadow: var(--dad-glow);
-        }
-        #win-message.draw {
-             color: #aaa;
-             text-shadow: none;
-         }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--modal-bg); display: flex; justify-content: center; align-items: center; z-index: 100; opacity: 0; visibility: hidden; transition: opacity 0.4s ease, visibility 0s linear 0.4s; }
+        .modal.active { opacity: 1; visibility: visible; transition: opacity 0.4s ease, visibility 0s linear 0s; }
+        .modal-content { background-color: var(--modal-content-bg); padding: 30px 40px; border-radius: 12px; text-align: center; box-shadow: 0 5px 25px rgba(0, 0, 0, 0.6); transform: scale(0.8) translateY(20px); transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
+        .modal.active .modal-content { transform: scale(1) translateY(0); }
+        .modal h2 { margin-top: 0; margin-bottom: 25px; color: #f0f0f0; font-size: 1.8em; }
+        .button-container { display: flex; flex-direction: column; gap: 15px; align-items: center; }
+        .modal button { padding: 12px 25px; font-size: 1.1em; border: none; border-radius: 8px; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.3s ease, background-color 0.3s ease; font-weight: 600; min-width: 180px; color: var(--bg-color); }
+        .modal button:hover { transform: translateY(-3px) scale(1.03); }
+        .matilda-button { background-color: var(--matilda-color); box-shadow: 0 0 10px var(--matilda-color), inset 0 0 5px rgba(255, 255, 255, 0.3); }
+        .matilda-button:hover { box-shadow: 0 0 15px var(--matilda-color), 0 0 20px var(--matilda-color), inset 0 0 8px rgba(255, 255, 255, 0.4); }
+        .dad-button { background-color: var(--dad-color); box-shadow: 0 0 10px var(--dad-color), inset 0 0 5px rgba(255, 255, 255, 0.3); }
+        .dad-button:hover { box-shadow: 0 0 15px var(--dad-color), 0 0 20px var(--dad-color), inset 0 0 8px rgba(255, 255, 255, 0.4); }
+        #play-again-button { background-color: #555; color: var(--text-color); margin-top: 15px; box-shadow: 0 0 8px #888; }
+        #play-again-button:hover { background-color: #666; box-shadow: 0 0 12px #aaa; }
+        #win-message.matilda-win { color: var(--matilda-color); text-shadow: var(--matilda-glow); }
+        #win-message.dad-win { color: var(--dad-color); text-shadow: var(--dad-glow); }
+        #win-message.draw { color: #aaa; text-shadow: none; }
 
         /* Win Line */
-        .win-line-container {
-            position: absolute;
-            top: 15px; left: 15px;
-            width: calc(3 * 100px + 2 * 10px);
-            height: calc(3 * 100px + 2 * 10px);
-            pointer-events: none;
-            z-index: 10;
-            overflow: hidden;
-        }
-
-        .win-line {
-            position: absolute;
-            height: var(--win-line-thickness);
-            background-color: white;
-            border-radius: calc(var(--win-line-thickness) / 2);
-            transform-origin: 0 50%;
-            transform: scaleX(0);
-            transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1), background-color 0.3s ease, box-shadow 0.3s ease;
-            opacity: 0;
-        }
-
-        .win-line.visible {
-             transform: scaleX(1);
-             opacity: 1;
-         }
+        .win-line-container { position: absolute; top: 15px; left: 15px; width: calc(3 * 100px + 2 * 10px); height: calc(3 * 100px + 2 * 10px); pointer-events: none; z-index: 10; overflow: hidden; }
+        .win-line { position: absolute; height: var(--win-line-thickness); background-color: white; border-radius: calc(var(--win-line-thickness) / 2); transform-origin: 0 50%; transform: scaleX(0); transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1), background-color 0.3s ease, box-shadow 0.3s ease; opacity: 0; }
+        .win-line.visible { transform: scaleX(1); opacity: 1; }
 
         /* Confetti Canvas */
-        #confetti-canvas {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 99;
-        }
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 99; }
 
         /* Reset Button */
-        .reset-button {
-            margin-top: 15px;
-            padding: 8px 15px;
-            font-size: 0.9em;
-            background-color: #444;
-            color: #ccc;
-            border: 1px solid #666;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-        }
-        .reset-button:hover {
-            background-color: #555;
-            border-color: #888;
-        }
+        .reset-button { margin-top: 15px; padding: 8px 15px; font-size: 0.9em; background-color: #444; color: #ccc; border: 1px solid #666; border-radius: 5px; cursor: pointer; transition: background-color 0.3s ease, border-color 0.3s ease; }
+        .reset-button:hover { background-color: #555; border-color: #888; }
 
         /* Responsiveness */
-        @media (min-width: 600px) {
-            .button-container { flex-direction: row; justify-content: center; }
-            h1 { font-size: 2.8em; }
-            .scoreboard { font-size: 1.6em; padding: 15px 30px; }
-            .player-score { padding: 10px 20px; } /* Adjust padding for larger font */
-        }
-
-        @media (max-width: 400px) {
-            .grid {
-                grid-template-columns: repeat(3, 80px);
-                grid-template-rows: repeat(3, 80px);
-                gap: 8px; padding: 10px;
-            }
-            .cell { font-size: 2.8em; }
-            .win-line-container {
-                top: 10px; left: 10px;
-                width: calc(3 * 80px + 2 * 8px);
-                height: calc(3 * 80px + 2 * 8px);
-            }
-            h1 { font-size: 1.8em; }
-            .scoreboard { font-size: 1.2em; flex-direction: column; gap: 5px; }
-             .modal-content { padding: 20px; width: 80%; }
-             .modal h2 { font-size: 1.5em; }
-             .modal button { font-size: 1em; min-width: 150px; }
-             .player-score { padding: 6px 10px; } /* Adjust padding for smaller layout */
-        }
+        @media (min-width: 600px) { .button-container { flex-direction: row; justify-content: center; } h1 { font-size: 2.8em; } .scoreboard { font-size: 1.6em; padding: 15px 30px; } .player-score { padding: 10px 20px; } }
+        @media (max-width: 400px) { .grid { grid-template-columns: repeat(3, 80px); grid-template-rows: repeat(3, 80px); gap: 8px; padding: 10px; } .cell { font-size: 2.8em; } .win-line-container { top: 10px; left: 10px; width: calc(3 * 80px + 2 * 8px); height: calc(3 * 80px + 2 * 8px); } h1 { font-size: 1.8em; } .scoreboard { font-size: 1.2em; flex-direction: column; gap: 5px; } .modal-content { padding: 20px; width: 80%; } .modal h2 { font-size: 1.5em; } .modal button { font-size: 1em; min-width: 150px; } .player-score { padding: 6px 10px; } }
 
     </style>
 </head>
@@ -354,7 +179,6 @@
     <div class="header">
         <h1>Tic Tac Toe: Matilda vs. Dad</h1>
         <div class="scoreboard">
-            <!-- Add IDs for easier JS selection -->
             <div class="player-score matilda-score" id="matilda-score-element">
                 <span>Matilda:</span>
                 <span id="matilda-score-value">0</span>
@@ -379,8 +203,8 @@
 
     <button class="reset-button" id="reset-button">Reset Scores</button>
 
-    <!-- Selection Modal -->
-    <div class="modal" id="selection-modal">
+    <!-- Modals -->
+    <div class="modal" id="selection-modal"> <!-- Selection Modal -->
         <div class="modal-content">
             <h2>Who wants to be X or O?</h2>
             <p style="color: #bbb; margin-bottom: 20px;">(X always starts the first game)</p>
@@ -388,24 +212,20 @@
                 <button class="matilda-button" id="matilda-selects">Matilda Picks</button>
                 <button class="dad-button" id="dad-selects">Dad Picks</button>
             </div>
-            <div id="symbol-choice" style="margin-top: 20px; display: none;">
-                <!-- Content dynamically added by JS -->
-            </div>
+            <div id="symbol-choice" style="margin-top: 20px; display: none;"></div>
         </div>
     </div>
-
-    <!-- Win/Draw Modal -->
-    <div class="modal" id="win-modal">
+    <div class="modal" id="win-modal"> <!-- Win/Draw Modal -->
         <div class="modal-content">
             <h2 id="win-message">Winner Announcement!</h2>
             <button id="play-again-button">Play Again</button>
         </div>
     </div>
 
-    <!-- Confetti Canvas -->
-    <canvas id="confetti-canvas"></canvas>
+    <canvas id="confetti-canvas"></canvas> <!-- Confetti Canvas -->
 
     <script>
+        // --- JavaScript (No changes from previous step) ---
         document.addEventListener('DOMContentLoaded', () => {
             // DOM Elements
             const grid = document.getElementById('grid');
@@ -415,13 +235,12 @@
             const matildaSelectsBtn = document.getElementById('matilda-selects');
             const dadSelectsBtn = document.getElementById('dad-selects');
             const symbolChoiceDiv = document.getElementById('symbol-choice');
-            let symbolButtons; // Query later
+            let symbolButtons;
             const winMessage = document.getElementById('win-message');
             const playAgainBtn = document.getElementById('play-again-button');
             const resetButton = document.getElementById('reset-button');
             const matildaScoreDisplay = document.getElementById('matilda-score-value');
             const dadScoreDisplay = document.getElementById('dad-score-value');
-            // Get scoreboard elements by ID
             const matildaScoreElement = document.getElementById('matilda-score-element');
             const dadScoreElement = document.getElementById('dad-score-element');
             const winLine = document.getElementById('win-line');
@@ -429,13 +248,13 @@
             const confettiCanvas = document.getElementById('confetti-canvas');
             const ctx = confettiCanvas.getContext('2d');
 
-            // Game State Variables (rest are the same)
+            // Game State Variables
             let board = ['', '', '', '', '', '', '', '', ''];
             let currentPlayer = null;
             let playerSymbols = { matilda: '', dad: '' };
             const rootStyle = getComputedStyle(document.documentElement);
-            let playerColors = {}; // Will be populated in startGame/assignSymbols
-            let playerGlows = {};  // Will be populated
+            let playerColors = {};
+            let playerGlows = {};
             let scores = { matilda: 0, dad: 0 };
             let gameActive = false;
             let firstPlayerOfRound = null;
@@ -451,285 +270,118 @@
 
             // --- Initialization ---
             function initGame() {
-                loadScores();
-                updateScoreDisplay();
+                loadScores(); updateScoreDisplay();
                 selectionModal.classList.add('active');
-                resetBoardState(); // Resets board & turn indicator
-                hideWinLine();
-                stopConfetti();
-                gameActive = false;
-                symbolChoiceDiv.style.display = 'none';
+                resetBoardState(); hideWinLine(); stopConfetti();
+                gameActive = false; symbolChoiceDiv.style.display = 'none';
             }
-
             function resetBoardState() {
                 board = ['', '', '', '', '', '', '', '', ''];
                 cells.forEach(cell => {
-                    cell.textContent = '';
-                    cell.classList.remove('x', 'o', 'matilda', 'dad');
-                    cell.style.color = '';
-                    cell.style.textShadow = '';
+                    cell.textContent = ''; cell.className = 'cell'; // Reset classes
+                    cell.style.color = ''; cell.style.textShadow = '';
                 });
-                hideWinLine();
-                stopConfetti();
-                updateTurnIndicator(); // Call here to remove pulse if resetting mid-game
+                hideWinLine(); stopConfetti();
+                updateTurnIndicator(); // Remove pulse/underline
             }
-
             function startGame() {
-                resetBoardState();
-                selectionModal.classList.remove('active');
-                // Ensure colors/glows are fresh (in case CSS vars change dynamically - unlikely here)
+                resetBoardState(); selectionModal.classList.remove('active');
                 playerColors.matilda = rootStyle.getPropertyValue('--matilda-color').trim();
                 playerColors.dad = rootStyle.getPropertyValue('--dad-color').trim();
                 playerGlows.matilda = rootStyle.getPropertyValue('--matilda-glow').trim();
                 playerGlows.dad = rootStyle.getPropertyValue('--dad-glow').trim();
-
-                currentPlayer = firstPlayerOfRound;
-                gameActive = true;
-                updateTurnIndicator(); // Set initial turn pulse
+                currentPlayer = firstPlayerOfRound; gameActive = true;
+                updateTurnIndicator(); // Set initial turn indicator
             }
 
             // --- Player & Symbol Selection ---
             matildaSelectsBtn.addEventListener('click', () => promptSymbolChoice('matilda'));
             dadSelectsBtn.addEventListener('click', () => promptSymbolChoice('dad'));
-
             function promptSymbolChoice(player) {
-                symbolChoiceDiv.innerHTML = `
-                    <p style="margin-bottom: 10px;">Choose your symbol:</p>
-                    <button class="symbol-button" data-symbol="X">X</button>
-                    <button class="symbol-button" data-symbol="O">O</button>
-                `;
+                symbolChoiceDiv.innerHTML = `<p style="margin-bottom: 10px;">Choose your symbol:</p><button class="symbol-button" data-symbol="X">X</button><button class="symbol-button" data-symbol="O">O</button>`;
                 symbolChoiceDiv.style.display = 'block';
                 symbolButtons = symbolChoiceDiv.querySelectorAll('.symbol-button');
-                symbolButtons.forEach(button => {
-                    button.addEventListener('click', () => {
-                        const symbol = button.getAttribute('data-symbol');
-                        assignSymbols(player, symbol);
-                    });
-                 });
+                symbolButtons.forEach(button => button.addEventListener('click', () => { assignSymbols(player, button.getAttribute('data-symbol')); }));
             }
-
             function assignSymbols(player, symbol) {
                  playerSymbols[player] = symbol;
                  const otherPlayer = (player === 'matilda') ? 'dad' : 'matilda';
                  playerSymbols[otherPlayer] = (symbol === 'X') ? 'O' : 'X';
                  firstPlayerOfRound = (playerSymbols.matilda === 'X') ? 'matilda' : 'dad';
-                 symbolChoiceDiv.style.display = 'none';
-                 startGame();
+                 symbolChoiceDiv.style.display = 'none'; startGame();
             }
 
             // --- Game Logic ---
-            cells.forEach(cell => {
-                cell.addEventListener('click', handleCellClick);
-            });
-
+            cells.forEach(cell => cell.addEventListener('click', handleCellClick));
             function handleCellClick(event) {
-                const clickedCell = event.target;
-                const index = parseInt(clickedCell.getAttribute('data-index'));
-
+                const clickedCell = event.target; const index = parseInt(clickedCell.getAttribute('data-index'));
                 if (board[index] !== '' || !gameActive || !currentPlayer) return;
-
                 const currentSymbol = playerSymbols[currentPlayer];
                 board[index] = currentSymbol;
-                clickedCell.textContent = currentSymbol;
-                clickedCell.classList.add(currentSymbol.toLowerCase());
-                clickedCell.classList.add(currentPlayer);
-                clickedCell.style.color = playerColors[currentPlayer];
-                clickedCell.style.textShadow = playerGlows[currentPlayer];
-
-                if (checkWin()) {
-                    handleWin(currentPlayer);
-                } else if (checkDraw()) {
-                    handleDraw();
-                } else {
-                    switchPlayer();
-                }
+                clickedCell.textContent = currentSymbol; clickedCell.classList.add(currentSymbol.toLowerCase()); clickedCell.classList.add(currentPlayer);
+                clickedCell.style.color = playerColors[currentPlayer]; clickedCell.style.textShadow = playerGlows[currentPlayer];
+                if (checkWin()) { handleWin(currentPlayer); }
+                else if (checkDraw()) { handleDraw(); }
+                else { switchPlayer(); }
             }
+            function switchPlayer() { currentPlayer = (currentPlayer === 'matilda') ? 'dad' : 'matilda'; updateTurnIndicator(); }
 
-            function switchPlayer() {
-                currentPlayer = (currentPlayer === 'matilda') ? 'dad' : 'matilda';
-                updateTurnIndicator(); // Update pulse on turn switch
-            }
-
-            // --- Turn Indicator --- NEW FUNCTION
+            // --- Turn Indicator ---
             function updateTurnIndicator() {
-                // Remove active class from both first
                 matildaScoreElement.classList.remove('active-turn');
                 dadScoreElement.classList.remove('active-turn');
-
-                // Add to the current player if game is active
                 if (gameActive && currentPlayer) {
-                    if (currentPlayer === 'matilda') {
-                        matildaScoreElement.classList.add('active-turn');
-                    } else {
-                        dadScoreElement.classList.add('active-turn');
-                    }
+                    const activeElement = (currentPlayer === 'matilda') ? matildaScoreElement : dadScoreElement;
+                    activeElement.classList.add('active-turn');
                 }
             }
 
-            function checkWin() {
-                for (const combo of winningCombos) {
-                    const [a, b, c] = combo;
-                    if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-                        lastWinningCombo = combo;
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-            function checkDraw() {
-                return board.every(cell => cell !== '');
-            }
+            // --- Win/Draw Checks ---
+            function checkWin() { for (const combo of winningCombos) { const [a, b, c] = combo; if (board[a] && board[a] === board[b] && board[a] === board[c]) { lastWinningCombo = combo; return true; } } return false; }
+            function checkDraw() { return board.every(cell => cell !== ''); }
 
             // --- Win/Draw Handling ---
             function handleWin(winner) {
-                gameActive = false; // Stop game logic
-                updateTurnIndicator(); // Remove pulse
-                scores[winner]++;
-                saveScores();
-                updateScoreDisplay();
-                winMessage.textContent = `${winner.charAt(0).toUpperCase() + winner.slice(1)} Wins!`;
-                winMessage.className = '';
-                winMessage.classList.add(`${winner}-win`);
-                winMessage.style.textShadow = playerGlows[winner];
-
-                drawWinLine(lastWinningCombo, winner);
-                startConfetti(winner);
-
+                gameActive = false; updateTurnIndicator(); // Stop pulse/underline
+                scores[winner]++; saveScores(); updateScoreDisplay();
+                winMessage.textContent = `${winner.charAt(0).toUpperCase() + winner.slice(1)} Wins!`; winMessage.className = ''; winMessage.classList.add(`${winner}-win`); winMessage.style.textShadow = playerGlows[winner];
+                drawWinLine(lastWinningCombo, winner); startConfetti(winner);
                 setTimeout(() => { winModal.classList.add('active'); }, 800);
                 firstPlayerOfRound = (winner === 'matilda') ? 'dad' : 'matilda';
             }
-
             function handleDraw() {
-                gameActive = false; // Stop game logic
-                updateTurnIndicator(); // Remove pulse
-                winMessage.textContent = "It's a Draw!";
-                winMessage.className = '';
-                winMessage.classList.add('draw');
-                winMessage.style.textShadow = 'none';
-
-                hideWinLine();
-                stopConfetti();
-
+                gameActive = false; updateTurnIndicator(); // Stop pulse/underline
+                winMessage.textContent = "It's a Draw!"; winMessage.className = ''; winMessage.classList.add('draw'); winMessage.style.textShadow = 'none';
+                hideWinLine(); stopConfetti();
                 setTimeout(() => { winModal.classList.add('active'); }, 300);
                 firstPlayerOfRound = (firstPlayerOfRound === 'matilda') ? 'dad' : 'matilda';
             }
+            playAgainBtn.addEventListener('click', () => { winModal.classList.remove('active'); setTimeout(startGame, 400); });
 
-            playAgainBtn.addEventListener('click', () => {
-                winModal.classList.remove('active');
-                setTimeout(startGame, 400);
-            });
-
-             // --- Score Management ---
-            resetButton.addEventListener('click', () => {
-                if (confirm("Are you sure you want to reset the scores?")) {
-                    scores = { matilda: 0, dad: 0 };
-                    saveScores();
-                    updateScoreDisplay();
-                    gameActive = false; // Explicitly set game inactive
-                    currentPlayer = null; // Reset player
-                    updateTurnIndicator(); // Ensure pulse is off
-                    initGame(); // Force re-selection
-                }
-            });
-
-            function updateScoreDisplay() {
-                matildaScoreDisplay.textContent = scores.matilda;
-                dadScoreDisplay.textContent = scores.dad;
-                // Update scoreboard text shadows (redundant if CSS vars static, but safe)
-                matildaScoreElement.style.textShadow = playerGlows.matilda || '';
-                dadScoreElement.style.textShadow = playerGlows.dad || '';
-            }
-
-            function saveScores() {
-                localStorage.setItem('ticTacToeScores', JSON.stringify(scores));
-            }
-
-            function loadScores() {
-                const savedScores = localStorage.getItem('ticTacToeScores');
-                scores = savedScores ? JSON.parse(savedScores) : { matilda: 0, dad: 0 };
-            }
+            // --- Score Management ---
+            resetButton.addEventListener('click', () => { if (confirm("Are you sure you want to reset the scores?")) { scores = { matilda: 0, dad: 0 }; saveScores(); updateScoreDisplay(); gameActive = false; currentPlayer = null; updateTurnIndicator(); initGame(); } });
+            function updateScoreDisplay() { matildaScoreDisplay.textContent = scores.matilda; dadScoreDisplay.textContent = scores.dad; matildaScoreElement.style.textShadow = playerGlows.matilda || ''; dadScoreElement.style.textShadow = playerGlows.dad || ''; }
+            function saveScores() { localStorage.setItem('ticTacToeScores', JSON.stringify(scores)); }
+            function loadScores() { const savedScores = localStorage.getItem('ticTacToeScores'); scores = savedScores ? JSON.parse(savedScores) : { matilda: 0, dad: 0 }; }
 
             // --- Win Line Animation ---
-            function hideWinLine() {
-                winLine.style.transform = 'scaleX(0) rotate(0rad)';
-                winLine.style.opacity = '0';
-                winLine.classList.remove('visible');
-            }
-
-             function drawWinLine(combo, winner) {
+            function hideWinLine() { winLine.style.transform = 'scaleX(0) rotate(0rad)'; winLine.style.opacity = '0'; winLine.classList.remove('visible'); }
+            function drawWinLine(combo, winner) {
                  if (!combo || combo.length < 3 || !cells[combo[0]] || !cells[combo[2]]) return;
-                 const startCell = cells[combo[0]].getBoundingClientRect();
-                 const endCell = cells[combo[2]].getBoundingClientRect();
-                 const containerRect = winLineContainer.getBoundingClientRect();
+                 const startCell = cells[combo[0]].getBoundingClientRect(); const endCell = cells[combo[2]].getBoundingClientRect(); const containerRect = winLineContainer.getBoundingClientRect();
                  if (containerRect.width === 0 || containerRect.height === 0) return;
-
-                 const startX = startCell.left + startCell.width / 2 - containerRect.left;
-                 const startY = startCell.top + startCell.height / 2 - containerRect.top;
-                 const endX = endCell.left + endCell.width / 2 - containerRect.left;
-                 const endY = endCell.top + endCell.height / 2 - containerRect.top;
-
-                 const dx = endX - startX; const dy = endY - startY;
-                 const length = Math.sqrt(dx * dx + dy * dy);
-                 const angle = Math.atan2(dy, dx);
-
-                 const winnerColor = playerColors[winner];
-                 const winnerGlow = playerGlows[winner];
-                 const lineThickness = parseFloat(rootStyle.getPropertyValue('--win-line-thickness'));
-
-                 winLine.style.width = `${length}px`;
-                 winLine.style.backgroundColor = winnerColor;
-                 winLine.style.boxShadow = winnerGlow;
-                 winLine.style.top = `${startY - (lineThickness / 2)}px`;
-                 winLine.style.left = `${startX}px`;
-                 winLine.style.transformOrigin = '0 50%';
-                 winLine.style.transform = `rotate(${angle}rad) scaleX(0)`;
-                 winLine.style.opacity = '1';
-
-                 void winLine.offsetWidth;
-                 winLine.style.transform = `rotate(${angle}rad) scaleX(1)`;
-                 winLine.classList.add('visible');
+                 const startX = startCell.left + startCell.width / 2 - containerRect.left; const startY = startCell.top + startCell.height / 2 - containerRect.top; const endX = endCell.left + endCell.width / 2 - containerRect.left; const endY = endCell.top + endCell.height / 2 - containerRect.top;
+                 const dx = endX - startX; const dy = endY - startY; const length = Math.sqrt(dx * dx + dy * dy); const angle = Math.atan2(dy, dx);
+                 const winnerColor = playerColors[winner]; const winnerGlow = playerGlows[winner]; const lineThickness = parseFloat(rootStyle.getPropertyValue('--win-line-thickness'));
+                 winLine.style.width = `${length}px`; winLine.style.backgroundColor = winnerColor; winLine.style.boxShadow = winnerGlow; winLine.style.top = `${startY - (lineThickness / 2)}px`; winLine.style.left = `${startX}px`; winLine.style.transformOrigin = '0 50%'; winLine.style.transform = `rotate(${angle}rad) scaleX(0)`; winLine.style.opacity = '1';
+                 void winLine.offsetWidth; winLine.style.transform = `rotate(${angle}rad) scaleX(1)`; winLine.classList.add('visible');
             }
 
             // --- Confetti Animation --- (Code remains the same)
-             function startConfetti(winner) {
-                const color = playerColors[winner];
-                particles = [];
-                const numberOfParticles = 150;
-                const canvasWidth = window.innerWidth; const canvasHeight = window.innerHeight;
-                confettiCanvas.width = canvasWidth; confettiCanvas.height = canvasHeight;
-                for (let i = 0; i < numberOfParticles; i++) {
-                    particles.push(createParticle(canvasWidth / 2, canvasHeight / 2, color));
-                }
-                if (confettiAnimationId) cancelAnimationFrame(confettiAnimationId);
-                animateConfetti();
-            }
-             function createParticle(x, y, color) { /* ... as before ... */
-                const angle = Math.random() * Math.PI * 2;
-                const speed = Math.random() * 6 + 3;
-                const friction = 0.97; const gravity = 0.15;
-                const lifespan = Math.random() * 60 + 90;
-                const size = Math.random() * 8 + 4;
-                return { x: x, y: y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 4, size: size, color: color, lifespan: lifespan, friction: friction, gravity: gravity, opacity: 1, rotation: Math.random() * 360, spin: (Math.random() - 0.5) * 10 };
-             }
-             function animateConfetti() { /* ... as before ... */
-                ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
-                particles = particles.filter(p => p.lifespan > 0);
-                particles.forEach(p => {
-                    p.vx *= p.friction; p.vy *= p.friction; p.vy += p.gravity;
-                    p.x += p.vx; p.y += p.vy; p.lifespan--; p.rotation += p.spin;
-                    if (p.lifespan < 30) p.opacity = p.lifespan / 30;
-                    ctx.save(); ctx.translate(p.x + p.size / 2, p.y + p.size / 2); ctx.rotate(p.rotation * Math.PI / 180); ctx.fillStyle = p.color; ctx.globalAlpha = p.opacity; ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size / 2); ctx.restore();
-                });
-                if (particles.length > 0) { confettiAnimationId = requestAnimationFrame(animateConfetti); }
-                else { stopConfetti(); }
-             }
-             function stopConfetti() { /* ... as before ... */
-                if (confettiAnimationId) { cancelAnimationFrame(confettiAnimationId); confettiAnimationId = null; }
-                particles = [];
-                setTimeout(() => { if (ctx) ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height); }, 100);
-             }
-
+             function startConfetti(winner) { const color = playerColors[winner]; particles = []; const numberOfParticles = 150; const canvasWidth = window.innerWidth; const canvasHeight = window.innerHeight; confettiCanvas.width = canvasWidth; confettiCanvas.height = canvasHeight; for (let i = 0; i < numberOfParticles; i++) { particles.push(createParticle(canvasWidth / 2, canvasHeight / 2, color)); } if (confettiAnimationId) cancelAnimationFrame(confettiAnimationId); animateConfetti(); }
+             function createParticle(x, y, color) { const angle = Math.random() * Math.PI * 2; const speed = Math.random() * 6 + 3; const friction = 0.97; const gravity = 0.15; const lifespan = Math.random() * 60 + 90; const size = Math.random() * 8 + 4; return { x: x, y: y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 4, size: size, color: color, lifespan: lifespan, friction: friction, gravity: gravity, opacity: 1, rotation: Math.random() * 360, spin: (Math.random() - 0.5) * 10 }; }
+             function animateConfetti() { ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height); particles = particles.filter(p => p.lifespan > 0); particles.forEach(p => { p.vx *= p.friction; p.vy *= p.friction; p.vy += p.gravity; p.x += p.vx; p.y += p.vy; p.lifespan--; p.rotation += p.spin; if (p.lifespan < 30) p.opacity = p.lifespan / 30; ctx.save(); ctx.translate(p.x + p.size / 2, p.y + p.size / 2); ctx.rotate(p.rotation * Math.PI / 180); ctx.fillStyle = p.color; ctx.globalAlpha = p.opacity; ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size / 2); ctx.restore(); }); if (particles.length > 0) { confettiAnimationId = requestAnimationFrame(animateConfetti); } else { stopConfetti(); } }
+             function stopConfetti() { if (confettiAnimationId) { cancelAnimationFrame(confettiAnimationId); confettiAnimationId = null; } particles = []; setTimeout(() => { if (ctx) ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height); }, 100); }
 
             // --- Start the game ---
             initGame();
