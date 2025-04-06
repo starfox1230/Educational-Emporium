@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extra-axial Tumors Quiz</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        /* CSS rules (mostly unchanged) */
+        body {
+            background-color: #12121f;
+            color: #e0e0fc;
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .quiz-container {
+            background-color: #1a1a2e;
+            padding: 30px 40px;
+            border-radius: 15px;
+            box-shadow: 0 0 25px rgba(74, 74, 245, 0.4),
+                        0 5px 15px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 800px;
+            text-align: center;
+            border: 1px solid #3a3a5e;
+            display: flex; /* Use flexbox for vertical layout */
+            flex-direction: column;
+            justify-content: space-between; /* Pushes nav buttons down */
+            min-height: 500px; /* Ensure minimum height */
+        }
+
+        .quiz-content {
+             flex-grow: 1; /* Allow content to take available space */
+             margin-bottom: 20px; /* Space above navigation buttons */
+        }
+
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            color: #8a8aff;
+            margin-bottom: 25px;
+            text-shadow: 0 0 8px rgba(138, 138, 255, 0.5);
+        }
+
+        #question-counter {
+            font-size: 0.9em;
+            color: #aaaafc;
+            margin-bottom: 15px;
+        }
+
+        #question-text {
+            font-size: 1.3em;
+            color: #f0f0ff;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            min-height: 60px;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .option-button {
+            background-color: #2a2a4e;
+            color: #d0d0fc;
+            border: 1px solid #4a4a7e;
+            padding: 12px 15px;
+            font-size: 1em;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+            text-align: left;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .option-button:hover:not(:disabled) {
+            background-color: #3a3a6e;
+            transform: translateY(-2px);
+            box-shadow: 0 0 12px rgba(74, 74, 245, 0.3);
+        }
+
+        .option-button:active:not(:disabled) {
+            transform: translateY(0px);
+        }
+
+        .option-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .option-button.correct {
+            background-color: #1f7a3f;
+            border-color: #28a745;
+            color: #ffffff;
+            box-shadow: 0 0 15px rgba(40, 167, 69, 0.6);
+            opacity: 1;
+        }
+
+        .option-button.incorrect {
+            background-color: #9a2532;
+            border-color: #dc3545;
+            color: #ffffff;
+            box-shadow: 0 0 15px rgba(220, 53, 69, 0.6);
+            opacity: 1;
+        }
+
+        .option-button.reveal-correct {
+            background-color: #1f7a3f !important;
+            border-color: #28a745 !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 15px rgba(40, 167, 69, 0.6) !important;
+            opacity: 1 !important;
+        }
+
+
+        .explanation-container {
+            background-color: #202035;
+            border: 1px solid #3a3a5e;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: left;
+            font-size: 0.95em;
+            line-height: 1.5;
+            color: #c0c0fa;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .explanation-container strong {
+            color: #8a8aff;
+        }
+
+        /* --- Navigation Button Styling --- */
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between; /* Space out Prev/Next */
+            align-items: center;
+            margin-top: 30px; /* Keep margin from content above */
+            width: 100%; /* Ensure full width */
+        }
+
+        .nav-button { /* Common style for Prev/Next */
+            background: linear-gradient(45deg, #4a4af5, #8a8aff);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1em;
+            font-family: 'Orbitron', sans-serif;
+            border-radius: 25px; /* Pill shape */
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.3s ease, background 0.3s ease;
+            box-shadow: 0 4px 10px rgba(74, 74, 245, 0.3);
+            min-width: 120px; /* Give buttons minimum width */
+            text-align: center;
+        }
+
+        .nav-button:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(74, 74, 245, 0.5);
+        }
+
+        .nav-button:disabled {
+            background: #5a5a7e; /* Different background when disabled */
+            cursor: not-allowed;
+            opacity: 0.6;
+            box-shadow: none;
+            transform: none;
+        }
+        /* --- End Navigation Button Styling --- */
+
+
+        #completion-message {
+            margin-top: 40px;
+             flex-grow: 1; /* Allow it to take space when visible */
+             display: flex;
+             flex-direction: column;
+             justify-content: center;
+             align-items: center;
+        }
+        #completion-message h2 {
+             font-family: 'Orbitron', sans-serif;
+             color: #28a745;
+             text-shadow: 0 0 8px rgba(40, 167, 69, 0.5);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .quiz-container {
+                padding: 20px;
+                width: 95%;
+                min-height: 400px;
+            }
+            h1 {
+                font-size: 1.5em;
+            }
+            #question-text {
+                font-size: 1.1em;
+            }
+            .option-button {
+                font-size: 0.9em;
+                padding: 10px 12px;
+            }
+            .nav-button {
+                padding: 10px 20px;
+                font-size: 1em;
+                min-width: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <!-- Content Area -->
+        <div class="quiz-content">
+            <h1>Extra-axial Tumors Quiz</h1>
+            <div id="question-counter"></div>
+            <div id="question-text">Loading question...</div>
+            <div id="answer-options" class="options-container">
+                <!-- Answer buttons will be loaded here -->
+            </div>
+            <div id="explanation" class="explanation-container" style="display: none;">
+                <!-- Explanation will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Completion Message (Initially Hidden) -->
+         <div id="completion-message" style="display: none;">
+            <h2>Quiz Complete!</h2>
+            <p>You have finished all the questions.</p>
+        </div>
+
+        <!-- Navigation Buttons Area -->
+        <div class="navigation-buttons">
+            <button id="prev-button" class="nav-button">Previous</button>
+            <button id="next-button" class="nav-button">Next</button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "What is the primary topic of this presentation?",
+                options: ["Intra-axial Brain Tumors", "Intracranial Extra-axial Tumors", "Spinal Cord Tumors", "Pediatric Brain Tumors"],
+                correctAnswer: "Intracranial Extra-axial Tumors",
+                explanation: "The title slide and introduction (0:00-0:14) clearly state the topic is 'Extra-axial Tumors', specifically intracranial ones."
+            },
+            {
+                question: "Which anatomical structure is NOT considered part of the extra-axial space?",
+                options: ["Dura mater", "Subarachnoid space", "Brain parenchyma (gray/white matter)", "Calvarium"],
+                correctAnswer: "Brain parenchyma (gray/white matter)",
+                explanation: "Extra-axial means outside the brain parenchyma. The presentation discusses the calvarium, dura, arachnoid, pia, and subarachnoid space as components related to the extra-axial space (0:34-1:58). Intra-axial tumors arise within the brain parenchyma."
+            },
+            {
+                question: "What are the pachymeninges?",
+                options: ["The combination of arachnoid and pia mater", "The dura mater", "The cerebrospinal fluid", "The blood vessels in the subarachnoid space"],
+                correctAnswer: "The dura mater",
+                explanation: "The dura mater is also referred to as the pachymeninges (thick meningeal layer) around 0:56-0:58."
+            },
+            {
+                question: "What are the leptomeninges comprised of?",
+                options: ["Dura mater and periosteum", "Arachnoid mater and pia mater", "Calvarium and dura mater", "Brain cortex and white matter"],
+                correctAnswer: "Arachnoid mater and pia mater",
+                explanation: "Deep to the dura (pachymeninges) are the leptomeninges, which consist of the arachnoid mater and the pia mater (1:36-1:40)."
+            },
+            {
+                question: "What is the significance of the 'CSF cleft sign' in imaging?",
+                options: ["It indicates an intra-axial tumor origin.", "It suggests an extra-axial tumor origin.", "It is specific for meningiomas.", "It confirms the presence of hydrocephalus."],
+                correctAnswer: "It suggests an extra-axial tumor origin.",
+                explanation: "The presence of a thin cleft of CSF separating a mass from the brain parenchyma (visualized around 3:49-3:57) is a classic sign indicating the mass is extra-axial, located outside the brain itself."
+            },
+            {
+                question: "What does 'gray/white matter buckling' indicate about a mass?",
+                options: ["The mass is invading the brain.", "The mass is located within the ventricles.", "The mass is extra-axial and compressing the adjacent brain.", "The mass is primarily cystic."],
+                correctAnswer: "The mass is extra-axial and compressing the adjacent brain.",
+                explanation: "Buckling or compression of the adjacent gray and white matter (4:13-4:19) is a sign that an extra-axial mass is pushing on the brain from the outside, rather than infiltrating it."
+            },
+            {
+                question: "Which of the following is an imaging sign suggesting an extra-axial tumor?",
+                options: ["Infiltration of white matter tracts", "Displacement of subarachnoid vessels", "Central necrosis within the lesion", "Location deep within the basal ganglia"],
+                correctAnswer: "Displacement of subarachnoid vessels",
+                explanation: "Extra-axial masses arise outside the brain and can displace structures within the subarachnoid space, such as cortical vessels (4:45-4:57). Infiltration is characteristic of intra-axial tumors."
+            },
+            {
+                question: "What is the most common primary intracranial extra-axial neoplasm?",
+                options: ["Schwannoma", "Meningioma", "Epidermoid cyst", "Metastasis"],
+                correctAnswer: "Meningioma",
+                explanation: "Meningiomas are stated to be the most common intracranial extra-axial masses (3:30) and comprise about 1/3 of all primary intracranial neoplasms (5:44)."
+            },
+            {
+                question: "From which cells do meningiomas typically arise?",
+                options: ["Schwann cells", "Astrocytes", "Arachnoid meningothelial 'cap' cells", "Ependymal cells"],
+                correctAnswer: "Arachnoid meningothelial 'cap' cells",
+                explanation: "Meningiomas arise from arachnoid meningothelial 'cap' cells, located within the arachnoid layer of the meninges (6:11-6:12)."
+            },
+            {
+                question: "What does the 'dural tail sign' associated with meningiomas typically represent pathologically?",
+                options: ["Direct tumor infiltration along the dura", "Reactive dural thickening adjacent to the tumor", "An entrapped blood vessel", "A small satellite tumor nodule"],
+                correctAnswer: "Reactive dural thickening adjacent to the tumor",
+                explanation: "The dural tail sign, common with meningiomas (3:43, 7:33), mostly represents reactive dural thickening adjacent to the tumor rather than direct tumor invasion (7:37-7:39)."
+            },
+            {
+                question: "Hyperostosis, or thickening of the adjacent bone, is most characteristically seen with which extra-axial tumor?",
+                options: ["Schwannoma", "Epidermoid cyst", "Meningioma", "Chordoma"],
+                correctAnswer: "Meningioma",
+                explanation: "The presentation shows examples of hyperostosis (thickened, sclerotic bone) associated with meningiomas (5:03-5:24, 11:08-11:19), which is a characteristic bony reaction."
+            },
+            {
+                question: "What percentage of primary intracranial neoplasms are meningiomas?",
+                options: ["About 10%", "About 25%", "About 33%", "About 50%"],
+                correctAnswer: "About 33%",
+                explanation: "Meningiomas comprise approximately 1/3 (or 33%) of all primary intracranial neoplasms (5:44)."
+            },
+            {
+                question: "What is the typical growth rate of most meningiomas?",
+                options: ["Rapid growth ( > 5 cm³/year)", "Moderate growth (2.5-5 cm³/year)", "Very slow growth (most < 1 cm³/year)", "No growth after initial diagnosis"],
+                correctAnswer: "Very slow growth (most < 1 cm³/year)",
+                explanation: "Meningiomas typically have a very slow growth rate, usually less than 1 cm³ per year (6:24-6:27)."
+            },
+            {
+                question: "From which cells do schwannomas originate?",
+                options: ["Arachnoid cap cells", "Oligodendrocytes", "Schwann cells of peripheral nerves", "Neurons"],
+                correctAnswer: "Schwann cells of peripheral nerves",
+                explanation: "Schwannomas originate from Schwann cells, which myelinate peripheral nerves. Intracranially, this applies to cranial nerves III-XII (15:47-15:50)."
+            },
+            {
+                question: "Which cranial nerve is the most common site of origin for intracranial schwannomas?",
+                options: ["Optic nerve (CN II)", "Trigeminal nerve (CN V)", "Facial nerve (CN VII)", "Vestibulocochlear nerve (CN VIII)"],
+                correctAnswer: "Vestibulocochlear nerve (CN VIII)",
+                explanation: "95% of intracranial schwannomas arise from the vestibulocochlear nerve (CN VIII), often presenting as vestibular schwannomas (16:00-16:07)."
+            },
+            {
+                question: "What is the Antoni A pattern in schwannoma histology, and how does it typically appear on T2-weighted MRI?",
+                options: ["Looser tissue, higher T2 signal", "More cellular, dense fascicles, lower T2 signal", "Cystic degeneration, very high T2 signal", "Hemorrhagic areas, variable T2 signal"],
+                correctAnswer: "More cellular, dense fascicles, lower T2 signal",
+                explanation: "The Antoni A pattern is described as more cellular with dense/compact fascicles, corresponding to lower signal intensity on T2-weighted images (16:27-16:38)."
+            },
+            {
+                question: "Bilateral vestibular schwannomas are pathognomonic for which condition?",
+                options: ["Neurofibromatosis type I (NF1)", "Neurofibromatosis type II (NF2)", "Tuberous Sclerosis", "Von Hippel-Lindau Disease"],
+                correctAnswer: "Neurofibromatosis type II (NF2)",
+                explanation: "The vast majority of patients with NF2 have bilateral vestibular schwannomas (21:04-21:10). The presentation shows an example of bilateral vestibular schwannomas in an NF2 patient (21:14-21:20)."
+            },
+            {
+                question: "What is the WHO grade for typical schwannomas?",
+                options: ["Grade I (Benign)", "Grade II (Atypical)", "Grade III (Anaplastic)", "Grade IV (Malignant)"],
+                correctAnswer: "Grade I (Benign)",
+                explanation: "Schwannomas are typically benign, classified as WHO grade I (15:39)."
+            },
+            {
+                question: "Solitary Fibrous Tumor/Hemangiopericytoma is now considered a combined term representing a spectrum of:",
+                options: ["Gliomas", "Neuronal tumors", "Mesenchymal tumors", "Ependymal tumors"],
+                correctAnswer: "Mesenchymal tumors",
+                explanation: "Solitary Fibrous Tumor/Hemangiopericytoma represents a spectrum of dural-based mesenchymal tumors (12:31-12:33, 13:10)."
+            },
+            {
+                question: "Compared to typical meningiomas, Solitary Fibrous Tumors/Hemangiopericytomas tend to have:",
+                options: ["Lower recurrence rates", "Higher rates of recurrence and extracranial metastases", "Less vascularity", "More frequent calcification"],
+                correctAnswer: "Higher rates of recurrence and extracranial metastases",
+                explanation: "These tumors, particularly the higher-grade hemangiopericytoma end of the spectrum, are associated with high recurrence rates and can have extracranial metastases (13:07, 13:22-13:26)."
+            },
+            {
+                question: "Which primary cancers most commonly metastasize to the dura?",
+                options: ["Lung and Kidney", "Breast and Prostate", "Melanoma and Colon", "Thyroid and Pancreas"],
+                correctAnswer: "Breast and Prostate",
+                explanation: "For isolated dural metastases, the most common primary neoplasms mentioned are breast and prostate cancers (22:06-22:14)."
+            },
+            {
+                question: "Leptomeningeal metastatic disease involves the spread of cancer to which structures?",
+                options: ["The dura mater only", "The skull bones", "The arachnoid and pia mater (leptomeninges)", "The brain parenchyma"],
+                correctAnswer: "The arachnoid and pia mater (leptomeninges)",
+                explanation: "Leptomeningeal disease refers to spread within the leptomeninges (arachnoid and pia) and subarachnoid space (21:50-21:52, 22:24-22:26). The images show enhancement along the folia and cranial nerves (24:30-24:59)."
+            },
+            {
+                question: "What imaging finding is characteristic of an Epidermoid cyst?",
+                options: ["Fat signal intensity on T1WI", "Avid contrast enhancement", "Restricted diffusion on DWI sequences", "Suppression on FLAIR sequences"],
+                correctAnswer: "Restricted diffusion on DWI sequences",
+                explanation: "Epidermoids contain keratin debris and characteristically show restricted diffusion on DWI sequences (31:35-31:39). They do *not* suppress on FLAIR, helping distinguish them from arachnoid cysts (31:40-31:42)."
+            },
+            {
+                question: "Which non-neoplastic extra-axial mass contains lipid, hair follicles, and sebaceous material, and is often midline?",
+                options: ["Arachnoid cyst", "Epidermoid cyst", "Dermoid cyst", "Lipoma"],
+                correctAnswer: "Dermoid cyst",
+                explanation: "Dermoid cysts contain various ectodermal elements including keratin, sebaceous material, hair follicles, and lipid (fat). They are often midline (31:50-32:12)."
+            },
+            {
+                question: "Rupture of which cystic extra-axial mass can cause chemical meningitis?",
+                options: ["Arachnoid cyst", "Epidermoid cyst", "Dermoid cyst", "Ecchordosis Physaliphora"],
+                correctAnswer: "Dermoid cyst",
+                explanation: "Rupture of a dermoid cyst can spill its contents (including sebaceous material and keratin) into the subarachnoid space, leading to chemical meningitis (32:13-32:16)."
+            },
+            {
+                question: "How do lipomas typically appear on MRI and CT?",
+                options: ["Low signal on T1WI, high density on CT", "High signal on T1WI, low (fat) density on CT", "Isointense signal on T1WI, calcified on CT", "Variable signal, avid enhancement"],
+                correctAnswer: "High signal on T1WI, low (fat) density on CT",
+                explanation: "Lipomas follow fat signal intensity (bright on T1, darkens with fat suppression) and fat density on CT (32:18-32:22). An example shows high T1 signal (33:55)."
+            },
+            {
+                question: "Chordomas typically arise from remnants of what embryonic structure?",
+                options: ["Neural crest", "Notochord", "Rathke's pouch", "Ectoderm"],
+                correctAnswer: "Notochord",
+                explanation: "Chordomas arise from notochord remnants (28:23-28:25)."
+            },
+            {
+                question: "Where is the most common intracranial location for a chordoma?",
+                options: ["Petroclival synchondrosis", "Cerebellopontine angle", "Clivus", "Foramen magnum"],
+                correctAnswer: "Clivus",
+                explanation: "Intracranially, chordomas most commonly arise from the clivus (35% of all chordomas) and are typically midline (28:26-28:31)."
+            },
+            {
+                question: "How do chondrosarcomas typically differ from chordomas in location?",
+                options: ["Chondrosarcomas are always intra-axial.", "Chondrosarcomas are midline, chordomas are off-midline.", "Chondrosarcomas arise off-midline (e.g., petroclival synchondrosis), chordomas are typically midline.", "Chondrosarcomas only occur in the spine."],
+                correctAnswer: "Chondrosarcomas arise off-midline (e.g., petroclival synchondrosis), chordomas are typically midline.",
+                explanation: "A key distinguishing feature is location: Chordomas are typically midline (clivus), while chondrosarcomas arise off-midline from locations like the petroclival synchondrosis (28:29-28:31 vs 28:49-28:54)."
+            },
+            {
+                question: "What type of calcification pattern is characteristic of chondrosarcomas?",
+                options: ["Dense, amorphous calcification", "No calcification", "Arc/whorl/ring calcifications (chondroid matrix)", "Popcorn-like calcification"],
+                correctAnswer: "Arc/whorl/ring calcifications (chondroid matrix)",
+                explanation: "Chondrosarcomas characteristically demonstrate arc/whorl/ring type calcifications, reflecting mineralization of the chondroid matrix (28:58-29:03). An example is shown on CT at 29:58."
+            },
+            {
+                question: "Ecchordosis physaliphora is a benign cystic mass arising from:",
+                options: ["Arachnoid cap cells", "Ectopic notochordal remnants at the dorsal clivus", "Schwann cells", "Pituitary gland"],
+                correctAnswer: "Ectopic notochordal remnants at the dorsal clivus",
+                explanation: "Ecchordosis physaliphora is described as a benign cystic mass arising from the dorsal clivus, representing an ectopic notochordal remnant (30:14-30:22)."
+            },
+            {
+                question: "What is a key distinguishing imaging feature between ecchordosis physaliphora and a chordoma?",
+                options: ["Ecchordosis physaliphora typically enhances avidly, while chordomas do not.", "Chordomas are always cystic, while ecchordosis is solid.", "Ecchordosis physaliphora should not enhance, whereas chordomas typically show variable enhancement.", "Ecchordosis physaliphora always causes bone destruction."],
+                correctAnswer: "Ecchordosis physaliphora should not enhance, whereas chordomas typically show variable enhancement.",
+                explanation: "A main differentiating feature is that ecchordosis physaliphora should *not* show contrast enhancement, unlike chordomas which usually show some degree of enhancement (30:28-30:33 vs 28:42)."
+            },
+            {
+                question: "What type of intracranial lymphoma (primary vs secondary) more commonly presents with extra-axial disease?",
+                options: ["Primary CNS Lymphoma", "Secondary (Metastatic) Intracranial Lymphoma", "Both equally likely", "Neither typically involves extra-axial sites"],
+                correctAnswer: "Secondary (Metastatic) Intracranial Lymphoma",
+                explanation: "While primary CNS lymphoma usually presents as intra-axial masses, secondary (metastatic) intracranial lymphoma commonly involves extra-axial sites (about 2/3 of cases) (25:42-25:58)."
+            },
+            {
+                question: "Granulocytic sarcoma (chloroma) is associated with which underlying condition?",
+                options: ["Neurofibromatosis type 2", "Multiple myeloma", "Myelogenous leukemia (AML or CML blast phase)", "Metastatic breast cancer"],
+                correctAnswer: "Myelogenous leukemia (AML or CML blast phase)",
+                explanation: "Granulocytic sarcoma (chloroma) is described as a myelogenous leukemic mass that often heralds the onset of AML or the blastic phase of CML (26:51-27:21)."
+            },
+            {
+                question: "What finding on MRI, particularly T2*WI or SWI, can sometimes be seen with schwannomas but is less common with meningiomas?",
+                options: ["Significant vasogenic edema", "Dural tail sign", "Microbleeds (hemorrhage)", "Hyperostosis"],
+                correctAnswer: "Microbleeds (hemorrhage)",
+                explanation: "Schwannomas can be associated with hemorrhage (microbleeds) seen on susceptibility-weighted sequences (17:27-17:30), a feature less typical for meningiomas (unless post-treatment)."
+            }
+        ];
+
+
+        // --- DOM Element References ---
+        const questionCounterElement = document.getElementById('question-counter');
+        const questionTextElement = document.getElementById('question-text');
+        const answerOptionsElement = document.getElementById('answer-options');
+        const explanationElement = document.getElementById('explanation');
+        const prevButton = document.getElementById('prev-button'); // Added
+        const nextButton = document.getElementById('next-button'); // Now used for navigation
+        const completionMessageElement = document.getElementById('completion-message');
+        const quizContentElement = document.querySelector('.quiz-content'); // Added
+        const navigationButtonsElement = document.querySelector('.navigation-buttons'); // Added
+
+        // --- State Variables ---
+        let currentQuestionIndex = 0;
+        let score = 0; // Optional score tracking
+        let userAnswers = new Array(quizData.length).fill(null); // Store user selections
+        let questionsAttempted = new Array(quizData.length).fill(false); // Track if a question was attempted
+
+        // --- Functions ---
+
+        function loadQuestion() {
+            // Check if quiz is finished *before* trying to load
+             if (currentQuestionIndex >= quizData.length) {
+                showCompletion();
+                return;
+            }
+            // Ensure quiz content is visible and completion is hidden
+            quizContentElement.style.display = 'block';
+            navigationButtonsElement.style.display = 'flex'; // Make sure nav buttons are visible
+            completionMessageElement.style.display = 'none';
+
+
+            // Reset styles and visibility for the new question
+            explanationElement.style.display = 'none';
+            explanationElement.innerHTML = '';
+            answerOptionsElement.innerHTML = ''; // Clear previous options
+
+            // Get current question data
+            const currentQuestion = quizData[currentQuestionIndex];
+
+            // Update question text and counter
+            questionCounterElement.textContent = `Question ${currentQuestionIndex + 1} of ${quizData.length}`;
+            questionTextElement.textContent = currentQuestion.question;
+
+            // Create and append answer buttons
+            currentQuestion.options.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.classList.add('option-button');
+                 // If this question was previously answered, restore the state
+                if (questionsAttempted[currentQuestionIndex]) {
+                    button.disabled = true;
+                    if (option === currentQuestion.correctAnswer) {
+                         button.classList.add('reveal-correct'); // Always show correct if attempted
+                    }
+                    if (option === userAnswers[currentQuestionIndex] && option !== currentQuestion.correctAnswer) {
+                        button.classList.add('incorrect'); // Show incorrect selection
+                    }
+                } else {
+                    button.addEventListener('click', selectAnswer); // Only add listener if not attempted
+                }
+
+                answerOptionsElement.appendChild(button);
+            });
+             // If the question was previously attempted, show the explanation immediately
+            if (questionsAttempted[currentQuestionIndex]) {
+                explanationElement.innerHTML = `<strong>Explanation:</strong> ${currentQuestion.explanation}`;
+                explanationElement.style.display = 'block';
+            }
+
+
+            // Update navigation button states
+            updateNavButtonStates();
+        }
+
+        function updateNavButtonStates() {
+            prevButton.disabled = (currentQuestionIndex === 0);
+            // Next button is enabled unless it's the very last question and it hasn't been attempted yet.
+            // OR enable always except when completion screen is shown. Let's go with simpler: enable always until completion.
+             nextButton.disabled = (currentQuestionIndex === quizData.length -1) && !questionsAttempted[currentQuestionIndex]; // Disable next on last Q *until* answered
+
+        }
+
+        function selectAnswer(event) {
+            const selectedButton = event.target;
+            const selectedAnswer = selectedButton.textContent;
+            const currentQuestion = quizData[currentQuestionIndex];
+            const correctAnswer = currentQuestion.correctAnswer;
+
+             // Mark as attempted and store the answer
+            questionsAttempted[currentQuestionIndex] = true;
+            userAnswers[currentQuestionIndex] = selectedAnswer;
+
+
+            // Disable all *option* buttons only
+            const optionButtons = answerOptionsElement.querySelectorAll('.option-button');
+            optionButtons.forEach(button => {
+                button.disabled = true; // Disable options after selection
+                 // Remove event listeners to prevent re-clicks if somehow enabled
+                 button.removeEventListener('click', selectAnswer);
+            });
+
+            // Check if the answer is correct
+            if (selectedAnswer === correctAnswer) {
+                selectedButton.classList.add('correct');
+                score++; // Optional score tracking
+            } else {
+                selectedButton.classList.add('incorrect');
+                // Highlight the correct answer as well
+                optionButtons.forEach(button => {
+                    if (button.textContent === correctAnswer) {
+                        button.classList.add('reveal-correct');
+                    }
+                });
+            }
+
+            // Show explanation
+            explanationElement.innerHTML = `<strong>Explanation:</strong> ${currentQuestion.explanation}`;
+            explanationElement.style.display = 'block';
+
+            // Enable the next button now that the question is answered
+            updateNavButtonStates();
+            if(currentQuestionIndex === quizData.length - 1){ // Specifically enable if it's the last question
+                 nextButton.disabled = false; // Enable to allow moving to completion screen
+                 nextButton.textContent = "Finish"; // Change text for clarity
+             }
+
+        }
+
+        function goToNextQuestion() {
+             if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                 nextButton.textContent = "Next"; // Reset button text
+                loadQuestion();
+            } else {
+                 // If on the last question and 'Finish' is clicked
+                 showCompletion();
+            }
+        }
+
+        function goToPreviousQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                nextButton.textContent = "Next"; // Ensure button text is correct
+                loadQuestion();
+            }
+        }
+
+
+        function showCompletion() {
+            quizContentElement.style.display = 'none'; // Hide questions/options/explanation
+            navigationButtonsElement.style.display = 'none'; // Hide nav buttons
+            completionMessageElement.style.display = 'flex'; // Show completion message (use flex for centering)
+            // Optional: Display score
+            completionMessageElement.innerHTML += `<p>Review complete!</p>`; // Adjusted message
+        }
+
+
+        // --- Event Listeners ---
+        prevButton.addEventListener('click', goToPreviousQuestion);
+        nextButton.addEventListener('click', goToNextQuestion);
+
+
+        // --- Initial Load ---
+        loadQuestion(); // Load the first question
+    </script>
+
+</body>
+</html>
