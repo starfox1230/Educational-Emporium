@@ -4,184 +4,247 @@
     <title>WordGlow</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1,user-scalable=no">
     <style>
-        /* Progress Bar Styles */
-        #progressContainer {
-            position: fixed;
-            top: 0;
-            left: 0; /* Ensure it starts from the left edge */
-            width: 100%;
-            background-color: #e0e0e0;
-            height: 20px;
-            border-radius: 0; /* Full width bar often looks better without rounded corners */
-            box-shadow: 0px 2px 5px rgba(0,0,0,0.1); /* Adjusted shadow */
-            z-index: 1000;
-            display: flex;
-            align-items: center;
+        /* --- Modernized Styles (unchanged from previous version) --- */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+        :root {
+            /* --- Theme: Default (Light) --- */
+            --background-color: #f8f9fa;
+            --text-color: #343a40;
+            --card-bg: #ffffff;
+            --border-color: #dee2e6;
+            --shadow-color: rgba(0, 0, 0, 0.08);
+            --primary-color: #007bff;
+            --primary-hover-color: #0056b3;
+            --primary-text-color: #ffffff;
+            --highlight-bg: #ffe082;
+            --highlight-text: #343a40;
+            --correct-flash: rgba(40, 167, 69, 0.7);
+            --wrong-flash: rgba(220, 53, 69, 0.7);
+            --progress-bar-bg: #e9ecef;
+            --progress-bar-fill: #28a745;
+            --progress-text-color: #343a40;
+            --button-shadow: rgba(0, 0, 0, 0.1);
+            --button-hover-shadow: rgba(0, 0, 0, 0.15);
+            --button-active-shadow: rgba(0, 0, 0, 0.1);
+            --toggle-bg: #ffffff;
+            --toggle-border: var(--border-color);
+            --toggle-icon-color: var(--text-color);
+            --toggle-shadow: var(--shadow-color);
         }
 
-        #progressBar {
-            height: 100%;
-            width: 0%;
-            background-color: #4caf50;
-            border-radius: 0; /* Match container */
-            transition: width 0.3s ease;
+        /* --- Theme: Dark --- */
+        body.theme-dark {
+            --background-color: #121212;
+            --text-color: #e0e0e0;
+            --card-bg: #1e1e1e;
+            --border-color: #333333;
+            --shadow-color: rgba(255, 255, 255, 0.05);
+            --primary-color: #3f91ff;
+            --primary-hover-color: #69aaff;
+            --primary-text-color: #ffffff;
+            --highlight-bg: #fdd835;
+            --highlight-text: #121212;
+            --correct-flash: rgba(100, 221, 23, 0.7);
+            --wrong-flash: rgba(255, 109, 98, 0.7);
+            --progress-bar-bg: #333333;
+            --progress-bar-fill: #38a759;
+            --progress-text-color: #e0e0e0;
+            --button-shadow: rgba(0, 0, 0, 0.3);
+            --button-hover-shadow: rgba(0, 0, 0, 0.4);
+            --button-active-shadow: rgba(0, 0, 0, 0.3);
+            --toggle-bg: #2a2a2a;
+            --toggle-border: #444444;
+            --toggle-icon-color: var(--text-color);
+            --toggle-shadow: rgba(0, 0, 0, 0.2);
         }
 
-        #progressText {
-            position: absolute;
-            width: 100%;
-            text-align: center;
-            font-size: 12px;
-            color: #333;
-            line-height: 20px; /* Vertically center text in the bar */
+        /* --- Theme: Pink/Purple Dark --- */
+        body.theme-pink {
+            --background-color: #2a1a2e;
+            --text-color: #f0e8f2;
+            --card-bg: #3e2a42;
+            --border-color: #5a3a60;
+            --shadow-color: rgba(255, 210, 255, 0.06);
+            --primary-color: #ff4081;
+            --primary-hover-color: #ff79b0;
+            --primary-text-color: #ffffff;
+            --highlight-bg: #d1c4e9;
+            --highlight-text: #2a1a2e;
+            --correct-flash: rgba(156, 204, 101, 0.7);
+            --wrong-flash: rgba(255, 138, 128, 0.7);
+            --progress-bar-bg: #5a3a60;
+            --progress-bar-fill: #ba68c8;
+            --progress-text-color: #f0e8f2;
+            --button-shadow: rgba(42, 26, 46, 0.4);
+            --button-hover-shadow: rgba(42, 26, 46, 0.5);
+            --button-active-shadow: rgba(42, 26, 46, 0.4);
+            --toggle-bg: #3e2a42;
+            --toggle-border: #5a3a60;
+            --toggle-icon-color: var(--text-color);
+            --toggle-shadow: rgba(42, 26, 46, 0.3);
         }
 
         /* General Styles */
+        html { box-sizing: border-box; }
+        *, *:before, *:after { box-sizing: inherit; }
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f4f4f4;
-            color: #333;
-            padding-top: 40px; /* Space for fixed progress bar + a little margin */
-            padding-bottom: 100px; /* Increased space for fixed buttons */
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            background-color: var(--background-color);
+            color: var(--text-color);
+            padding-top: 40px;
+            padding-bottom: 110px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin: 0; /* Remove default body margin */
-            min-height: 100vh; /* Ensure body takes at least full viewport height */
-            box-sizing: border-box; /* Include padding in height calculation */
+            margin: 0;
+            min-height: 100vh;
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            /* Prevent text selection on double-tap for navigation */
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+             /* Improve tap responsiveness on iOS */
+             -webkit-tap-highlight-color: transparent;
         }
 
+        /* Progress Bar Styles */
+        #progressContainer {
+            position: fixed; top: 0; left: 0; width: 100%;
+            background-color: var(--progress-bar-bg); height: 12px;
+            box-shadow: 0 1px 3px var(--shadow-color); z-index: 1000;
+            display: flex; align-items: center; transition: background-color 0.3s ease;
+        }
+        #progressBar {
+            height: 100%; width: 0%; background-color: var(--progress-bar-fill);
+            transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.3s ease;
+        }
+        #progressText {
+            position: absolute; width: 100%; text-align: center; font-size: 9px;
+            font-weight: 600; color: var(--progress-text-color); opacity: 0.8;
+            line-height: 12px; z-index: 1001; transition: color 0.3s ease;
+        }
+
+        /* Theme Toggle Button */
+        #themeToggleButton {
+            position: fixed; top: 18px; right: 15px; z-index: 995;
+            width: 40px; height: 40px; border-radius: 50%;
+            border: 1px solid var(--toggle-border); background-color: var(--toggle-bg);
+            color: var(--toggle-icon-color); box-shadow: 0 2px 5px var(--toggle-shadow);
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem; padding: 0;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, transform 0.1s ease, box-shadow 0.2s ease;
+            overflow: hidden;
+        }
+        #themeToggleButton:hover { box-shadow: 0 3px 7px var(--toggle-shadow); }
+        #themeToggleButton:active { transform: scale(0.95); box-shadow: 0 1px 3px var(--toggle-shadow); }
+
+        /* Text Area */
+        textarea#storyArea {
+            font-size: 1rem; padding: 15px; width: 90%; max-width: 700px;
+            border-radius: 8px; box-shadow: 0 2px 5px var(--shadow-color);
+            margin-bottom: 25px; margin-top: 35px; border: 1px solid var(--border-color);
+            background-color: var(--card-bg); color: var(--text-color); line-height: 1.6;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+             user-select: text; /* Allow text selection ONLY in textarea */
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+        }
+        textarea#storyArea:focus {
+             outline: none; border-color: var(--primary-color);
+             box-shadow: 0 3px 8px rgba(from var(--primary-color) r g b / 0.2);
+        }
+        @supports not (color: rgba(from red r g b / 0.5)) {
+             textarea#storyArea:focus { box-shadow: 0 3px 8px var(--shadow-color); }
+        }
+
+        /* Buttons General */
+        button:not(#themeToggleButton) {
+            font-family: inherit; font-size: 1.1rem; font-weight: 600;
+            padding: 12px 25px; margin: 0 8px; border: none; border-radius: 8px;
+            background-color: var(--primary-color); color: var(--primary-text-color);
+            cursor: pointer; touch-action: manipulation;
+            transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+            box-shadow: 0 2px 4px var(--button-shadow);
+        }
+        button:not(#themeToggleButton):hover {
+            background-color: var(--primary-hover-color); box-shadow: 0 4px 8px var(--button-hover-shadow);
+        }
+        button:not(#themeToggleButton):active {
+            transform: scale(0.97); background-color: var(--primary-hover-color);
+            box-shadow: 0 1px 2px var(--button-active-shadow);
+        }
+        button#pasteStoryButton {
+             display: block; margin-left: auto; margin-right: auto;
+             padding: 15px 35px; font-size: 1.2rem;
+        }
+
+        /* Navigation Button Wrapper */
         #buttonWrapper {
-            position: fixed;
-            right: 10px;  /* Add some spacing from edge */
-            bottom: 10px; /* Add some spacing from edge */
-            width: auto;
-            padding: 5px;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
-            z-index: 999;
+            position: fixed; right: 0; bottom: 0; left: 0; width: 100%;
+            padding: 15px 10px;
+            background-color: rgba(from var(--card-bg) r g b / 0.85);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 -2px 10px var(--shadow-color); border-top: 1px solid var(--border-color);
+            z-index: 990; border-radius: 0;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+             /* Make sure taps here don't propagate to body if needed, but closest('button') check should suffice */
+             /* pointer-events: auto; */
         }
 
         #buttons {
-            display: flex; /* Ensure buttons are displayed inline */
-            justify-content: space-between;
+            display: flex; justify-content: space-around; max-width: 500px; margin: 0 auto;
         }
+         #prevWordButton, #nextWordButton { flex-grow: 1; max-width: 200px; }
 
+        /* Sentence Display */
         #sentenceDisplay {
-            font-size: 2em;
-            width: 90%;
-            max-width: 800px; /* Add max-width for larger screens */
-            margin: 20px auto; /* Center horizontally */
-            padding: 15px; /* Slightly more padding */
-            height: auto;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
-            white-space: pre-wrap; /* Preserve whitespace and wrap */
-            line-height: 1.6;
-            background-color: #fff;
+            font-size: clamp(1.5em, 4vw, 2.2em); width: 90%; max-width: 800px;
+            margin: 30px auto; padding: 25px; border-radius: 12px;
+            box-shadow: 0 4px 15px var(--shadow-color); white-space: pre-wrap;
+            line-height: 1.7; background-color: var(--card-bg); color: var(--text-color);
+            transition: box-shadow 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+            /* pointer-events: none; This would prevent clicks, but we want the body listener to catch them */
         }
 
-        textarea#storyArea { /* Make selector more specific */
-            font-size: 1.2em;
-            padding: 10px;
-            width: 90%;
-            max-width: 800px; /* Add max-width */
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            margin-top: 10px; /* Keep margin for spacing */
-            border: 1px solid #ccc; /* Add subtle border */
-            box-sizing: border-box; /* Include padding/border in width */
-        }
-
-        button {
-            font-size: 1.7em;
-            padding: 20px 25px; /* Adjust padding for better look */
-            margin: 0 5px;
-            border: none;
-            border-radius: 5px;
-            background-color: #0066ff;
-            color: #fff;
-            cursor: pointer; /* Add pointer cursor */
-            touch-action: manipulation; /* Improve touch responsiveness */
-        }
-
-        button#pasteStoryButton { /* Style paste button differently if needed */
-             display: block; /* Center button */
-             margin-left: auto;
-             margin-right: auto;
-        }
-
-
-        button:active {
-            background-color: #0052cc;
-        }
-
+        /* Highlight */
         .highlight {
-            background-color: #ffeb3b;
-            color: #333;
-            padding: 0.1em 0; /* Add slight vertical padding */
-            margin: -0.1em 0; /* Counteract padding shift */
-            border-radius: 3px; /* Slightly rounded highlight */
-            transition: background-color 0.5s ease;
-            box-decoration-break: clone; /* Ensures background applies nicely on wrapped lines */
-            -webkit-box-decoration-break: clone;
+            background-color: var(--highlight-bg); color: var(--highlight-text);
+            padding: 0.1em 0.2em; margin: -0.1em -0.2em; border-radius: 4px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            box-decoration-break: clone; -webkit-box-decoration-break: clone;
         }
 
-        /* Wrong Answer Animation */
-        .wrong-answer {
-            animation: pulseRed 1s forwards;
-        }
+        /* Answer Effects */
+        .wrong-answer { animation: pulseWrong 0.8s ease-out forwards; }
+        @keyframes pulseWrong { 0% { background-color: var(--highlight-bg); } 40% { background-color: var(--wrong-flash); } 100% { background-color: var(--highlight-bg); } }
+        .correct-answer { animation: pulseCorrect 0.5s ease-out forwards; }
+        @keyframes pulseCorrect { 0% { background-color: var(--highlight-bg); } 50% { background-color: var(--correct-flash); } 100% { background-color: var(--highlight-bg); } }
 
-        @keyframes pulseRed {
-            0% { background-color: #ffeb3b; } /* Start yellow */
-            50% { background-color: #ff8a80; } /* Flash light red */
-            100% { background-color: #ffeb3b; } /* Return yellow */
-        }
-
-        /* Correct Answer Animation */
-        .correct-answer {
-            animation: fadeGreen 0.5s forwards;
-        }
-
-        @keyframes fadeGreen {
-            0% { background-color: #b9f6ca; } /* Start light green */
-            100% { background-color: #ffeb3b; } /* End yellow (ready for next highlight) */
-        }
-
-        /* Responsive adjustments if needed */
+        /* Responsive adjustments */
         @media (max-width: 600px) {
-            #sentenceDisplay {
-                font-size: 1.5em; /* Smaller font on small screens */
-            }
-            button {
-                font-size: 1.3em; /* Smaller buttons */
-                padding: 15px 20px;
-            }
-            #buttonWrapper {
-                 width: calc(100% - 20px); /* Make buttons take more width */
-                 right: 10px;
-                 left: 10px;
-                 bottom: 10px;
-                 box-sizing: border-box;
-            }
-             #buttons {
-                 justify-content: space-around; /* Space out buttons more */
-             }
+             body { padding-bottom: 90px; }
+             textarea#storyArea { margin-top: 25px; }
+            #sentenceDisplay { padding: 20px; margin: 20px auto; }
+            button:not(#themeToggleButton) { font-size: 1rem; padding: 10px 18px; }
+            #buttonWrapper { padding: 10px 5px; }
+             #buttons { max-width: none; }
+             #themeToggleButton { top: 16px; right: 10px; width: 36px; height: 36px; font-size: 1.1rem;}
         }
-
     </style>
 </head>
 <body>
+    <!-- Theme Toggle Button -->
+    <button id="themeToggleButton" title="Toggle theme" aria-label="Toggle theme">☀️</button>
+
     <!-- Progress Bar at the top -->
     <div id="progressContainer">
         <div id="progressBar"></div>
         <div id="progressText">0%</div>
     </div>
-
-    <!-- Content area needs vertical space from progress bar -->
-    <!-- <br><br> Removed these breaks, using body padding instead -->
 
     <textarea id="storyArea" rows="10" cols="50" placeholder="Paste your story here..."></textarea>
     <br>
@@ -197,17 +260,46 @@
     </div>
 
     <script>
+        // --- Theme Handling Logic (unchanged) ---
+        const themes = ['default', 'dark', 'pink'];
+        const themeIcons = ['☀️', '🌙', '✨'];
+        const themeToggleButton = document.getElementById('themeToggleButton');
+        const bodyElement = document.body;
+        const storageKey = 'wordGlowTheme';
+        let currentThemeIndex = 0;
+        function applyTheme(themeIndex) {
+            const themeName = themes[themeIndex];
+            themes.forEach(t => bodyElement.classList.remove(`theme-${t}`));
+            if (themeName !== 'default') { bodyElement.classList.add(`theme-${themeName}`); }
+            themeToggleButton.innerHTML = themeIcons[themeIndex];
+            localStorage.setItem(storageKey, themeName);
+            currentThemeIndex = themeIndex;
+        }
+        function toggleTheme() {
+            const nextThemeIndex = (currentThemeIndex + 1) % themes.length;
+            applyTheme(nextThemeIndex);
+        }
+        themeToggleButton.addEventListener('click', toggleTheme);
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem(storageKey);
+            const savedThemeIndex = themes.indexOf(savedTheme);
+            applyTheme(savedThemeIndex !== -1 ? savedThemeIndex : 0);
+        }
+        initializeTheme();
+        // --- End Theme Handling ---
+
+
+        // --- Existing JavaScript ---
         window.onload = function() {
-            // Initial state setup
-            document.getElementById('buttons').style.display = 'none';
-            document.getElementById('sentenceDisplay').style.display = 'none';
+            if (!isStoryInserted) {
+                document.getElementById('buttons').style.display = 'none';
+                document.getElementById('sentenceDisplay').style.display = 'none';
+            }
         };
 
-        // Global variables for state management
         var text, sentences, currentSentenceIndex, currentWordIndex;
         var isStoryInserted = false;
 
-        // DOM Element References (cache for performance)
         const sentenceDisplay = document.getElementById('sentenceDisplay');
         const progressBar = document.getElementById('progressBar');
         const progressText = document.getElementById('progressText');
@@ -217,88 +309,53 @@
         const prevButton = document.getElementById('prevWordButton');
         const nextButton = document.getElementById('nextWordButton');
 
-        /**
-         * Updates the sentence display, highlighting the current word.
-         */
         function updateSentence() {
-            sentenceDisplay.innerHTML = ''; // Clear previous content
-            if (!sentences || !sentences[currentSentenceIndex]) {
-                 console.error("Invalid sentence index:", currentSentenceIndex);
-                 return; // Exit if sentence data is invalid
-            }
-
+            sentenceDisplay.innerHTML = '';
+            if (!sentences || !sentences[currentSentenceIndex]) return;
             sentences[currentSentenceIndex].forEach(function(token, index) {
-                const element = document.createElement('span'); // Use spans for better control
+                const element = document.createElement('span');
                 element.textContent = token.content;
                 if (token.isWord && index === currentWordIndex) {
-                    element.className = 'highlight'; // Apply highlight class
+                    element.className = 'highlight';
                 }
                 sentenceDisplay.appendChild(element);
             });
         }
 
-        /**
-         * Finds the index { sentenceIndex, wordIndex } of the next word.
-         * Returns null if no next word exists.
-         */
         function findNextWordIndex(startSentenceIndex, startWordIndex) {
              if (!sentences || sentences.length === 0) return null;
-
-             // Start searching from the word after the current one in the current sentence
-             for (let i = startWordIndex + 1; i < sentences[startSentenceIndex]?.length; i++) {
-                if (sentences[startSentenceIndex][i].isWord) {
-                    return { sentenceIndex: startSentenceIndex, wordIndex: i };
-                }
+             const currentSentence = sentences[startSentenceIndex];
+             if (currentSentence) {
+                 for (let i = startWordIndex + 1; i < currentSentence.length; i++) {
+                    if (currentSentence[i].isWord) return { sentenceIndex: startSentenceIndex, wordIndex: i };
+                 }
              }
-
-             // If not found in the current sentence, search subsequent sentences
              for (let sIdx = startSentenceIndex + 1; sIdx < sentences.length; sIdx++) {
-                if (!sentences[sIdx]) continue; // Skip empty/undefined sentences
+                if (!sentences[sIdx]) continue;
                 for (let wIdx = 0; wIdx < sentences[sIdx].length; wIdx++) {
-                    if (sentences[sIdx][wIdx].isWord) {
-                        return { sentenceIndex: sIdx, wordIndex: wIdx };
-                    }
+                    if (sentences[sIdx][wIdx].isWord) return { sentenceIndex: sIdx, wordIndex: wIdx };
                 }
              }
-
-             return null; // No next word found
+             return null;
         }
 
-        /**
-         * Finds the index { sentenceIndex, wordIndex } of the previous word.
-         * Returns null if no previous word exists.
-         */
         function findPrevWordIndex(startSentenceIndex, startWordIndex) {
             if (!sentences || sentences.length === 0) return null;
-
-            // Start searching backwards from the word before the current one in the current sentence
-            if (sentences[startSentenceIndex]) {
+            const currentSentence = sentences[startSentenceIndex];
+            if (currentSentence) {
                  for (let i = startWordIndex - 1; i >= 0; i--) {
-                     if (sentences[startSentenceIndex][i].isWord) {
-                         return { sentenceIndex: startSentenceIndex, wordIndex: i };
-                     }
+                     if (currentSentence[i].isWord) return { sentenceIndex: startSentenceIndex, wordIndex: i };
                  }
             }
-
-
-            // If not found, search backwards through previous sentences
             for (let sIdx = startSentenceIndex - 1; sIdx >= 0; sIdx--) {
-                 if (!sentences[sIdx]) continue; // Skip empty/undefined sentences
-                 // Search from the end of the previous sentence
+                 if (!sentences[sIdx]) continue;
                  for (let wIdx = sentences[sIdx].length - 1; wIdx >= 0; wIdx--) {
-                     if (sentences[sIdx][wIdx].isWord) {
-                         return { sentenceIndex: sIdx, wordIndex: wIdx };
-                     }
+                     if (sentences[sIdx][wIdx].isWord) return { sentenceIndex: sIdx, wordIndex: wIdx };
                  }
             }
-
-            return null; // No previous word found
+            return null;
         }
 
-
-        /**
-         * Moves the highlight to the previous word.
-         */
         function prevWord() {
             if (!isStoryInserted) return;
             const newIndex = findPrevWordIndex(currentSentenceIndex, currentWordIndex);
@@ -310,9 +367,6 @@
             }
         }
 
-        /**
-         * Moves the highlight to the next word.
-         */
         function nextWord() {
             if (!isStoryInserted) return;
             const newIndex = findNextWordIndex(currentSentenceIndex, currentWordIndex);
@@ -322,228 +376,126 @@
                 updateSentence();
                 updateProgress();
             } else {
-                // Optional: Handle reaching the end of the text (e.g., show a message)
                 console.log("End of text reached.");
             }
         }
 
-        /**
-         * Updates the progress bar based on the current word position.
-         */
         function updateProgress() {
             if (!isStoryInserted || !sentences || sentences.length === 0) {
-                progressBar.style.width = '0%';
-                progressText.innerText = '0%';
-                return;
+                progressBar.style.width = '0%'; progressText.innerText = '0%'; return;
             }
-
-            let totalWords = 0;
-            let wordsCounted = 0;
-            let currentWordFound = false;
-
+            let totalWords = 0, wordsCounted = 0;
             for (let sIdx = 0; sIdx < sentences.length; sIdx++) {
                  if (!sentences[sIdx]) continue;
                  for (let wIdx = 0; wIdx < sentences[sIdx].length; wIdx++) {
                      if (sentences[sIdx][wIdx].isWord) {
                          totalWords++;
-                         if (!currentWordFound) {
+                         if (sIdx < currentSentenceIndex || (sIdx === currentSentenceIndex && wIdx <= currentWordIndex)) {
                              wordsCounted++;
-                             if (sIdx === currentSentenceIndex && wIdx === currentWordIndex) {
-                                 currentWordFound = true;
-                             }
                          }
                      }
                  }
             }
-
-
-            if (totalWords === 0) {
-                 progressBar.style.width = '0%';
-                 progressText.innerText = '0%';
-                 return;
-            }
-
-            // Ensure progress reflects the *current* word being highlighted
-             const progressPercentage = Math.min(100, Math.floor((wordsCounted / totalWords) * 100));
-
-
+            if (totalWords === 0) { progressBar.style.width = '0%'; progressText.innerText = '0%'; return; }
+            const progressPercentage = Math.min(100, Math.max(0, Math.floor((wordsCounted / totalWords) * 100)));
             progressBar.style.width = progressPercentage + '%';
             progressText.innerText = progressPercentage + '%';
         }
 
-        /**
-         * Parses the text from the textarea into sentences and tokens.
-         */
         function parseText(rawText) {
-             if (!rawText || rawText.trim() === '') {
-                 return []; // Return empty if no text
-             }
-
-            // Improved sentence splitting: Handles more punctuation and spacing variations.
-            // Matches sequences not ending in [.!?], followed by [.!?], optionally followed by quotes/spaces.
-             const sentenceRegex = /([^.!?]+[.!?]+(?:["'”’]?\s*|$))/g;
-             let rawSentences = rawText.match(sentenceRegex);
-
-             if (!rawSentences) {
-                // If no sentence terminators found, treat the whole text as one sentence.
-                rawSentences = [rawText];
-             }
-
-             // Tokenize each sentence
+             if (!rawText || rawText.trim() === '') return [];
+             const sentenceRegex = /([^.!?]+(?:[.!?]+["'”’]?\s*|))/g;
+             let rawSentences = rawText.match(sentenceRegex)?.filter(s => s && s.trim().length > 0) ?? [];
+             if (rawSentences.length === 0 && rawText.trim().length > 0) rawSentences = [rawText];
              return rawSentences.map(sentence => {
-                if (!sentence) return null; // Skip potential null matches
-
-                // Tokenizer: Captures words (including contractions), punctuation/symbols, and whitespace.
-                // \b\w+(['’]\w+)*\b : Word boundaries, one or more word chars, optional apostrophe/contraction part.
-                // \S : Any non-whitespace character (captures punctuation).
-                // \s+ : One or more whitespace characters.
                 const tokenRegex = /(\b\w+(?:['’]\w+)*\b|\S|\s+)/g;
                  let tokens = sentence.trim().match(tokenRegex);
-
-                if (!tokens) return null; // Skip if sentence resulted in no tokens
-
-                return tokens.map(token => {
-                    // Check if the token is a word (matches the word part of the regex)
-                     const isWord = /^\b\w+(?:['’]\w+)*\b$/.test(token);
-                     return { content: token, isWord: isWord };
-                });
-            }).filter(sentenceTokens => sentenceTokens && sentenceTokens.length > 0); // Filter out null or empty sentences
+                if (!tokens) return null;
+                return tokens.map(token => ({ content: token, isWord: /^\b\w+(?:['’]\w+)*\b$/.test(token) }));
+            }).filter(sentenceTokens => sentenceTokens && sentenceTokens.length > 0);
         }
 
-
-        /**
-         * Handles the "Insert Story" button click.
-         */
         pasteButton.addEventListener('click', function() {
-            text = storyArea.value;
-            sentences = parseText(text);
-
+            text = storyArea.value; sentences = parseText(text);
             if (!sentences || sentences.length === 0) {
-                 // Handle case where no valid sentences/words are found
-                 sentenceDisplay.textContent = "Please paste some text with words.";
-                 sentenceDisplay.style.display = 'block';
-                 isStoryInserted = false;
-                 // Optionally reset progress bar
-                 progressBar.style.width = '0%';
-                 progressText.innerText = '0%';
-                 return; // Stop processing
+                 sentenceDisplay.textContent = "Please paste some text with words."; sentenceDisplay.style.display = 'block';
+                 isStoryInserted = false; progressBar.style.width = '0%'; progressText.innerText = '0%';
+                 buttonsContainer.style.display = 'none'; return;
             }
-
             isStoryInserted = true;
-
-            // Find the very first word in the entire text
-            const firstWordIndex = findNextWordIndex(-1, -1); // Start search from the beginning
-
+            const firstWordIndex = findNextWordIndex(-1, -1);
             if (firstWordIndex) {
-                currentSentenceIndex = firstWordIndex.sentenceIndex;
-                currentWordIndex = firstWordIndex.wordIndex;
+                currentSentenceIndex = firstWordIndex.sentenceIndex; currentWordIndex = firstWordIndex.wordIndex;
             } else {
-                // This case should ideally be caught by the sentences.length check above,
-                // but as a fallback:
-                sentenceDisplay.textContent = "No words found in the text.";
-                sentenceDisplay.style.display = 'block';
-                isStoryInserted = false;
-                return;
+                sentenceDisplay.textContent = "No words found in the text."; sentenceDisplay.style.display = 'block';
+                isStoryInserted = false; progressBar.style.width = '0%'; progressText.innerText = '0%';
+                buttonsContainer.style.display = 'none'; return;
             }
-
-
-            // Hide input elements, show reading elements
-            pasteButton.style.display = 'none';
-            storyArea.style.display = 'none';
-            buttonsContainer.style.display = 'flex'; // Use flex as per CSS
-            sentenceDisplay.style.display = 'block';
-
-            // Initial display update
-            updateSentence();
-            updateProgress();
+            pasteButton.style.display = 'none'; storyArea.style.display = 'none';
+            buttonsContainer.style.display = 'flex'; sentenceDisplay.style.display = 'block';
+            updateSentence(); updateProgress();
         });
 
         // --- Event Listeners for Navigation and Interaction ---
-
-        // Touch event handlers (prevent default to avoid double taps/zoom)
-        function prevWordTouch(e) {
-            e.preventDefault();
-            prevWord();
-        }
-        function nextWordTouch(e) {
-            e.preventDefault();
-            nextWord();
-        }
-
-        // Add click and touch listeners to buttons
+        function prevWordTouch(e) { e.preventDefault(); prevWord(); }
+        function nextWordTouch(e) { e.preventDefault(); nextWord(); }
         prevButton.addEventListener('touchstart', prevWordTouch, { passive: false });
         prevButton.addEventListener('click', prevWord);
         nextButton.addEventListener('touchstart', nextWordTouch, { passive: false });
         nextButton.addEventListener('click', nextWord);
 
-
-        // Keyboard event listener for arrows and spacebar/F1
         window.addEventListener('keydown', function(e) {
-            if (!isStoryInserted) return; // Only process keys if story is active
-
+            if (!isStoryInserted) return;
             switch (e.key) {
-                case "ArrowRight":
-                    e.preventDefault(); // Prevent browser scrolling
-                    nextWord();
-                    break;
-                case "ArrowLeft":
-                    e.preventDefault(); // Prevent browser scrolling
-                    prevWord();
-                    break;
-                case "F1":
-                    e.preventDefault(); // Prevent default F1 help action
-                    triggerWrongAnswerEffect();
-                    break;
-                case " ": // Space bar
-                    e.preventDefault(); // Prevent page scroll
-                    triggerCorrectAnswerEffect();
-                    break;
+                case "ArrowRight": e.preventDefault(); nextWord(); break;
+                case "ArrowLeft": e.preventDefault(); prevWord(); break;
+                case "F1": e.preventDefault(); triggerWrongAnswerEffect(); break;
+                case " ": e.preventDefault(); triggerCorrectAnswerEffect(); break;
             }
         });
 
-        /**
-         * Triggers the visual effect for a wrong answer (F1).
-         */
         function triggerWrongAnswerEffect() {
             const highlightedWord = sentenceDisplay.querySelector('.highlight');
             if (!highlightedWord) return;
-
             highlightedWord.classList.add('wrong-answer');
-
-            // Use requestAnimationFrame to ensure class is added before timeout starts
-            requestAnimationFrame(() => {
-                setTimeout(() => {
-                    // Check if the element *still* exists and has the class before removing
-                    const currentHighlight = sentenceDisplay.querySelector('.highlight');
-                    if (currentHighlight && currentHighlight.classList.contains('wrong-answer')) {
-                        currentHighlight.classList.remove('wrong-answer');
-                    }
-                }, 1000); // Duration of the animation
-            });
+             setTimeout(() => { highlightedWord?.classList.remove('wrong-answer'); }, 800);
         }
 
-        /**
-         * Triggers the visual effect for a correct answer (Space) and moves to the next word.
-         */
         function triggerCorrectAnswerEffect() {
             const highlightedWord = sentenceDisplay.querySelector('.highlight');
             if (!highlightedWord) return;
-
             highlightedWord.classList.add('correct-answer');
-
-            // Use requestAnimationFrame for smoother visual updates
-            requestAnimationFrame(() => {
-                setTimeout(() => {
-                    // Check if the element still exists and has the class before removing
-                     const currentHighlight = sentenceDisplay.querySelector('.highlight');
-                     if (currentHighlight && currentHighlight.classList.contains('correct-answer')) {
-                         currentHighlight.classList.remove('correct-answer');
-                     }
-                     // Move to the next word *after* the animation interval
-                     nextWord();
-                }, 500); // Duration of the animation
-            });
+            setTimeout(() => {
+                 highlightedWord?.classList.remove('correct-answer');
+                 nextWord();
+            }, 500);
         }
+
+        // --- NEW: Screen Tap Navigation ---
+        document.body.addEventListener('click', function(event) {
+            // Only navigate if story is inserted
+            if (!isStoryInserted) {
+                return;
+            }
+
+            // Ignore clicks if they landed on any button or the initial textarea
+            if (event.target.closest('button') || event.target.closest('textarea#storyArea')) {
+                return;
+            }
+
+            // Determine if click was on left or right half
+            const screenWidth = window.innerWidth;
+            const clickX = event.clientX;
+
+            if (clickX < screenWidth / 2) {
+                // Left side tap
+                prevWord();
+            } else {
+                // Right side tap
+                nextWord();
+            }
+        });
+        // --- End Screen Tap Navigation ---
 
     </script>
 </body>
