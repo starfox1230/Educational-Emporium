@@ -2,8 +2,176 @@
 <html>
 <head>
     <title>WordGlow</title>
-    <link rel="stylesheet" type="text/css" href="styles.css">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1,user-scalable=no">
+    <style>
+        /* Progress Bar Styles */
+        #progressContainer {
+            position: fixed;
+            top: 0;
+            left: 0; /* Ensure it starts from the left edge */
+            width: 100%;
+            background-color: #e0e0e0;
+            height: 20px;
+            border-radius: 0; /* Full width bar often looks better without rounded corners */
+            box-shadow: 0px 2px 5px rgba(0,0,0,0.1); /* Adjusted shadow */
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+        }
+
+        #progressBar {
+            height: 100%;
+            width: 0%;
+            background-color: #4caf50;
+            border-radius: 0; /* Match container */
+            transition: width 0.3s ease;
+        }
+
+        #progressText {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            color: #333;
+            line-height: 20px; /* Vertically center text in the bar */
+        }
+
+        /* General Styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            padding-top: 40px; /* Space for fixed progress bar + a little margin */
+            padding-bottom: 100px; /* Increased space for fixed buttons */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0; /* Remove default body margin */
+            min-height: 100vh; /* Ensure body takes at least full viewport height */
+            box-sizing: border-box; /* Include padding in height calculation */
+        }
+
+        #buttonWrapper {
+            position: fixed;
+            right: 10px;  /* Add some spacing from edge */
+            bottom: 10px; /* Add some spacing from edge */
+            width: auto;
+            padding: 5px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+            z-index: 999;
+        }
+
+        #buttons {
+            display: flex; /* Ensure buttons are displayed inline */
+            justify-content: space-between;
+        }
+
+        #sentenceDisplay {
+            font-size: 2em;
+            width: 90%;
+            max-width: 800px; /* Add max-width for larger screens */
+            margin: 20px auto; /* Center horizontally */
+            padding: 15px; /* Slightly more padding */
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+            white-space: pre-wrap; /* Preserve whitespace and wrap */
+            line-height: 1.6;
+            background-color: #fff;
+        }
+
+        textarea#storyArea { /* Make selector more specific */
+            font-size: 1.2em;
+            padding: 10px;
+            width: 90%;
+            max-width: 800px; /* Add max-width */
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            margin-top: 10px; /* Keep margin for spacing */
+            border: 1px solid #ccc; /* Add subtle border */
+            box-sizing: border-box; /* Include padding/border in width */
+        }
+
+        button {
+            font-size: 1.7em;
+            padding: 20px 25px; /* Adjust padding for better look */
+            margin: 0 5px;
+            border: none;
+            border-radius: 5px;
+            background-color: #0066ff;
+            color: #fff;
+            cursor: pointer; /* Add pointer cursor */
+            touch-action: manipulation; /* Improve touch responsiveness */
+        }
+
+        button#pasteStoryButton { /* Style paste button differently if needed */
+             display: block; /* Center button */
+             margin-left: auto;
+             margin-right: auto;
+        }
+
+
+        button:active {
+            background-color: #0052cc;
+        }
+
+        .highlight {
+            background-color: #ffeb3b;
+            color: #333;
+            padding: 0.1em 0; /* Add slight vertical padding */
+            margin: -0.1em 0; /* Counteract padding shift */
+            border-radius: 3px; /* Slightly rounded highlight */
+            transition: background-color 0.5s ease;
+            box-decoration-break: clone; /* Ensures background applies nicely on wrapped lines */
+            -webkit-box-decoration-break: clone;
+        }
+
+        /* Wrong Answer Animation */
+        .wrong-answer {
+            animation: pulseRed 1s forwards;
+        }
+
+        @keyframes pulseRed {
+            0% { background-color: #ffeb3b; } /* Start yellow */
+            50% { background-color: #ff8a80; } /* Flash light red */
+            100% { background-color: #ffeb3b; } /* Return yellow */
+        }
+
+        /* Correct Answer Animation */
+        .correct-answer {
+            animation: fadeGreen 0.5s forwards;
+        }
+
+        @keyframes fadeGreen {
+            0% { background-color: #b9f6ca; } /* Start light green */
+            100% { background-color: #ffeb3b; } /* End yellow (ready for next highlight) */
+        }
+
+        /* Responsive adjustments if needed */
+        @media (max-width: 600px) {
+            #sentenceDisplay {
+                font-size: 1.5em; /* Smaller font on small screens */
+            }
+            button {
+                font-size: 1.3em; /* Smaller buttons */
+                padding: 15px 20px;
+            }
+            #buttonWrapper {
+                 width: calc(100% - 20px); /* Make buttons take more width */
+                 right: 10px;
+                 left: 10px;
+                 bottom: 10px;
+                 box-sizing: border-box;
+            }
+             #buttons {
+                 justify-content: space-around; /* Space out buttons more */
+             }
+        }
+
+    </style>
 </head>
 <body>
     <!-- Progress Bar at the top -->
@@ -11,17 +179,372 @@
         <div id="progressBar"></div>
         <div id="progressText">0%</div>
     </div>
-    <br><br>
-    <textarea id="storyArea" rows="10" cols="50"></textarea>
+
+    <!-- Content area needs vertical space from progress bar -->
+    <!-- <br><br> Removed these breaks, using body padding instead -->
+
+    <textarea id="storyArea" rows="10" cols="50" placeholder="Paste your story here..."></textarea>
     <br>
     <button id="pasteStoryButton">Insert Story</button>
+
     <div id="sentenceDisplay" style="display: none;"></div>
+
     <div id="buttonWrapper">
         <div id="buttons" style="display: none;">
             <button id="prevWordButton">Previous</button>
-            <button id="nextWordButton">&nbsp;&nbsp;&nbsp;Next&nbsp;&nbsp;&nbsp;</button>
+            <button id="nextWordButton">   Next   </button>
         </div>
     </div>
-    <script src="script.js"></script>
+
+    <script>
+        window.onload = function() {
+            // Initial state setup
+            document.getElementById('buttons').style.display = 'none';
+            document.getElementById('sentenceDisplay').style.display = 'none';
+        };
+
+        // Global variables for state management
+        var text, sentences, currentSentenceIndex, currentWordIndex;
+        var isStoryInserted = false;
+
+        // DOM Element References (cache for performance)
+        const sentenceDisplay = document.getElementById('sentenceDisplay');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const storyArea = document.getElementById('storyArea');
+        const pasteButton = document.getElementById('pasteStoryButton');
+        const buttonsContainer = document.getElementById('buttons');
+        const prevButton = document.getElementById('prevWordButton');
+        const nextButton = document.getElementById('nextWordButton');
+
+        /**
+         * Updates the sentence display, highlighting the current word.
+         */
+        function updateSentence() {
+            sentenceDisplay.innerHTML = ''; // Clear previous content
+            if (!sentences || !sentences[currentSentenceIndex]) {
+                 console.error("Invalid sentence index:", currentSentenceIndex);
+                 return; // Exit if sentence data is invalid
+            }
+
+            sentences[currentSentenceIndex].forEach(function(token, index) {
+                const element = document.createElement('span'); // Use spans for better control
+                element.textContent = token.content;
+                if (token.isWord && index === currentWordIndex) {
+                    element.className = 'highlight'; // Apply highlight class
+                }
+                sentenceDisplay.appendChild(element);
+            });
+        }
+
+        /**
+         * Finds the index { sentenceIndex, wordIndex } of the next word.
+         * Returns null if no next word exists.
+         */
+        function findNextWordIndex(startSentenceIndex, startWordIndex) {
+             if (!sentences || sentences.length === 0) return null;
+
+             // Start searching from the word after the current one in the current sentence
+             for (let i = startWordIndex + 1; i < sentences[startSentenceIndex]?.length; i++) {
+                if (sentences[startSentenceIndex][i].isWord) {
+                    return { sentenceIndex: startSentenceIndex, wordIndex: i };
+                }
+             }
+
+             // If not found in the current sentence, search subsequent sentences
+             for (let sIdx = startSentenceIndex + 1; sIdx < sentences.length; sIdx++) {
+                if (!sentences[sIdx]) continue; // Skip empty/undefined sentences
+                for (let wIdx = 0; wIdx < sentences[sIdx].length; wIdx++) {
+                    if (sentences[sIdx][wIdx].isWord) {
+                        return { sentenceIndex: sIdx, wordIndex: wIdx };
+                    }
+                }
+             }
+
+             return null; // No next word found
+        }
+
+        /**
+         * Finds the index { sentenceIndex, wordIndex } of the previous word.
+         * Returns null if no previous word exists.
+         */
+        function findPrevWordIndex(startSentenceIndex, startWordIndex) {
+            if (!sentences || sentences.length === 0) return null;
+
+            // Start searching backwards from the word before the current one in the current sentence
+            if (sentences[startSentenceIndex]) {
+                 for (let i = startWordIndex - 1; i >= 0; i--) {
+                     if (sentences[startSentenceIndex][i].isWord) {
+                         return { sentenceIndex: startSentenceIndex, wordIndex: i };
+                     }
+                 }
+            }
+
+
+            // If not found, search backwards through previous sentences
+            for (let sIdx = startSentenceIndex - 1; sIdx >= 0; sIdx--) {
+                 if (!sentences[sIdx]) continue; // Skip empty/undefined sentences
+                 // Search from the end of the previous sentence
+                 for (let wIdx = sentences[sIdx].length - 1; wIdx >= 0; wIdx--) {
+                     if (sentences[sIdx][wIdx].isWord) {
+                         return { sentenceIndex: sIdx, wordIndex: wIdx };
+                     }
+                 }
+            }
+
+            return null; // No previous word found
+        }
+
+
+        /**
+         * Moves the highlight to the previous word.
+         */
+        function prevWord() {
+            if (!isStoryInserted) return;
+            const newIndex = findPrevWordIndex(currentSentenceIndex, currentWordIndex);
+            if (newIndex !== null) {
+                currentSentenceIndex = newIndex.sentenceIndex;
+                currentWordIndex = newIndex.wordIndex;
+                updateSentence();
+                updateProgress();
+            }
+        }
+
+        /**
+         * Moves the highlight to the next word.
+         */
+        function nextWord() {
+            if (!isStoryInserted) return;
+            const newIndex = findNextWordIndex(currentSentenceIndex, currentWordIndex);
+            if (newIndex !== null) {
+                currentSentenceIndex = newIndex.sentenceIndex;
+                currentWordIndex = newIndex.wordIndex;
+                updateSentence();
+                updateProgress();
+            } else {
+                // Optional: Handle reaching the end of the text (e.g., show a message)
+                console.log("End of text reached.");
+            }
+        }
+
+        /**
+         * Updates the progress bar based on the current word position.
+         */
+        function updateProgress() {
+            if (!isStoryInserted || !sentences || sentences.length === 0) {
+                progressBar.style.width = '0%';
+                progressText.innerText = '0%';
+                return;
+            }
+
+            let totalWords = 0;
+            let wordsCounted = 0;
+            let currentWordFound = false;
+
+            for (let sIdx = 0; sIdx < sentences.length; sIdx++) {
+                 if (!sentences[sIdx]) continue;
+                 for (let wIdx = 0; wIdx < sentences[sIdx].length; wIdx++) {
+                     if (sentences[sIdx][wIdx].isWord) {
+                         totalWords++;
+                         if (!currentWordFound) {
+                             wordsCounted++;
+                             if (sIdx === currentSentenceIndex && wIdx === currentWordIndex) {
+                                 currentWordFound = true;
+                             }
+                         }
+                     }
+                 }
+            }
+
+
+            if (totalWords === 0) {
+                 progressBar.style.width = '0%';
+                 progressText.innerText = '0%';
+                 return;
+            }
+
+            // Ensure progress reflects the *current* word being highlighted
+             const progressPercentage = Math.min(100, Math.floor((wordsCounted / totalWords) * 100));
+
+
+            progressBar.style.width = progressPercentage + '%';
+            progressText.innerText = progressPercentage + '%';
+        }
+
+        /**
+         * Parses the text from the textarea into sentences and tokens.
+         */
+        function parseText(rawText) {
+             if (!rawText || rawText.trim() === '') {
+                 return []; // Return empty if no text
+             }
+
+            // Improved sentence splitting: Handles more punctuation and spacing variations.
+            // Matches sequences not ending in [.!?], followed by [.!?], optionally followed by quotes/spaces.
+             const sentenceRegex = /([^.!?]+[.!?]+(?:["'”’]?\s*|$))/g;
+             let rawSentences = rawText.match(sentenceRegex);
+
+             if (!rawSentences) {
+                // If no sentence terminators found, treat the whole text as one sentence.
+                rawSentences = [rawText];
+             }
+
+             // Tokenize each sentence
+             return rawSentences.map(sentence => {
+                if (!sentence) return null; // Skip potential null matches
+
+                // Tokenizer: Captures words (including contractions), punctuation/symbols, and whitespace.
+                // \b\w+(['’]\w+)*\b : Word boundaries, one or more word chars, optional apostrophe/contraction part.
+                // \S : Any non-whitespace character (captures punctuation).
+                // \s+ : One or more whitespace characters.
+                const tokenRegex = /(\b\w+(?:['’]\w+)*\b|\S|\s+)/g;
+                 let tokens = sentence.trim().match(tokenRegex);
+
+                if (!tokens) return null; // Skip if sentence resulted in no tokens
+
+                return tokens.map(token => {
+                    // Check if the token is a word (matches the word part of the regex)
+                     const isWord = /^\b\w+(?:['’]\w+)*\b$/.test(token);
+                     return { content: token, isWord: isWord };
+                });
+            }).filter(sentenceTokens => sentenceTokens && sentenceTokens.length > 0); // Filter out null or empty sentences
+        }
+
+
+        /**
+         * Handles the "Insert Story" button click.
+         */
+        pasteButton.addEventListener('click', function() {
+            text = storyArea.value;
+            sentences = parseText(text);
+
+            if (!sentences || sentences.length === 0) {
+                 // Handle case where no valid sentences/words are found
+                 sentenceDisplay.textContent = "Please paste some text with words.";
+                 sentenceDisplay.style.display = 'block';
+                 isStoryInserted = false;
+                 // Optionally reset progress bar
+                 progressBar.style.width = '0%';
+                 progressText.innerText = '0%';
+                 return; // Stop processing
+            }
+
+            isStoryInserted = true;
+
+            // Find the very first word in the entire text
+            const firstWordIndex = findNextWordIndex(-1, -1); // Start search from the beginning
+
+            if (firstWordIndex) {
+                currentSentenceIndex = firstWordIndex.sentenceIndex;
+                currentWordIndex = firstWordIndex.wordIndex;
+            } else {
+                // This case should ideally be caught by the sentences.length check above,
+                // but as a fallback:
+                sentenceDisplay.textContent = "No words found in the text.";
+                sentenceDisplay.style.display = 'block';
+                isStoryInserted = false;
+                return;
+            }
+
+
+            // Hide input elements, show reading elements
+            pasteButton.style.display = 'none';
+            storyArea.style.display = 'none';
+            buttonsContainer.style.display = 'flex'; // Use flex as per CSS
+            sentenceDisplay.style.display = 'block';
+
+            // Initial display update
+            updateSentence();
+            updateProgress();
+        });
+
+        // --- Event Listeners for Navigation and Interaction ---
+
+        // Touch event handlers (prevent default to avoid double taps/zoom)
+        function prevWordTouch(e) {
+            e.preventDefault();
+            prevWord();
+        }
+        function nextWordTouch(e) {
+            e.preventDefault();
+            nextWord();
+        }
+
+        // Add click and touch listeners to buttons
+        prevButton.addEventListener('touchstart', prevWordTouch, { passive: false });
+        prevButton.addEventListener('click', prevWord);
+        nextButton.addEventListener('touchstart', nextWordTouch, { passive: false });
+        nextButton.addEventListener('click', nextWord);
+
+
+        // Keyboard event listener for arrows and spacebar/F1
+        window.addEventListener('keydown', function(e) {
+            if (!isStoryInserted) return; // Only process keys if story is active
+
+            switch (e.key) {
+                case "ArrowRight":
+                    e.preventDefault(); // Prevent browser scrolling
+                    nextWord();
+                    break;
+                case "ArrowLeft":
+                    e.preventDefault(); // Prevent browser scrolling
+                    prevWord();
+                    break;
+                case "F1":
+                    e.preventDefault(); // Prevent default F1 help action
+                    triggerWrongAnswerEffect();
+                    break;
+                case " ": // Space bar
+                    e.preventDefault(); // Prevent page scroll
+                    triggerCorrectAnswerEffect();
+                    break;
+            }
+        });
+
+        /**
+         * Triggers the visual effect for a wrong answer (F1).
+         */
+        function triggerWrongAnswerEffect() {
+            const highlightedWord = sentenceDisplay.querySelector('.highlight');
+            if (!highlightedWord) return;
+
+            highlightedWord.classList.add('wrong-answer');
+
+            // Use requestAnimationFrame to ensure class is added before timeout starts
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    // Check if the element *still* exists and has the class before removing
+                    const currentHighlight = sentenceDisplay.querySelector('.highlight');
+                    if (currentHighlight && currentHighlight.classList.contains('wrong-answer')) {
+                        currentHighlight.classList.remove('wrong-answer');
+                    }
+                }, 1000); // Duration of the animation
+            });
+        }
+
+        /**
+         * Triggers the visual effect for a correct answer (Space) and moves to the next word.
+         */
+        function triggerCorrectAnswerEffect() {
+            const highlightedWord = sentenceDisplay.querySelector('.highlight');
+            if (!highlightedWord) return;
+
+            highlightedWord.classList.add('correct-answer');
+
+            // Use requestAnimationFrame for smoother visual updates
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    // Check if the element still exists and has the class before removing
+                     const currentHighlight = sentenceDisplay.querySelector('.highlight');
+                     if (currentHighlight && currentHighlight.classList.contains('correct-answer')) {
+                         currentHighlight.classList.remove('correct-answer');
+                     }
+                     // Move to the next word *after* the animation interval
+                     nextWord();
+                }, 500); // Duration of the animation
+            });
+        }
+
+    </script>
 </body>
 </html>
