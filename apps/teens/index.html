@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Number Quiz (Fun Version)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+    /* === Global touch resets === */
+    *, *::before, *::after {
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: manipulation;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-start: #FDEBFF;
+      --bg-end:   #BFE5FF;
+      --card-bg:  rgba(255,255,255,0.9);
+      --primary:  #A569BD;
+      --accent:   #FFB6C1;
+      --btn-bg:   #FFFFFF;
+      --shadow:   rgba(0,0,0,0.1);
+      --radius:   12px;
+      --text:     #333333;
+      --correct:  #28A745;
+      --wrong:    #DC3545;
+    }
+
+    body {
+      margin: 0;
+      padding: 1rem;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+    }
+    body[tabindex] { outline: none; }
+
+    canvas#confetti-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 380px;
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 24px var(--shadow);
+      text-align: center;
+      padding: 1.5rem;
+    }
+    h1 {
+      color: var(--primary);
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    #scoreContainer {
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+      color: var(--primary);
+    }
+    .controls {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+    select, .start-btn {
+      padding: 0.5rem 0.75rem;
+      border: none;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 12px var(--shadow);
+      background: var(--btn-bg);
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
+      font-weight: 500;
+    }
+    select:hover, .start-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px var(--shadow);
+    }
+
+    #quiz {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(60px,1fr));
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .btn {
+      padding: 0.75rem 0;
+      border: 2px solid var(--accent);
+      border-radius: var(--radius);
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--primary);
+      background: var(--btn-bg);
+      box-shadow: 0 4px 12px var(--shadow);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      position: relative;
+    }
+    #message {
+      min-height: 1.4em;
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--text);
+      margin-top: 0.5rem;
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-5px); }
+      100% { transform: translateX(0); }
+    }
+    @keyframes bounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    .shake { animation: shake 0.3s; }
+    .bounce { animation: bounce 0.3s; }
+  </style>
+</head>
+<body tabindex="-1">
+
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="container">
+    <h1>Number Quiz</h1>
+    <div id="scoreContainer">Score: <span id="score">0</span></div>
+
+    <div class="controls">
+      <select id="rangeSelect">
+        <option value="1-10">1 – 10</option>
+        <option value="11-20">11 – 20</option>
+        <option value="1-20">1 – 20</option>
+      </select>
+      <div class="start-btn">Start</div>
+    </div>
+
+    <div id="quiz"></div>
+    <div id="message"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0/dist/confetti.browser.min.js"></script>
+  <script>
+    const words = {
+      1:'one',2:'two',3:'three',4:'four',5:'five',
+      6:'six',7:'seven',8:'eight',9:'nine',10:'ten',
+      11:'eleven',12:'twelve',13:'thirteen',14:'fourteen',15:'fifteen',
+      16:'sixteen',17:'seventeen',18:'eighteen',19:'nineteen',20:'twenty'
+    };
+
+    const positiveMessages = [
+      '🎉 Well done!', '🙌 Awesome!', '⭐ Great job!', '👍 You rocked it!'
+    ];
+    const wrongMessages = [
+      '❌ Oops!', '💡 Try again!', '🤔 Not quite!', '🔄 Give it another go!'
+    ];
+
+    const rangeSelect = document.getElementById('rangeSelect');
+    const startBtn    = document.querySelector('.start-btn');
+    const quizDiv     = document.getElementById('quiz');
+    const msgDiv      = document.getElementById('message');
+    const scoreSpan   = document.getElementById('score');
+
+    const confettiCanvas = document.getElementById('confetti-canvas');
+    const myConfetti = confetti.create(confettiCanvas, {
+      resize: true,
+      useWorker: true
+    });
+
+    let currentRange = [1,10], targetNumber, score = 0;
+
+    function clearFocus() {
+      document.body.focus();
+    }
+    function setupHandlers() {
+      document.querySelectorAll('.btn').forEach(btn => {
+        btn.addEventListener('touchstart', clearFocus, {passive:true});
+      });
+    }
+
+    function speakMessage(msg) {
+      const text = msg.split(' ').slice(1).join(' ');
+      speechSynthesis.cancel();
+      speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+    }
+
+    startBtn.addEventListener('click', () => {
+      clearFocus();
+      const [min,max] = rangeSelect.value.split('-').map(Number);
+      currentRange = [min,max];
+      score = 0;
+      scoreSpan.textContent = score;
+      msgDiv.textContent = '';
+      targetNumber = Math.floor(Math.random()*(max-min+1))+min;
+      renderButtons(min, max);
+      speechSynthesis.cancel();
+      speechSynthesis.speak(new SpeechSynthesisUtterance(words[targetNumber]));
+    });
+
+    function renderButtons(min, max) {
+      quizDiv.innerHTML = '';
+      const nums = Array.from({length: max-min+1}, (_,i)=>i+min)
+                        .sort(() => Math.random() - 0.5);
+      nums.forEach(n => {
+        const btn = document.createElement('div');
+        btn.textContent = n;
+        btn.className   = 'btn';
+        btn.onclick     = () => handleAnswer(btn, n);
+        quizDiv.appendChild(btn);
+      });
+      setupHandlers();
+    }
+
+    function handleAnswer(btn, val) {
+      clearFocus();
+
+      if (val === targetNumber) {
+        const green = getComputedStyle(document.documentElement)
+                        .getPropertyValue('--correct').trim();
+        btn.style.backgroundColor = green;
+        btn.style.borderColor     = green;
+        btn.style.color           = '#fff';
+
+        score++;
+        scoreSpan.textContent = score;
+        const msg = positiveMessages[Math.floor(Math.random()*positiveMessages.length)];
+        msgDiv.textContent = msg;
+        speakMessage(msg);
+        myConfetti({ particleCount: 100, spread: 60 });
+        btn.classList.add('bounce');
+        Array.from(quizDiv.children).forEach(b => b.style.pointerEvents = 'none');
+        btn.addEventListener('animationend', () => btn.classList.remove('bounce'), {once:true});
+
+        setTimeout(() => {
+          const [min, max] = currentRange;
+          targetNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+          renderButtons(min, max);
+          speechSynthesis.cancel();
+          speechSynthesis.speak(new SpeechSynthesisUtterance(words[targetNumber]));
+          msgDiv.textContent = '';
+        }, 800);
+
+      } else {
+        const red = getComputedStyle(document.documentElement)
+                       .getPropertyValue('--wrong').trim();
+        btn.style.backgroundColor = red;
+        btn.style.borderColor     = red;
+        btn.style.color           = '#fff';
+
+        const msg = wrongMessages[Math.floor(Math.random()*wrongMessages.length)];
+        msgDiv.textContent = msg;
+        speakMessage(msg);
+        btn.classList.add('shake');
+        btn.style.pointerEvents = 'none';
+        btn.addEventListener('animationend', () => {
+          btn.classList.remove('shake');
+          btn.style.pointerEvents = '';
+        }, {once:true});
+      }
+    }
+  </script>
+
+</body>
+</html>
