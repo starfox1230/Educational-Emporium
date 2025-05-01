@@ -379,7 +379,7 @@
             const gainNode = audioContext.createGain();
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
-            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime); // Volume
+            gainNode.gain.setValueAtTime(0.6, audioContext.currentTime); // Volume
             if (type === 'correct') {
                 oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
                 gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.3);
