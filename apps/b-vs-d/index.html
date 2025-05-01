@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>B or D? Letter Fun!</title>
+    <!-- Lottie Player via CDN -->
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+    <!-- JS Confetti via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #1a052a; /* Dark Purple */
+            --primary-color: #e040fb; /* Magenta */
+            --secondary-color: #7c4dff; /* Indigo/Purple */
+            --accent-color: #00e5ff; /* Cyan */
+            --text-color: #f0e4ff; /* Light Lavender */
+            --correct-color: #4caf50; /* Green */
+            --incorrect-color: #f44336; /* Red */
+            --button-bg: #311b92; /* Deep Indigo */
+            --button-hover-bg: #4527a0;
+            --button-active-bg: #512da8;
+            --disabled-color: #666;
+            --progress-start-color: var(--secondary-color); /* Indigo */
+            --progress-mid-color: var(--primary-color);   /* Magenta */
+            --progress-end-color: var(--accent-color);     /* Cyan */
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overscroll-behavior: none; /* Prevent pull-to-refresh */
+        }
+
+        body {
+            /* Default Font - a safe fallback */
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, var(--bg-color) 0%, #2a084a 100%);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            -webkit-tap-highlight-color: transparent;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        #app {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 20px;
+            padding: 20px 25px 25px 25px; /* Adjusted padding top */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            height: 90%;
+            max-height: 750px; /* Increased max-height slightly */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; /* Align items to start */
+            overflow: hidden;
+        }
+
+        /* Progress Bar Area */
+        #progress-container {
+            width: 100%;
+            height: 18px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin-bottom: 15px; /* Space below progress bar */
+            overflow: hidden; /* Clip the inner bar */
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        #progress-bar {
+            height: 100%;
+            width: 0%; /* Start at 0 */
+            border-radius: 10px;
+            background: linear-gradient(90deg, var(--progress-start-color) 0%, var(--progress-mid-color) 50%, var(--progress-end-color) 100%);
+            background-size: 200% 100%; /* Double size for color change effect */
+            background-position: 100% 0; /* Start from the right (start color) */
+            transition: width 0.5s ease-out, background-position 0.5s ease-out; /* Smooth transitions */
+            position: relative;
+        }
+        /* Juice effect */
+         #progress-bar.juice {
+            animation: pulse 0.6s ease-out;
+         }
+         @keyframes pulse {
+           0% { box-shadow: 0 0 0 0 rgba(255,255,255, 0); }
+           50% { box-shadow: 0 0 8px 4px rgba(255,255,255, 0.4); }
+           100% { box-shadow: 0 0 0 0 rgba(255,255,255, 0); }
+         }
+
+
+        /* Header Area */
+        #header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+             width: 100%; /* Ensure it takes full width */
+        }
+
+        #score-display {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: var(--accent-color);
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 8px 15px;
+            border-radius: 15px;
+            min-width: 60px;
+            text-align: center;
+            font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif; /* Keep score font consistent */
+        }
+
+        #play-button {
+            background-color: var(--primary-color);
+            color: var(--bg-color);
+            border: none;
+            border-radius: 50%;
+            width: 55px;
+            height: 55px;
+            font-size: 2em;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+        }
+        #play-button svg {
+            width: 25px;
+            height: 25px;
+            fill: var(--bg-color);
+            margin-left: 3px;
+        }
+        #play-button:hover { background-color: #f50057; }
+        #play-button:active { transform: scale(0.95); background-color: #c51162; }
+        #play-button:disabled { background-color: var(--disabled-color); cursor: not-allowed; opacity: 0.6; }
+        #play-button:disabled svg { fill: #aaa; }
+
+        /* Game Area */
+        #game-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+             width: 100%; /* Ensure game area takes width */
+             padding-bottom: 10px; /* Ensure check button doesn't touch bottom */
+        }
+
+        #prompt {
+            font-size: 1.4em; /* Instruction size */
+            margin-bottom: 20px; /* Reduced margin */
+            color: var(--text-color);
+            min-height: 1.2em;
+            font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif; /* Default prompt font */
+        }
+        #prompt.instruction {
+            color: var(--accent-color);
+        }
+        #prompt .letter-display {
+            font-size: 4.5em; /* Slightly larger letter */
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-top: 5px; /* Reduced margin */
+            display: block;
+            line-height: 1.1;
+            /* Font family will be set by JS */
+        }
+
+        #choices {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 25px; /* Reduced margin */
+        }
+
+        .choice-button {
+            background-color: var(--button-bg);
+            color: var(--text-color);
+            border: 3px solid var(--secondary-color);
+            border-radius: 15px;
+            padding: 15px 0; /* Adjusted padding */
+            width: 45%;
+            max-width: 130px; /* Slightly wider */
+            font-size: 3.5em; /* Larger font size for letters */
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+            line-height: 1; /* Prevent large line height from pushing layout */
+            /* Font family will be set by JS */
+        }
+        .choice-button svg { /* For sound icon */
+             width: 40px;
+             height: 40px;
+             fill: var(--text-color);
+         }
+
+        .choice-button:hover { background-color: var(--button-hover-bg); border-color: var(--primary-color); }
+        .choice-button:active { transform: scale(0.96); background-color: var(--button-active-bg); }
+        .choice-button.selected { background-color: var(--secondary-color); border-color: var(--accent-color); color: var(--bg-color); }
+        .choice-button.selected svg { fill: var(--bg-color); }
+
+        /* Check Button */
+        #check-button {
+            background-color: var(--correct-color);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 15px 30px;
+            font-size: 1.5em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            width: 70%;
+            max-width: 250px;
+            margin: 10px auto 0 auto; /* Adjusted margin */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            -webkit-tap-highlight-color: transparent;
+             outline: none;
+             font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif; /* Consistent button font */
+        }
+         #check-button svg { /* Checkmark icon */
+            width: 25px;
+            height: 25px;
+            fill: white;
+             vertical-align: middle;
+             margin-left: 8px;
+         }
+        #check-button:hover { background-color: #388e3c; }
+        #check-button:active { transform: scale(0.97); }
+        #check-button:disabled { background-color: var(--disabled-color); cursor: not-allowed; opacity: 0.7; }
+
+        /* Feedback Area */
+        #feedback {
+            min-height: 1.5em;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-top: 10px; /* Reduced margin */
+            transition: color 0.3s ease;
+            font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif; /* Consistent feedback font */
+        }
+        #feedback.correct { color: var(--correct-color); }
+        #feedback.incorrect { color: var(--incorrect-color); animation: shake 0.5s ease-in-out; }
+        @keyframes shake { /* Unchanged */ }
+
+        /* Win Overlay */
+        #win-overlay { /* Unchanged */
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(26, 5, 42, 0.9); display: none;
+            justify-content: center; align-items: center; flex-direction: column;
+            z-index: 1000; opacity: 0; transition: opacity 0.5s ease;
+            font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif; /* Consistent overlay font */
+        }
+         #win-overlay.show { display: flex; opacity: 1; }
+        #win-overlay h2 { color: var(--primary-color); font-size: 2.5em; margin-bottom: 20px; }
+        #lottie-trophy { width: 250px; height: 250px; }
+        #play-again-button { /* Unchanged styling */
+            margin-top: 30px; background-color: var(--accent-color); color: var(--bg-color);
+            border: none; border-radius: 15px; padding: 15px 30px; font-size: 1.3em;
+            font-weight: bold; cursor: pointer; transition: background-color 0.2s ease, transform 0.1s ease;
+            -webkit-tap-highlight-color: transparent; outline: none;
+        }
+         #play-again-button:hover { background-color: #00b8d4; }
+         #play-again-button:active { transform: scale(0.97); }
+
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div id="progress-container">
+            <div id="progress-bar"></div>
+        </div>
+
+        <div id="header">
+            <button id="play-button" aria-label="Play Sound">
+                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+            <div id="score-display">0</div>
+        </div>
+
+        <div id="game-area">
+            <div id="prompt">Starting...</div>
+            <div id="choices">
+                <!-- Choice buttons will be added here by JS -->
+            </div>
+            <button id="check-button" style="display: none;">
+                Check
+                <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </button>
+             <div id="feedback"></div>
+        </div>
+
+
+    </div>
+
+    <div id="win-overlay">
+        <h2>You did it!</h2>
+        <lottie-player
+            id="lottie-trophy"
+            src="https://assets10.lottiefiles.com/packages/lf20_touohxv0.json"
+            background="transparent"
+            speed="1"
+            loop
+            autoplay>
+        </lottie-player>
+         <button id="play-again-button">Play Again?</button>
+    </div>
+
+    <script>
+        const scoreDisplay = document.getElementById('score-display');
+        const playButton = document.getElementById('play-button');
+        const promptElement = document.getElementById('prompt');
+        const choicesElement = document.getElementById('choices');
+        const checkButton = document.getElementById('check-button');
+        const feedbackElement = document.getElementById('feedback');
+        const winOverlay = document.getElementById('win-overlay');
+        const playAgainButton = document.getElementById('play-again-button');
+        const progressBar = document.getElementById('progress-bar'); // Progress Bar Element
+        const progressBarContainer = document.getElementById('progress-container'); // For potential effects
+
+        const jsConfetti = new JSConfetti(); // Confetti instance
+
+        let score = 0;
+        const maxScore = 20;
+        const minScore = 0;
+        let currentMode = null;
+        let correctAnswer = null; // Base letter 'B' or 'D'
+        let selectedAnswer = null;
+        let interactionAllowed = true;
+
+        // --- Font Selection ---
+        // Common fonts that usually distinguish b/d well. Avoid overly complex/cursive.
+        const availableFonts = [
+            "'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif", // Default nice rounded
+            "'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif",
+            "Verdana, Geneva, sans-serif",
+            "Tahoma, Geneva, sans-serif",
+            "'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive", // Kid friendly, test b/d clarity
+            "Georgia, serif",
+            "'Times New Roman', Times, serif",
+            "'Courier New', Courier, monospace" // Monospaced can help differentiate
+        ];
+        let currentFont = availableFonts[0]; // Start with default
+
+        // --- Text-to-Speech ---
+        const synth = window.speechSynthesis;
+        let voices = [];
+        function populateVoiceList() { /* ... (unchanged) ... */
+          if(typeof speechSynthesis === 'undefined') { console.warn("Speech Synthesis not supported"); return; }
+          voices = synth.getVoices();
+        }
+        populateVoiceList();
+        if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+          speechSynthesis.onvoiceschanged = populateVoiceList;
+        }
+
+        // --- Sound Effects (Web Audio API) ---
+        let audioContext;
+        try { audioContext = new (window.AudioContext || window.webkitAudioContext)(); }
+        catch (e) { console.warn("Web Audio API is not supported"); }
+        function playSound(type) { /* ... (unchanged - maybe adjust volume/duration if needed) ... */
+            if (!audioContext) return;
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime); // Volume
+            if (type === 'correct') {
+                oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+                gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.3);
+                oscillator.start(audioContext.currentTime); oscillator.stop(audioContext.currentTime + 0.3);
+            } else if (type === 'incorrect') {
+                oscillator.type = 'square'; oscillator.frequency.setValueAtTime(150, audioContext.currentTime); // Low G#
+                gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.4);
+                oscillator.start(audioContext.currentTime); oscillator.stop(audioContext.currentTime + 0.4);
+            }
+        }
+        function initAudioContext() { /* ... (unchanged) ... */
+            if (audioContext && audioContext.state === 'suspended') { audioContext.resume(); }
+            document.body.removeEventListener('click', initAudioContext);
+            document.body.removeEventListener('touchstart', initAudioContext);
+        }
+        document.body.addEventListener('click', initAudioContext);
+        document.body.addEventListener('touchstart', initAudioContext);
+
+
+        // --- Core Game Logic ---
+
+        function speak(text) { /* ... (unchanged - still speaks "Bee"/"Dee") ... */
+             if (!synth) { console.warn("TTS not available."); return; }
+             if (synth.speaking) { synth.cancel(); }
+             let speakText = text === 'B' ? "Bee" : "Dee";
+             const utterThis = new SpeechSynthesisUtterance(speakText);
+             utterThis.onerror = (event) => { console.error('Speech Error', event); feedbackElement.textContent = "Speech error."; feedbackElement.className = 'incorrect'; };
+             // Optional voice selection here
+             utterThis.pitch = 1.1; utterThis.rate = 0.9;
+             let spoken = false;
+             utterThis.onstart = () => { spoken = true; };
+             utterThis.onend = () => { console.log('Speech end'); };
+             setTimeout(() => { if (!spoken) console.warn("Speech fallback timer."); }, 2000);
+             synth.speak(utterThis);
+        }
+
+        function updateScoreDisplay() {
+            scoreDisplay.textContent = score;
+            scoreDisplay.style.transform = 'scale(1.1)';
+            setTimeout(() => scoreDisplay.style.transform = 'scale(1)', 150);
+            updateProgressBar(); // Update progress bar whenever score changes
+        }
+
+        // --- NEW: Progress Bar Update ---
+        function updateProgressBar() {
+            const percentage = (score / maxScore) * 100;
+            progressBar.style.width = `${percentage}%`;
+
+            // Change background position for color gradient effect
+            // Position 100% means start color (left side of gradient) is dominant
+            // Position 0% means end color (right side of gradient) is dominant
+            const backgroundPosition = 100 - percentage;
+            progressBar.style.backgroundPosition = `${backgroundPosition}% 0`;
+
+            // Optional: Add 'juice' effect only on score increase (handled in checkAnswer)
+        }
+        // --- END NEW ---
+
+        function nextRound() {
+            if (score >= maxScore) {
+                showWin();
+                return;
+            }
+
+            interactionAllowed = true;
+            selectedAnswer = null;
+            feedbackElement.textContent = '';
+            feedbackElement.className = '';
+            choicesElement.innerHTML = '';
+            checkButton.style.display = 'none';
+            checkButton.disabled = true;
+            progressBar.classList.remove('juice'); // Remove juice effect if present
+
+            // Randomly choose mode, correct answer, case, and font
+            currentMode = Math.random() < 0.5 ? 'soundToLetter' : 'letterToSound';
+            correctAnswer = Math.random() < 0.5 ? 'B' : 'D';
+            const useUpperCase = Math.random() < 0.5; // Random case
+            currentFont = availableFonts[Math.floor(Math.random() * availableFonts.length)]; // Random font
+
+            console.log(`New Round: Mode=${currentMode}, Correct=${correctAnswer}, Case=${useUpperCase ? 'Upper' : 'Lower'}, Font=${currentFont}`);
+
+            if (currentMode === 'soundToLetter') {
+                setupSoundToLetterMode(useUpperCase);
+                 setTimeout(() => {
+                     if (interactionAllowed) speak(correctAnswer);
+                 }, 500);
+            } else {
+                setupLetterToSoundMode(useUpperCase);
+            }
+        }
+
+        // --- UPDATED: Mode Setup Functions ---
+        function setupSoundToLetterMode(useUpperCase) {
+            promptElement.textContent = 'Listen and choose the letter:';
+            promptElement.className = 'instruction'; // Style as instruction
+             promptElement.style.fontFamily = "'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif"; // Reset prompt font
+            playButton.disabled = false;
+
+            const letters = ['B', 'D'];
+            // letters.sort(() => Math.random() - 0.5); // Optional Shuffle
+
+            letters.forEach(letter => {
+                const button = document.createElement('button');
+                button.classList.add('choice-button');
+                // Apply random case and font
+                button.textContent = useUpperCase ? letter.toUpperCase() : letter.toLowerCase();
+                button.style.fontFamily = currentFont; // Apply random font
+                button.dataset.letter = letter; // Store the BASE letter ('B' or 'D')
+                button.addEventListener('click', handleLetterChoice);
+                choicesElement.appendChild(button);
+            });
+        }
+
+        function setupLetterToSoundMode(useUpperCase) {
+             const displayLetter = useUpperCase ? correctAnswer.toUpperCase() : correctAnswer.toLowerCase();
+             promptElement.innerHTML = `Which sounds like: <span class="letter-display">${displayLetter}</span>`;
+             promptElement.className = ''; // Reset class
+             // Apply random font to the displayed letter
+             const letterSpan = promptElement.querySelector('.letter-display');
+             if(letterSpan) letterSpan.style.fontFamily = currentFont;
+             else promptElement.style.fontFamily = currentFont; // Fallback if span fails
+
+             playButton.disabled = true;
+
+             const sounds = ['B', 'D'];
+             // sounds.sort(() => Math.random() - 0.5); // Optional Shuffle
+
+             sounds.forEach(sound => {
+                 const button = document.createElement('button');
+                 button.classList.add('choice-button');
+                 button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`;
+                 button.dataset.sound = sound; // Store BASE sound ('B' or 'D')
+                 button.setAttribute('aria-label', `Play ${sound === 'B' ? 'Bee' : 'Dee'} sound`);
+                 button.addEventListener('click', handleSoundChoice);
+                 choicesElement.appendChild(button);
+             });
+
+             checkButton.style.display = 'block';
+             checkButton.disabled = true;
+        }
+        // --- END UPDATED ---
+
+
+        function handleLetterChoice(event) {
+            if (!interactionAllowed) return;
+            // Get the base letter from the dataset
+            const chosenBaseLetter = event.target.dataset.letter;
+            checkAnswer(chosenBaseLetter);
+        }
+
+        function handleSoundChoice(event) { // Unchanged logic, just plays sound and selects
+            if (!interactionAllowed) return;
+             const button = event.target.closest('.choice-button');
+             if (!button) return;
+            const chosenSound = button.dataset.sound; // Base sound 'B' or 'D'
+            speak(chosenSound);
+            selectedAnswer = chosenSound;
+            document.querySelectorAll('#choices .choice-button').forEach(btn => btn.classList.remove('selected'));
+            button.classList.add('selected');
+            checkButton.disabled = false;
+        }
+
+
+        function checkAnswer(answer) { // answer is always 'B' or 'D'
+            if (!interactionAllowed) return;
+            interactionAllowed = false;
+            synth.cancel();
+
+            let isCorrect = (answer === correctAnswer);
+
+            if (isCorrect) {
+                score = Math.min(maxScore, score + 1);
+                feedbackElement.textContent = 'Correct!';
+                feedbackElement.className = 'correct';
+                playSound('correct');
+                jsConfetti.addConfetti({ emojis: ['🥳', '✨', '⭐', '💜'], emojiSize: 60, confettiNumber: 40 });
+                progressBar.classList.add('juice'); // Add juice effect
+
+            } else {
+                score = Math.max(minScore, score - 2);
+                 // Show the correct base letter, spoken form
+                feedbackElement.textContent = `Oops! The right one sounds like ${correctAnswer === 'B' ? 'Bee' : 'Dee'}.`;
+                feedbackElement.className = 'incorrect';
+                playSound('incorrect');
+                progressBar.classList.remove('juice'); // Ensure no juice on incorrect
+            }
+
+            updateScoreDisplay(); // This now also calls updateProgressBar
+
+            setTimeout(() => {
+                nextRound();
+            }, isCorrect ? 1800 : 2500); // Slightly longer delay for incorrect maybe
+        }
+
+        function showWin() { // Unchanged logic
+            interactionAllowed = false;
+             synth.cancel();
+             promptElement.textContent = '🏆';
+             choicesElement.innerHTML = '';
+             checkButton.style.display = 'none';
+            winOverlay.classList.add('show');
+            const player = document.getElementById('lottie-trophy');
+            player.stop(); player.play();
+             playSound('correct'); setTimeout(() => playSound('correct'), 300);
+        }
+
+        function resetGame() { // Updated to reset progress bar
+            score = 0;
+            updateScoreDisplay(); // Resets score display and progress bar
+            winOverlay.classList.remove('show');
+             const player = document.getElementById('lottie-trophy');
+             player.stop();
+            nextRound();
+        }
+
+        // --- Event Listeners ---
+        playButton.addEventListener('click', () => { // Unchanged logic
+            if (currentMode === 'soundToLetter' && correctAnswer && interactionAllowed) {
+                speak(correctAnswer);
+            }
+        });
+        checkButton.addEventListener('click', () => { // Unchanged logic
+            if (!checkButton.disabled && selectedAnswer && interactionAllowed) {
+                checkAnswer(selectedAnswer);
+            }
+        });
+        playAgainButton.addEventListener('click', resetGame); // Unchanged
+
+        // --- Initialise Game ---
+        window.addEventListener('load', () => {
+            updateScoreDisplay(); // Initialize score display and progress bar
+            promptElement.textContent = "Get Ready...";
+            promptElement.className = 'instruction';
+            playButton.disabled = true;
+            setTimeout(nextRound, 1500);
+        });
+
+    </script>
+
+</body>
+</html>
