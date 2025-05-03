@@ -1,150 +1,834 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matilda and Eloise's Competition</title>
+    <!-- Make viewport non-scalable, prevent zooming which can interfere with interactions -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tracker</title> <!-- Simple Title -->
+    <!-- Link iro.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
     <style>
+        /* Basic Reset & Body Styles */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent; /* Disable tap highlight */
+            margin: 0; /* Reset margins */
+            padding: 0; /* Reset paddings */
+        }
+        html {
+            height: 100%; /* Ensure html takes full height */
+            overflow: hidden; /* Prevent html element scroll */
+        }
         body {
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            height: 100vh; /* Use viewport height */
             margin: 0;
+            padding: 20px; /* Add padding around the content area */
             background-color: #1c1c1c;
             color: white;
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            overflow: hidden; /* Prevent body from scrolling, container will scroll */
+            /* Prevent default selection behavior */
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        /* Container for all people */
+        #people-container {
+            width: 100%; /* Take full width within body padding */
+            max-width: 600px; /* Max width for better layout on large screens */
+            margin: 0 auto; /* Center the container horizontally */
+            display: flex;
+            flex-direction: column;
+            gap: 20px; /* Space between people */
+            overflow-y: auto; /* Allow this container to scroll vertically */
+            flex-grow: 1; /* Allow container to take available vertical space */
+            padding-bottom: 90px; /* Padding at the bottom for scroll space + button overlap */
+             -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            /* border: 1px solid red; */ /* Uncomment for debugging layout */
         }
 
         .progress-container {
-            width: 80%;
-            margin: 10px 0;
+            width: 100%;
+            position: relative;
+            flex-shrink: 0; /* Prevent items shrinking weirdly */
         }
 
         .progress-bar {
             width: 100%;
-            background-color: #2c2c2c; /* Dark gray background for empty part */
+            background-color: #2c2c2c;
             border-radius: 25px;
             overflow: hidden;
             height: 50px;
             position: relative;
-            user-select: none; /* Prevent text selection */
-            cursor: pointer; /* Optional: change cursor to pointer */
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border-color 0.2s ease;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            -webkit-touch-callout: none; /* Important for iOS */
+        }
+        .progress-bar.long-press-active {
+             border-color: #555;
         }
 
         .progress-fill {
             height: 100%;
-            transition: width 0.3s ease;
-        }
-
-        .matilda-fill {
-            background-color: pink;
-        }
-
-        .eloise-fill {
-            background-color: #b380ff; /* Lighter purple for Eloise */
-        }
-
-        h1 {
-            margin-bottom: 0;
-        }
-
-        h2 {
-            margin-top: 0;
-            margin-bottom: 10px;
+            transition: width 0.3s ease, background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            font-weight: bold;
+            color: rgba(0, 0, 0, 0.6);
+            pointer-events: none; /* Fill shouldn't capture pointer events */
         }
 
         .name {
             font-size: 24px;
             margin-bottom: 5px;
-            user-select: none; /* Optional: Prevent name text selection */
+            padding: 5px 8px;
+            border-radius: 5px;
+            border: 1px dashed transparent;
+            cursor: default;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            -webkit-touch-callout: none;
+            min-height: 38px;
+            display: inline-block; /* Prevents collapsing */
+            width: 100%; /* Take full width */
+             overflow-wrap: break-word; /* Wrap long names */
+             word-break: break-all; /* Break long words if needed */
+        }
+        .name.long-press-active {
+             background-color: #444;
         }
 
-        .matilda-name {
-            color: pink;
+
+        /* Name Input Field Styling */
+        .name-input {
+            font-size: 24px;
+            padding: 5px 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: #333;
+            color: white;
+            width: 100%;
+            font-family: inherit;
+            margin-bottom: 5px;
+            height: 38px;
+            line-height: normal;
+            /* Allow text selection *within* the input */
+            user-select: text;
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+             -webkit-touch-callout: default; /* Allow callout inside input */
+            display: block;
+            box-sizing: border-box;
         }
 
-        .eloise-name {
-            color: #b380ff;
+        /* Edit Mode Styles */
+        body.editing .name {
+            border: 1px dashed #888;
+            cursor: pointer;
         }
+        body.editing .name:hover { /* Hover only relevant on desktop */
+             background-color: #3a3a3a;
+        }
+
+        /* Buttons Container */
+        #edit-controls {
+            position: fixed; /* Keep buttons visible */
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none; /* Hidden by default */
+            gap: 15px;
+            background-color: rgba(44, 44, 44, 0.95); /* Slightly more opaque */
+            padding: 10px 20px;
+            border-radius: 15px;
+            z-index: 100;
+            flex-shrink: 0;
+        }
+        body.editing #edit-controls {
+            display: flex;
+        }
+
+        .edit-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            transition: background-color 0.2s ease;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        .edit-button:hover, .edit-button:active {
+            background-color: #0056b3;
+        }
+        .edit-button#done-editing-btn {
+            background-color: #28a745;
+        }
+         .edit-button#done-editing-btn:hover, .edit-button#done-editing-btn:active {
+            background-color: #218838;
+        }
+
+        /* Color Picker Styles */
+        #color-picker-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #2c2c2c;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            z-index: 200;
+            display: none; /* Hidden by default */
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            -webkit-touch-callout: none;
+        }
+        #color-picker-wrapper {
+            margin-bottom: 15px;
+        }
+        #close-color-picker {
+             display: block;
+             margin: 10px auto 0;
+             padding: 8px 15px;
+             font-size: 14px;
+             border: none;
+             border-radius: 8px;
+             cursor: pointer;
+             background-color: #6c757d;
+             color: white;
+             transition: background-color 0.2s ease;
+             user-select: none;
+             -webkit-user-select: none;
+        }
+         #close-color-picker:hover, #close-color-picker:active {
+             background-color: #5a6268;
+         }
     </style>
 </head>
 <body>
+    <!-- Title Removed -->
+    <!-- < h1 >Competition Tracker</ h1 > -->
 
-    <div class="progress-container">
-        <div class="name matilda-name"><b>Matilda</b></div>
-        <div class="progress-bar" id="matilda-bar">
-            <div class="progress-fill matilda-fill" id="matilda-progress" style="width: 0%;"></div>
-        </div>
+    <div id="people-container">
+        <!-- People will be dynamically added here -->
     </div>
 
-    <div class="progress-container">
-        <div class="name eloise-name"><b>Eloise</b></div>
-        <div class="progress-bar" id="eloise-bar">
-            <div class="progress-fill eloise-fill" id="eloise-progress" style="width: 0%;"></div>
-        </div>
+    <!-- Edit Controls (hidden initially) -->
+    <div id="edit-controls">
+        <button id="add-person-btn" class="edit-button">Add Person</button>
+        <button id="done-editing-btn" class="edit-button">Done Editing</button>
+    </div>
+
+    <!-- Color Picker Modal (hidden initially) -->
+    <div id="color-picker-container">
+        <div id="color-picker-wrapper"></div>
+        <button id="close-color-picker">Close</button>
     </div>
 
     <script>
-        let matildaProgress = 0;
-        let eloiseProgress = 0;
+        // Wrap entire script in DOMContentLoaded to ensure DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
 
-        document.addEventListener('keydown', (event) => {
-            // Prevent default action when spacebar is pressed
-            if (event.key === ' ') {
-                event.preventDefault();
+            // --- State Management ---
+            let people = [
+                { id: 'matilda', name: 'Matilda', progress: 20, color: '#FFC0CB' }, // Pink
+                { id: 'eloise', name: 'Eloise', progress: 40, color: '#b380ff' }  // Lighter Purple
+            ];
+            let isEditing = false;
+            const longPressDuration = 600; // milliseconds
+            let currentEditingPersonId = null; // For color picker target
+            let iroColorPicker = null; // Holds the iro.js instance
+            let activeLongPressTimer = null; // Track the currently active timer globally
+            let longPressTriggered = false; // Flag to prevent click after long press
+
+            // --- DOM Elements ---
+            const peopleContainer = document.getElementById('people-container');
+            const editControls = document.getElementById('edit-controls');
+            const addPersonBtn = document.getElementById('add-person-btn');
+            const doneEditingBtn = document.getElementById('done-editing-btn');
+            const colorPickerContainer = document.getElementById('color-picker-container');
+            const colorPickerWrapper = document.getElementById('color-picker-wrapper');
+            const closeColorPickerBtn = document.getElementById('close-color-picker');
+
+            // --- Safety Check ---
+            if (!peopleContainer || !editControls || !addPersonBtn || !doneEditingBtn || !colorPickerContainer || !colorPickerWrapper || !closeColorPickerBtn) {
+                console.error("One or more essential DOM elements are missing!");
+                // Optionally display an error message to the user
+                document.body.innerHTML = '<p style="color: red; padding: 20px;">Error: Could not initialize the application. Required elements not found.</p>';
+                return; // Stop script execution
             }
 
-            switch (event.key) {
-                case 'F1': // F1 to increase Matilda's progress
-                    if (matildaProgress < 100) matildaProgress += 5;
-                    break;
-                case ' ': // Spacebar to decrease Matilda's progress
-                    if (matildaProgress > 0) matildaProgress -= 5;
-                    break;
-                case 'F11': // F11 to increase Eloise's progress
-                    if (eloiseProgress < 100) eloiseProgress += 5;
-                    break;
-                case 'F8': // F8 to decrease Eloise's progress
-                    if (eloiseProgress > 0) eloiseProgress -= 5;
-                    break;
+
+            // --- Core Functions ---
+
+            function renderPeople() {
+                if (!peopleContainer) return; // Extra safety check
+
+                const scrollPosition = peopleContainer.scrollTop; // Preserve scroll position
+                peopleContainer.innerHTML = ''; // Clear existing content
+
+                if (people.length === 0) {
+                     // Optionally display a message if no people exist
+                     // peopleContainer.innerHTML = '<p style="text-align: center; margin-top: 30px;">No people added yet. Enter edit mode to add someone.</p>';
+                } else {
+                    people.forEach(person => {
+                        const personDiv = document.createElement('div');
+                        personDiv.classList.add('progress-container');
+                        personDiv.dataset.id = person.id;
+
+                        const nameDiv = document.createElement('div');
+                        nameDiv.classList.add('name');
+                        nameDiv.style.color = person.color;
+                        nameDiv.innerHTML = `<b>${escapeHTML(person.name)}</b>`; // Escape HTML in names
+                        nameDiv.dataset.id = person.id;
+
+                        const progressBar = document.createElement('div');
+                        progressBar.classList.add('progress-bar');
+                        progressBar.dataset.id = person.id;
+
+                        const progressFill = document.createElement('div');
+                        progressFill.classList.add('progress-fill');
+                        progressFill.style.width = `${person.progress}%`;
+                        progressFill.style.backgroundColor = person.color;
+                        // progressFill.textContent = `${person.progress}%`; // Optional % text
+
+                        progressBar.appendChild(progressFill);
+                        personDiv.appendChild(nameDiv);
+                        personDiv.appendChild(progressBar);
+                        peopleContainer.appendChild(personDiv);
+
+                        addNameEventListeners(nameDiv);
+                        addProgressBarEventListeners(progressBar);
+                    });
+                }
+                updateEditStateUI();
+                // Restore scroll position after elements are added
+                // Use requestAnimationFrame to ensure DOM is updated before setting scroll
+                requestAnimationFrame(() => {
+                     peopleContainer.scrollTop = scrollPosition;
+                });
             }
-            updateProgressBars();
-        });
 
-        // Add click event for Matilda's progress bar
-        document.getElementById('matilda-bar').addEventListener('click', function(event) {
-            let barWidth = this.clientWidth;
-            let clickPosition = event.offsetX;
-            let clickedPercent = (clickPosition / barWidth) * 100;
 
-            if (clickedPercent < 50) {
-                if (matildaProgress > 0) matildaProgress -= 5;
-            } else {
-                if (matildaProgress < 100) matildaProgress += 5;
+            function updateProgressBar(personId) {
+                const person = people.find(p => p.id === personId);
+                if (!person) return;
+                // Query within the container for robustness
+                const progressBar = peopleContainer?.querySelector(`.progress-bar[data-id="${personId}"]`);
+                if (progressBar) {
+                    const progressFill = progressBar.querySelector('.progress-fill');
+                     if (progressFill) {
+                          progressFill.style.width = `${person.progress}%`;
+                          // progressFill.textContent = `${person.progress}%`; // Optional % text
+                     }
+                }
             }
-            updateProgressBars();
-        });
 
-        // Add click event for Eloise's progress bar
-        document.getElementById('eloise-bar').addEventListener('click', function(event) {
-            let barWidth = this.clientWidth;
-            let clickPosition = event.offsetX;
-            let clickedPercent = (clickPosition / barWidth) * 100;
-
-            if (clickedPercent < 50) {
-                if (eloiseProgress > 0) eloiseProgress -= 5;
-            } else {
-                if (eloiseProgress < 100) eloiseProgress += 5;
+            function updateNameElement(personId) {
+                const person = people.find(p => p.id === personId);
+                 if (!person) return;
+                 const nameElement = peopleContainer?.querySelector(`.name[data-id="${personId}"]`);
+                 if(nameElement && !nameElement.querySelector('input')) { // Ensure it's not an input
+                    nameElement.innerHTML = `<b>${escapeHTML(person.name)}</b>`; // Escape HTML
+                    nameElement.style.color = person.color;
+                 }
             }
-            updateProgressBars();
-        });
 
-        function updateProgressBars() {
-            document.getElementById('matilda-progress').style.width = matildaProgress + '%';
-            document.getElementById('eloise-progress').style.width = eloiseProgress + '%';
-        }
+            function updateFillColor(personId) {
+                 const person = people.find(p => p.id === personId);
+                 if (!person) return;
+                 const progressBar = peopleContainer?.querySelector(`.progress-bar[data-id="${personId}"]`);
+                 if (progressBar) {
+                     const progressFill = progressBar.querySelector('.progress-fill');
+                     if (progressFill) progressFill.style.backgroundColor = person.color;
+                 }
+                 const nameElement = peopleContainer?.querySelector(`.name[data-id="${personId}"]`);
+                 // Update name color only if it's currently a div, not an input
+                 if(nameElement && !nameElement.querySelector('input')) {
+                     nameElement.style.color = person.color;
+                 }
+            }
+
+            function setEditingMode(editing) {
+                const wasEditing = isEditing;
+                isEditing = editing;
+
+                if (!isEditing && wasEditing) { // Check if exiting edit mode
+                    const openInput = peopleContainer?.querySelector('.name-input');
+                    if (openInput) {
+                        saveNameFromInput(openInput); // Save any open input
+                    }
+                }
+                updateEditStateUI();
+            }
+
+
+            function updateEditStateUI() {
+                if (!editControls) return;
+                editControls.style.display = isEditing ? 'flex' : 'none';
+                document.body.classList.toggle('editing', isEditing);
+            }
+
+            // --- Name Editing Functions ---
+
+            // Change function signature from (event) to (targetElement)
+            function handleNameLongPress(targetElement) { // <-- Changed parameter name
+                // console.log("Long press detected on name:", targetElement.dataset.id); // Use targetElement
+                // const target = event.currentTarget; // <<-- REMOVE THIS LINE
+                const personId = targetElement.dataset.id; // <<-- Use targetElement here
+            
+                 // If already editing this one, do nothing on long press
+                if (peopleContainer?.querySelector(`.name-input[data-id="${personId}"]`)) {
+                    return;
+                }
+                // If editing another one, save it first
+                const existingInput = peopleContainer?.querySelector('.name-input');
+                if (existingInput && existingInput.dataset.id !== personId) {
+                     saveNameFromInput(existingInput);
+                }
+
+                setEditingMode(true); // Ensure we are in editing mode
+                makeNameEditable(personId); // Make this specific name editable
+            }
+
+            function makeNameEditable(personId) {
+                const existingInput = peopleContainer?.querySelector('.name-input');
+                if (existingInput && existingInput.dataset.id !== personId) {
+                     saveNameFromInput(existingInput);
+                }
+                // Check if already editing this specific name
+                if (peopleContainer?.querySelector(`.name-input[data-id="${personId}"]`)) {
+                    return; // Already an input, do nothing
+                }
+
+                const nameDiv = peopleContainer?.querySelector(`.name[data-id="${personId}"]`);
+                const person = people.find(p => p.id === personId);
+                if (!nameDiv || !person) return;
+
+                // console.log("Making name editable:", personId);
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.classList.add('name-input');
+                input.value = person.name; // Use raw name for editing
+                input.dataset.id = personId;
+                input.setAttribute('aria-label', `Edit name for ${person.name}`); // Accessibility
+                input.setAttribute('autocomplete', 'off'); // Disable autocomplete
+                input.setAttribute('autocapitalize', 'words'); // Capitalize words
+
+
+                input.addEventListener('blur', handleNameInputBlur);
+                input.addEventListener('keydown', handleNameInputKeydown);
+
+                nameDiv.replaceWith(input);
+
+                 setTimeout(() => {
+                    input.focus();
+                    input.select();
+                }, 100); // Delay focus slightly
+            }
+
+            function handleNameInputBlur(event) {
+                setTimeout(() => {
+                    const currentInputElement = peopleContainer?.querySelector(`.name-input[data-id="${event.target.dataset.id}"]`);
+                    // Save only if still in edit mode AND the blurred element is still the active input for this person
+                    if (isEditing && currentInputElement && currentInputElement === event.target) {
+                        // console.log("Saving name on blur for:", event.target.dataset.id);
+                        saveNameFromInput(event.target);
+                    } else {
+                         // console.log("Skipping save on blur for:", event.target.dataset.id);
+                    }
+                }, 150); // Delay to allow other actions (like Done button click)
+            }
+
+
+            function handleNameInputKeydown(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    saveNameFromInput(event.target);
+                } else if (event.key === 'Escape') {
+                     cancelNameEdit(event.target);
+                }
+            }
+
+            function saveNameFromInput(inputElement) {
+                 if (!inputElement || !inputElement.classList.contains('name-input')) return;
+                 // console.log("Saving name for:", inputElement.dataset.id);
+
+                 const personId = inputElement.dataset.id;
+                 const person = people.find(p => p.id === personId);
+                 const newName = inputElement.value.trim();
+
+                 if (person) {
+                     // Update name only if it's not empty after trimming
+                      if (newName) {
+                          person.name = newName;
+                      } else {
+                          // Revert to old name if input is empty? Or keep 'New Person'?
+                          // For simplicity, let's revert if name becomes empty.
+                          // We retrieve the *original* name before replacing the input
+                          // This requires storing it temporarily or re-rendering based on ID
+                          // Simpler: just don't save if newName is empty
+                          console.warn("Attempted to save empty name for", personId);
+                          // Keep the old name in the data: person.name remains unchanged if newName is empty
+                      }
+                 }
+
+
+                 // Revert to div display using the (potentially updated) name from the data
+                 const nameDiv = document.createElement('div');
+                 nameDiv.classList.add('name');
+                 nameDiv.style.color = person ? person.color : 'white';
+                 // Ensure person exists before accessing name
+                 nameDiv.innerHTML = `<b>${escapeHTML(person ? person.name : 'Error')}</b>`;
+                 nameDiv.dataset.id = personId;
+                 addNameEventListeners(nameDiv); // Re-attach listeners
+
+                 inputElement.replaceWith(nameDiv);
+            }
+
+            function cancelNameEdit(inputElement) {
+                 if (!inputElement || !inputElement.classList.contains('name-input')) return;
+                  // console.log("Cancelling name edit for:", inputElement.dataset.id);
+                 const personId = inputElement.dataset.id;
+                 const person = people.find(p => p.id === personId);
+
+                 // Revert to div display using current data (which wasn't saved)
+                 const nameDiv = document.createElement('div');
+                 nameDiv.classList.add('name');
+                 nameDiv.style.color = person ? person.color : 'white';
+                 // Ensure person exists before accessing name
+                 nameDiv.innerHTML = `<b>${escapeHTML(person ? person.name : 'Error')}</b>`;
+                 nameDiv.dataset.id = personId;
+                 addNameEventListeners(nameDiv);
+
+                 inputElement.replaceWith(nameDiv);
+            }
+
+
+            // --- Add New Person Function ---
+            function addPerson() {
+                const newId = `person_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`; // More unique ID
+                const defaultColor = `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`;
+                people.push({
+                    id: newId,
+                    name: 'New Person',
+                    progress: 0,
+                    color: defaultColor
+                });
+                renderPeople(); // Re-render the whole list
+
+                setTimeout(() => {
+                    const newPersonElement = peopleContainer?.querySelector(`.progress-container[data-id="${newId}"]`);
+                    if (newPersonElement) {
+                         newPersonElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                         setTimeout(() => {
+                              makeNameEditable(newId);
+                         }, 250); // Slightly longer delay after scroll
+                    }
+                }, 50);
+            }
+
+            // --- Color Editing Functions ---
+
+                function handleBarLongPress(targetElement) { // <-- Changed parameter name for clarity
+                    // console.log("Long press detected on bar:", targetElement.dataset.id); // Use targetElement
+                    // Ensure not editing text at the same time
+                     const openInput = peopleContainer?.querySelector('.name-input');
+                     if (openInput) {
+                         saveNameFromInput(openInput);
+                     }
+
+                    // const target = event.currentTarget; // <<-- REMOVE THIS LINE
+                    const personId = targetElement.dataset.id; // <<-- Use targetElement here
+                    currentEditingPersonId = personId;
+
+                    const person = people.find(p => p.id === personId);
+                    if (!person) return;
+
+                // Clean up previous instance if any
+                if (iroColorPicker) {
+                    try { iroColorPicker.off(['color:change', 'input:end'], handleColorChange); } catch (e) { /* Ignore */ }
+                    iroColorPicker = null;
+                    if(colorPickerWrapper) colorPickerWrapper.innerHTML = '';
+                }
+
+                if (!colorPickerWrapper) return; // Safety check
+
+                try {
+                    iroColorPicker = new iro.ColorPicker(colorPickerWrapper, {
+                        width: Math.min(window.innerWidth * 0.7, 280), // Responsive width
+                        color: person.color,
+                        borderWidth: 1,
+                        borderColor: "#fff",
+                        layout: [
+                           { component: iro.ui.Wheel },
+                           { component: iro.ui.Slider, options: { sliderType: 'value' } },
+                        ]
+                    });
+
+                    if(colorPickerContainer) colorPickerContainer.style.display = 'block';
+                    // Update color on drag end or final change
+                    iroColorPicker.on(['color:change', 'input:end'], handleColorChange);
+                 } catch(e) {
+                     console.error("Failed to initialize color picker:", e);
+                     // Optionally show an error to the user
+                     alert("Error initializing color picker.");
+                     if(colorPickerContainer) colorPickerContainer.style.display = 'none'; // Ensure it's hidden on error
+                 }
+            }
+
+            function handleColorChange(color) {
+                if (!currentEditingPersonId) return;
+                const person = people.find(p => p.id === currentEditingPersonId);
+                if (person && color) { // Check color object exists
+                    const newColor = color.hexString;
+                    person.color = newColor;
+                    updateFillColor(currentEditingPersonId);
+                }
+            }
+
+            function closeColorPicker() {
+                 if(colorPickerContainer) colorPickerContainer.style.display = 'none';
+                 if (iroColorPicker) {
+                     try { iroColorPicker.off(['color:change', 'input:end'], handleColorChange); } catch (e) { /* Ignore */ }
+                     iroColorPicker = null;
+                     if(colorPickerWrapper) colorPickerWrapper.innerHTML = '';
+                 }
+                currentEditingPersonId = null;
+            }
+
+            // --- Event Listeners Setup ---
+
+            function setupLongPress(element, actionCallback) {
+                let pressTimer = null;
+                let startX, startY; // Track start position
+
+                const startPress = (event) => {
+                    // Prevent default actions ONLY on the elements we intend to handle (name, progress bar)
+                    if (event.type === 'touchstart') {
+                         // Check if target or ancestor is name or progress bar
+                         const targetElement = event.target.closest('.name, .progress-bar');
+                         if (targetElement && targetElement === element) {
+                            event.preventDefault(); // Prevent selection/callout ONLY on these elements
+                            try {
+                                startX = event.touches[0].clientX;
+                                startY = event.touches[0].clientY;
+                            } catch(e) { console.error("Error getting touch coords", e); }
+                         } else {
+                            // Allow default touch behavior (like scrolling) elsewhere
+                            return;
+                         }
+
+                    } else if (event.type === 'mousedown') {
+                         if (event.button !== 0) return; // Ignore non-left clicks
+                         startX = event.clientX;
+                         startY = event.clientY;
+                    } else {
+                        return; // Ignore other event types
+                    }
+
+
+                    clearTimeout(activeLongPressTimer);
+                    longPressTriggered = false;
+                    element.classList.add('long-press-active');
+
+                    pressTimer = setTimeout(() => {
+                        pressTimer = null;
+                        element.classList.remove('long-press-active');
+                        longPressTriggered = true;
+                        // Pass the element itself, NOT the event object
+                        if (actionCallback) actionCallback(element);
+                    }, longPressDuration);
+                    activeLongPressTimer = pressTimer;
+                };
+
+                const cancelPress = (event) => {
+                    if (pressTimer && pressTimer === activeLongPressTimer) {
+                        clearTimeout(pressTimer);
+                        pressTimer = null;
+                        activeLongPressTimer = null;
+                        // console.log("Long press cancelled");
+                    }
+                     element.classList.remove('long-press-active');
+                     // Reset flag only if timer didn't fire (avoid race condition with click)
+                     if (!longPressTriggered) {
+                         // Use timeout to ensure this runs after potential click handler
+                         setTimeout(() => { longPressTriggered = false; }, 0);
+                     }
+                };
+
+                const handleMove = (event) => {
+                     if (!pressTimer) return;
+
+                     const threshold = 10; // Pixels threshold
+                     let currentX, currentY;
+
+                     try {
+                         if (event.type === 'touchmove' && event.touches.length > 0) {
+                             currentX = event.touches[0].clientX;
+                             currentY = event.touches[0].clientY;
+                         } else if (event.type === 'mousemove') {
+                              currentX = event.clientX;
+                              currentY = event.clientY;
+                         } else {
+                             return;
+                         }
+
+                         const deltaX = Math.abs(currentX - startX);
+                         const deltaY = Math.abs(currentY - startY);
+
+                         if (deltaX > threshold || deltaY > threshold) {
+                            //  console.log("Cancelled long press due to move");
+                             cancelPress(event);
+                         }
+                     } catch (e) {
+                         console.error("Error during move detection", e);
+                         cancelPress(event); // Cancel safely on error
+                     }
+                };
+
+                // Use { passive: false } for touchstart ONLY when we need preventDefault
+                // We check inside the handler if preventDefault is needed.
+                element.addEventListener('touchstart', startPress, { passive: false });
+                element.addEventListener('touchend', cancelPress);
+                element.addEventListener('touchcancel', cancelPress);
+                // Move events can be passive as they only read data to cancel
+                element.addEventListener('touchmove', handleMove, { passive: true });
+
+                element.addEventListener('mousedown', startPress);
+                element.addEventListener('mouseup', cancelPress);
+                element.addEventListener('mouseleave', cancelPress);
+                element.addEventListener('mousemove', handleMove);
+
+                // Prevent context menu on the specific element
+                 element.addEventListener('contextmenu', (e) => {
+                     e.preventDefault();
+                     cancelPress(e);
+                 });
+            }
+
+            function addNameEventListeners(nameDiv) {
+                setupLongPress(nameDiv, handleNameLongPress);
+
+                nameDiv.addEventListener('click', (event) => {
+                    // Use timeout to ensure flag check happens after potential long press resolves
+                    setTimeout(() => {
+                        if (longPressTriggered) {
+                            // console.log("Ignoring click after long press trigger on name");
+                            longPressTriggered = false; // Reset flag after handling
+                            return;
+                        }
+                        if (isEditing && !nameDiv.querySelector('input')) {
+                            // console.log("Click detected on name in edit mode:", nameDiv.dataset.id);
+                            makeNameEditable(nameDiv.dataset.id);
+                        }
+                    }, 0);
+                });
+            }
+
+
+            function addProgressBarEventListeners(progressBar) {
+                setupLongPress(progressBar, handleBarLongPress);
+
+                progressBar.addEventListener('click', function(event) {
+                     setTimeout(() => {
+                         if (longPressTriggered) {
+                            // console.log("Ignoring click after long press trigger on bar");
+                             longPressTriggered = false; // Reset flag
+                             return;
+                         }
+                         if (colorPickerContainer?.style.display === 'block') return;
+
+                         const personId = this.dataset.id;
+                         const person = people.find(p => p.id === personId);
+                         if (!person) return;
+
+                         try {
+                            let barRect = this.getBoundingClientRect();
+                            let barWidth = barRect.width;
+                            if (barWidth <= 0) return; // Avoid division by zero if bar isn't rendered properly
+
+                            let clickPosition = event.clientX - barRect.left;
+                            clickPosition = Math.max(0, Math.min(clickPosition, barWidth)); // Clamp click position within bar bounds
+
+                            let clickedPercent = (clickPosition / barWidth) * 100;
+
+                            const increment = 5;
+                            if (clickedPercent < 50) {
+                                person.progress = Math.max(0, person.progress - increment);
+                            } else {
+                                person.progress = Math.min(100, person.progress + increment);
+                            }
+                            updateProgressBar(personId);
+                         } catch (e) {
+                             console.error("Error calculating progress on click:", e);
+                         }
+                     }, 0);
+                });
+            }
+
+            // --- Utility Functions ---
+function escapeHTML(str) {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+
+            // --- Global Event Listeners ---
+            document.addEventListener('keydown', (event) => {
+                if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return;
+
+                if (['F1', ' ', 'F11', 'F8'].includes(event.key)) {
+                     event.preventDefault();
+                }
+
+                let targetPerson = null;
+                const increment = 5;
+
+                switch (event.key) {
+                    case 'F1': targetPerson = people.length > 0 ? people[0] : null; if (targetPerson) targetPerson.progress = Math.min(100, targetPerson.progress + increment); break;
+                    case ' ': targetPerson = people.length > 0 ? people[0] : null; if (targetPerson) targetPerson.progress = Math.max(0, targetPerson.progress - increment); break;
+                    case 'F11': targetPerson = people.length > 1 ? people[1] : null; if (targetPerson) targetPerson.progress = Math.min(100, targetPerson.progress + increment); break;
+                    case 'F8': targetPerson = people.length > 1 ? people[1] : null; if (targetPerson) targetPerson.progress = Math.max(0, targetPerson.progress - increment); break;
+                }
+                if (targetPerson) updateProgressBar(targetPerson.id);
+            });
+
+            addPersonBtn.addEventListener('click', addPerson);
+            doneEditingBtn.addEventListener('click', () => setEditingMode(false));
+            closeColorPickerBtn.addEventListener('click', closeColorPicker);
+
+            // --- Initial Render ---
+            renderPeople();
+
+        }); // End DOMContentLoaded listener
     </script>
 </body>
 </html>
