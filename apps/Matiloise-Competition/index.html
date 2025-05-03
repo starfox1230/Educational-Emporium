@@ -621,66 +621,140 @@
 
             // --- Event Listeners Setup ---
 
-            function setupLongPress(element, actionCallback) {
+            // --- Event Listeners Setup ---
+
+            // NEW: Tap Handler function specifically for Progress Bar taps
+            function handleProgressBarTap(progressBarElement, touchX) {
+                 // console.log("Handling progress bar tap. X:", touchX);
+                 // Double-check flags, though they should be correctly set if we got here
+                 if (longPressTriggered) {
+                     // console.log("Ignoring tap because long press was triggered.");
+                     return;
+                 }
+                 if (colorPickerContainer?.style.display === 'block') return; // Ignore if color picker is open
+
+                 const personId = progressBarElement.dataset.id;
+                 const person = people.find(p => p.id === personId);
+                 if (!person) return;
+
+                 try {
+                    let barRect = progressBarElement.getBoundingClientRect();
+                    let barWidth = barRect.width;
+                    if (barWidth <= 0) return; // Avoid division by zero
+
+                    // Use the touchX coordinate passed from touchend event
+                    let tapPosition = touchX - barRect.left;
+                    tapPosition = Math.max(0, Math.min(tapPosition, barWidth)); // Clamp within bar bounds
+
+                    let tappedPercent = (tapPosition / barWidth) * 100;
+
+                    const increment = 5; // Or your desired increment amount
+                    if (tappedPercent < 50) {
+                        person.progress = Math.max(0, person.progress - increment);
+                    } else {
+                        person.progress = Math.min(100, person.progress + increment);
+                    }
+                    updateProgressBar(personId);
+                 } catch (e) {
+                     console.error("Error calculating progress on tap:", e);
+                 }
+            }
+
+
+            // MODIFIED: setupLongPress now includes tap detection and callback
+            function setupLongPress(element, longPressCallback, tapCallback) {
                 let pressTimer = null;
-                let startX, startY; // Track start position
+                let startX, startY;
+                let isPotentialTap = false; // Flag for potential tap
+                let hasMoved = false;       // Flag to track movement
 
                 const startPress = (event) => {
-                    // Prevent default actions ONLY on the elements we intend to handle (name, progress bar)
-                    if (event.type === 'touchstart') {
-                         // Check if target or ancestor is name or progress bar
-                         const targetElement = event.target.closest('.name, .progress-bar');
-                         if (targetElement && targetElement === element) {
-                            event.preventDefault(); // Prevent selection/callout ONLY on these elements
-                            try {
-                                startX = event.touches[0].clientX;
-                                startY = event.touches[0].clientY;
-                            } catch(e) { console.error("Error getting touch coords", e); }
-                         } else {
-                            // Allow default touch behavior (like scrolling) elsewhere
-                            return;
-                         }
+                    // Reset flags for new interaction
+                    hasMoved = false;
+                    isPotentialTap = false;
+                    longPressTriggered = false; // Reset global long press flag here
 
+                    if (event.type === 'touchstart') {
+                        // Check if touch is directly on the element we care about
+                        const targetElement = event.target.closest(element.tagName.toLowerCase() + (element.className ? '.' + element.className.split(' ').join('.') : ''));
+                         if (targetElement && targetElement === element) {
+                             // Prevent default scroll/zoom ONLY when touching the interactive element
+                             event.preventDefault();
+                             try {
+                                 startX = event.touches[0].clientX;
+                                 startY = event.touches[0].clientY;
+                                 isPotentialTap = true; // It's a potential tap initially
+                             } catch(e) { console.error("Error getting touch coords", e); isPotentialTap = false;}
+                         } else {
+                             // Allow scroll/zoom if touch starts elsewhere (e.g., between elements)
+                             return;
+                         }
                     } else if (event.type === 'mousedown') {
-                         if (event.button !== 0) return; // Ignore non-left clicks
-                         startX = event.clientX;
-                         startY = event.clientY;
+                        if (event.button !== 0) return; // Ignore non-left clicks
+                        startX = event.clientX;
+                        startY = event.clientY;
+                        // Mouse doesn't use isPotentialTap; click handler manages mouse clicks
                     } else {
                         return; // Ignore other event types
                     }
 
-
-                    clearTimeout(activeLongPressTimer);
-                    longPressTriggered = false;
+                    clearTimeout(activeLongPressTimer); // Clear any lingering timer
                     element.classList.add('long-press-active');
 
                     pressTimer = setTimeout(() => {
-                        pressTimer = null;
+                        // console.log("Long Press Timer Fired for", element.dataset.id);
+                        pressTimer = null; // Clear timer ref
                         element.classList.remove('long-press-active');
-                        longPressTriggered = true;
-                        // Pass the element itself, NOT the event object
-                        if (actionCallback) actionCallback(element);
+                        longPressTriggered = true; // Set global flag
+                        isPotentialTap = false; // Cannot be a tap if long press fired
+                        if (longPressCallback) longPressCallback(element); // Fire the long press action
                     }, longPressDuration);
-                    activeLongPressTimer = pressTimer;
+                    activeLongPressTimer = pressTimer; // Track this timer globally
                 };
 
                 const cancelPress = (event) => {
+                     // console.log("Cancel Press / End. Type:", event.type, "isPotentialTap:", isPotentialTap, "longPressTriggered:", longPressTriggered, "hasMoved:", hasMoved);
+
+                    // Important: Clear the *specific* timer associated with this element's press start
                     if (pressTimer && pressTimer === activeLongPressTimer) {
                         clearTimeout(pressTimer);
                         pressTimer = null;
-                        activeLongPressTimer = null;
-                        // console.log("Long press cancelled");
+                        activeLongPressTimer = null; // Clear global tracker too
+                        // console.log("Long press timer cancelled for", element.dataset.id);
                     }
                      element.classList.remove('long-press-active');
-                     // Reset flag only if timer didn't fire (avoid race condition with click)
-                     if (!longPressTriggered) {
-                         // Use timeout to ensure this runs after potential click handler
-                         setTimeout(() => { longPressTriggered = false; }, 0);
-                     }
+
+                    // --- Tap Handling Logic (only for touchend if conditions met) ---
+                    if (event.type === 'touchend' && isPotentialTap && !longPressTriggered && !hasMoved) {
+                        // console.log("Tap detected on touchend for", element.dataset.id);
+                        if (tapCallback) {
+                           try {
+                                // Use changedTouches for final tap position
+                                const touchEndX = event.changedTouches[0].clientX;
+                                tapCallback(element, touchEndX); // Pass element and X coord
+                           } catch (e) {
+                               console.error("Error getting touchend coords:", e);
+                           }
+                        }
+                    }
+                    // --- End Tap Handling ---
+
+                    // Reset flags after processing
+                    isPotentialTap = false;
+                    hasMoved = false;
+                    // Don't reset longPressTriggered here, it might be needed by a click shortly after
+                    // Let a small timeout clear it to prevent race conditions with click handlers
+                    setTimeout(() => {
+                        longPressTriggered = false;
+                         // console.log("Resetting longPressTriggered flag");
+                    }, 50);
                 };
 
                 const handleMove = (event) => {
-                     if (!pressTimer) return;
+                     // Only act if a press has started (timer exists or potential tap)
+                     if (!pressTimer && !isPotentialTap) return;
+                     // If already marked as moved, don't recalculate
+                     if (hasMoved) return;
 
                      const threshold = 10; // Pixels threshold
                      let currentX, currentY;
@@ -693,74 +767,121 @@
                               currentX = event.clientX;
                               currentY = event.clientY;
                          } else {
-                             return;
+                             return; // Not a move event we track
                          }
 
                          const deltaX = Math.abs(currentX - startX);
                          const deltaY = Math.abs(currentY - startY);
 
                          if (deltaX > threshold || deltaY > threshold) {
-                            //  console.log("Cancelled long press due to move");
-                             cancelPress(event);
+                            //  console.log("Movement detected, cancelling tap/long press potential for", element.dataset.id);
+                             hasMoved = true;
+                             isPotentialTap = false; // Moved too much, not a tap
+                             // Clear the timer if it's still active
+                             if (pressTimer && pressTimer === activeLongPressTimer) {
+                                 clearTimeout(pressTimer);
+                                 pressTimer = null;
+                                 activeLongPressTimer = null;
+                                 element.classList.remove('long-press-active');
+                                 // console.log("Cleared timer due to move for", element.dataset.id);
+                             }
                          }
                      } catch (e) {
                          console.error("Error during move detection", e);
-                         cancelPress(event); // Cancel safely on error
+                          hasMoved = true; // Assume move on error
+                          isPotentialTap = false; // Cancel tap potential safely
+                         if (pressTimer && pressTimer === activeLongPressTimer) { // Clear timer if exists
+                             clearTimeout(pressTimer);
+                             pressTimer = null;
+                             activeLongPressTimer = null;
+                             element.classList.remove('long-press-active');
+                         }
                      }
                 };
 
-                // Use { passive: false } for touchstart ONLY when we need preventDefault
-                // We check inside the handler if preventDefault is needed.
+                // Attach Listeners
+                // Use passive: false for touchstart because we call preventDefault inside
                 element.addEventListener('touchstart', startPress, { passive: false });
-                element.addEventListener('touchend', cancelPress);
-                element.addEventListener('touchcancel', cancelPress);
-                // Move events can be passive as they only read data to cancel
+                // touchend/cancel can be passive, they read data but don't need to prevent default actions
+                element.addEventListener('touchend', cancelPress, { passive: true });
+                element.addEventListener('touchcancel', cancelPress, { passive: true });
+                // touchmove is also passive, just reading coords to check threshold
                 element.addEventListener('touchmove', handleMove, { passive: true });
 
+                // Mouse events
                 element.addEventListener('mousedown', startPress);
-                element.addEventListener('mouseup', cancelPress);
-                element.addEventListener('mouseleave', cancelPress);
+                element.addEventListener('mouseup', cancelPress); // Mouseup triggers cancelPress but won't match tap conditions
+                element.addEventListener('mouseleave', cancelPress); // Treat leaving element like cancelling
                 element.addEventListener('mousemove', handleMove);
 
-                // Prevent context menu on the specific element
+                // Prevent context menu (usually triggered by long press or right click)
                  element.addEventListener('contextmenu', (e) => {
                      e.preventDefault();
-                     cancelPress(e);
+                     // Also ensure any active press state is cancelled
+                      hasMoved = true; // Prevent tap logic
+                      isPotentialTap = false;
+                     if (pressTimer && pressTimer === activeLongPressTimer) {
+                        clearTimeout(pressTimer);
+                        pressTimer = null;
+                        activeLongPressTimer = null;
+                        element.classList.remove('long-press-active');
+                     }
                  });
             }
 
-            function addNameEventListeners(nameDiv) {
-                setupLongPress(nameDiv, handleNameLongPress);
 
+            // MODIFIED: addNameEventListeners uses new setupLongPress
+            function addNameEventListeners(nameDiv) {
+                 // Pass only the long press callback for name, no specific tap action needed here
+                 // (click listener handles edit mode tap)
+                setupLongPress(nameDiv, handleNameLongPress, null);
+
+                // Click listener for edit mode (works for mouse and MAYBE emulated mobile clicks)
                 nameDiv.addEventListener('click', (event) => {
-                    // Use timeout to ensure flag check happens after potential long press resolves
+                    // console.log("Name CLICKED. LongPressTriggered:", longPressTriggered);
+                    // Use timeout to allow longPressTriggered flag to be potentially set by touchend/cancelPress
                     setTimeout(() => {
                         if (longPressTriggered) {
-                            // console.log("Ignoring click after long press trigger on name");
-                            longPressTriggered = false; // Reset flag after handling
+                            // console.log("Ignoring click on name (long press occurred)");
                             return;
                         }
+                        // On touch devices, long press edit is handled by setupLongPress.
+                        // This click listener primarily enables edit-mode tap/click on desktop
+                        // and potentially redundant tap on mobile if click event still fires.
                         if (isEditing && !nameDiv.querySelector('input')) {
-                            // console.log("Click detected on name in edit mode:", nameDiv.dataset.id);
-                            makeNameEditable(nameDiv.dataset.id);
+                             // console.log("Click making name editable:", nameDiv.dataset.id);
+                             makeNameEditable(nameDiv.dataset.id);
                         }
-                    }, 0);
+                    }, 0); // Use zero timeout
                 });
             }
 
 
+            // MODIFIED: addProgressBarEventListeners uses new setupLongPress and tap handler
             function addProgressBarEventListeners(progressBar) {
-                setupLongPress(progressBar, handleBarLongPress);
+                // Pass both long press (color edit) and tap (adjust progress) callbacks
+                setupLongPress(progressBar, handleBarLongPress, handleProgressBarTap);
 
+                // Keep click listener mainly for DESKTOP mouse clicks
                 progressBar.addEventListener('click', function(event) {
+                    // console.log("Progress bar CLICKED. LongPressTriggered:", longPressTriggered);
+
+                    // If touch is supported, taps are handled by `touchend` via `setupLongPress`.
+                    // Ignore the emulated click event on touch devices to prevent double actions.
+                     if ('ontouchstart' in window) {
+                         // console.log("Ignoring click on touch device (handled by touchend)");
+                         return;
+                     }
+
+                     // Use timeout to allow longPressTriggered flag to settle
                      setTimeout(() => {
                          if (longPressTriggered) {
-                            // console.log("Ignoring click after long press trigger on bar");
-                             longPressTriggered = false; // Reset flag
+                            // console.log("Ignoring click after long press on bar (desktop)");
                              return;
                          }
                          if (colorPickerContainer?.style.display === 'block') return;
 
+                         // --- This is now DESKTOP MOUSE CLICK logic ---
                          const personId = this.dataset.id;
                          const person = people.find(p => p.id === personId);
                          if (!person) return;
@@ -768,10 +889,11 @@
                          try {
                             let barRect = this.getBoundingClientRect();
                             let barWidth = barRect.width;
-                            if (barWidth <= 0) return; // Avoid division by zero if bar isn't rendered properly
+                            if (barWidth <= 0) return;
 
+                            // Use event.clientX for mouse clicks
                             let clickPosition = event.clientX - barRect.left;
-                            clickPosition = Math.max(0, Math.min(clickPosition, barWidth)); // Clamp click position within bar bounds
+                            clickPosition = Math.max(0, Math.min(clickPosition, barWidth));
 
                             let clickedPercent = (clickPosition / barWidth) * 100;
 
@@ -785,7 +907,7 @@
                          } catch (e) {
                              console.error("Error calculating progress on click:", e);
                          }
-                     }, 0);
+                     }, 0); // Use zero timeout
                 });
             }
 
