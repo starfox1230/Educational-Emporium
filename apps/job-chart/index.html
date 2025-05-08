@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matilda's Room Jobs</title>
+    <style>
+        :root {
+            --page-bg: #F0E6FF; /* Lightest lavender for overall page */
+            --title-purple: #5D3A9B;
+            --header-bg: #DCD0FF; /* Table header (MON, TUE...) background */
+            --chore-col-bg: #EAE0FF; /* First column (chore names) background */
+            --cell-bg: #F8F0FF; /* Data cell background */
+            --grid-border: #BEA6E0;
+            --text-dark: #4A2E87;
+            --icon-color: #785A9B;
+            --accent-color: #9B59B6; /* For buttons, highlights */
+            --completed-bounce: bounce-effect 0.3s ease;
+        }
+
+        @keyframes bounce-effect {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        
+        @keyframes sparkle-effect {
+            0% { opacity: 1; transform: scale(0) rotate(0deg); }
+            50% { opacity: 0.8; transform: scale(1.5) rotate(180deg); }
+            100% { opacity: 0; transform: scale(0) rotate(360deg); }
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--page-bg);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--page-bg); /* Similar to body or slightly different */
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            color: var(--title-purple);
+            text-align: center;
+            font-size: 2.8em;
+            margin-bottom: 25px;
+            cursor: default; /* For long-press */
+            user-select: none; /* Prevent text selection during long press */
+        }
+
+        .chore-chart-wrapper {
+            background-color: var(--chore-col-bg); /* Background for the rounded container of the table */
+            border-radius: 10px;
+            overflow: hidden; /* To make border-radius clip table corners */
+            border: 1px solid var(--grid-border);
+        }
+        
+        .chore-chart table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .chore-chart th, .chore-chart td {
+            border: 1px solid var(--grid-border);
+            text-align: center;
+            padding: 8px;
+            height: 70px; /* Increased height for icons/text */
+            box-sizing: border-box;
+        }
+
+        .chore-chart th {
+            background-color: var(--header-bg);
+            color: var(--title-purple);
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        
+        .chore-chart th:first-child { /* Top-left empty cell */
+             background-color: var(--chore-col-bg);
+             border-top-left-radius: 10px; /* Match wrapper */
+        }
+        .chore-chart th:last-child {
+             border-top-right-radius: 10px; /* Match wrapper */
+        }
+
+
+        .chore-chart td.chore-label-cell {
+            background-color: var(--chore-col-bg);
+            font-weight: bold;
+            font-size: 0.9em;
+            color: var(--title-purple);
+            padding: 5px;
+            vertical-align: middle;
+            position: relative; /* For delete button in parent mode */
+        }
+        
+        .chore-label-cell .chore-item-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .chore-label-cell .chore-icon svg {
+            width: 32px;
+            height: 32px;
+            fill: var(--icon-color);
+        }
+        
+        .chore-label-cell .chore-name {
+            font-size: 0.9em;
+        }
+
+        .chore-chart td.task-cell {
+            background-color: var(--cell-bg);
+            cursor: pointer;
+            font-size: 1.8em; /* For emoji icons */
+            transition: background-color 0.2s ease;
+            position: relative; /* For sparkle animation */
+        }
+
+        .chore-chart td.task-cell:hover {
+            background-color: #e8dfff;
+        }
+        
+        .chore-chart tr:last-child td:first-child.chore-label-cell {
+            border-bottom-left-radius: 10px;
+        }
+        .chore-chart tr:last-child td:last-child.task-cell {
+             border-bottom-right-radius: 10px;
+        }
+
+        .sparkle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: gold;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: sparkle-effect 0.6s forwards;
+        }
+
+        .controls {
+            text-align: center;
+            margin-top: 25px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .controls button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.2s ease;
+        }
+
+        .controls button:hover {
+            background-color: #8E44AD;
+        }
+        
+        .parent-controls { /* Initially hidden */
+            display: none; 
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+            padding: 15px;
+            border: 1px dashed var(--accent-color);
+            border-radius: 8px;
+            background-color: #fdfaff;
+        }
+        
+        .parent-mode-active .parent-controls {
+            display: flex; /* Show when parent mode is active */
+        }
+
+        .parent-controls input[type="text"], .parent-controls select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid var(--grid-border);
+            margin-right: 5px;
+        }
+        
+        .delete-chore-btn {
+            display: none; /* Hidden by default */
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            line-height: 20px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .parent-mode-active .delete-chore-btn {
+            display: block; /* Show in parent mode */
+        }
+
+
+        #reward-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #2ECC71;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            font-size: 1.2em;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s, visibility 0.5s, top 0.5s;
+        }
+
+        #reward-notification.show {
+            opacity: 1;
+            visibility: visible;
+            top: 50px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .container { padding: 15px; }
+            header h1 { font-size: 2.2em; margin-bottom: 20px; }
+            .chore-chart th, .chore-chart td { padding: 6px; height: 60px; }
+            .chore-chart th { font-size: 0.75em; }
+            .chore-label-cell .chore-icon svg { width: 24px; height: 24px;}
+            .chore-label-cell .chore-name { font-size: 0.8em; }
+            .chore-chart td.task-cell { font-size: 1.5em; }
+            .controls button { padding: 8px 15px; font-size: 0.9em; }
+        }
+        @media (max-width: 480px) {
+            header h1 { font-size: 1.8em; }
+            .chore-chart th { font-size: 0.6em; } /* MON -> M, etc. if too small */
+            .chore-label-cell .chore-icon svg { width: 20px; height: 20px;}
+            .chore-label-cell .chore-name { font-size: 0.7em; }
+            .chore-chart td.task-cell { font-size: 1.2em; }
+            .chore-chart td, .chore-chart th { padding: 4px; height: 50px;}
+            .chore-chart-wrapper {overflow-x: auto;} /* Allow table to scroll horizontally if too wide */
+            .chore-chart table {min-width: 400px;} /* Prevent excessive squishing of columns */
+
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 id="page-title">MATILDA'S ROOM JOBS</h1>
+        </header>
+        <main>
+            <div class="chore-chart-wrapper">
+                <div class="chore-chart">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th></th> <!-- Empty for chore names column -->
+                                <th>MON</th>
+                                <th>TUE</th>
+                                <th>WED</th>
+                                <th>THU</th>
+                                <th>FRI</th>
+                                <th>SAT</th>
+                                <th>SUN</th>
+                            </tr>
+                        </thead>
+                        <tbody id="chore-grid-body">
+                            <!-- Chore rows will be dynamically generated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button id="reset-week-button">Reset Week</button>
+                <p>Total Points: <span id="total-points">0</span></p>
+            </div>
+            
+            <div class="parent-controls" id="parent-controls-section">
+                <h3>Parent Mode</h3>
+                <input type="text" id="new-chore-name" placeholder="New chore name">
+                <!-- Basic icon selection, can be improved to emoji picker or SVG selector -->
+                <select id="new-chore-icon-type">
+                    <option value="emoji">Emoji</option>
+                    <option value="svg">SVG (Preset)</option>
+                </select>
+                <input type="text" id="new-chore-icon-value" placeholder="Enter Emoji (e.g., ✨) or SVG key">
+                <button id="add-chore-button">Add Chore</button>
+                <button id="exit-parent-mode-button">Exit Parent Mode</button>
+            </div>
+
+        </main>
+    </div>
+
+    <div id="reward-notification">
+        🎉 You earned a reward! Keep up the great work! ⭐
+    </div>
+
+    <script>
+        const choreGridBody = document.getElementById('chore-grid-body');
+        const resetWeekButton = document.getElementById('reset-week-button');
+        const totalPointsDisplay = document.getElementById('total-points');
+        const rewardNotification = document.getElementById('reward-notification');
+        const pageTitle = document.getElementById('page-title');
+        const parentControlsSection = document.getElementById('parent-controls-section');
+        const addChoreButton = document.getElementById('add-chore-button');
+        const newChoreNameInput = document.getElementById('new-chore-name');
+        const newChoreIconTypeInput = document.getElementById('new-chore-icon-type');
+        const newChoreIconValueInput = document.getElementById('new-chore-icon-value');
+        const exitParentModeButton = document.getElementById('exit-parent-mode-button');
+
+        const PARENT_PASSWORD = "roomjobs"; // Simple password for parent mode
+        let isParentModeActive = false;
+
+        // Default SVG icons (simple representations)
+        const svgIcons = {
+            stuffies: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c2.481 0 4.5-2.019 4.5-4.5S18.981 3 16.5 3C14.02 3 12 5.019 12 7.5c0 .88.25 1.691.681 2.385C11.625 9.319 10.5 8.458 10.5 7.5 10.5 5.019 8.481 3 6 3S1.5 5.019 1.5 7.5c0 .958.625 1.819 1.681 2.385C3.25 10.691 3 11.5 3 12.375c0 2.306 1.001 4.363 2.626 5.752C6.042 19.046 7.5 21 7.5 21h9s1.458-1.954 1.874-2.873C20.001 16.738 21 14.681 21 12.375c0-.875-.25-1.681-.681-2.385.944-.548 1.681-1.473 1.681-2.49C22 6.019 19.981 4 17.5 4S13 6.019 13 8.5c0 .958.625 1.819 1.681 2.385C14.75 11.691 14.5 12.5 14.5 13.375c0 1.422.499 2.729 1.32 3.768.091.112.185.222.28.332H7.9c.095-.11.189-.22.28-.332.821-1.039 1.32-2.346 1.32-3.768 0-.875-.25-1.681-.681-2.385C9.769 10.319 10.5 9.458 10.5 8.5 10.5 7.078 9.422 6 8 6S5.5 7.078 5.5 8.5c0 .958.625 1.819 1.681 2.385C7.25 11.691 7 12.5 7 13.375c0 1.763.708 3.35 1.846 4.52L7.5 20l-1.346-2.107A5.98 5.98 0 0 1 4.5 13.375C4.5 12.5 4.75 11.691 5.181 11C4.237 10.452 3.5 9.527 3.5 8.5 3.5 6.019 5.519 4 8 4s4.5 2.019 4.5 4.5c0 .958-.625 1.819-1.681 2.385C10.75 10.691 11 11.5 11 12.375c0 .479-.073.941-.209 1.381.711.301 1.36.713 1.909 1.232.55-.519 1.199-.931 1.909-1.232C14.427 13.316 14.354 12.854 14.354 12.375 14.354 11.5 14.604 10.691 15.035 11c-.944-.548-1.681-1.473-1.681-2.49C13.354 7.078 14.432 6 15.854 6s2.5 1.078 2.5 2.5c0 .958-.625 1.819-1.681 2.385C16.604 10.691 16.854 11.5 16.854 12.375c0 .479-.073.941-.209 1.381.711.301 1.36.713 1.909 1.232.55-.519 1.199-.931 1.909-1.232C19.927 13.316 19.854 12.854 19.854 12.375c0-.875.25-1.681.681-2.385.944-.548 1.681-1.473 1.681-2.49C20.354 6.019 18.335 4 15.854 4c-1.422 0-2.5.922-2.5 2.344V7.5c0 .88.25 1.691.681 2.385.001 0 .001 0 .001 0h.001C14.035 10.309 14.035 10.309 14.035 10.309zM8 18H6v-2h2v2zm8 0h-2v-2h2v2z"></path></svg>',
+            dolls: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 5.5A3.5 3.5 0 0 0 8.5 9H7a5 5 0 0 1 10 0h-1.5a3.5 3.5 0 0 0-3.5-3.5zM12 14c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>',
+            books: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V5h10v6z"/></svg>',
+            dirty_clothes: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.5 6C18.5 5.17 17.83 4.5 17 4.5H14.82C14.4 3.34 13.3 2.5 12 2.5S9.6 3.34 9.18 4.5H7C6.17 4.5 5.5 5.17 5.5 6V7H4V19.5C4 20.33 4.67 21 5.5 21H18.5C19.33 21 20 20.33 20 19.5V7H18.5V6ZM12 4.5C12.55 4.5 13 4.95 13 5.5V6H11V5.5C11 4.95 11.45 4.5 12 4.5ZM18 19H6V9H18V19Z"/></svg>',
+            house_toys: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8h5z"/></svg>',
+            medical_toys: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.11 0-1.99.89-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.11-.9-2-2-2zm-1 11h-4v4h-4v-4H6v-4h4V6h4v4h4v4z"/></svg>',
+            mystery_things: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v2h-2zm0 4h2v6h-2z"/></svg>'
+        };
+        
+        const initialChoresData = [
+            { id: 'stuffies', name: 'Stuffies', iconType: 'svg', iconValue: 'stuffies' },
+            { id: 'dolls', name: 'Dolls', iconType: 'svg', iconValue: 'dolls' },
+            { id: 'books', name: 'Books', iconType: 'svg', iconValue: 'books' },
+            { id: 'dirty_clothes', name: 'Dirty Clothes', iconType: 'svg', iconValue: 'dirty_clothes' },
+            { id: 'house_toys', name: 'House Toys', iconType: 'svg', iconValue: 'house_toys' },
+            { id: 'medical_toys', name: 'Medical Toys', iconType: 'svg', iconValue: 'medical_toys' },
+            { id: 'mystery_things', name: 'Mystery Things', iconType: 'svg', iconValue: 'mystery_things' }
+        ];
+
+        let chores = [];
+        let completionStatus = {}; // { "choreId_dayIndex": status (0-3) }
+        let currentPoints = 0;
+        const pointsPerTask = 1;
+        const rewardThreshold = 5; // Show reward after 5 points
+        const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+        const taskIcons = ['', '✔️', '🌟', '💖']; // Cycle: 0-empty, 1-check, 2-star, 3-heart
+
+        function getChoreIconHTML(chore) {
+            if (chore.iconType === 'svg' && svgIcons[chore.iconValue]) {
+                return svgIcons[chore.iconValue];
+            } else if (chore.iconType === 'emoji') {
+                return `<span style="font-size: 28px;">${chore.iconValue}</span>`;
+            }
+            return svgIcons.mystery_things; // Default if not found
+        }
+
+        function renderGrid() {
+            choreGridBody.innerHTML = '';
+            chores.forEach(chore => {
+                const row = document.createElement('tr');
+                row.dataset.choreId = chore.id;
+
+                // Chore label cell
+                const labelCell = document.createElement('td');
+                labelCell.classList.add('chore-label-cell');
+                labelCell.innerHTML = `
+                    <div class="chore-item-content">
+                        <div class="chore-icon">${getChoreIconHTML(chore)}</div>
+                        <span class="chore-name">${chore.name}</span>
+                    </div>
+                    <button class="delete-chore-btn" data-chore-id="${chore.id}">X</button>
+                `;
+                row.appendChild(labelCell);
+                
+                if (isParentModeActive) {
+                    const deleteBtn = labelCell.querySelector('.delete-chore-btn');
+                    if (deleteBtn) { // Ensure button exists
+                        deleteBtn.style.display = 'block';
+                        deleteBtn.onclick = () => deleteChore(chore.id);
+                    }
+                }
+
+
+                // Task cells for each day
+                days.forEach((day, dayIndex) => {
+                    const cell = document.createElement('td');
+                    cell.classList.add('task-cell');
+                    cell.dataset.choreId = chore.id;
+                    cell.dataset.dayIndex = dayIndex;
+                    
+                    const statusKey = `${chore.id}_${dayIndex}`;
+                    const currentStatus = completionStatus[statusKey] || 0;
+                    cell.innerHTML = taskIcons[currentStatus];
+                    if (currentStatus > 0) cell.style.animation = 'none'; // Prevent re-animation on render unless changed
+
+                    cell.addEventListener('click', () => handleTaskClick(cell, chore.id, dayIndex));
+                    row.appendChild(cell);
+                });
+                choreGridBody.appendChild(row);
+            });
+            updatePointsDisplay();
+            toggleParentModeUI(); // Ensure delete buttons are correctly shown/hidden
+        }
+        
+        function handleTaskClick(cell, choreId, dayIndex) {
+            const statusKey = `${choreId}_${dayIndex}`;
+            let currentStatus = completionStatus[statusKey] || 0;
+            
+            const oldPoints = currentStatus > 0 ? pointsPerTask : 0;
+
+            currentStatus = (currentStatus + 1) % taskIcons.length;
+            completionStatus[statusKey] = currentStatus;
+            
+            cell.innerHTML = taskIcons[currentStatus];
+            
+            const newPoints = currentStatus > 0 ? pointsPerTask : 0;
+            currentPoints += (newPoints - oldPoints);
+
+            // Animation
+            cell.style.animation = 'none'; // Reset animation
+            void cell.offsetWidth; // Trigger reflow
+            cell.style.animation = 'var(--completed-bounce)'; // CORRECTED LINE
+
+            // Sparkle effect
+            if (currentStatus > 0) {
+                createSparkles(cell);
+            }
+
+            updatePointsDisplay();
+            checkReward();
+            saveData();
+        }
+
+        function createSparkles(cell) {
+            for (let i = 0; i < 5; i++) { // Create 5 sparkles
+                const sparkle = document.createElement('div');
+                sparkle.classList.add('sparkle');
+                sparkle.style.left = `${Math.random() * 80 + 10}%`; // Random position within cell
+                sparkle.style.top = `${Math.random() * 80 + 10}%`;
+                sparkle.style.backgroundColor = ['gold', 'lightpink', 'lightblue'][Math.floor(Math.random() * 3)];
+                cell.appendChild(sparkle);
+                setTimeout(() => sparkle.remove(), 600); // Remove after animation
+            }
+        }
+
+
+        function updatePointsDisplay() {
+            totalPointsDisplay.textContent = currentPoints;
+        }
+
+        function checkReward() {
+            if (currentPoints > 0 && currentPoints % rewardThreshold === 0) {
+                 const lastRewardedPoints = parseInt(localStorage.getItem('lastRewardedPoints') || '0');
+                 if (currentPoints > lastRewardedPoints) {
+                    showRewardNotification();
+                    localStorage.setItem('lastRewardedPoints', currentPoints.toString());
+                 }
+            }
+        }
+
+        function showRewardNotification() {
+            rewardNotification.classList.add('show');
+            setTimeout(() => {
+                rewardNotification.classList.remove('show');
+            }, 3000); // Show for 3 seconds
+        }
+
+        function resetWeek() {
+            if (confirm("Are you sure you want to reset the week? All progress will be lost.")) {
+                completionStatus = {};
+                currentPoints = 0;
+                localStorage.removeItem('lastRewardedPoints');
+                renderGrid();
+                saveData();
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('matildaChores', JSON.stringify(chores));
+            localStorage.setItem('matildaCompletionStatus', JSON.stringify(completionStatus));
+            localStorage.setItem('matildaCurrentPoints', currentPoints.toString());
+        }
+
+        function loadData() {
+            const loadedChores = localStorage.getItem('matildaChores');
+            if (loadedChores) {
+                chores = JSON.parse(loadedChores);
+            } else {
+                chores = JSON.parse(JSON.stringify(initialChoresData)); // Deep copy
+            }
+
+            const loadedStatus = localStorage.getItem('matildaCompletionStatus');
+            if (loadedStatus) {
+                completionStatus = JSON.parse(loadedStatus);
+            }
+
+            const loadedPoints = localStorage.getItem('matildaCurrentPoints');
+             if (loadedPoints !== null) { // Check for null explicitly
+                currentPoints = parseInt(loadedPoints);
+            } else {
+                currentPoints = 0; // Default to 0 if not found
+            }
+            
+            // Recalculate points to ensure data integrity
+            let calculatedPoints = 0;
+            chores.forEach(chore => {
+                days.forEach((day, dayIndex) => {
+                    const statusKey = `${chore.id}_${dayIndex}`;
+                    if (completionStatus[statusKey] && completionStatus[statusKey] > 0) {
+                        calculatedPoints += pointsPerTask;
+                    }
+                });
+            });
+            currentPoints = calculatedPoints; 
+            updatePointsDisplay(); 
+        }
+        
+        // Parent Mode
+        let pressTimer;
+        pageTitle.addEventListener('mousedown', startPress);
+        pageTitle.addEventListener('touchstart', startPress, { passive: false }); // passive: false for preventDefault
+        pageTitle.addEventListener('mouseup', cancelPress);
+        pageTitle.addEventListener('mouseleave', cancelPress);
+        pageTitle.addEventListener('touchend', cancelPress);
+
+        function startPress(e) {
+            if (e.type === 'touchstart') e.preventDefault(); 
+            pressTimer = window.setTimeout(() => {
+                promptParentPassword();
+            }, 2000); 
+        }
+        function cancelPress() {
+            clearTimeout(pressTimer);
+        }
+        
+        function promptParentPassword() {
+            if (isParentModeActive) return; 
+            const password = prompt("Enter parent password:");
+            if (password === PARENT_PASSWORD) {
+                activateParentMode();
+            } else if (password !== null) { 
+                alert("Incorrect password.");
+            }
+        }
+
+        function activateParentMode() {
+            isParentModeActive = true;
+            document.body.classList.add('parent-mode-active');
+            renderGrid(); 
+        }
+        
+        function deactivateParentMode() {
+            isParentModeActive = false;
+            document.body.classList.remove('parent-mode-active');
+            renderGrid(); 
+        }
+
+        function toggleParentModeUI() {
+            parentControlsSection.style.display = isParentModeActive ? 'flex' : 'none';
+            const deleteButtons = document.querySelectorAll('.delete-chore-btn');
+            deleteButtons.forEach(btn => {
+                if (btn) btn.style.display = isParentModeActive ? 'block' : 'none';
+            });
+        }
+
+        exitParentModeButton.addEventListener('click', deactivateParentMode);
+
+        addChoreButton.addEventListener('click', () => {
+            const name = newChoreNameInput.value.trim();
+            const iconType = newChoreIconTypeInput.value;
+            const iconValue = newChoreIconValueInput.value.trim();
+
+            if (!name || !iconValue) {
+                alert("Please enter chore name and icon value.");
+                return;
+            }
+            if (iconType === 'svg' && !svgIcons[iconValue]) {
+                alert(`SVG key "${iconValue}" not recognized. Available: ${Object.keys(svgIcons).join(', ')}`);
+                return;
+            }
+
+            const newChore = {
+                id: name.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now(), 
+                name: name,
+                iconType: iconType,
+                iconValue: iconValue
+            };
+            chores.push(newChore);
+            newChoreNameInput.value = '';
+            newChoreIconValueInput.value = '';
+            renderGrid();
+            saveData();
+        });
+
+        function deleteChore(choreId) {
+            const choreToDelete = chores.find(c => c.id === choreId);
+            if (choreToDelete && confirm(`Are you sure you want to delete the chore "${choreToDelete.name}"?`)) {
+                chores = chores.filter(chore => chore.id !== choreId);
+                Object.keys(completionStatus).forEach(key => {
+                    if (key.startsWith(choreId + '_')) {
+                        delete completionStatus[key];
+                    }
+                });
+                renderGrid(); 
+                // Recalculate points after deletion
+                let calculatedPoints = 0;
+                chores.forEach(chore => {
+                    days.forEach((day, dayIndex) => {
+                        const statusKey = `${chore.id}_${dayIndex}`;
+                        if (completionStatus[statusKey] && completionStatus[statusKey] > 0) {
+                            calculatedPoints += pointsPerTask;
+                        }
+                    });
+                });
+                currentPoints = calculatedPoints;
+                updatePointsDisplay();
+                saveData();
+            }
+        }
+
+
+        // Initial setup
+        resetWeekButton.addEventListener('click', resetWeek);
+        
+        loadData();
+        renderGrid();
+        deactivateParentMode(); // Start with parent mode off
+    </script>
+</body>
+</html>
