@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lesson 1.1: The One and Only! ✨</title>
+    <title>Unit 1: Numbers to 10 Gems ✨</title>
     <style>
         /* --- Global Styles for Night Mode (Copied & Adapted) --- */
         body {
@@ -11,7 +11,7 @@
             background-color: #2c2c3e; /* Dark Purple-Blue */
             color: #f0e6ff; /* Light Lavender Text */
             margin: 0;
-            padding: 20px;
+            padding: 20px; /* Added some padding for the whole page */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -19,29 +19,27 @@
         }
 
         /* --- Navigation Buttons Styling --- */
-        .nav-bar {
+        .nav-buttons {
             width: 100%;
-            max-width: 1000px;
+            max-width: 950px;
             margin-bottom: 20px;
             display: flex;
-            flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
-            justify-content: flex-start;
-            gap: 10px; /* Space between buttons */
+            justify-content: flex-start; /* Align button to the left */
         }
 
         .nav-button {
             display: inline-block;
             padding: 10px 20px;
+            margin-right: 10px; /* Space between buttons if you add more */
             background-color: #ff69b4; /* Hot Pink */
             color: white;
             text-decoration: none;
-            border-radius: 20px;
+            border-radius: 20px; /* Pill shape */
             font-weight: bold;
-            font-size: 0.95em;
+            font-size: 1em;
             border: 2px solid #ff1493; /* Deep Pink border */
             box-shadow: 0 2px 5px rgba(255, 105, 180, 0.3);
             transition: background-color 0.3s ease, transform 0.2s ease;
-            cursor: pointer;
         }
 
         .nav-button:hover {
@@ -50,468 +48,292 @@
             transform: translateY(-2px);
         }
 
-        /* --- Lesson Header Styling --- */
-        .lesson-header {
+        /* --- Unit Header Styling --- */
+        .unit-header {
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
             width: 100%;
-            max-width: 1000px;
+            max-width: 950px;
         }
 
-        .lesson-header h1 {
-            font-size: 2.4em;
+        .unit-header h1 {
+            font-size: 2.6em;
             color: #ffc0cb; /* Pink */
             margin-bottom: 5px;
-        }
-        .lesson-header .page-ref {
-            font-size: 0.9em;
-            color: #d8c8ff;
-            margin-bottom: 10px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
         }
 
-        /* --- Main Content Area for Lesson --- */
-        .lesson-content-container {
-            max-width: 1000px;
+        .unit-header .page-ref {
+            font-size: 0.9em;
+            color: #d8c8ff; /* Lighter Lavender */
+            margin-bottom: 15px;
+        }
+
+        .unit-header .unit-description {
+            font-size: 1.1em;
+            line-height: 1.6;
+            max-width: 700px;
+            margin: 0 auto; /* Center the description */
+            color: #e0d8ff;
+        }
+
+        /* --- Main Content Area for Unit Overview --- */
+        .unit-content-container {
+            max-width: 950px;
             width: 100%;
             padding: 20px;
-            background-color: #3a3a52;
+            background-color: #3a3a52; /* Darker Shade for Content Background */
             border-radius: 15px;
             box-shadow: 0 6px 12px rgba(0,0,0,0.25);
             margin-bottom: 30px;
         }
 
-        /* --- Tab System Styling --- */
-        .tabs-navigation {
-            display: flex;
-            margin-bottom: -1px; /* Overlap border with content */
-            border-bottom: 3px solid #ff69b4; /* Pink underline for active tab area */
-            padding-bottom: 5px; /* Space above the underline */
-        }
-
-        .tab-button {
-            padding: 12px 25px;
-            cursor: pointer;
-            background-color: #4f4f70; /* Mid-tone purple for inactive tabs */
-            color: #d8c8ff;
-            border: 1px solid #6a6aaf;
-            border-bottom: none;
-            border-radius: 10px 10px 0 0; /* Rounded top corners */
-            font-size: 1.1em;
-            font-weight: bold;
-            margin-right: 5px;
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        .tab-button.active {
-            background-color: #ff69b4; /* Hot Pink for active tab */
-            color: white;
-            border-color: #ff69b4;
-        }
-        .tab-button:not(.active):hover {
-            background-color: #606082;
-        }
-
-        .tab-content-area {
-            border: 1px solid #6a6aaf;
-            border-top: none; /* Top border handled by tab buttons */
-            padding: 25px;
-            background-color: #40405c; /* Slightly different dark shade for content */
-            border-radius: 0 0 10px 10px;
-        }
-
-        .tab-pane {
-            display: none; /* Hide inactive tab content */
-        }
-
-        .tab-pane.active {
-            display: block; /* Show active tab content */
-        }
-
-        /* --- Parent Guide Specific Styling --- */
-        .parent-guide h2, .parent-guide h3, .parent-guide h4 {
-            color: #ffc0cb; /* Pink for headings */
-            margin-top: 20px;
-        }
-        .parent-guide h2 { font-size: 1.6em; border-bottom: 1px dashed #ffc0cb; padding-bottom: 5px;}
-        .parent-guide h3 { font-size: 1.3em; }
-        .parent-guide h4 { font-size: 1.15em; color: #e0d8ff; }
-
-        .parent-guide p, .parent-guide li {
-            line-height: 1.7;
-            font-size: 1.05em;
-            color: #e8e0ff;
-        }
-        .parent-guide ul {
-            list-style: '✨ '; /* Sparkle bullet */
-            padding-left: 25px;
-        }
-        .parent-guide strong { color: #ffc0cb; } /* Highlight important words */
-        .parent-guide .dialogue {
-            font-style: italic;
-            color: #d8c8ff;
-            margin-left: 15px;
-            padding-left: 10px;
-            border-left: 2px solid #ff69b4;
-        }
-        .parent-guide .materials-list li { margin-bottom: 5px; }
-        .parent-guide .instruction {
-            background-color: #4a4a63;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            border-left: 3px solid #ffc0cb;
-        }
-
-
-        /* --- Child Activity Zone Specific Styling --- */
-        .child-activity-zone h2 {
-            color: #ffc0cb;
+        /* --- Lesson Listing Styling --- */
+        .lesson-selection-area h2 {
             text-align: center;
-            font-size: 1.8em;
-            margin-bottom: 20px;
-        }
-        .activity-step {
-            background-color: #4a4a63; /* Slightly lighter than tab content area */
-            padding: 20px;
-            border-radius: 10px;
+            color: #f0e6ff;
+            margin-top: 0; /* Reset margin from container padding */
             margin-bottom: 25px;
+            font-size: 1.8em;
+            border-bottom: 2px dashed #ff69b4; /* Hot Pink Dashed Line */
+            padding-bottom: 12px;
+        }
+
+        .lesson-grid {
+            display: grid;
+            /* Adjust columns for potentially more lessons */
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+            list-style: none;
+            padding: 0;
+        }
+
+        .lesson-card {
+            background-color: #4f4f70; /* Mid-tone purple */
+            border-radius: 10px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #6a6aaf; /* Slightly lighter border */
+        }
+
+        .lesson-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 5px 12px rgba(255, 105, 180, 0.25); /* Pink glow on hover */
+        }
+
+        .lesson-card a {
+            display: flex; /* For better alignment of content */
+            flex-direction: column;
+            justify-content: center; /* Center content vertically */
+            padding: 20px 15px;
+            text-decoration: none;
+            color: #f0e6ff;
             text-align: center;
-            border: 1px solid #606082;
+            min-height: 100px; /* Ensure cards have some height */
         }
-        .activity-step p {
-            font-size: 1.2em;
+
+        .lesson-card .lesson-title {
+            font-size: 1.25em;
+            font-weight: bold;
+            color: #ffc0cb; /* Pink */
+            margin-bottom: 5px;
+        }
+
+        .lesson-card .lesson-subtitle {
+            font-size: 0.9em;
+            color: #d8c8ff; /* Lighter Lavender */
+        }
+
+        /* --- "What You'll Learn" Section --- */
+        .learning-objectives {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #40405c; /* Slightly different dark shade */
+            border-radius: 10px;
+        }
+        .learning-objectives h3 {
+            color: #ffc0cb; /* Pink */
+            text-align: center;
             margin-bottom: 15px;
+            font-size: 1.5em;
         }
-        .interactive-element {
-            margin: 15px 0;
-            /* Placeholder for specific interactive element styles */
+        .learning-objectives ul {
+            list-style: '💖 '; /* Girly bullet point */
+            padding-left: 25px;
+            font-size: 1.05em;
         }
-        .activity-image {
-            max-width: 150px;
-            height: auto;
-            border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-            cursor: pointer;
-            transition: transform 0.2s ease;
-        }
-        .activity-image:hover {
-            transform: scale(1.05);
+        .learning-objectives li {
+            margin-bottom: 8px;
+            line-height: 1.5;
         }
 
-        .numeral-display {
-            font-size: 5em;
-            font-weight: bold;
-            color: #ff69b4;
-            margin: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-        }
-        .feedback-message {
-            font-size: 1.1em;
-            font-weight: bold;
-            margin-top: 10px;
-            min-height: 20px; /* Reserve space for feedback */
-        }
-        .correct { color: #aaffaa; /* Light Green */ }
-        .try-again { color: #ffaaaa; /* Light Red */ }
-
-        #trace-canvas {
-            border: 2px dashed #ffc0cb; /* Pink dashed border */
-            background-color: #555577; /* Slightly lighter for canvas visibility */
-            border-radius: 8px;
-            cursor: crosshair;
-        }
-        .canvas-controls button {
-            margin-top: 10px;
-            padding: 8px 15px;
-            font-size: 1em;
-        }
-
-
-        /* --- Footer Styling --- */
+        /* --- Footer Styling (Can be same as main index if preferred) --- */
         .app-footer {
             text-align: center;
             padding: 25px;
-            margin-top: auto;
+            margin-top: auto; /* Pushes footer to the bottom */
             font-size: 0.9em;
-            color: #b0a0cc;
+            color: #b0a0cc; /* Muted Lavender */
             width: 100%;
-            max-width: 1000px;
-            background-color: #232334;
+            max-width: 950px; /* Match content width */
+            background-color: #232334; /* Very Dark Purple-Blue */
             border-top: 2px solid #4f4f70;
-            border-radius: 0 0 10px 10px;
+            border-radius: 0 0 10px 10px; /* Rounded bottom corners if content above is rounded */
         }
     </style>
 </head>
 <body>
 
-    <nav class="nav-bar">
-        <a href="../../index.html" class="nav-button">🏠 Main Menu</a>
-        <a href="../index.html" class="nav-button">📖 Unit 1 Overview</a>
-    </nav>
+    <div class="nav-buttons">
+        <a href="../index.html" class="nav-button">🏠 Back to Main Menu</a>
+        <!-- If you had a unit selection on main menu that takes you here,
+             you might not need a "back to unit selection" if main menu is that.
+             Otherwise, you might add another button here. -->
+    </div>
 
-    <header class="lesson-header">
-        <h1>Lesson 1.1: The One and Only! ✨</h1>
-        <p class="page-ref">(Book Reference: Page 14)</p>
+    <header class="unit-header">
+        <h1>Unit 1: Numbers to 10 Gems ✨</h1>
+        <p class="page-ref">(Corresponds to Book: Page 11)</p>
+        <p class="unit-description">
+            In this magical unit, your little learner will discover the secrets of numbers 0 through 10!
+            We'll use counters, fingers, coins, and written numbers to make friends with each number.
+            Get ready to also uncover combinations that make 5 and the super special combinations that make 10!
+        </p>
     </header>
 
-    <main class="lesson-content-container">
-        <div class="tabs-navigation">
-            <button class="tab-button active" onclick="openTab(event, 'parent-guide')">💖 Parent Guide</button>
-            <button class="tab-button" onclick="openTab(event, 'child-activity')">🎉 Child Activity Zone</button>
-        </div>
+    <main class="unit-content-container">
+        <section class="lesson-selection-area">
+            <h2>Choose Your Sparkly Lesson!</h2>
+            <ul class="lesson-grid">
+                <!-- Week 1 Lessons -->
+                <li class="lesson-card">
+                    <a href="lesson-1/index.html"> <!-- unit-1/lesson-1/index.html -->
+                        <div class="lesson-title">Lesson 1.1: The One and Only!</div>
+                        <div class="lesson-subtitle">Meet Number 1</div>
+                    </a>
+                </li>
+                <li class="lesson-card">
+                    <a href="lesson-2/index.html"> <!-- unit-1/lesson-2/index.html -->
+                        <div class="lesson-title">Lesson 1.2: Twinkle Twos!</div>
+                        <div class="lesson-subtitle">Discover Number 2 & Pairs</div>
+                    </a>
+                </li>
+                <li class="lesson-card">
+                    <a href="lesson-3/index.html"> <!-- unit-1/lesson-3/index.html -->
+                        <div class="lesson-title">Lesson 1.3: Three Cheers!</div>
+                        <div class="lesson-subtitle">Exploring Number 3</div>
+                    </a>
+                </li>
+                <li class="lesson-card">
+                    <a href="lesson-4/index.html"> <!-- unit-1/lesson-4/index.html -->
+                        <div class="lesson-title">Lesson 1.4: Four-tastic Fun!</div>
+                        <div class="lesson-subtitle">Adventures with Number 4</div>
+                    </a>
+                </li>
 
-        <div class="tab-content-area">
-            <!-- Parent Guide Tab -->
-            <div id="parent-guide" class="tab-pane active parent-guide">
-                <h2>Lesson Objectives</h2>
-                <ul>
-                    <li>Recognize a quantity of <strong>1</strong>.</li>
-                    <li>Trace and identify the numeral <strong>1</strong>.</li>
-                </ul>
+                <!-- Week 2 Lessons -->
+                <li class="lesson-card">
+                    <a href="lesson-5/index.html"> <!-- unit-1/lesson-5/index.html for Lesson 2.1 -->
+                        <div class="lesson-title">Lesson 2.1: High Five!</div>
+                        <div class="lesson-subtitle">Learning Number 5</div>
+                    </a>
+                </li>
+                <li class="lesson-card">
+                    <a href="lesson-6/index.html"> <!-- unit-1/lesson-6/index.html for Lesson 2.2 -->
+                        <div class="lesson-title">Lesson 2.2: Zero the Hero!</div>
+                        <div class="lesson-subtitle">Understanding Number 0</div>
+                    </a>
+                </li>
+                <li class="lesson-card">
+                    <a href="lesson-7/index.html"> <!-- unit-1/lesson-7/index.html for Lesson 2.3 -->
+                        <div class="lesson-title">Lesson 2.3: Penny Power!</div>
+                        <div class="lesson-subtitle">Introducing Pennies</div>
+                    </a>
+                </li>
+                <li class="lesson-card">
+                    <a href="lesson-8/index.html"> <!-- unit-1/lesson-8/index.html for Lesson 2.4 -->
+                        <div class="lesson-title">Lesson 2.4: Nickel Knockout!</div>
+                        <div class="lesson-subtitle">Learning about Nickels</div>
+                    </a>
+                </li>
 
-                <h2>Materials Needed</h2>
-                <ul class="materials-list">
-                    <li><strong>Physical:</strong> 1 small toy (like a race car or plastic animal), Paper for tracing (optional, if not using digital).</li>
-                    <li><strong>App Provides:</strong> Interactive activities for quantity 1, digital tracing for numeral 1.</li>
-                </ul>
+                <!-- Week 3 Lessons -->
+                <li class="lesson-card">
+                    <a href="lesson-9/index.html"> <!-- unit-1/lesson-9/index.html for Lesson 3.1 -->
+                        <div class="lesson-title">Lesson 3.1: Super Six!</div>
+                        <div class="lesson-subtitle">Getting to know Number 6</div>
+                    </a>
+                </li>
+                <li class="lesson-card">
+                    <a href="lesson-10/index.html"> <!-- unit-1/lesson-10/index.html for Lesson 3.2 -->
+                        <div class="lesson-title">Lesson 3.2: Lucky Seven!</div>
+                        <div class="lesson-subtitle">Exploring Number 7</div>
+                    </a>
+                </li>
+                <li class="lesson-card">
+                    <a href="lesson-11/index.html"> <!-- unit-1/lesson-11/index.html for Lesson 3.3 -->
+                        <div class="lesson-title">Lesson 3.3: Awesome Eight!</div>
+                        <div class="lesson-subtitle">Adventures with Number 8</div>
+                    </a>
+                </li>
+                <li class="lesson-card">
+                    <a href="lesson-12/index.html"> <!-- unit-1/lesson-12/index.html for Lesson 3.4 -->
+                        <div class="lesson-title">Lesson 3.4: Groovy Nine!</div>
+                        <div class="lesson-subtitle">Discovering Number 9</div>
+                    </a>
+                </li>
 
-                <hr style="border-color: #4f4f70; margin: 20px 0;">
+                <!-- Week 4 Lessons -->
+                 <li class="lesson-card">
+                    <a href="lesson-13/index.html"> <!-- unit-1/lesson-13/index.html for Lesson 4.1 -->
+                        <div class="lesson-title">Lesson 4.1: Ten-tastic!</div>
+                        <div class="lesson-subtitle">Introducing Number 10</div>
+                    </a>
+                </li>
+                <li class="lesson-card">
+                    <a href="lesson-14/index.html"> <!-- unit-1/lesson-14/index.html for Lesson 4.2 -->
+                        <div class="lesson-title">Lesson 4.2: Make 10 Magic!</div>
+                        <div class="lesson-subtitle">Combinations for Ten</div>
+                    </a>
+                </li>
+                <li class="lesson-card">
+                    <a href="lesson-15/index.html"> <!-- unit-1/lesson-15/index.html for Lesson 4.3 -->
+                        <div class="lesson-title">Lesson 4.3: Number Pairs Power!</div>
+                        <div class="lesson-subtitle">Finding Pairs that Make 10</div>
+                    </a>
+                </li>
+                <li class="lesson-card">
+                    <a href="lesson-16/index.html"> <!-- unit-1/lesson-16/index.html for Lesson 4.4 -->
+                        <div class="lesson-title">Lesson 4.4: Make 10 Memory Game!</div>
+                        <div class="lesson-subtitle">Fun with Ten Combinations</div>
+                    </a>
+                </li>
+                <!-- Add more lesson cards here -->
+            </ul>
+        </section>
 
-                <h3>Activity: Introduce 1</h3>
-                <div class="instruction">
-                    <p>Start by saying:</p>
-                    <p class="dialogue">"Today, we're going to learn all about the amazing number <strong>1</strong>!"</p>
-                    <p>Place <strong>1</strong> small toy on the table (or show a picture of one if in the app).</p>
-                    <p class="dialogue">"Look! This toy is all by itself. There's just <strong>1</strong> toy."</p>
-                    <p>Move the toy (or image).</p>
-                    <p class="dialogue">"No matter where I put it, there's still just <strong>1</strong> toy."</p>
-                </div>
-                <div class="instruction">
-                    <p>Continue with these prompts:</p>
-                    <p class="dialogue">"Can you hold up <strong>1</strong> finger?" (Child holds up 1 finger)</p>
-                    <p class="dialogue">"Look at my face. I have <strong>1</strong> nose. Can you point to your <strong>1</strong> nose?" (Child points)</p>
-                    <p class="dialogue">"I have <strong>1</strong> mouth. Can you point to your <strong>1</strong> mouth?" (Child points)</p>
-                    <p class="dialogue">"Can you clap your hands <strong>1</strong> time?" (Child claps once)</p>
-                    <p class="dialogue">"Can you balance on <strong>1</strong> foot?" (Child tries to balance)</p>
-                </div>
+        <section class="learning-objectives">
+            <h3>What Your Star Will Learn in Unit 1:</h3>
+            <ul>
+                <li>Count and recognize shiny quantities from 0 to 10.</li>
+                <li>Read and write the magical numerals from 0 to 10.</li>
+                <li>Identify sparkling nickels and pennies and find their value up to 10 cents.</li>
+                <li>Discover delightful combinations that make 10 (like 6 and 4, or 7 and 3)!</li>
+                <li>Find cool combinations that make 5.</li>
+            </ul>
+        </section>
 
-                <h3>Activity: Find Groups of 1</h3>
-                 <div class="instruction">
-                    <p class="dialogue">"You have just <strong>1</strong> nose and just <strong>1</strong> mouth. Let's look around the house (or in this picture) for things that we have only <strong>1</strong> of."</p>
-                    <p>Encourage the child to find single objects. Examples: one refrigerator, one favorite blankie, one cookie left.</p>
-                </div>
+         <!-- Optional: Link to Unit 1 Checkpoint if you make a separate page for it -->
+        <!--
+        <section class="unit-checkpoint-link" style="text-align: center; margin-top: 30px;">
+            <a href="checkpoint/index.html" class="nav-button" style="background-color: #c71585; border-color: #c71585;">Unit 1 Checkpoint Review!</a>
+        </section>
+        -->
 
-                <h3>Workbook (Page 1): Write 1</h3>
-                 <div class="instruction">
-                    <p class="dialogue">"We can write numbers, just like we write letters and words! If I'm making a grocery list and need just <strong>1</strong> apple, this is how I write the number 1."</p>
-                    <p>Show how to trace/write the number 1 (app will demonstrate this digitally).</p>
-                    <p class="dialogue">"To write a <strong>1</strong>, we start at the top and make a long line straight down. Easy peasy!"</p>
-                    <p>Guide the child to complete the workbook page or the digital tracing activity. Remind them to say "one" as they trace.</p>
-                </div>
-            </div>
-
-            <!-- Child Activity Zone Tab -->
-            <div id="child-activity" class="tab-pane child-activity-zone">
-                <h2>Let's Play with Number 1!</h2>
-
-                <div class="activity-step" id="activity-1-introduce">
-                    <p>Look! There is <strong>one</strong> shiny star! Can you click it?</p>
-                    <img src="https://via.placeholder.com/100/FFD700/000000?Text=★" alt="One Star" class="activity-image" id="clickable-star" onclick="showNumberOne()">
-                    <div id="number-display-1" class="numeral-display" style="display: none;">1</div>
-                    <p class="feedback-message" id="feedback-1"></p>
-                </div>
-
-                <div class="activity-step" id="activity-2-body-parts" style="display: none;">
-                    <p>Can you touch your nose? You have <strong>one</strong> nose!</p>
-                    <img src="https://via.placeholder.com/150/FFC0CB/000000?Text=Nose" alt="Face with nose" class="activity-image" onclick="feedbackMessage('feedback-2', 'Great job! You found your one nose!', true)">
-                    <p class="feedback-message" id="feedback-2"></p>
-                </div>
-
-                <div class="activity-step" id="activity-3-find-one" style="display: none;">
-                    <p>Click the picture that shows only <strong>one</strong> item!</p>
-                    <div style="display: flex; justify-content: space-around; margin: 15px 0;">
-                        <img src="https://via.placeholder.com/100/ADD8E6/000000?Text=🍎" alt="One Apple" class="activity-image" onclick="feedbackMessage('feedback-3', 'Yes! One apple! You got it!', true)">
-                        <img src="https://via.placeholder.com/100/90EE90/000000?Text=🎈🎈" alt="Two Balloons" class="activity-image" onclick="feedbackMessage('feedback-3', 'Oops! That shows two. Try again!', false)">
-                        <img src="https://via.placeholder.com/100/FFFFE0/000000?Text=☀️☀️☀️" alt="Three Suns" class="activity-image" onclick="feedbackMessage('feedback-3', 'That`s three! Look for just one.', false)">
-                    </div>
-                    <p class="feedback-message" id="feedback-3"></p>
-                </div>
-
-                <div class="activity-step" id="activity-4-trace-one" style="display: none;">
-                    <p>Time to trace the number <strong>1</strong>! Start at the dot and go down.</p>
-                    <canvas id="trace-canvas" width="200" height="250"></canvas>
-                    <div class="canvas-controls">
-                        <button class="nav-button" onclick="clearCanvas()">✨ Clear & Try Again</button>
-                    </div>
-                    <p class="feedback-message" id="feedback-4"></p>
-                </div>
-
-                <div style="text-align: center; margin-top: 20px;">
-                    <button class="nav-button" onclick="nextActivityStep()">Next Sparkly Step ➡️</button>
-                </div>
-
-            </div>
-        </div>
     </main>
 
     <footer class="app-footer">
-        <p>© 2024 Your Sparkly App. Lesson 1.1 - The One and Only!</p>
+        <p>© 2024 Your Sparkly App. Unit 1 Adventures!</p>
     </footer>
 
-    <script>
-        // --- Tab Navigation ---
-        function openTab(evt, tabName) {
-            var i, tabcontent, tabbuttons;
-            tabcontent = document.getElementsByClassName("tab-pane");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
-                tabcontent[i].classList.remove("active");
-            }
-            tabbuttons = document.getElementsByClassName("tab-button");
-            for (i = 0; i < tabbuttons.length; i++) {
-                tabbuttons[i].classList.remove("active");
-            }
-            document.getElementById(tabName).style.display = "block";
-            document.getElementById(tabName).classList.add("active");
-            evt.currentTarget.classList.add("active");
-        }
-        // Initialize first tab
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelector('.tab-button.active').click();
-            initializeCanvas();
-            currentActivityStep = 0; // Start with the first activity
-            showCurrentActivityStep();
-        });
-
-        // --- Child Activity Zone Logic ---
-        let currentActivityStep = 0;
-        const activitySteps = ['activity-1-introduce', 'activity-2-body-parts', 'activity-3-find-one', 'activity-4-trace-one'];
-
-        function showCurrentActivityStep() {
-            activitySteps.forEach((stepId, index) => {
-                const stepElement = document.getElementById(stepId);
-                if (index === currentActivityStep) {
-                    stepElement.style.display = 'block';
-                } else {
-                    stepElement.style.display = 'none';
-                }
-            });
-        }
-
-        function nextActivityStep() {
-            currentActivityStep++;
-            if (currentActivityStep >= activitySteps.length) {
-                currentActivityStep = 0; // Loop back or end
-                 feedbackMessage('feedback-4', '🎉 You completed all steps for Number 1! Amazing! 🎉', true);
-            }
-             // Clear previous feedback
-            activitySteps.forEach(stepId => {
-                const feedbackEl = document.getElementById(stepId.replace('activity-', 'feedback-'));
-                if (feedbackEl) feedbackEl.textContent = '';
-            });
-            showCurrentActivityStep();
-        }
-
-
-        function showNumberOne() {
-            document.getElementById('number-display-1').style.display = 'inline-block';
-            feedbackMessage('feedback-1', 'That\'s right! One star! And this is the number 1!', true);
-            // You could play a sound here: new Audio('path/to/one_sound.mp3').play();
-        }
-
-        function feedbackMessage(elementId, message, isCorrect) {
-            const el = document.getElementById(elementId);
-            el.textContent = message;
-            el.className = 'feedback-message ' + (isCorrect ? 'correct' : 'try-again');
-        }
-
-        // --- Canvas Tracing Logic ---
-        let canvas, ctx, drawing = false, lastX, lastY;
-
-        function initializeCanvas() {
-            canvas = document.getElementById('trace-canvas');
-            if (!canvas) return;
-            ctx = canvas.getContext('2d');
-            
-            // Set canvas background and initial tracing guide
-            clearCanvas(); // Also draws the guide
-
-            canvas.addEventListener('mousedown', startDrawing);
-            canvas.addEventListener('mousemove', draw);
-            canvas.addEventListener('mouseup', stopDrawing);
-            canvas.addEventListener('mouseout', stopDrawing);
-
-            // Touch events
-            canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDrawing(e.touches[0]);}, { passive: false });
-            canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e.touches[0]);}, { passive: false });
-            canvas.addEventListener('touchend', stopDrawing);
-        }
-
-        function drawTracingGuide() {
-            ctx.strokeStyle = "#d8c8ff"; // Light lavender for guide
-            ctx.lineWidth = 20; // Thick guide line
-            ctx.lineCap = "round";
-            
-            // Dotted line for "1"
-            ctx.beginPath();
-            ctx.setLineDash([10, 10]); // Dashed line
-            ctx.moveTo(canvas.width / 2, 30); // Start point
-            ctx.lineTo(canvas.width / 2, canvas.height - 30); // End point
-            ctx.stroke();
-            ctx.setLineDash([]); // Reset to solid line for drawing
-
-            // Starting dot
-            ctx.beginPath();
-            ctx.fillStyle = "#ff69b4"; // Hot pink dot
-            ctx.arc(canvas.width / 2, 30, 10, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        function clearCanvas() {
-            if (!ctx) return;
-            ctx.fillStyle = "#555577"; // Canvas background
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            drawTracingGuide();
-            feedbackMessage('feedback-4', 'Ready to trace!', true);
-        }
-
-        function getMousePos(canvasDom, mouseEvent) {
-            var rect = canvasDom.getBoundingClientRect();
-            return {
-                x: mouseEvent.clientX - rect.left,
-                y: mouseEvent.clientY - rect.top
-            };
-        }
-
-        function startDrawing(e) {
-            drawing = true;
-            const pos = getMousePos(canvas, e);
-            [lastX, lastY] = [pos.x, pos.y];
-        }
-
-        function draw(e) {
-            if (!drawing) return;
-            const pos = getMousePos(canvas, e);
-            ctx.beginPath();
-            ctx.strokeStyle = '#ffc0cb'; // Pink for drawing
-            ctx.lineWidth = 10;
-            ctx.lineCap = 'round';
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(pos.x, pos.y);
-            ctx.stroke();
-            [lastX, lastY] = [pos.x, pos.y];
-        }
-
-        function stopDrawing() {
-            drawing = false;
-            // Basic check: could be more sophisticated
-            if (lastY > canvas.height - 50 && Math.abs(lastX - (canvas.width / 2)) < 30) {
-                 feedbackMessage('feedback-4', 'Great tracing of number 1! 💖', true);
-            } else {
-                 // feedbackMessage('feedback-4', 'Good try! Follow the line down.', false);
-            }
-        }
-
-    </script>
 </body>
 </html>
