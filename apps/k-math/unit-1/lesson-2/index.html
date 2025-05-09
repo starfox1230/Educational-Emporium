@@ -115,7 +115,7 @@
             border-bottom: 2px solid #ff69b4;
             padding-bottom: 5px;
         }
-        
+
         .parent-guide h3 {
             color: #d8c8ff; /* Lighter Lavender */
         }
@@ -173,7 +173,7 @@
             font-weight: bold;
             min-height: 20px;
         }
-        
+
         .feedback-positive {
             color: #a1ffc0; /* Light Green for positive */
         }
@@ -195,7 +195,7 @@
             display: flex;
             justify-content: space-around;
         }
-        
+
         .control-button {
             background-color: #ff69b4; /* Hot Pink */
             color: white;
@@ -257,7 +257,7 @@
                 <li>Pair of shoes 👟👟</li>
                 <li>Workbook page 2 (from the book)</li>
             </ul>
-            
+
             <p class="instruction">Remember: Concrete examples always need to come before abstract symbols. In this lesson, you'll provide many different concrete examples of the quantity 2 before teaching the written symbol.</p>
 
             <h2>Activity: Introduce 2 🌟</h2>
@@ -318,7 +318,7 @@
                 <p class="instruction-text">Can you show me 2 fingers, just like this? <span class="emoji-interactive" onclick="interactiveAction('fingers')">✌️</span> Click the hand when you're ready!</p>
                 <div class="feedback-message" id="feedback-2"></div>
             </div>
-            
+
             <div id="activity-step-3" class="activity-step">
                 <p class="instruction-text">We have lots of things that come in pairs of 2! Can you find 2 eyes? Click the eyes! <span class="emoji-interactive" onclick="interactiveAction('eyes')">👀</span></p>
                 <div class="feedback-message" id="feedback-3"></div>
@@ -338,7 +338,7 @@
                 <p class="instruction-text">A 'pair' means two things that go together! Which of these are pairs? Click a pair! <span class="emoji-interactive" onclick="checkPair(true, 'shoes')">👟👟</span> <span class="emoji-interactive" onclick="checkPair(true, 'socks')">🧦🧦</span> <span class="emoji-interactive" onclick="checkPair(false, 'apple')">🍎</span></p>
                 <div class="feedback-message" id="feedback-6"></div>
             </div>
-            
+
             <div id="activity-step-7" class="activity-step">
                 <p class="instruction-text">Time to write the amazing number 2! Start at the 💖, curve around, and slide across the bottom. Give it a try on the sparkly pad!</p>
                 <canvas id="trace-canvas" width="200" height="200"></canvas>
@@ -358,7 +358,6 @@
     </footer>
 
     <script>
-            <script>
         let ttsEnabled = false;
         const synth = window.speechSynthesis;
         let currentInstructionText = ""; // This will store the emoji-stripped text for TTS
@@ -377,6 +376,7 @@
         const emojiRegex = /[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{2B50}\u{1F004}\u{1F0CF}\u{1F170}-\u{1F251}\u{2300}-\u{23FF}]/gu;
 
         function removeEmojis(text) {
+            if (typeof text !== 'string') return ""; // Ensure text is a string
             return text.replace(emojiRegex, '').replace(/\s+/g, ' ').trim(); // Replace emojis with nothing, then clean up extra spaces
         }
 
@@ -471,48 +471,54 @@
         function countInteractive(itemNumber, itemName) {
             const feedbackElem = document.getElementById(`feedback-1`);
             interactiveCounter++;
-            let feedbackText = "";
+            let feedbackText = ""; // For display text
+            let cleanFeedbackText = ""; // For TTS
             if (interactiveCounter === 1) {
-                feedbackText = `That's 1 ${itemName}! Keep going!`;
-                feedbackElem.textContent = `👟 That's 1 ${itemName}! Keep going!`; // Show emoji
+                feedbackText = `👟 That's 1 ${itemName}! Keep going!`; // Display with emoji
+                cleanFeedbackText = `That's 1 ${itemName}! Keep going!`;
             } else if (interactiveCounter === 2) {
-                feedbackText = `💖 Fantastic! That's 2 ${itemName}s! So smart!`;
-                feedbackElem.textContent = feedbackText; // Show with emoji
+                feedbackText = `💖 Fantastic! That's 2 ${itemName}s! So smart!`; // Display with emoji
+                cleanFeedbackText = `Fantastic! That's 2 ${itemName}s! So smart!`;
                 feedbackElem.className = "feedback-message feedback-positive";
                 interactiveCounter = 0;
             }
-            currentInstructionText = removeEmojis(feedbackText);
+            feedbackElem.textContent = feedbackText;
+            currentInstructionText = cleanFeedbackText;
             speak(currentInstructionText);
         }
 
         function interactiveAction(actionType) {
             let feedbackText = ""; // This will be displayed with emojis
-            let cleanFeedbackText = ""; // This will be spoken
+            let cleanFeedbackText = ""; // This will be spoken for TTS
             let feedbackId = "";
 
             switch (actionType) {
                 case 'fingers':
                     feedbackId = 'feedback-2';
                     feedbackText = "✌️ Amazing! Two fingers! You got it!";
+                    cleanFeedbackText = "Amazing! Two fingers! You got it!";
                     break;
                 case 'eyes':
                     feedbackId = 'feedback-3';
                     feedbackText = "👀 That's right! We have two eyes!";
+                    cleanFeedbackText = "That's right! We have two eyes!";
                     break;
                 case 'ears':
                     feedbackId = 'feedback-4';
                     feedbackText = "👂 You found them! Two ears, perfect for listening!";
+                    cleanFeedbackText = "You found them! Two ears, perfect for listening!";
                     break;
                 case 'hop':
                     feedbackId = 'feedback-5';
                     feedbackText = "🤸‍♀️ Super hopping! That was 2 hops!";
+                    cleanFeedbackText = "Super hopping! That was 2 hops!";
                     break;
             }
             const feedbackElem = document.getElementById(feedbackId);
             if (feedbackElem) {
                 feedbackElem.textContent = feedbackText; // Display with emojis
                 feedbackElem.className = "feedback-message feedback-positive";
-                currentInstructionText = removeEmojis(feedbackText); // Clean for TTS
+                currentInstructionText = cleanFeedbackText; // Store cleaned for TTS
                 speak(currentInstructionText);
             }
         }
@@ -522,16 +528,19 @@
             const feedbackElem = document.getElementById('feedback-6');
             pairAttempts++;
             let feedbackText = ""; // For display
+            let cleanFeedbackText = ""; // For TTS
             if (isCorrectPair) {
                 feedbackText = `🌟 Yes! A pair of ${itemName}! Well done!`;
+                cleanFeedbackText = `Yes! A pair of ${itemName}! Well done!`;
                 feedbackElem.className = "feedback-message feedback-positive";
                 pairAttempts = 0;
             } else {
                 feedbackText = `Oops! The ${itemName} is just one. A pair means two things together. Try again!`;
+                cleanFeedbackText = `Oops! The ${itemName} is just one. A pair means two things together. Try again!`;
                 feedbackElem.className = "feedback-message feedback-try-again";
             }
             feedbackElem.textContent = feedbackText; // Display with emojis
-            currentInstructionText = removeEmojis(feedbackText); // Clean for TTS
+            currentInstructionText = cleanFeedbackText; // Clean for TTS
             speak(currentInstructionText);
         }
 
@@ -539,7 +548,7 @@
         // Canvas Tracing Logic
         let canvas, ctx, drawing = false, lastX, lastY;
         const traceGuide2 = [
-            { type: 'emoji', char: '💖', x: 38, y: 58 }, // Adjusted emoji position
+            { type: 'emoji', char: '💖', x: 38, y: 58 }, // Adjusted emoji position for better centering
             { type: 'move', x: 50, y: 50 },
             { type: 'arc', x: 100, y: 70, radius: 50, startAngle: Math.PI * 1.2, endAngle: Math.PI * 0.1, anticlockwise: false },
             { type: 'line', x: 50, y: 150 },
@@ -574,33 +583,35 @@
 
         function drawTracingGuide(guide) {
             if (!ctx) return;
-            
-            // Draw 💖 at starting point first if it exists
+
             const emojiPoint = guide.find(p => p.type === 'emoji');
             if (emojiPoint) {
                 ctx.font = '24px sans-serif';
-                ctx.fillStyle = '#ff69b4';
+                ctx.fillStyle = '#ff69b4'; // Hot pink for heart
                 ctx.fillText(emojiPoint.char, emojiPoint.x, emojiPoint.y);
             }
 
-            ctx.strokeStyle = '#ffc0cb';
+            ctx.strokeStyle = '#ffc0cb'; // Light Pink for guide
             ctx.lineWidth = 3;
             ctx.setLineDash([5, 5]);
             ctx.beginPath();
 
-            let firstMove = true;
+            let firstPathPoint = guide.find(p => p.type === 'move');
+            if (firstPathPoint) {
+                 ctx.moveTo(firstPathPoint.x, firstPathPoint.y);
+            }
+
             guide.forEach(point => {
-                if (point.type === 'move') {
+                if (point.type === 'move' && point !== firstPathPoint) { // subsequent moves if any
                     ctx.moveTo(point.x, point.y);
-                    firstMove = false;
-                } else if (point.type === 'arc' && !firstMove) {
+                } else if (point.type === 'arc') {
                     ctx.arc(point.x, point.y, point.radius, point.startAngle, point.endAngle, point.anticlockwise);
-                } else if (point.type === 'line' && !firstMove) {
+                } else if (point.type === 'line') {
                     ctx.lineTo(point.x, point.y);
                 }
             });
             ctx.stroke();
-            ctx.setLineDash([]);
+            ctx.setLineDash([]); // Reset dash
         }
 
         function clearCanvas() {
@@ -611,7 +622,7 @@
             if (feedbackElem) {
                 const canvasReadyMsg = "Ready to trace the number 2!";
                 feedbackElem.textContent = canvasReadyMsg;
-                // currentInstructionText = removeEmojis(canvasReadyMsg); // Update if you want this spoken automatically
+                // currentInstructionText = removeEmojis(canvasReadyMsg); // Uncomment if this should be spoken on clear
                 // speak(currentInstructionText);
             }
         }
@@ -626,7 +637,7 @@
             if (!drawing) return;
             const pos = getMousePos(canvas, e);
             ctx.beginPath();
-            ctx.strokeStyle = '#f0e6ff';
+            ctx.strokeStyle = '#f0e6ff'; // Light Lavender for drawing
             ctx.lineWidth = 5;
             ctx.lineCap = 'round';
             ctx.moveTo(lastX, lastY);
@@ -641,9 +652,10 @@
                 const feedbackElem = document.getElementById('feedback-7');
                 if (feedbackElem) {
                     const drawingCompleteMsg = "✨ Beautiful 2! ✨";
+                    const cleanDrawingCompleteMsg = "Beautiful 2!";
                     feedbackElem.textContent = drawingCompleteMsg; // Show with emoji
                     feedbackElem.className = "feedback-message feedback-positive";
-                    currentInstructionText = removeEmojis(drawingCompleteMsg); // Clean for TTS
+                    currentInstructionText = cleanDrawingCompleteMsg; // Clean for TTS
                     speak(currentInstructionText);
                 }
             }
@@ -665,7 +677,6 @@
             openTab('parent-guide');
         });
 
-    </script>
     </script>
 </body>
 </html>
