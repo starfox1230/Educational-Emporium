@@ -1,4 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 1.2: Two is Terrific! 💖</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #2c2c3e; /* Dark Purple-Blue */
+            color: #f0e6ff; /* Light Lavender Text */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .nav-bar {
+            background-color: #3a3a52; /* Slightly Lighter Purple-Blue */
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(255, 105, 180, 0.1); /* Soft Pinkish Shadow */
+        }
+
+        .nav-button, .tts-toggle-button {
+            background-color: #ff69b4; /* Hot Pink */
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 20px;
+            border: 2px solid #ff1493; /* Deep Pink */
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-button:hover, .tts-toggle-button:hover {
+            background-color: #c71585; /* Medium Violet Red */
+        }
+
+        .lesson-header {
+            background-color: #4a4a63; /* Another shade for depth */
+            padding: 20px;
+            text-align: center;
+            border-bottom: 3px solid #ffc0cb; /* Light Pink */
+        }
+
+        .lesson-header h1 {
+            color: #ffc0cb; /* Light Pink */
+            margin: 0;
+            font-size: 2.5em;
+        }
+
+        .page-ref {
+            color: #d8c8ff; /* Lighter Lavender */
+            font-style: italic;
+        }
+
+        .lesson-content-container {
+            flex-grow: 1;
+            padding: 20px;
+            background-color: #3a3a52;
+            max-width: 900px;
+            margin: 20px auto;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .tabs-navigation {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .tab-button {
+            background-color: #ffc0cb; /* Light Pink */
+            color: #3a3a52; /* Dark text for contrast */
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px 10px 0 0;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            margin: 0 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .tab-button.active, .tab-button:hover {
+            background-color: #ff69b4; /* Hot Pink */
+            color: white;
+        }
+
+        .tab-pane {
+            display: none; /* Hidden by default */
+            padding: 20px;
+            background-color: #40405c; /* Interactive/child activity zone backgrounds */
+            border-radius: 0 0 10px 10px;
+            animation: fadeIn 0.5s;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .parent-guide h2 {
+            color: #ffc0cb; /* Light Pink */
+            border-bottom: 2px solid #ff69b4;
+            padding-bottom: 5px;
+        }
+        
+        .parent-guide h3 {
+            color: #d8c8ff; /* Lighter Lavender */
+        }
+
+        .parent-guide ul {
+            list-style-type: '💖 ';
+            padding-left: 25px;
+        }
+         .parent-guide .dialogue {
+            background-color: #4a4a63;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 5px solid #ff69b4;
+            border-radius: 5px;
+        }
+        .parent-guide .instruction {
+            color: #b0a0cc; /* Muted Lavender */
+            font-style: italic;
+        }
+
+        .child-activity-zone h2 {
+            text-align: center;
+            color: #ffc0cb;
+        }
+
+        .activity-step {
+            display: none; /* Hidden by default */
+            text-align: center;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #4a4a63;
+            border-radius: 10px;
+        }
+
+        .instruction-text {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: #f0e6ff;
+        }
+
+        .emoji-interactive {
+            font-size: 3em;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: transform 0.2s;
+        }
+
+        .emoji-interactive:hover {
+            transform: scale(1.2);
+        }
+
+        .feedback-message {
+            margin-top: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            min-height: 20px;
+        }
+        
+        .feedback-positive {
+            color: #a1ffc0; /* Light Green for positive */
+        }
+
+        .feedback-try-again {
+            color: #ffb3a1; /* Light Red for try again */
+        }
+
+        #trace-canvas {
+            border: 2px dashed #ff69b4; /* Hot Pink dashed border */
+            border-radius: 10px;
+            background-color: #5a5a73; /* Slightly different background for canvas */
+            cursor: crosshair;
+            margin-bottom: 10px;
+        }
+
+        .child-activity-controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-around;
+        }
+        
+        .control-button {
+            background-color: #ff69b4; /* Hot Pink */
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 20px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .control-button:hover {
+            background-color: #c71585; /* Medium Violet Red */
+        }
+
+        .app-footer {
+            text-align: center;
+            padding: 15px;
+            background-color: #3a3a52;
+            color: #b0a0cc;
+            font-size: 0.9em;
+            margin-top: auto; /* Pushes footer to bottom */
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="nav-bar">
+        <div>
+            <a href="../../index.html" class="nav-button">🏠 Main Menu</a>
+            <a href="../index.html" class="nav-button">📖 Unit 1 Overview</a>
+        </div>
+        <button id="tts-toggle" class="tts-toggle-button">🔊 TTS: OFF</button>
+    </nav>
+
+    <header class="lesson-header">
+        <h1>Lesson 1.2: Two is Terrific! 💖</h1>
+        <p class="page-ref">From Kindergarten Math with Confidence, Pages 16-17</p>
+    </header>
+
+    <main class="lesson-content-container">
+        <div class="tabs-navigation">
+            <button class="tab-button active" onclick="openTab('parent-guide')">💖 Parent Guide</button>
+            <button class="tab-button" onclick="openTab('child-activity')">🎉 Child Activity Zone</button>
+        </div>
+
+        <div id="parent-guide" class="tab-pane active">
+            <h2>Lesson Objectives ✨</h2>
+            <ul>
+                <li>Recognize a quantity of 2</li>
+                <li>Learn the word "pair"</li>
+                <li>Trace the numeral 2</li>
+                <li>Find pairs of 2 objects</li>
+            </ul>
+
+            <h2>Materials Needed 🛍️</h2>
+            <ul>
+                <li>Pair of shoes 👟👟</li>
+                <li>Workbook page 2 (from the book)</li>
+            </ul>
+            
+            <p class="instruction">Remember: Concrete examples always need to come before abstract symbols. In this lesson, you'll provide many different concrete examples of the quantity 2 before teaching the written symbol.</p>
+
+            <h2>Activity: Introduce 2 🌟</h2>
+            <div class="dialogue">
+                <p><strong>You:</strong> "Today, you'll learn about the number 2! Hold one shoe in each of your hands."</p>
+                <p><strong>You:</strong> "I have 1 shoe in this hand 👟 and 1 shoe in this hand 👟. Together, I have 2 shoes! Bring the shoes together and place them next to each other."</p>
+            </div>
+            <div class="dialogue">
+                <p><strong>You:</strong> "Can you hold up 2 fingers? ✌️"</p>
+                <p><em>Child holds up 2 fingers.</em></p>
+            </div>
+            <div class="dialogue">
+                <p><strong>You:</strong> "Hold up your hands. How many hands do you have? 🖐️🖐️"</p>
+                <p><em>Child: 2!</em></p>
+                <p><strong>You:</strong> "How many arms? 💪💪"</p>
+                <p><em>Child: 2!</em></p>
+                <p><strong>You:</strong> "How many legs? 🦵🦵"</p>
+                <p><em>Child: 2!</em></p>
+            </div>
+            <div class="dialogue">
+                <p><strong>You:</strong> "Look at my face. What do I have 2 of on my face? 🤔"</p>
+                <p><em>Possible answers: 2 eyes 👀, 2 nostrils, 2 ears 👂, 2 eyebrows, 2 cheeks 😊.</em></p>
+            </div>
+             <div class="dialogue">
+                <p><strong>You:</strong> "Can you point to your 2 eyes? 👀 Your 2 ears? 👂 Your 2 cheeks? 😊"</p>
+                <p><em>Child points to correct body parts.</em></p>
+            </div>
+            <div class="dialogue">
+                <p><strong>You:</strong> "Can you hop 2 times? 🤸‍♀️🤸‍♀️"</p>
+                <p><em>Child hops twice.</em></p>
+                <p><strong>You:</strong> "Can you pat your head 2 times? 👋👋"</p>
+                <p><em>Child pats head twice.</em></p>
+            </div>
+
+            <h2>Activity: Find Pairs 🧸🧸</h2>
+            <div class="dialogue">
+                <p><strong>You:</strong> "Point to the pair of shoes again 👟👟. We call 2 shoes a 'pair' of shoes. Let's look around the house for some pairs!"</p>
+            </div>
+            <p class="instruction">Walk with your child around your home and look for pairs of objects. For example, you might find a pair of socks 🧦🧦, a pair of dice 🎲🎲, or a pair of candlesticks. Point out that you and your child together are a pair of people 👩‍👧.</p>
+
+            <h2>Workbook (Page 2): Write 2 and Find Pairs ✏️</h2>
+             <p class="instruction">At the top of workbook page 2 (from the book), demonstrate how to trace the number 2.</p>
+            <div class="dialogue">
+                <p><strong>You:</strong> "To write a 2, start at the top and curve around. Then, make a straight line across the bottom." (Show how to trace the number 2 in the air or on paper).</p>
+            </div>
+            <p class="instruction">Have your child complete workbook page 2. The page will likely have activities for finding pairs and tracing the number 2.</p>
+        </div>
+
+        <div id="child-activity" class="tab-pane child-activity-zone">
+            <h2>Let's Play with the Number Two! 💖</h2>
+
+            <div id="activity-step-1" class="activity-step">
+                <p class="instruction-text">Sparkle! ✨ I have 1 shoe here <span class="emoji-interactive" onclick="countInteractive(1, 'shoe')">👟</span> and another shoe here <span class="emoji-interactive" onclick="countInteractive(2, 'shoe')">👟</span>. Click them to count! How many shoes in total?</p>
+                <div class="feedback-message" id="feedback-1"></div>
+            </div>
+
+            <div id="activity-step-2" class="activity-step">
+                <p class="instruction-text">Can you show me 2 fingers, just like this? <span class="emoji-interactive" onclick="interactiveAction('fingers')">✌️</span> Click the hand when you're ready!</p>
+                <div class="feedback-message" id="feedback-2"></div>
+            </div>
+            
+            <div id="activity-step-3" class="activity-step">
+                <p class="instruction-text">We have lots of things that come in pairs of 2! Can you find 2 eyes? Click the eyes! <span class="emoji-interactive" onclick="interactiveAction('eyes')">👀</span></p>
+                <div class="feedback-message" id="feedback-3"></div>
+            </div>
+
+            <div id="activity-step-4" class="activity-step">
+                <p class="instruction-text">Time for more pairs! Click the ears! <span class="emoji-interactive" onclick="interactiveAction('ears')">👂</span> Do we have 2 ears?</p>
+                <div class="feedback-message" id="feedback-4"></div>
+            </div>
+
+            <div id="activity-step-5" class="activity-step">
+                <p class="instruction-text">Let's hop 2 times! 🤸‍♀️ One... Two! Did you do it? Click the star! <span class="emoji-interactive" onclick="interactiveAction('hop')">🌟</span></p>
+                <div class="feedback-message" id="feedback-5"></div>
+            </div>
+
+            <div id="activity-step-6" class="activity-step">
+                <p class="instruction-text">A 'pair' means two things that go together! Which of these are pairs? Click a pair! <span class="emoji-interactive" onclick="checkPair(true, 'shoes')">👟👟</span> <span class="emoji-interactive" onclick="checkPair(true, 'socks')">🧦🧦</span> <span class="emoji-interactive" onclick="checkPair(false, 'apple')">🍎</span></p>
+                <div class="feedback-message" id="feedback-6"></div>
+            </div>
+            
+            <div id="activity-step-7" class="activity-step">
+                <p class="instruction-text">Time to write the amazing number 2! Start at the 💖, curve around, and slide across the bottom. Give it a try on the sparkly pad!</p>
+                <canvas id="trace-canvas" width="200" height="200"></canvas>
+                <button class="control-button" onclick="clearCanvas()">✨ Clear Pad</button>
+                <div class="feedback-message" id="feedback-7"></div>
+            </div>
+
+            <div class="child-activity-controls">
+                <button class="control-button" onclick="repeatCurrentInstruction()">🔁 Repeat</button>
+                <button class="control-button" onclick="nextActivityStep()">Next Sparkly Step ➡️</button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        © 2024 Your Sparkly Math App. Lesson 1.2 Fun! ✨
+    </footer>
+
     <script>
+            <script>
         let ttsEnabled = false;
         const synth = window.speechSynthesis;
         let currentInstructionText = ""; // This will store the emoji-stripped text for TTS
@@ -306,3 +666,6 @@
         });
 
     </script>
+    </script>
+</body>
+</html>
