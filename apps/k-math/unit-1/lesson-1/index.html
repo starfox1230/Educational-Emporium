@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lesson 1.1: The One and Only! ✨</title>
     <style>
-        /* --- Global Styles for Night Mode (Copied & Adapted) --- */
+        /* ... (All previous CSS styles remain the same) ... */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #2c2c3e; /* Dark Purple-Blue */
@@ -25,11 +25,16 @@
             margin-bottom: 20px;
             display: flex;
             flex-wrap: wrap;
-            justify-content: flex-start;
+            justify-content: space-between; /* For TTS toggle alignment */
+            align-items: center;
+            gap: 10px;
+        }
+        .nav-links {
+            display: flex;
             gap: 10px;
         }
 
-        .nav-button {
+        .nav-button, .tts-toggle-button { /* Shared style for buttons */
             display: inline-block;
             padding: 10px 20px;
             background-color: #ff69b4; /* Hot Pink */
@@ -44,11 +49,16 @@
             cursor: pointer;
         }
 
-        .nav-button:hover {
+        .nav-button:hover, .tts-toggle-button:hover {
             background-color: #c71585; /* Medium Violet Red */
             border-color: #c71585;
             transform: translateY(-2px);
         }
+        .tts-toggle-button.active {
+            background-color: #c71585; /* Darker when active */
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
 
         /* --- Lesson Header Styling --- */
         .lesson-header {
@@ -178,16 +188,16 @@
             text-align: center;
             border: 1px solid #606082;
         }
-        .activity-step p {
+        .activity-step p.instruction-text { /* Added class for instruction text */
             font-size: 1.2em;
             margin-bottom: 15px;
         }
         
         .emoji-interactive {
-            font-size: 4rem; /* Make emojis large and clickable */
+            font-size: 4rem; 
             cursor: pointer;
             transition: transform 0.2s ease;
-            display: inline-block; /* Allows transform */
+            display: inline-block; 
             margin: 5px 10px;
         }
         .emoji-interactive:hover {
@@ -215,7 +225,7 @@
             background-color: #555577;
             border-radius: 8px;
             cursor: crosshair;
-            display: block; /* Center canvas */
+            display: block; 
             margin: 15px auto;
         }
         .canvas-controls button {
@@ -223,13 +233,38 @@
             padding: 8px 15px;
             font-size: 1em;
         }
+        .child-activity-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px; /* Space between next and repeat buttons */
+            margin-top: 20px;
+        }
+
+
+        /* --- Footer Styling --- */
+        .app-footer {
+            text-align: center;
+            padding: 25px;
+            margin-top: auto;
+            font-size: 0.9em;
+            color: #b0a0cc;
+            width: 100%;
+            max-width: 1000px;
+            background-color: #232334;
+            border-top: 2px solid #4f4f70;
+            border-radius: 0 0 10px 10px;
+        }
     </style>
 </head>
 <body>
 
     <nav class="nav-bar">
-        <a href="../../index.html" class="nav-button">🏠 Main Menu</a>
-        <a href="../index.html" class="nav-button">📖 Unit 1 Overview</a>
+        <div class="nav-links">
+            <a href="../../index.html" class="nav-button">🏠 Main Menu</a>
+            <a href="../index.html" class="nav-button">📖 Unit 1 Overview</a>
+        </div>
+        <button id="tts-toggle" class="tts-toggle-button">🔊 TTS: OFF</button>
     </nav>
 
     <header class="lesson-header">
@@ -244,22 +279,19 @@
         </div>
 
         <div class="tab-content-area">
-            <!-- Parent Guide Tab (Content remains the same as previous version) -->
+            <!-- Parent Guide Tab (Content remains the same) -->
             <div id="parent-guide" class="tab-pane active parent-guide">
                 <h2>Lesson Objectives</h2>
                 <ul>
                     <li>Recognize a quantity of <strong>1</strong>.</li>
                     <li>Trace and identify the numeral <strong>1</strong>.</li>
                 </ul>
-
                 <h2>Materials Needed</h2>
                 <ul class="materials-list">
                     <li><strong>Physical:</strong> 1 small toy (like a 🚗 or 🧸), Paper for tracing (optional).</li>
                     <li><strong>App Provides:</strong> Interactive activities for quantity 1, digital tracing for numeral 1.</li>
                 </ul>
-
                 <hr style="border-color: #4f4f70; margin: 20px 0;">
-
                 <h3>Activity: Introduce 1</h3>
                 <div class="instruction">
                     <p>Start by saying:</p>
@@ -276,12 +308,10 @@
                     <p class="dialogue">"Can you clap your hands <strong>1</strong> time? 👏"</p>
                     <p class="dialogue">"Can you balance on <strong>1</strong> foot? 🧍‍♀️"</p>
                 </div>
-
                 <h3>Activity: Find Groups of 1</h3>
                  <div class="instruction">
                     <p class="dialogue">"You have just <strong>1</strong> nose 👃 and just <strong>1</strong> mouth 👄. Let's look around for things that we have only <strong>1</strong> of. Maybe <strong>1</strong> yummy 🍎 or <strong>1</strong> special 🎁?"</p>
                 </div>
-
                 <h3>Workbook (Page 1): Write 1</h3>
                  <div class="instruction">
                     <p class="dialogue">"We can write numbers, just like we write letters and words! If I need just <strong>1</strong> 🧁, this is how I write the number 1."</p>
@@ -294,20 +324,20 @@
                 <h2>Let's Play with Number 1! 💖</h2>
 
                 <div class="activity-step" id="activity-1-introduce">
-                    <p>Look! There is <strong>one</strong> shiny star! Can you click it?</p>
+                    <p class="instruction-text">Look! There is <strong>one</strong> shiny star! Can you click it?</p>
                     <span class="emoji-interactive" onclick="showNumberOne()">🌟</span>
                     <div id="number-display-1" class="numeral-display" style="display: none;">1</div>
                     <p class="feedback-message" id="feedback-1"></p>
                 </div>
 
                 <div class="activity-step" id="activity-2-body-parts" style="display: none;">
-                    <p>Can you touch your nose? You have <strong>one</strong> nose!</p>
+                    <p class="instruction-text">Can you touch your nose? You have <strong>one</strong> nose!</p>
                     <span class="emoji-interactive" onclick="feedbackMessage('feedback-2', 'Great job! You found your one nose! 👃💖', true)">👃</span>
                     <p class="feedback-message" id="feedback-2"></p>
                 </div>
 
                 <div class="activity-step" id="activity-3-find-one" style="display: none;">
-                    <p>Click the picture that shows only <strong>one</strong> sparkly item!</p>
+                    <p class="instruction-text">Click the picture that shows only <strong>one</strong> sparkly item!</p>
                     <div>
                         <span class="emoji-interactive" onclick="feedbackMessage('feedback-3', 'Yes! One diamond! 💎 You got it!', true)">💎</span>
                         <span class="emoji-interactive" onclick="feedbackMessage('feedback-3', 'Oops! Those are two hearts. ❤️❤️ Try again!', false)">❤️❤️</span>
@@ -317,17 +347,19 @@
                 </div>
 
                 <div class="activity-step" id="activity-4-trace-one" style="display: none;">
-                    <p>Time to trace the number <strong>1</strong>! Start at the 💖 and go down.</p>
-                    <canvas id="trace-canvas" width="150" height="200"></canvas> <!-- Adjusted canvas size -->
+                    <p class="instruction-text">Time to trace the number <strong>1</strong>! Start at the 💖 and go down.</p>
+                    <canvas id="trace-canvas" width="150" height="200"></canvas>
                     <div class="canvas-controls">
                         <button class="nav-button" onclick="clearCanvas()">✨ Clear & Try Again</button>
                     </div>
                     <p class="feedback-message" id="feedback-4"></p>
                 </div>
 
-                <div style="text-align: center; margin-top: 20px;">
+                <div class="child-activity-controls">
+                    <button class="nav-button" onclick="repeatCurrentInstruction()">🔁 Repeat Instructions</button>
                     <button class="nav-button" onclick="nextActivityStep()">Next Sparkly Step ➡️</button>
                 </div>
+
             </div>
         </div>
     </main>
@@ -337,6 +369,36 @@
     </footer>
 
     <script>
+        // --- TTS State & Speech Synthesis Setup ---
+        let ttsEnabled = false;
+        const synth = window.speechSynthesis;
+        let currentInstructionText = ""; // To store text for repeating
+
+        const ttsToggleButton = document.getElementById('tts-toggle');
+        ttsToggleButton.addEventListener('click', () => {
+            ttsEnabled = !ttsEnabled;
+            ttsToggleButton.textContent = `🔊 TTS: ${ttsEnabled ? 'ON' : 'OFF'}`;
+            ttsToggleButton.classList.toggle('active', ttsEnabled);
+            if (!ttsEnabled && synth.speaking) {
+                synth.cancel(); // Stop any ongoing speech if TTS is turned off
+            }
+        });
+
+        function speak(textToSpeak) {
+            if (ttsEnabled && textToSpeak && synth) {
+                if (synth.speaking) { // If already speaking, cancel previous and speak new
+                    synth.cancel();
+                }
+                const utterance = new SpeechSynthesisUtterance(textToSpeak);
+                // Optional: Configure voice, rate, pitch
+                // const voices = synth.getVoices();
+                // utterance.voice = voices.find(voice => voice.lang === 'en-US' && voice.name.includes('Female')); // Example
+                utterance.pitch = 1.2; // Slightly higher pitch for a "girly" feel
+                utterance.rate = 0.9;  // Slightly slower for clarity
+                synth.speak(utterance);
+            }
+        }
+
         // --- Tab Navigation ---
         function openTab(evt, tabName) {
             var i, tabcontent, tabbuttons;
@@ -352,13 +414,27 @@
             document.getElementById(tabName).style.display = "block";
             document.getElementById(tabName).classList.add("active");
             evt.currentTarget.classList.add("active");
+
+             // Stop speech when switching tabs
+            if (synth.speaking) {
+                synth.cancel();
+            }
+            // If switching to child activity, speak its first instruction
+            if (tabName === 'child-activity' && activitySteps.length > 0) {
+                const firstStepId = activitySteps[currentActivityStep || 0];
+                const instructionEl = document.querySelector(`#${firstStepId} .instruction-text`);
+                if (instructionEl) {
+                    currentInstructionText = instructionEl.textContent.replace(/<strong>|<\/strong>/g, ''); // Store and clean for TTS
+                    speak(currentInstructionText);
+                }
+            }
         }
         // Initialize first tab
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelector('.tab-button.active').click();
             initializeCanvas();
             currentActivityStep = 0;
-            showCurrentActivityStep();
+            showCurrentActivityStep(); // This will also trigger initial TTS if enabled
         });
 
         // --- Child Activity Zone Logic ---
@@ -370,38 +446,70 @@
                 const stepElement = document.getElementById(stepId);
                 if (index === currentActivityStep) {
                     stepElement.style.display = 'block';
+                    const instructionEl = stepElement.querySelector('.instruction-text');
+                    if (instructionEl) {
+                        currentInstructionText = instructionEl.textContent.replace(/<strong>|<\/strong>/g, ''); // Remove strong tags for cleaner speech
+                        speak(currentInstructionText);
+                    } else {
+                        currentInstructionText = ""; // No specific instruction text element
+                    }
                 } else {
                     stepElement.style.display = 'none';
                 }
             });
         }
+        
+        function repeatCurrentInstruction() {
+            if(currentInstructionText) {
+                speak(currentInstructionText);
+            } else {
+                // Fallback if currentInstructionText is somehow not set
+                const currentStepElement = document.getElementById(activitySteps[currentActivityStep]);
+                const instructionEl = currentStepElement.querySelector('.instruction-text');
+                if (instructionEl) {
+                    const textToRepeat = instructionEl.textContent.replace(/<strong>|<\/strong>/g, '');
+                    speak(textToRepeat);
+                }
+            }
+        }
+
 
         function nextActivityStep() {
             currentActivityStep++;
             if (currentActivityStep >= activitySteps.length) {
                 currentActivityStep = 0; 
-                 feedbackMessage('feedback-4', '🎉 You completed all steps for Number 1! You superstar! 🌟💖', true);
+                 const congratsMsg = '🎉 You completed all steps for Number 1! You superstar! 🌟💖';
+                 feedbackMessage('feedback-4', congratsMsg, true);
+                 currentInstructionText = congratsMsg;
+                 speak(congratsMsg); // Speak the final congrats
+            } else {
+                // Clear previous feedback from all steps before showing new one
+                activitySteps.forEach(stepId => {
+                    const feedbackElId = `feedback-${stepId.match(/\d+/)[0]}`; 
+                    const feedbackEl = document.getElementById(feedbackElId);
+                    if (feedbackEl) feedbackEl.textContent = '';
+                });
             }
-            activitySteps.forEach(stepId => {
-                const feedbackElId = `feedback-${stepId.match(/\d+/)[0]}`; // Extracts number from stepId
-                const feedbackEl = document.getElementById(feedbackElId);
-                if (feedbackEl) feedbackEl.textContent = '';
-            });
-            showCurrentActivityStep();
+            showCurrentActivityStep(); // This will read the new instruction
         }
 
         function showNumberOne() {
             document.getElementById('number-display-1').style.display = 'inline-block';
-            feedbackMessage('feedback-1', 'That\'s right! One star 🌟! And this is the number 1!', true);
+            const msg = 'That\'s right! One star 🌟! And this is the number 1!';
+            feedbackMessage('feedback-1', msg, true);
+            currentInstructionText = msg; // Update for potential repeat
+            speak(msg);
         }
 
         function feedbackMessage(elementId, message, isCorrect) {
             const el = document.getElementById(elementId);
             el.textContent = message;
             el.className = 'feedback-message ' + (isCorrect ? 'correct' : 'try-again');
+            // Optionally speak feedback messages too, if desired
+            // speak(message); 
         }
 
-        // --- Canvas Tracing Logic ---
+        // --- Canvas Tracing Logic (remains the same as previous version) ---
         let canvas, ctx, drawing = false, lastX, lastY;
 
         function initializeCanvas() {
@@ -431,23 +539,14 @@
             ctx.stroke();
             ctx.setLineDash([]); 
 
-            // Replaced dot with a heart emoji (drawn, not text) for cuteness
-            // For a true emoji, you'd draw it as text: ctx.fillText('💖', canvas.width / 2 - 10, 30);
-            // But let's draw a simple heart shape
-            ctx.fillStyle = "#ff69b4"; // Hot pink heart
+            ctx.fillStyle = "#ff69b4"; 
             ctx.beginPath();
             ctx.moveTo(canvas.width / 2, 25);
             ctx.bezierCurveTo(canvas.width / 2, 15, canvas.width / 2 - 15, 5, canvas.width / 2 - 15, 25);
-            ctx.bezierCurveTo(canvas.width / 2 - 15, 40, canvas.width / 2 + 10, 40, canvas.width / 2, 50); // Adjusted right side for symmetry
+            ctx.bezierCurveTo(canvas.width / 2 - 15, 40, canvas.width / 2 + 10, 40, canvas.width / 2, 50); 
             ctx.bezierCurveTo(canvas.width / 2 - 10, 40, canvas.width / 2 + 15, 40, canvas.width / 2 + 15, 25);
             ctx.bezierCurveTo(canvas.width / 2 + 15, 5, canvas.width / 2, 15, canvas.width / 2, 25);
             ctx.fill();
-
-            // Or simpler: Draw a pink dot for the start
-            // ctx.beginPath();
-            // ctx.fillStyle = "#ff69b4"; // Hot pink dot
-            // ctx.arc(canvas.width / 2, 20, 8, 0, Math.PI * 2);
-            // ctx.fill();
         }
 
         function clearCanvas() {
@@ -455,7 +554,9 @@
             ctx.fillStyle = "#555577"; 
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             drawTracingGuide();
-            feedbackMessage('feedback-4', 'Ready to trace, sweetie! ✍️', true);
+            const msg = 'Ready to trace, sweetie! ✍️';
+            feedbackMessage('feedback-4', msg, true);
+            // Don't set currentInstructionText here unless it's the active instruction
         }
 
         function getMousePos(canvasDom, mouseEvent) {
@@ -477,7 +578,7 @@
             const pos = getMousePos(canvas, e);
             ctx.beginPath();
             ctx.strokeStyle = '#ffc0cb'; 
-            ctx.lineWidth = 8; // Slightly thinner for user drawing
+            ctx.lineWidth = 8; 
             ctx.lineCap = 'round';
             ctx.moveTo(lastX, lastY);
             ctx.lineTo(pos.x, pos.y);
@@ -487,8 +588,11 @@
 
         function stopDrawing() {
             drawing = false;
-            if (lastY > canvas.height - 40 && Math.abs(lastX - (canvas.width / 2)) < 25) { // Looser check
-                 feedbackMessage('feedback-4', 'Fabulous tracing of number 1! 💖🎉', true);
+            if (lastY > canvas.height - 40 && Math.abs(lastX - (canvas.width / 2)) < 25) { 
+                 const msg = 'Fabulous tracing of number 1! 💖🎉';
+                 feedbackMessage('feedback-4', msg, true);
+                 currentInstructionText = msg; // Update for potential repeat
+                 speak(msg);
             }
         }
 
