@@ -169,6 +169,7 @@
     let lastX, lastY;
     let isRotated = false; 
     let currentAppRotation = 0; // Store the current rotation degrees
+    const dpr = window.devicePixelRatio || 1; // Define dpr globally for convenience
 
     let undoStack = [];
     let redoStack = [];
@@ -201,20 +202,20 @@
 
     function redrawDisplayCanvas() {
       displayCtx.save(); 
-      displayCtx.setTransform(1,0,0,1,0,0); 
+      displayCtx.setTransform(1,0,0,1,0,0); // Reset transform for absolute clearing/drawing
 
       if (depictClearAsBlack) {
         displayCtx.fillStyle = '#000000';
-        displayCtx.fillRect(0, 0, displayCanvas.width, displayCanvas.height);
+        displayCtx.fillRect(0, 0, displayCanvas.width, displayCanvas.height); // Fill entire buffer
       } else {
-        displayCtx.clearRect(0, 0, displayCanvas.width, displayCanvas.height);
+        displayCtx.clearRect(0, 0, displayCanvas.width, displayCanvas.height); // Clear entire buffer
       }
-      // Must ensure dataCanvas is drawn at correct scale if DPR is used
-      // If displayCtx was scaled by DPR, drawImage might need adjustment or ensure dataCanvas has same effective scale
-      displayCtx.drawImage(dataCanvas, 0, 0, dataCanvas.width, dataCanvas.height, 0,0, displayCanvas.width/ (window.devicePixelRatio || 1), displayCanvas.height / (window.devicePixelRatio || 1) );
-      // Simpler if both canvases are handled with same DPR logic:
-      // displayCtx.drawImage(dataCanvas, 0, 0); // if displayCtx scale handles DPR
-      displayCtx.restore(); 
+      
+      // Draw dataCanvas buffer directly to displayCanvas buffer, 1:1 pixel mapping
+      // since displayCtx transform is currently identity.
+      displayCtx.drawImage(dataCanvas, 0, 0); 
+      
+      displayCtx.restore(); // Restore original transform of displayCtx (which includes DPR scaling set in orientAndSizeUI)
     }
 
     function saveState() { /* ... same ... */ }
@@ -228,17 +229,17 @@
     }
     applyState = function (pureImageData) {
       if (pureImageData) {
-        // Ensure dataCanvas is ready for putImageData (correct size)
         if (dataCanvas.width !== pureImageData.width || dataCanvas.height !== pureImageData.height) {
             dataCanvas.width = pureImageData.width;
             dataCanvas.height = pureImageData.height;
-            // If DPR scaling is used on dataCtx, it needs to be reapplied after resize
-            const dpr = window.devicePixelRatio || 1;
+            // Reapply DPR scaling to dataCtx if canvas dimensions changed
             dataCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
         }
         dataCtx.putImageData(pureImageData, 0, 0);
       } else {
-        dataCtx.clearRect(0, 0, dataCanvas.width, dataCanvas.height);
+        // Ensure dataCtx is scaled before clearing, if it's a fresh clear
+        dataCtx.setTransform(dpr, 0, 0, dpr, 0, 0); // Ensure transform for operations
+        dataCtx.clearRect(0, 0, dataCanvas.width / dpr, dataCanvas.height / dpr); // Clear logical area
       }
       redrawDisplayCanvas();
       updateUndoRedoButtons();
@@ -250,8 +251,6 @@
 
 
     function getPointerPos(e) {
-        const dpr = window.devicePixelRatio || 1;
-        // Bounding rect of the element that receives pointer events (displayCanvas)
         const rect = displayCanvas.getBoundingClientRect();
 
         let clientX, clientY;
@@ -263,39 +262,27 @@
             clientY = e.clientY;
         }
 
-        // Coordinates relative to the displayCanvas's bounding box on screen
         let xOnScreen = clientX - rect.left;
         let yOnScreen = clientY - rect.top;
 
         let logicalX, logicalY;
 
         if (isRotated) {
-            // displayCanvas is rotated. Its rect.width is the screen width it occupies (original CSS height, vw).
-            // Its rect.height is the screen height it occupies (original CSS width, vh).
-            // The dataCanvas's unrotated dimensions: width=vh*dpr, height=vw*dpr.
-            // For a 90deg clockwise rotation of displayCanvas:
-            // Logical X (unrotated sense) in displayCanvas = yOnScreen
-            // Logical Y (unrotated sense) in displayCanvas = rect.width - xOnScreen
-
+            // Transformation for 90deg clockwise rotation of appContainer where
+            // original bottom-left of app becomes screen top-left.
+            // screenX maps to canvas Y (inverted and offset)
+            // screenY maps to canvas X
+            // rect.width is on-screen width of displayCanvas (original logicalHeight, e.g., vw)
+            // rect.height is on-screen height of displayCanvas (original logicalWidth, e.g., vh)
             logicalX = yOnScreen;
-            logicalY = rect.width - xOnScreen; // rect.width is the on-screen width, which is old CSS height (vw)
-
-            // Now scale these logical CSS pixels to dataCanvas buffer pixels
-            // dataCanvas.width was vh*dpr, its corresponding CSS dimension on screen is rect.height (was vh)
-            // dataCanvas.height was vw*dpr, its corresponding CSS dimension on screen is rect.width (was vw)
-            logicalX = logicalX * (dataCanvas.width / rect.height);
-            logicalY = logicalY * (dataCanvas.height / rect.width);
-
+            logicalY = rect.width - xOnScreen; 
         } else { // Not rotated
             logicalX = xOnScreen;
             logicalY = yOnScreen;
-
-            // Scale CSS pixels on displayCanvas to dataCanvas buffer pixels
-            // rect.width is CSS width of displayCanvas, dataCanvas.width is buffer width
-            logicalX = logicalX * (dataCanvas.width / rect.width);
-            logicalY = logicalY * (dataCanvas.height / rect.height);
         }
         
+        // Return logical coordinates. dataCtx is already scaled by DPR,
+        // so it expects logical coordinates for its drawing operations.
         return { x: logicalX, y: logicalY };
     }
 
@@ -307,7 +294,7 @@
       if (controlsPanel.classList.contains('open')) return;
       saveState();
       isDrawing = true;
-      const pos = getPointerPos(e);
+      const pos = getPointerPos(e); // Gets logical coordinates
       [lastX, lastY] = [pos.x, pos.y];
       const actualColor = getPaletteColor(selectedColor);
       if (actualColor === ERASER) {
@@ -317,40 +304,49 @@
         dataCtx.strokeStyle = actualColor;
         dataCtx.fillStyle = actualColor;
       }
-      dataCtx.lineWidth = currentBrushSize; // This should be in dataCanvas pixels
+      // currentBrushSize is logical. dataCtx is scaled by DPR, so line/arc will be scaled.
+      dataCtx.lineWidth = currentBrushSize; 
       dataCtx.lineCap = 'round';
       dataCtx.lineJoin = 'round';
+      
+      // Draw a single point for click/tap
       dataCtx.beginPath();
       dataCtx.arc(lastX, lastY, currentBrushSize / 2, 0, Math.PI * 2);
       dataCtx.fill();
-      dataCtx.beginPath();
+
+      // Prepare for dragging
+      dataCtx.beginPath(); // Start new path for the line segment
       dataCtx.moveTo(lastX, lastY);
       redrawDisplayCanvas();
     }
     draw = function (e) {
       if (!isDrawing || controlsPanel.classList.contains('open')) return;
-      const pos = getPointerPos(e);
+      const pos = getPointerPos(e); // Gets logical coordinates
       dataCtx.lineTo(pos.x, pos.y);
       dataCtx.stroke();
-      dataCtx.beginPath();
+      
+      // For smoother lines when moving fast, begin new path segment from current point
+      dataCtx.beginPath(); 
       dataCtx.moveTo(pos.x, pos.y);
+      
       [lastX, lastY] = [pos.x, pos.y];
       redrawDisplayCanvas();
     }
     stopDrawing = function () {
       if (!isDrawing) return;
-      dataCtx.beginPath();
+      // dataCtx.beginPath(); // No longer needed here as draw() manages it
       isDrawing = false;
-      updateUndoRedoButtons();
+      updateUndoRedoButtons(); // Consider if state should be saved on mouseup (done in startDrawing)
     }
 
     displayCanvas.addEventListener('mousedown', startDrawing);
     displayCanvas.addEventListener('mousemove', draw);
     document.addEventListener('mouseup', stopDrawing);
-    displayCanvas.addEventListener('mouseleave', stopDrawing);
-    displayCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDrawing(e); });
-    displayCanvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); });
+    displayCanvas.addEventListener('mouseleave', stopDrawing); // Could also call stopDrawing
+    displayCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDrawing(e); }, { passive: false });
+    displayCanvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); }, { passive: false });
     document.addEventListener('touchend', stopDrawing);
+
 
     document.getElementById('clear-canvas-btn').addEventListener('click', () => { /* ... same ... */ });
     document.getElementById('undo-btn').addEventListener('click', () => { /* ... same ... */ });
@@ -358,7 +354,8 @@
     document.getElementById('save-btn').addEventListener('click', () => { /* ... same ... */ });
     document.getElementById('clear-canvas-btn').onclick = () => {
       saveState();
-      dataCtx.clearRect(0, 0, dataCanvas.width, dataCanvas.height);
+      // Clear logical area, dataCtx scale will handle buffer
+      dataCtx.clearRect(0, 0, dataCanvas.width / dpr, dataCanvas.height / dpr); 
       redrawDisplayCanvas();
     };
     document.getElementById('undo-btn').onclick = () => {
@@ -420,38 +417,15 @@
     
     const brushSizeSlider = document.getElementById('brush-size-slider');
     brushSizeSlider.addEventListener('input', (e) => {
-      currentBrushSize = parseInt(e.target.value); // This is in dataCanvas pixels
+      currentBrushSize = parseInt(e.target.value); // This is logical brush size
       document.getElementById('brush-size-value').textContent = currentBrushSize;
 
-      const dpr = window.devicePixelRatio || 1;
-      const displayRect = displayCanvas.getBoundingClientRect(); // CSS size of display canvas
-      
-      // We want the preview to reflect the brush size on the displayCanvas
-      // currentBrushSize is in dataCanvas pixels. Need to convert to displayCanvas CSS pixels.
-      let cssBrushDiameter;
-      if (isRotated) {
-        // dataCanvas.width corresponds to displayRect.height (CSS pixels)
-        cssBrushDiameter = currentBrushSize * (displayRect.height / dataCanvas.width) * dpr;
-         // Or more simply: currentBrushSize (data px) / dpr = brushSize (css logical px)
-        // cssBrushDiameter = currentBrushSize / dpr;
-      } else {
-        // dataCanvas.width corresponds to displayRect.width (CSS pixels)
-        cssBrushDiameter = currentBrushSize * (displayRect.width / dataCanvas.width) * dpr;
-        // cssBrushDiameter = currentBrushSize / dpr;
-      }
-       // The above scaling is if currentBrushSize was already scaled by DPR.
-       // If currentBrushSize is logical pixels, then for display:
-       // cssBrushDiameter = currentBrushSize; (since preview is CSS pixels)
-
-      // Let's assume currentBrushSize is the logical size, not yet DPR scaled for dataCtx.lineWidth
-      // So dataCtx.lineWidth = currentBrushSize * dpr;
-      // Then preview should be currentBrushSize in CSS pixels.
-      cssBrushDiameter = currentBrushSize; // if currentBrushSize is logical.
+      // Brush preview is in CSS pixels, so it should match logical currentBrushSize
+      const cssBrushDiameter = currentBrushSize; 
 
       brushPreviewEl.style.width = cssBrushDiameter + 'px';
       brushPreviewEl.style.height = cssBrushDiameter + 'px';
       
-      const appContainerRect = appContainer.getBoundingClientRect();
       // Center on screen (viewport)
       brushPreviewEl.style.left = (window.innerWidth / 2 - cssBrushDiameter / 2) + 'px';
       brushPreviewEl.style.top = (window.innerHeight / 2 - cssBrushDiameter / 2) + 'px';
@@ -485,31 +459,39 @@
 
     panelToggleBtn.addEventListener('click', () => {
       controlsPanel.classList.toggle('open');
-      const panelHeight = controlsPanel.offsetHeight; 
-      if (controlsPanel.classList.contains('open')) {
-        panelToggleBtn.textContent = '▼ Close'; // Always Down arrow
-        panelToggleBtn.style.bottom = panelHeight + 'px';
-      } else {
-        panelToggleBtn.textContent = '▲ Tools'; // Always Up arrow
-        panelToggleBtn.style.bottom = '0px';
-        clearTimeout(brushPreviewTimeout);
-        brushPreviewEl.style.display = 'none';
-      }
+      // Allow CSS transition to compute height before moving button
+      requestAnimationFrame(() => {
+        const panelHeight = controlsPanel.offsetHeight;
+        if (controlsPanel.classList.contains('open')) {
+            panelToggleBtn.textContent = '▼ Close';
+            panelToggleBtn.style.bottom = panelHeight + 'px';
+        } else {
+            panelToggleBtn.textContent = '▲ Tools';
+            panelToggleBtn.style.bottom = '0px';
+            clearTimeout(brushPreviewTimeout);
+            brushPreviewEl.style.display = 'none';
+        }
+      });
     });
 
     function orientAndSizeUI() {
         const vw = window.innerWidth;
         const vh = window.innerHeight;
         let logicalWidth, logicalHeight;
-        const dpr = window.devicePixelRatio || 1;
+        // dpr is already global
 
-        appContainer.style.transformOrigin = 'top left'; // Explicitly set
+        appContainer.style.transformOrigin = 'top left';
 
         if (vh > vw && vw < 768) { // Portrait on phone-like screens, force landscape
             isRotated = true;
             currentAppRotation = 90;
-            appContainer.style.width = vh + 'px'; // App container takes physical screen height as its width
-            appContainer.style.height = vw + 'px';// App container takes physical screen width as its height
+            // App container takes physical screen height as its logical width
+            // and physical screen width as its logical height
+            appContainer.style.width = vh + 'px'; 
+            appContainer.style.height = vw + 'px';
+            // This specific transform makes the app's original (0, vw) [bottom-left] 
+            // appear at screen (0,0) [top-left of viewport].
+            // The app's original X-axis runs down, Y-axis runs left (from screen top-right essentially).
             appContainer.style.transform = `rotate(${currentAppRotation}deg) translateY(-${vw}px)`;
             
             logicalWidth = vh; 
@@ -525,76 +507,71 @@
             logicalHeight = vh;
         }
 
-        // displayCanvas CSS fills its container (which is appContainer after rotation)
         displayCanvas.style.width = logicalWidth + 'px';
         displayCanvas.style.height = logicalHeight + 'px';
         
-        // Set canvas buffer sizes (attributes)
-        displayCanvas.width = logicalWidth * dpr;
-        displayCanvas.height = logicalHeight * dpr;
-        
-        // Store a copy of data for resizing
         let existingImageData = null;
-        if(dataCanvas.width > 0 && dataCanvas.height > 0) { // Check if dataCanvas has been initialized
+        if(dataCanvas.width > 0 && dataCanvas.height > 0) {
             existingImageData = dataCtx.getImageData(0, 0, dataCanvas.width, dataCanvas.height);
         }
 
+        displayCanvas.width = logicalWidth * dpr;
+        displayCanvas.height = logicalHeight * dpr;
         dataCanvas.width = logicalWidth * dpr;
         dataCanvas.height = logicalHeight * dpr;
 
-        // Apply DPR scaling to contexts
-        // Important: setTransform CUMULATES. Reset first or use transform()
-        displayCtx.resetTransform(); // Or setTransform(1,0,0,1,0,0)
+        // Apply DPR scaling to contexts. resetTransform() clears any previous transform.
+        displayCtx.resetTransform(); 
         displayCtx.scale(dpr, dpr);
         dataCtx.resetTransform();
         dataCtx.scale(dpr, dpr);
         
-        // Restore or clear data
         let stateToApply = null;
         if (undoStack.length > 0) {
             const lastUndoData = undoStack[undoStack.length - 1];
+            // Check if last undo state matches new dimensions. If not, it's invalid.
             if (lastUndoData.width === dataCanvas.width && lastUndoData.height === dataCanvas.height) {
                 stateToApply = lastUndoData;
-            } else { // Dimensions changed, invalidate stack
-                undoStack = [];
+            } else { 
+                undoStack = []; // Invalidate stacks if dimensions change significantly
                 redoStack = [];
             }
-        } else if (existingImageData && existingImageData.width === dataCanvas.width && existingImageData.height === dataCanvas.height) {
-            // Fallback to re-applying current content if undo stack is empty but canvas was drawn on
-            stateToApply = existingImageData;
+        } else if (existingImageData && 
+                   existingImageData.width === dataCanvas.width && 
+                   existingImageData.height === dataCanvas.height) {
+            stateToApply = existingImageData; // Restore previous drawing if no undo history
         }
-
-        applyState(stateToApply); // Clears if stateToApply is null, then redraws display
-        updateUndoRedoButtons(); // Update based on (potentially cleared) undoStack
         
-        // Update panel toggle button text based on current state
+        // applyState will handle clearing if stateToApply is null, then redrawDisplayCanvas
+        applyState(stateToApply); 
+        updateUndoRedoButtons();
+        
         if (controlsPanel.classList.contains('open')) {
             panelToggleBtn.textContent = '▼ Close';
-            panelToggleBtn.style.bottom = controlsPanel.offsetHeight + 'px';
+            requestAnimationFrame(() => { // Ensure panel height is calculated after styles apply
+                 panelToggleBtn.style.bottom = controlsPanel.offsetHeight + 'px';
+            });
         } else {
             panelToggleBtn.textContent = '▲ Tools';
         }
-        controlsPanel.style.maxHeight = logicalHeight * 0.6 + 'px';
+        controlsPanel.style.maxHeight = (isRotated ? vw : vh) * 0.6 + 'px'; // Max height based on on-screen vertical space
     }
 
 
     function initApp() {
       initPalette();
       orientAndSizeUI(); 
-      // Save initial empty state only if stack is truly empty after orientAndSizeUI
       if (undoStack.length === 0 && redoStack.length === 0) {
-          // Check if dataCanvas is effectively empty before saving an "empty" state
           const initialData = dataCtx.getImageData(0,0,dataCanvas.width, dataCanvas.height);
           let isEmpty = true;
-          for(let i=3; i < initialData.data.length; i+=4) {
+          for(let i=3; i < initialData.data.length; i+=4) { // Check alpha channel
               if(initialData.data[i] !== 0) {isEmpty = false; break;}
           }
-          if(isEmpty) saveState();
+          if(isEmpty) saveState(); // Save initial empty state
       }
       updateUndoRedoButtons();
       document.getElementById('brush-size-value').textContent = currentBrushSize;
-      // Panel default state
-      panelToggleBtn.textContent = '▲ Tools';
+      panelToggleBtn.textContent = '▲ Tools'; // Default panel state
     }
 
     initApp();
@@ -602,7 +579,7 @@
     if (window.screen.orientation) {
         window.screen.orientation.addEventListener('change', orientAndSizeUI);
     } else {
-        window.addEventListener('orientationchange', orientAndSizeUI);
+        window.addEventListener('orientationchange', orientAndSizeUI); // For older browsers
     }
 
   </script>
