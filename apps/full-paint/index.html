@@ -5,15 +5,94 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>Full-Res Painter</title>
   <style>
-    body { margin: 0; background: #121212; color: #e0e0e0; font-family: sans-serif; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; }
-    #app-container { width: 100vw; height: 100vh; position: relative; overflow: hidden; transform-origin: top left; }
-    #canvas-container { margin: 0; width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
-    canvas#paint-canvas { display: block; }
-    #brush-preview { position: fixed; border: 2px solid rgba(224, 224, 224, 0.7); border-radius: 50%; background-color: rgba(128, 128, 128, 0.3); pointer-events: none; display: none; z-index: 1000; box-sizing: border-box; }
-    #controls-panel { position: absolute; bottom: 0; left: 0; width: 100%; background: #1a1a1a; z-index: 100; transform: translateY(100%); transition: transform 0.3s ease-out; padding: 20px 10px 10px 10px; box-sizing: border-box; max-height: 60%; overflow-y: auto; display: flex; flex-direction: column; align-items: center; border-top: 1px solid #333; box-shadow: 0 -2px 10px rgba(0,0,0,0.5); }
-    #controls-panel.open { transform: translateY(0); }
-    #panel-toggle-btn { position: absolute; left: 50%; bottom: 0px; transform: translateX(-50%); background: #6200ee; color: white; border: none; padding: 8px 20px; border-top-left-radius: 10px; border-top-right-radius: 10px; cursor: pointer; z-index: 101; transition: bottom 0.3s ease-out, background-color 0.2s; font-size: 16px; }
-    #panel-toggle-btn:hover { background: #7c4dff; }
+    body {
+      margin: 0;
+      background: #121212;
+      color: #e0e0e0;
+      font-family: sans-serif;
+      overflow: hidden;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    #app-container {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      overflow: hidden;
+      /* transform-origin: top left; */ /* Set in JS if needed */
+    }
+
+    #canvas-container {
+      margin: 0;
+      width: 100%; 
+      height: 100%;
+      position: absolute; 
+      top: 0;
+      left: 0;
+    }
+
+    canvas#paint-canvas {
+      display: block;
+    }
+
+    #brush-preview {
+      position: fixed;
+      border: 2px solid rgba(224, 224, 224, 0.7);
+      border-radius: 50%;
+      background-color: rgba(128, 128, 128, 0.3);
+      pointer-events: none;
+      display: none;
+      z-index: 1000;
+      box-sizing: border-box;
+    }
+
+    #controls-panel {
+      position: absolute; 
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: #1a1a1a;
+      z-index: 100;
+      transform: translateY(100%);
+      transition: transform 0.3s ease-out;
+      padding: 20px 10px 10px 10px;
+      box-sizing: border-box;
+      max-height: 60%; 
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border-top: 1px solid #333;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
+    }
+
+    #controls-panel.open {
+      transform: translateY(0);
+    }
+
+    #panel-toggle-btn {
+      position: absolute; 
+      left: 50%;
+      bottom: 0px;
+      transform: translateX(-50%);
+      background: #6200ee;
+      color: white;
+      border: none;
+      padding: 8px 20px;
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
+      cursor: pointer;
+      z-index: 101;
+      transition: bottom 0.3s ease-out, background-color 0.2s;
+      font-size: 16px;
+    }
+    #panel-toggle-btn:hover {
+      background: #7c4dff;
+    }
+
+    /* Styles for controls inside the panel (largely unchanged) */
     #controls-panel #controls { margin: 0 0 16px 0; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%; }
     #controls-panel button { padding: 8px 12px; border: none; border-radius: 8px; background: #6200ee; color: white; cursor: pointer; transition: background-color 0.2s; }
     #controls-panel button:hover { background: #7c4dff; }
@@ -30,6 +109,7 @@
     #controls-panel input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; background: #6200ee; border-radius: 50%; cursor: pointer; }
     #controls-panel input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; background: #6200ee; border-radius: 50%; cursor: pointer; border: none; }
     #controls-panel #clear-toggle-container { width: 100%; max-width: 500px; margin-bottom: 10px; text-align: center; font-size: 15px; }
+
   </style>
 </head>
 <body>
@@ -38,13 +118,32 @@
       <canvas id="paint-canvas"></canvas>
     </div>
     <div id="brush-preview"></div>
+
     <button id="panel-toggle-btn">▲ Tools</button>
     <div id="controls-panel">
-      <div id="controls"> <button id="clear-canvas-btn">Clear Canvas</button> <button id="undo-btn">Undo</button> <button id="redo-btn">Redo</button> <button id="save-btn">Save PNG</button> </div>
-      <div class="slider-group"> <label for="brush-size-slider">Brush Size: <span id="brush-size-value">5</span>px</label> <input type="range" id="brush-size-slider" min="1" max="100" value="5"> </div>
-      <div id="palette-container"> <div id="color-palette"></div> </div>
-      <div class="slider-group"> <label for="brightness-slider">Color Brightness</label> <input type="range" id="brightness-slider" min="-50" max="50" value="0"> </div>
-      <div id="clear-toggle-container"> <label> <input type="checkbox" id="clear-toggle"> Depict Transparent as Black </label> </div>
+      <div id="controls">
+        <button id="clear-canvas-btn">Clear Canvas</button>
+        <button id="undo-btn">Undo</button>
+        <button id="redo-btn">Redo</button>
+        <button id="save-btn">Save PNG</button>
+      </div>
+      <div class="slider-group">
+        <label for="brush-size-slider">Brush Size: <span id="brush-size-value">5</span>px</label>
+        <input type="range" id="brush-size-slider" min="1" max="100" value="5">
+      </div>
+      <div id="palette-container">
+        <div id="color-palette"></div>
+      </div>
+      <div class="slider-group">
+        <label for="brightness-slider">Color Brightness</label>
+        <input type="range" id="brightness-slider" min="-50" max="50" value="0">
+      </div>
+      <div id="clear-toggle-container">
+        <label>
+          <input type="checkbox" id="clear-toggle">
+          Depict Transparent as Black
+        </label>
+      </div>
     </div>
   </div>
 
@@ -52,6 +151,7 @@
     const ERASER = "eraser";
     let brightnessOffset = 0;
     let depictClearAsBlack = false;
+
     const TOTAL_RAINBOW_COLORS = 32;
     const baseRainbowHues = Array.from({ length: TOTAL_RAINBOW_COLORS }, (_, i) => i * (360 / TOTAL_RAINBOW_COLORS));
 
@@ -64,13 +164,11 @@
     let brushPreviewTimeout;
 
     let selectedColor = 1;
-    let currentBrushSize = 5; // Logical brush size (CSS pixels)
+    let currentBrushSize = 5;
     let isDrawing = false;
     let lastX, lastY;
     let isRotated = false; 
-    // let currentAppRotation = 0; // Not strictly needed if isRotated is the main flag
-    let currentLogicalWidth = 0; // Stores logical CSS width of the canvas
-    let currentLogicalHeight = 0; // Stores logical CSS height of the canvas
+    let currentAppRotation = 0; // Store the current rotation degrees
 
     let undoStack = [];
     let redoStack = [];
@@ -78,53 +176,83 @@
 
     document.addEventListener('contextmenu', e => e.preventDefault());
 
-    function getPaletteColor(index) { if (index === 0) return ERASER; if (index === 1) return "#000000"; if (index === 2) return "#FFFFFF"; if (index === 3) { let l = Math.min(100, Math.max(0, 50 + brightnessOffset)); return `hsl(0, 0%, ${l}%)`; } let j = index - 4; let l = Math.min(100, Math.max(0, 50 + brightnessOffset)); return `hsl(${baseRainbowHues[j % TOTAL_RAINBOW_COLORS]}, 100%, ${l}%)`; }
-    function buildPaletteScrollable() { const p = []; const t = 3 + TOTAL_RAINBOW_COLORS; for (let i = 1; i <= t; i++){ p.push(getPaletteColor(i)); } return p; }
-
-    function redrawDisplayCanvas() {
-        displayCtx.save(); 
-        displayCtx.resetTransform(); // Clears any transformation, including DPR scale, to work with raw buffer pixels
-        if (depictClearAsBlack) {
-            displayCtx.fillStyle = '#000000';
-            displayCtx.fillRect(0, 0, displayCanvas.width, displayCanvas.height); // Fills raw buffer
-        } else {
-            displayCtx.clearRect(0, 0, displayCanvas.width, displayCanvas.height); // Clears raw buffer
-        }
-        displayCtx.restore(); // Restores the DPR-scaled state that was (or should have been) set in orientAndSizeUI
-        
-        // displayCtx is now DPR-scaled. dataCanvas contains a DPR-scaled image.
-        // Drawing dataCanvas (DPR image) onto displayCtx (DPR context) at (0,0 logical) should fill the logical space.
-        displayCtx.drawImage(dataCanvas, 0, 0);
+    function getPaletteColor(index) { /* ... same ... */ }
+    function buildPaletteScrollable() { /* ... same ... */ }
+    function getPaletteColor(index) {
+      if (index === 0) return ERASER;
+      if (index === 1) return "#000000";
+      if (index === 2) return "#FFFFFF";
+      if (index === 3) {
+        let lightness = Math.min(100, Math.max(0, 50 + brightnessOffset));
+        return `hsl(0, 0%, ${lightness}%)`;
+      }
+      let j = index - 4;
+      let lightness = Math.min(100, Math.max(0, 50 + brightnessOffset));
+      return `hsl(${baseRainbowHues[j % TOTAL_RAINBOW_COLORS]}, 100%, ${lightness}%)`;
+    }
+    function buildPaletteScrollable() {
+      const palette = [];
+      const totalPaletteColors = 3 + TOTAL_RAINBOW_COLORS;
+      for (let i = 1; i <= totalPaletteColors; i++){
+        palette.push(getPaletteColor(i));
+      }
+      return palette;
     }
 
-    function saveState() { if (undoStack.length >= MAX_UNDO_STEPS) undoStack.shift(); undoStack.push(dataCtx.getImageData(0, 0, dataCanvas.width, dataCanvas.height)); redoStack = []; updateUndoRedoButtons(); }
-    
-    function applyState(pureImageData) {
-      const dpr = window.devicePixelRatio || 1;
+    function redrawDisplayCanvas() {
+      displayCtx.save(); 
+      displayCtx.setTransform(1,0,0,1,0,0); 
+
+      if (depictClearAsBlack) {
+        displayCtx.fillStyle = '#000000';
+        displayCtx.fillRect(0, 0, displayCanvas.width, displayCanvas.height);
+      } else {
+        displayCtx.clearRect(0, 0, displayCanvas.width, displayCanvas.height);
+      }
+      // Must ensure dataCanvas is drawn at correct scale if DPR is used
+      // If displayCtx was scaled by DPR, drawImage might need adjustment or ensure dataCanvas has same effective scale
+      displayCtx.drawImage(dataCanvas, 0, 0, dataCanvas.width, dataCanvas.height, 0,0, displayCanvas.width/ (window.devicePixelRatio || 1), displayCanvas.height / (window.devicePixelRatio || 1) );
+      // Simpler if both canvases are handled with same DPR logic:
+      // displayCtx.drawImage(dataCanvas, 0, 0); // if displayCtx scale handles DPR
+      displayCtx.restore(); 
+    }
+
+    function saveState() { /* ... same ... */ }
+    function applyState(pureImageData) { /* ... same ... */ }
+    function updateUndoRedoButtons() { /* ... same ... */ }
+    saveState = function () {
+      if (undoStack.length >= MAX_UNDO_STEPS) undoStack.shift();
+      undoStack.push(dataCtx.getImageData(0, 0, dataCanvas.width, dataCanvas.height));
+      redoStack = [];
+      updateUndoRedoButtons();
+    }
+    applyState = function (pureImageData) {
       if (pureImageData) {
-        // Ensure dataCanvas buffer is correct size for the image data
+        // Ensure dataCanvas is ready for putImageData (correct size)
         if (dataCanvas.width !== pureImageData.width || dataCanvas.height !== pureImageData.height) {
             dataCanvas.width = pureImageData.width;
             dataCanvas.height = pureImageData.height;
-            // Reapply transform to dataCtx if canvas buffer was resized
-            dataCtx.resetTransform();
-            dataCtx.scale(dpr, dpr); 
+            // If DPR scaling is used on dataCtx, it needs to be reapplied after resize
+            const dpr = window.devicePixelRatio || 1;
+            dataCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
         }
-        dataCtx.putImageData(pureImageData, 0, 0); // Operates on buffer pixels, ignores context transform
+        dataCtx.putImageData(pureImageData, 0, 0);
       } else {
-        // dataCtx is scaled by dpr, clearRect expects logical coordinates for its current transform space
-        dataCtx.clearRect(0, 0, dataCanvas.width / dpr, dataCanvas.height / dpr); 
+        dataCtx.clearRect(0, 0, dataCanvas.width, dataCanvas.height);
       }
       redrawDisplayCanvas();
       updateUndoRedoButtons();
     }
+    updateUndoRedoButtons = function () {
+      document.getElementById('undo-btn').disabled = undoStack.length === 0;
+      document.getElementById('redo-btn').disabled = redoStack.length === 0;
+    }
 
-    function updateUndoRedoButtons() { document.getElementById('undo-btn').disabled = undoStack.length === 0; document.getElementById('redo-btn').disabled = redoStack.length === 0; }
-    
+
     function getPointerPos(e) {
-        // displayCanvas.getBoundingClientRect() gives the on-screen position and CSS dimensions
-        // of the displayCanvas, AFTER all transforms (including parent's rotation) have been applied.
-        const rect = displayCanvas.getBoundingClientRect(); 
+        const dpr = window.devicePixelRatio || 1;
+        // Bounding rect of the element that receives pointer events (displayCanvas)
+        const rect = displayCanvas.getBoundingClientRect();
 
         let clientX, clientY;
         if (e.touches && e.touches.length > 0) {
@@ -135,31 +263,86 @@
             clientY = e.clientY;
         }
 
-        let unrotated_css_x, unrotated_css_y; // Target: Coordinates in displayCanvas's own unrotated logical CSS pixel space
+        // Coordinates relative to the displayCanvas's bounding box on screen
+        let xOnScreen = clientX - rect.left;
+        let yOnScreen = clientY - rect.top;
+
+        let logicalX, logicalY;
 
         if (isRotated) {
-            // Given appContainer transform: rotate(90deg) translateY(-original_app_CSS_height) with origin top-left.
-            // This places the original top-left of appContainer (and thus displayCanvas)
-            // at the screen's top-right.
-            // displayCanvas's logical X-axis runs DOWN the screen from rect.top.
-            // displayCanvas's logical Y-axis runs LEFT on screen from rect.right.
-            
-            unrotated_css_x = clientY - rect.top; 
-            unrotated_css_y = rect.right - clientX; 
-        } else { 
-            // Standard orientation: logical X runs right, logical Y runs down.
-            unrotated_css_x = clientX - rect.left;
-            unrotated_css_y = clientY - rect.top;
+            // displayCanvas is rotated. Its rect.width is the screen width it occupies (original CSS height, vw).
+            // Its rect.height is the screen height it occupies (original CSS width, vh).
+            // The dataCanvas's unrotated dimensions: width=vh*dpr, height=vw*dpr.
+            // For a 90deg clockwise rotation of displayCanvas:
+            // Logical X (unrotated sense) in displayCanvas = yOnScreen
+            // Logical Y (unrotated sense) in displayCanvas = rect.width - xOnScreen
+
+            logicalX = yOnScreen;
+            logicalY = rect.width - xOnScreen; // rect.width is the on-screen width, which is old CSS height (vw)
+
+            // Now scale these logical CSS pixels to dataCanvas buffer pixels
+            // dataCanvas.width was vh*dpr, its corresponding CSS dimension on screen is rect.height (was vh)
+            // dataCanvas.height was vw*dpr, its corresponding CSS dimension on screen is rect.width (was vw)
+            logicalX = logicalX * (dataCanvas.width / rect.height);
+            logicalY = logicalY * (dataCanvas.height / rect.width);
+
+        } else { // Not rotated
+            logicalX = xOnScreen;
+            logicalY = yOnScreen;
+
+            // Scale CSS pixels on displayCanvas to dataCanvas buffer pixels
+            // rect.width is CSS width of displayCanvas, dataCanvas.width is buffer width
+            logicalX = logicalX * (dataCanvas.width / rect.width);
+            logicalY = logicalY * (dataCanvas.height / rect.height);
         }
         
-        // These unrotated_css_x/y are the logical CSS pixel coordinates.
-        // dataCtx has been scaled by DPR, so it expects these logical coordinates for drawing.
-        return { x: unrotated_css_x, y: unrotated_css_y };
+        return { x: logicalX, y: logicalY };
     }
 
-    function startDrawing(e) { if (controlsPanel.classList.contains('open')) return; saveState(); isDrawing = true; const pos = getPointerPos(e); [lastX, lastY] = [pos.x, pos.y]; const actualColor = getPaletteColor(selectedColor); if (actualColor === ERASER) { dataCtx.globalCompositeOperation = 'destination-out'; } else { dataCtx.globalCompositeOperation = 'source-over'; dataCtx.strokeStyle = actualColor; dataCtx.fillStyle = actualColor; } dataCtx.lineWidth = currentBrushSize; /* Uses logical units, dataCtx scale handles DPR */ dataCtx.lineCap = 'round'; dataCtx.lineJoin = 'round'; dataCtx.beginPath(); dataCtx.arc(lastX, lastY, currentBrushSize / 2, 0, Math.PI * 2); dataCtx.fill(); dataCtx.beginPath(); dataCtx.moveTo(lastX, lastY); redrawDisplayCanvas(); }
-    function draw(e) { if (!isDrawing || controlsPanel.classList.contains('open')) return; const pos = getPointerPos(e); dataCtx.lineTo(pos.x, pos.y); dataCtx.stroke(); dataCtx.beginPath(); dataCtx.moveTo(pos.x, pos.y); [lastX, lastY] = [pos.x, pos.y]; redrawDisplayCanvas(); }
-    function stopDrawing() { if (!isDrawing) return; dataCtx.beginPath(); isDrawing = false; updateUndoRedoButtons(); }
+
+    function startDrawing(e) { /* ... same, uses new getPointerPos ... */ }
+    function draw(e) { /* ... same, uses new getPointerPos ... */ }
+    function stopDrawing() { /* ... same ... */ }
+    startDrawing = function (e) {
+      if (controlsPanel.classList.contains('open')) return;
+      saveState();
+      isDrawing = true;
+      const pos = getPointerPos(e);
+      [lastX, lastY] = [pos.x, pos.y];
+      const actualColor = getPaletteColor(selectedColor);
+      if (actualColor === ERASER) {
+        dataCtx.globalCompositeOperation = 'destination-out';
+      } else {
+        dataCtx.globalCompositeOperation = 'source-over';
+        dataCtx.strokeStyle = actualColor;
+        dataCtx.fillStyle = actualColor;
+      }
+      dataCtx.lineWidth = currentBrushSize; // This should be in dataCanvas pixels
+      dataCtx.lineCap = 'round';
+      dataCtx.lineJoin = 'round';
+      dataCtx.beginPath();
+      dataCtx.arc(lastX, lastY, currentBrushSize / 2, 0, Math.PI * 2);
+      dataCtx.fill();
+      dataCtx.beginPath();
+      dataCtx.moveTo(lastX, lastY);
+      redrawDisplayCanvas();
+    }
+    draw = function (e) {
+      if (!isDrawing || controlsPanel.classList.contains('open')) return;
+      const pos = getPointerPos(e);
+      dataCtx.lineTo(pos.x, pos.y);
+      dataCtx.stroke();
+      dataCtx.beginPath();
+      dataCtx.moveTo(pos.x, pos.y);
+      [lastX, lastY] = [pos.x, pos.y];
+      redrawDisplayCanvas();
+    }
+    stopDrawing = function () {
+      if (!isDrawing) return;
+      dataCtx.beginPath();
+      isDrawing = false;
+      updateUndoRedoButtons();
+    }
 
     displayCanvas.addEventListener('mousedown', startDrawing);
     displayCanvas.addEventListener('mousemove', draw);
@@ -169,118 +352,259 @@
     displayCanvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); });
     document.addEventListener('touchend', stopDrawing);
 
-    document.getElementById('clear-canvas-btn').onclick = () => { 
-        saveState(); 
-        const dpr = window.devicePixelRatio || 1;
-        // dataCtx is scaled by dpr, clearRect expects logical coordinates for its current transform space
-        dataCtx.clearRect(0, 0, dataCanvas.width / dpr, dataCanvas.height / dpr); 
-        redrawDisplayCanvas(); 
+    document.getElementById('clear-canvas-btn').addEventListener('click', () => { /* ... same ... */ });
+    document.getElementById('undo-btn').addEventListener('click', () => { /* ... same ... */ });
+    document.getElementById('redo-btn').addEventListener('click', () => { /* ... same ... */ });
+    document.getElementById('save-btn').addEventListener('click', () => { /* ... same ... */ });
+    document.getElementById('clear-canvas-btn').onclick = () => {
+      saveState();
+      dataCtx.clearRect(0, 0, dataCanvas.width, dataCanvas.height);
+      redrawDisplayCanvas();
     };
-    document.getElementById('undo-btn').onclick = () => { if (undoStack.length > 0) { redoStack.push(dataCtx.getImageData(0, 0, dataCanvas.width, dataCanvas.height)); const ps = undoStack.pop(); applyState(ps); } };
-    document.getElementById('redo-btn').onclick = () => { if (redoStack.length > 0) { undoStack.push(dataCtx.getImageData(0, 0, dataCanvas.width, dataCanvas.height)); const ns = redoStack.pop(); applyState(ns); } };
-    document.getElementById('save-btn').onclick = () => { const r = Math.random().toString(36).substring(2, 7); const l = document.createElement('a'); l.download = `paint-art-${r}.png`; l.href = dataCanvas.toDataURL('image/png'); l.click(); };
-    
-    function selectColor(index) { selectedColor = index; document.querySelectorAll('.eraser-btn-palette, .color-btn').forEach(b => b.classList.remove('selected')); const sb = document.querySelector(`#controls-panel [data-color="${index}"]`); if (sb) sb.classList.add('selected'); }
-    function initPalette() { const pc = document.getElementById('palette-container'); const sp = document.getElementById('color-palette'); const spos = sp.scrollLeft; const ee = pc.querySelector('.eraser-btn-palette'); if (ee) ee.remove(); sp.innerHTML = ''; const eb = document.createElement('button'); eb.className = 'eraser-btn-palette'; eb.dataset.color = "0"; eb.addEventListener('click', () => selectColor(0)); if (selectedColor == 0) eb.classList.add('selected'); pc.prepend(eb); const sc = buildPaletteScrollable(); sc.forEach((c, i) => { const b = document.createElement('button'); b.className = 'color-btn'; const ai = i + 1; b.dataset.color = ai; b.style.backgroundColor = c; b.addEventListener('click', () => selectColor(ai)); if (selectedColor == ai) b.classList.add('selected'); sp.appendChild(b); }); sp.scrollLeft = spos; }
+    document.getElementById('undo-btn').onclick = () => {
+      if (undoStack.length > 0) {
+        redoStack.push(dataCtx.getImageData(0, 0, dataCanvas.width, dataCanvas.height));
+        const prevState = undoStack.pop();
+        applyState(prevState);
+      }
+    };
+    document.getElementById('redo-btn').onclick = () => {
+      if (redoStack.length > 0) {
+        undoStack.push(dataCtx.getImageData(0, 0, dataCanvas.width, dataCanvas.height));
+        const nextState = redoStack.pop();
+        applyState(nextState);
+      }
+    };
+    document.getElementById('save-btn').onclick = () => {
+      const randomStr = Math.random().toString(36).substring(2, 7);
+      const link = document.createElement('a');
+      link.download = `paint-art-${randomStr}.png`;
+      link.href = dataCanvas.toDataURL('image/png');
+      link.click();
+    };
+
+    function selectColor(index) { /* ... same ... */ }
+    function initPalette() { /* ... same ... */ }
+    selectColor = function (index) {
+      selectedColor = index;
+      document.querySelectorAll('.eraser-btn-palette, .color-btn').forEach(btn => btn.classList.remove('selected'));
+      const selectedButton = document.querySelector(`#controls-panel [data-color="${index}"]`);
+      if (selectedButton) selectedButton.classList.add('selected');
+    }
+    initPalette = function () {
+      const paletteContainer = document.getElementById('palette-container');
+      const scrollablePalette = document.getElementById('color-palette');
+      const scrollPos = scrollablePalette.scrollLeft;
+      const existingEraser = paletteContainer.querySelector('.eraser-btn-palette');
+      if (existingEraser) existingEraser.remove();
+      scrollablePalette.innerHTML = '';
+      const eraserBtn = document.createElement('button');
+      eraserBtn.className = 'eraser-btn-palette';
+      eraserBtn.dataset.color = "0";
+      eraserBtn.addEventListener('click', () => selectColor(0));
+      if (selectedColor == 0) eraserBtn.classList.add('selected');
+      paletteContainer.prepend(eraserBtn);
+      const scrollableColors = buildPaletteScrollable();
+      scrollableColors.forEach((color, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'color-btn';
+        const actualIndex = idx + 1;
+        btn.dataset.color = actualIndex;
+        btn.style.backgroundColor = color;
+        btn.addEventListener('click', () => selectColor(actualIndex));
+        if (selectedColor == actualIndex) btn.classList.add('selected');
+        scrollablePalette.appendChild(btn);
+      });
+      scrollablePalette.scrollLeft = scrollPos;
+    }
     
     const brushSizeSlider = document.getElementById('brush-size-slider');
-    brushSizeSlider.addEventListener('input', (e) => { currentBrushSize = parseInt(e.target.value); document.getElementById('brush-size-value').textContent = currentBrushSize; const cssBS = currentBrushSize; /* currentBrushSize is logical, preview is CSS */ brushPreviewEl.style.width = cssBS + 'px'; brushPreviewEl.style.height = cssBS + 'px'; brushPreviewEl.style.left = (window.innerWidth / 2 - cssBS / 2) + 'px'; brushPreviewEl.style.top = (window.innerHeight / 2 - cssBS / 2) + 'px'; brushPreviewEl.style.display = 'block'; clearTimeout(brushPreviewTimeout); brushPreviewTimeout = setTimeout(() => { brushPreviewEl.style.display = 'none'; }, 1500); });
-    brushSizeSlider.onchange = () => { clearTimeout(brushPreviewTimeout); brushPreviewEl.style.display = 'none'; };
-    document.getElementById('brightness-slider').oninput = (e) => { brightnessOffset = parseInt(e.target.value); initPalette(); };
-    document.getElementById('clear-toggle').onchange = (e) => { depictClearAsBlack = e.target.checked; redrawDisplayCanvas(); };
+    brushSizeSlider.addEventListener('input', (e) => {
+      currentBrushSize = parseInt(e.target.value); // This is in dataCanvas pixels
+      document.getElementById('brush-size-value').textContent = currentBrushSize;
+
+      const dpr = window.devicePixelRatio || 1;
+      const displayRect = displayCanvas.getBoundingClientRect(); // CSS size of display canvas
+      
+      // We want the preview to reflect the brush size on the displayCanvas
+      // currentBrushSize is in dataCanvas pixels. Need to convert to displayCanvas CSS pixels.
+      let cssBrushDiameter;
+      if (isRotated) {
+        // dataCanvas.width corresponds to displayRect.height (CSS pixels)
+        cssBrushDiameter = currentBrushSize * (displayRect.height / dataCanvas.width) * dpr;
+         // Or more simply: currentBrushSize (data px) / dpr = brushSize (css logical px)
+        // cssBrushDiameter = currentBrushSize / dpr;
+      } else {
+        // dataCanvas.width corresponds to displayRect.width (CSS pixels)
+        cssBrushDiameter = currentBrushSize * (displayRect.width / dataCanvas.width) * dpr;
+        // cssBrushDiameter = currentBrushSize / dpr;
+      }
+       // The above scaling is if currentBrushSize was already scaled by DPR.
+       // If currentBrushSize is logical pixels, then for display:
+       // cssBrushDiameter = currentBrushSize; (since preview is CSS pixels)
+
+      // Let's assume currentBrushSize is the logical size, not yet DPR scaled for dataCtx.lineWidth
+      // So dataCtx.lineWidth = currentBrushSize * dpr;
+      // Then preview should be currentBrushSize in CSS pixels.
+      cssBrushDiameter = currentBrushSize; // if currentBrushSize is logical.
+
+      brushPreviewEl.style.width = cssBrushDiameter + 'px';
+      brushPreviewEl.style.height = cssBrushDiameter + 'px';
+      
+      const appContainerRect = appContainer.getBoundingClientRect();
+      // Center on screen (viewport)
+      brushPreviewEl.style.left = (window.innerWidth / 2 - cssBrushDiameter / 2) + 'px';
+      brushPreviewEl.style.top = (window.innerHeight / 2 - cssBrushDiameter / 2) + 'px';
+      brushPreviewEl.style.display = 'block';
+
+      clearTimeout(brushPreviewTimeout);
+      brushPreviewTimeout = setTimeout(() => {
+        brushPreviewEl.style.display = 'none';
+      }, 1500);
+    });
+    brushSizeSlider.addEventListener('change', () => { /* ... same ... */ });
+    brushSizeSlider.onchange = () => {
+        clearTimeout(brushPreviewTimeout);
+        brushPreviewEl.style.display = 'none';
+    };
+
+
+    document.getElementById('brightness-slider').addEventListener('input', (e) => { /* ... same ... */ });
+    document.getElementById('brightness-slider').oninput = (e) => {
+      brightnessOffset = parseInt(e.target.value);
+      initPalette();
+    };
+
+    document.getElementById('clear-toggle').addEventListener('change', (e) => {
+      depictClearAsBlack = e.target.checked;
+      redrawDisplayCanvas();
+    });
     
     const controlsPanel = document.getElementById('controls-panel');
     const panelToggleBtn = document.getElementById('panel-toggle-btn');
-    panelToggleBtn.addEventListener('click', () => { controlsPanel.classList.toggle('open'); const ph = controlsPanel.offsetHeight; if (controlsPanel.classList.contains('open')) { panelToggleBtn.textContent = '▼ Close'; panelToggleBtn.style.bottom = ph + 'px'; } else { panelToggleBtn.textContent = '▲ Tools'; panelToggleBtn.style.bottom = '0px'; clearTimeout(brushPreviewTimeout); brushPreviewEl.style.display = 'none'; } });
+
+    panelToggleBtn.addEventListener('click', () => {
+      controlsPanel.classList.toggle('open');
+      const panelHeight = controlsPanel.offsetHeight; 
+      if (controlsPanel.classList.contains('open')) {
+        panelToggleBtn.textContent = '▼ Close'; // Always Down arrow
+        panelToggleBtn.style.bottom = panelHeight + 'px';
+      } else {
+        panelToggleBtn.textContent = '▲ Tools'; // Always Up arrow
+        panelToggleBtn.style.bottom = '0px';
+        clearTimeout(brushPreviewTimeout);
+        brushPreviewEl.style.display = 'none';
+      }
+    });
 
     function orientAndSizeUI() {
         const vw = window.innerWidth;
         const vh = window.innerHeight;
+        let logicalWidth, logicalHeight;
         const dpr = window.devicePixelRatio || 1;
 
-        // appContainer.style.transformOrigin = 'top left'; // Already set in CSS, but can be explicit here too.
+        appContainer.style.transformOrigin = 'top left'; // Explicitly set
 
         if (vh > vw && vw < 768) { // Portrait on phone-like screens, force landscape
             isRotated = true;
-            // currentAppRotation = 90; // Not used
-            appContainer.style.width = vh + 'px'; 
-            appContainer.style.height = vw + 'px';
-            // Transform ensures original (0,vw) [bottom-left in portrait] maps to (0,0) [top-left in landscape]
-            // and original (0,0) [top-left in portrait] maps to (vw,0) [top-right in landscape]
-            appContainer.style.transform = `rotate(90deg) translateY(-${vw}px)`;
+            currentAppRotation = 90;
+            appContainer.style.width = vh + 'px'; // App container takes physical screen height as its width
+            appContainer.style.height = vw + 'px';// App container takes physical screen width as its height
+            appContainer.style.transform = `rotate(${currentAppRotation}deg) translateY(-${vw}px)`;
             
-            currentLogicalWidth = vh; 
-            currentLogicalHeight = vw;
+            logicalWidth = vh; 
+            logicalHeight = vw;
         } else { // Landscape or square, or large portrait (tablet/desktop)
             isRotated = false;
-            // currentAppRotation = 0; // Not used
+            currentAppRotation = 0;
             appContainer.style.width = vw + 'px';
             appContainer.style.height = vh + 'px';
             appContainer.style.transform = 'none';
 
-            currentLogicalWidth = vw;
-            currentLogicalHeight = vh;
+            logicalWidth = vw;
+            logicalHeight = vh;
         }
 
-        displayCanvas.style.width = currentLogicalWidth + 'px';
-        displayCanvas.style.height = currentLogicalHeight + 'px';
+        // displayCanvas CSS fills its container (which is appContainer after rotation)
+        displayCanvas.style.width = logicalWidth + 'px';
+        displayCanvas.style.height = logicalHeight + 'px';
         
-        displayCanvas.width = currentLogicalWidth * dpr;
-        displayCanvas.height = currentLogicalHeight * dpr;
+        // Set canvas buffer sizes (attributes)
+        displayCanvas.width = logicalWidth * dpr;
+        displayCanvas.height = logicalHeight * dpr;
         
+        // Store a copy of data for resizing
         let existingImageData = null;
-        if(dataCanvas.width > 0 && dataCanvas.height > 0 && (dataCanvas.width !== currentLogicalWidth * dpr || dataCanvas.height !== currentLogicalHeight * dpr)) {
-             // Only grab if dimensions are about to change and it's not the first run.
-            try { // getImageData can fail if canvas is tainted or 0 size
-              existingImageData = dataCtx.getImageData(0, 0, dataCanvas.width, dataCanvas.height);
-            } catch (err) { console.warn("Could not get existing image data on resize:", err); existingImageData = null; }
+        if(dataCanvas.width > 0 && dataCanvas.height > 0) { // Check if dataCanvas has been initialized
+            existingImageData = dataCtx.getImageData(0, 0, dataCanvas.width, dataCanvas.height);
         }
 
+        dataCanvas.width = logicalWidth * dpr;
+        dataCanvas.height = logicalHeight * dpr;
 
-        dataCanvas.width = currentLogicalWidth * dpr;
-        dataCanvas.height = currentLogicalHeight * dpr;
-
-        displayCtx.resetTransform(); displayCtx.scale(dpr, dpr);
-        dataCtx.resetTransform(); dataCtx.scale(dpr, dpr);
+        // Apply DPR scaling to contexts
+        // Important: setTransform CUMULATES. Reset first or use transform()
+        displayCtx.resetTransform(); // Or setTransform(1,0,0,1,0,0)
+        displayCtx.scale(dpr, dpr);
+        dataCtx.resetTransform();
+        dataCtx.scale(dpr, dpr);
         
+        // Restore or clear data
         let stateToApply = null;
-        if (undoStack.length > 0) { 
-            const lud = undoStack[undoStack.length - 1]; 
-            if (lud.width === dataCanvas.width && lud.height === dataCanvas.height) { 
-                stateToApply = lud; 
-            } else { // Dimensions changed, invalidate stack if not perfectly matched
-                console.log("Undo stack invalidated due to resize.");
-                undoStack = []; redoStack = []; 
+        if (undoStack.length > 0) {
+            const lastUndoData = undoStack[undoStack.length - 1];
+            if (lastUndoData.width === dataCanvas.width && lastUndoData.height === dataCanvas.height) {
+                stateToApply = lastUndoData;
+            } else { // Dimensions changed, invalidate stack
+                undoStack = [];
+                redoStack = [];
             }
         } else if (existingImageData && existingImageData.width === dataCanvas.width && existingImageData.height === dataCanvas.height) {
-            // This case is tricky. If we just resized, existingImageData is from *before* dataCanvas was cleared by resize.
-            // Best to rely on undoStack or start fresh if undoStack is incompatible.
-            // stateToApply = existingImageData; // Potentially re-applying old content if not careful
+            // Fallback to re-applying current content if undo stack is empty but canvas was drawn on
+            stateToApply = existingImageData;
         }
-        // If stateToApply is still null here, applyState(null) will clear the dataCanvas.
-        applyState(stateToApply); 
-        updateUndoRedoButtons();
+
+        applyState(stateToApply); // Clears if stateToApply is null, then redraws display
+        updateUndoRedoButtons(); // Update based on (potentially cleared) undoStack
         
-        if (controlsPanel.classList.contains('open')) { panelToggleBtn.textContent = '▼ Close'; panelToggleBtn.style.bottom = controlsPanel.offsetHeight + 'px'; } else { panelToggleBtn.textContent = '▲ Tools'; }
-        controlsPanel.style.maxHeight = currentLogicalHeight * 0.6 + 'px'; // Use logical height for panel constraint
+        // Update panel toggle button text based on current state
+        if (controlsPanel.classList.contains('open')) {
+            panelToggleBtn.textContent = '▼ Close';
+            panelToggleBtn.style.bottom = controlsPanel.offsetHeight + 'px';
+        } else {
+            panelToggleBtn.textContent = '▲ Tools';
+        }
+        controlsPanel.style.maxHeight = logicalHeight * 0.6 + 'px';
     }
 
-    function initApp() { 
-        initPalette(); 
-        orientAndSizeUI(); // Sets up sizes, scales, and calls applyState(null) if no valid undo/existing
-        if (undoStack.length === 0 && redoStack.length === 0) { // After initial setup and clear
-            const id = dataCtx.getImageData(0,0,dataCanvas.width, dataCanvas.height); 
-            let ie = true; for(let i=3; i < id.data.length; i+=4) { if(id.data[i] !== 0) {ie = false; break;}} 
-            if(ie) saveState(); // Save truly empty state
-        } 
-        updateUndoRedoButtons(); 
-        document.getElementById('brush-size-value').textContent = currentBrushSize; 
-        panelToggleBtn.textContent = '▲ Tools'; 
+
+    function initApp() {
+      initPalette();
+      orientAndSizeUI(); 
+      // Save initial empty state only if stack is truly empty after orientAndSizeUI
+      if (undoStack.length === 0 && redoStack.length === 0) {
+          // Check if dataCanvas is effectively empty before saving an "empty" state
+          const initialData = dataCtx.getImageData(0,0,dataCanvas.width, dataCanvas.height);
+          let isEmpty = true;
+          for(let i=3; i < initialData.data.length; i+=4) {
+              if(initialData.data[i] !== 0) {isEmpty = false; break;}
+          }
+          if(isEmpty) saveState();
+      }
+      updateUndoRedoButtons();
+      document.getElementById('brush-size-value').textContent = currentBrushSize;
+      // Panel default state
+      panelToggleBtn.textContent = '▲ Tools';
     }
 
     initApp();
     window.addEventListener('resize', orientAndSizeUI);
-    if (window.screen.orientation) { window.screen.orientation.addEventListener('change', orientAndSizeUI); } else { window.addEventListener('orientationchange', orientAndSizeUI); }
+    if (window.screen.orientation) {
+        window.screen.orientation.addEventListener('change', orientAndSizeUI);
+    } else {
+        window.addEventListener('orientationchange', orientAndSizeUI);
+    }
+
   </script>
 </body>
 </html>
