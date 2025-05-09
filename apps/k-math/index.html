@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ Sparkle Math Adventures ✨</title>
+    <style>
+        /* --- Global Styles for Night Mode --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #2c2c3e; /* Dark Purple-Blue */
+            color: #f0e6ff; /* Light Lavender Text */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* --- Header Styling --- */
+        .app-header {
+            background: linear-gradient(135deg, #ff69b4, #c71585); /* Hot Pink to Medium Violet Red Gradient */
+            color: white;
+            padding: 25px 0;
+            text-align: center;
+            width: 100%;
+            box-shadow: 0 4px 10px rgba(255, 105, 180, 0.3); /* Pink Glow */
+            border-bottom: 3px solid #ff1493; /* Deep Pink */
+        }
+
+        .app-header h1 {
+            margin: 0;
+            font-size: 2.8em;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .app-header p {
+            margin: 8px 0 0;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        /* --- Main Content Area --- */
+        .main-container {
+            max-width: 950px;
+            width: 90%;
+            margin: 30px auto;
+            padding: 25px;
+            background-color: #3a3a52; /* Darker Shade for Content Background */
+            border-radius: 15px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+        }
+
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .welcome-section h2 {
+            color: #ffc0cb; /* Pink */
+            margin-bottom: 12px;
+            font-size: 2em;
+        }
+        .welcome-section p {
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        /* --- Unit Selection Styling --- */
+        .unit-selection-area h2 {
+            text-align: center;
+            color: #f0e6ff;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            border-bottom: 2px dashed #ff69b4; /* Hot Pink Dashed Line */
+            padding-bottom: 12px;
+        }
+
+        .unit-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            list-style: none;
+            padding: 0;
+        }
+
+        .unit-card {
+            background-color: #4f4f70; /* Mid-tone purple */
+            border-radius: 10px;
+            overflow: hidden; /* For potential image backgrounds later */
+            box-shadow: 0 3px 7px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .unit-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 6px 15px rgba(255, 105, 180, 0.2); /* Pink glow on hover */
+        }
+
+        .unit-card a {
+            display: block;
+            padding: 25px 20px;
+            text-decoration: none;
+            color: #f0e6ff;
+            text-align: center;
+        }
+
+        .unit-card .unit-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #ffc0cb; /* Pink */
+            margin-bottom: 8px;
+        }
+
+        .unit-card .unit-subtitle {
+            font-size: 0.95em;
+            color: #d8c8ff; /* Lighter Lavender */
+            line-height: 1.4;
+        }
+
+        /* --- Footer Styling --- */
+        .app-footer {
+            text-align: center;
+            padding: 25px;
+            margin-top: auto; /* Pushes footer to the bottom */
+            font-size: 0.9em;
+            color: #b0a0cc; /* Muted Lavender */
+            width: 100%;
+            background-color: #232334; /* Very Dark Purple-Blue */
+            border-top: 2px solid #4f4f70;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="app-header">
+        <h1>✨ Sparkle Math Adventures ✨</h1>
+        <p>Fun Lessons for Bright Minds!</p>
+    </header>
+
+    <main class="main-container">
+        <section class="welcome-section">
+            <h2>Hey Superstar!</h2>
+            <p>Ready to explore the magical world of numbers? Choose a unit below and let the adventure begin!</p>
+        </section>
+
+        <section class="unit-selection-area">
+            <h2>Pick Your Learning Quest!</h2>
+            <ul class="unit-list">
+                <li class="unit-card">
+                    <a href="unit-1/index.html">
+                        <div class="unit-title">Unit 1: Numbers to 10 Gems</div>
+                        <div class="unit-subtitle">Unlock counting, number friends, and making 5 & 10!</div>
+                    </a>
+                </li>
+
+                <!-- Placeholder for Unit 2 -->
+                <li class="unit-card">
+                     <a href="unit-2/index.html"> <!-- Create unit-2/index.html when ready -->
+                        <div class="unit-title">Unit 2: Shape & Pattern Palace</div>
+                        <div class="unit-subtitle">Discover dazzling 2D shapes and pretty patterns!</div>
+                    </a>
+                </li>
+
+                <!-- Placeholder for Unit 3 -->
+                <!--
+                <li class="unit-card">
+                    <a href="unit-3/index.html">
+                        <div class="unit-title">Unit 3: Compare & Measure Kingdom</div>
+                        <div class="unit-subtitle">Who's bigger? Who's smaller? Let's find out!</div>
+                    </a>
+                </li>
+                -->
+
+                <!-- Add more unit cards here as you create them -->
+            </ul>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <p>© 2024 Your Sparkly App. Inspired by "Kindergarten Math with Confidence".</p>
+        <p>This is a fan-made supplementary tool.</p>
+    </footer>
+
+</body>
+</html>
