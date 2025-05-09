@@ -1,0 +1,308 @@
+    <script>
+        let ttsEnabled = false;
+        const synth = window.speechSynthesis;
+        let currentInstructionText = ""; // This will store the emoji-stripped text for TTS
+        let currentActivityStep = 0;
+        const activitySteps = [
+            "activity-step-1",
+            "activity-step-2",
+            "activity-step-3",
+            "activity-step-4",
+            "activity-step-5",
+            "activity-step-6",
+            "activity-step-7"
+        ];
+
+        // Regex to match common emojis (not exhaustive but covers many)
+        const emojiRegex = /[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{2B50}\u{1F004}\u{1F0CF}\u{1F170}-\u{1F251}\u{2300}-\u{23FF}]/gu;
+
+        function removeEmojis(text) {
+            return text.replace(emojiRegex, '').replace(/\s+/g, ' ').trim(); // Replace emojis with nothing, then clean up extra spaces
+        }
+
+        // Tab Logic
+        function openTab(tabName) {
+            const panes = document.querySelectorAll('.tab-pane');
+            panes.forEach(pane => pane.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(button => button.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            if (tabName === 'child-activity' && currentActivityStep === 0) {
+                showCurrentActivityStep();
+            }
+        }
+
+        // TTS Logic
+        const ttsToggleButton = document.getElementById('tts-toggle');
+        ttsToggleButton.addEventListener('click', () => {
+            ttsEnabled = !ttsEnabled;
+            ttsToggleButton.textContent = ttsEnabled ? '🔊 TTS: ON' : '🔊 TTS: OFF';
+            if (ttsEnabled && currentInstructionText) {
+                speak(currentInstructionText);
+            } else if (!ttsEnabled && synth.speaking) {
+                synth.cancel();
+            }
+        });
+
+        function speak(textToSpeak) {
+            if (!ttsEnabled || !textToSpeak) return;
+            if (synth.speaking) {
+                synth.cancel();
+            }
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            utterance.pitch = 1.2;
+            utterance.rate = 0.9;
+            synth.speak(utterance);
+        }
+
+        // Child Activity Zone Logic
+        function showCurrentActivityStep() {
+            activitySteps.forEach(stepId => {
+                const stepElement = document.getElementById(stepId);
+                if (stepElement) stepElement.style.display = 'none';
+            });
+            const currentStepElement = document.getElementById(activitySteps[currentActivityStep]);
+            if (currentStepElement) {
+                currentStepElement.style.display = 'block';
+                const instructionElem = currentStepElement.querySelector('.instruction-text');
+                if (instructionElem) {
+                    // Display text with emojis, but store and speak cleaned text
+                    currentInstructionText = removeEmojis(instructionElem.textContent);
+                    speak(currentInstructionText);
+                }
+                if (activitySteps[currentActivityStep] === "activity-step-7") {
+                    initializeCanvas();
+                }
+            }
+        }
+
+        function nextActivityStep() {
+            const feedbackElem = document.getElementById(`feedback-${currentActivityStep + 1}`);
+            if (feedbackElem) {
+                feedbackElem.textContent = "";
+                feedbackElem.className = "feedback-message";
+            }
+
+            currentActivityStep++;
+            if (currentActivityStep >= activitySteps.length) {
+                currentActivityStep = 0; // Loop back
+                const lastFeedback = document.getElementById(`feedback-${activitySteps.length}`);
+                if (lastFeedback) {
+                    const completionMessage = "🎉 Yay! You completed all the sparkly steps for number 2! 🥳";
+                    lastFeedback.textContent = completionMessage; // Display with emojis
+                    lastFeedback.className = "feedback-message feedback-positive";
+                    currentInstructionText = removeEmojis(completionMessage); // Clean for TTS
+                    speak(currentInstructionText);
+                }
+                return;
+            }
+            showCurrentActivityStep();
+        }
+
+        function repeatCurrentInstruction() {
+            speak(currentInstructionText); // currentInstructionText is already cleaned
+        }
+
+        // Specific Activity Functions
+        let interactiveCounter = 0;
+        function countInteractive(itemNumber, itemName) {
+            const feedbackElem = document.getElementById(`feedback-1`);
+            interactiveCounter++;
+            let feedbackText = "";
+            if (interactiveCounter === 1) {
+                feedbackText = `That's 1 ${itemName}! Keep going!`;
+                feedbackElem.textContent = `👟 That's 1 ${itemName}! Keep going!`; // Show emoji
+            } else if (interactiveCounter === 2) {
+                feedbackText = `💖 Fantastic! That's 2 ${itemName}s! So smart!`;
+                feedbackElem.textContent = feedbackText; // Show with emoji
+                feedbackElem.className = "feedback-message feedback-positive";
+                interactiveCounter = 0;
+            }
+            currentInstructionText = removeEmojis(feedbackText);
+            speak(currentInstructionText);
+        }
+
+        function interactiveAction(actionType) {
+            let feedbackText = ""; // This will be displayed with emojis
+            let cleanFeedbackText = ""; // This will be spoken
+            let feedbackId = "";
+
+            switch (actionType) {
+                case 'fingers':
+                    feedbackId = 'feedback-2';
+                    feedbackText = "✌️ Amazing! Two fingers! You got it!";
+                    break;
+                case 'eyes':
+                    feedbackId = 'feedback-3';
+                    feedbackText = "👀 That's right! We have two eyes!";
+                    break;
+                case 'ears':
+                    feedbackId = 'feedback-4';
+                    feedbackText = "👂 You found them! Two ears, perfect for listening!";
+                    break;
+                case 'hop':
+                    feedbackId = 'feedback-5';
+                    feedbackText = "🤸‍♀️ Super hopping! That was 2 hops!";
+                    break;
+            }
+            const feedbackElem = document.getElementById(feedbackId);
+            if (feedbackElem) {
+                feedbackElem.textContent = feedbackText; // Display with emojis
+                feedbackElem.className = "feedback-message feedback-positive";
+                currentInstructionText = removeEmojis(feedbackText); // Clean for TTS
+                speak(currentInstructionText);
+            }
+        }
+
+        let pairAttempts = 0;
+        function checkPair(isCorrectPair, itemName) {
+            const feedbackElem = document.getElementById('feedback-6');
+            pairAttempts++;
+            let feedbackText = ""; // For display
+            if (isCorrectPair) {
+                feedbackText = `🌟 Yes! A pair of ${itemName}! Well done!`;
+                feedbackElem.className = "feedback-message feedback-positive";
+                pairAttempts = 0;
+            } else {
+                feedbackText = `Oops! The ${itemName} is just one. A pair means two things together. Try again!`;
+                feedbackElem.className = "feedback-message feedback-try-again";
+            }
+            feedbackElem.textContent = feedbackText; // Display with emojis
+            currentInstructionText = removeEmojis(feedbackText); // Clean for TTS
+            speak(currentInstructionText);
+        }
+
+
+        // Canvas Tracing Logic
+        let canvas, ctx, drawing = false, lastX, lastY;
+        const traceGuide2 = [
+            { type: 'emoji', char: '💖', x: 38, y: 58 }, // Adjusted emoji position
+            { type: 'move', x: 50, y: 50 },
+            { type: 'arc', x: 100, y: 70, radius: 50, startAngle: Math.PI * 1.2, endAngle: Math.PI * 0.1, anticlockwise: false },
+            { type: 'line', x: 50, y: 150 },
+            { type: 'line', x: 150, y: 150 }
+        ];
+
+
+        function initializeCanvas() {
+            canvas = document.getElementById('trace-canvas');
+            if (!canvas) return;
+            ctx = canvas.getContext('2d');
+            clearCanvas();
+
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+
+            canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDrawing(getTouchPos(canvas, e)); });
+            canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(getTouchPos(canvas, e)); });
+            canvas.addEventListener('touchend', (e) => { e.preventDefault(); stopDrawing(); });
+        }
+
+        function getTouchPos(canvasDom, touchEvent) {
+            var rect = canvasDom.getBoundingClientRect();
+            return {
+                clientX: touchEvent.touches[0].clientX - rect.left,
+                clientY: touchEvent.touches[0].clientY - rect.top
+            };
+        }
+
+
+        function drawTracingGuide(guide) {
+            if (!ctx) return;
+            
+            // Draw 💖 at starting point first if it exists
+            const emojiPoint = guide.find(p => p.type === 'emoji');
+            if (emojiPoint) {
+                ctx.font = '24px sans-serif';
+                ctx.fillStyle = '#ff69b4';
+                ctx.fillText(emojiPoint.char, emojiPoint.x, emojiPoint.y);
+            }
+
+            ctx.strokeStyle = '#ffc0cb';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+
+            let firstMove = true;
+            guide.forEach(point => {
+                if (point.type === 'move') {
+                    ctx.moveTo(point.x, point.y);
+                    firstMove = false;
+                } else if (point.type === 'arc' && !firstMove) {
+                    ctx.arc(point.x, point.y, point.radius, point.startAngle, point.endAngle, point.anticlockwise);
+                } else if (point.type === 'line' && !firstMove) {
+                    ctx.lineTo(point.x, point.y);
+                }
+            });
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        function clearCanvas() {
+            if (!ctx) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawTracingGuide(traceGuide2);
+            const feedbackElem = document.getElementById('feedback-7');
+            if (feedbackElem) {
+                const canvasReadyMsg = "Ready to trace the number 2!";
+                feedbackElem.textContent = canvasReadyMsg;
+                // currentInstructionText = removeEmojis(canvasReadyMsg); // Update if you want this spoken automatically
+                // speak(currentInstructionText);
+            }
+        }
+
+        function startDrawing(e) {
+            drawing = true;
+            const pos = getMousePos(canvas, e);
+            [lastX, lastY] = [pos.x, pos.y];
+        }
+
+        function draw(e) {
+            if (!drawing) return;
+            const pos = getMousePos(canvas, e);
+            ctx.beginPath();
+            ctx.strokeStyle = '#f0e6ff';
+            ctx.lineWidth = 5;
+            ctx.lineCap = 'round';
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+            [lastX, lastY] = [pos.x, pos.y];
+        }
+
+        function stopDrawing() {
+            if (drawing) {
+                drawing = false;
+                const feedbackElem = document.getElementById('feedback-7');
+                if (feedbackElem) {
+                    const drawingCompleteMsg = "✨ Beautiful 2! ✨";
+                    feedbackElem.textContent = drawingCompleteMsg; // Show with emoji
+                    feedbackElem.className = "feedback-message feedback-positive";
+                    currentInstructionText = removeEmojis(drawingCompleteMsg); // Clean for TTS
+                    speak(currentInstructionText);
+                }
+            }
+        }
+
+        function getMousePos(canvasDom, mouseEvent) {
+            var rect = canvasDom.getBoundingClientRect();
+            const clientX = mouseEvent.clientX || (mouseEvent.touches && mouseEvent.touches[0].clientX);
+            const clientY = mouseEvent.clientY || (mouseEvent.touches && mouseEvent.touches[0].clientY);
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            openTab('parent-guide');
+        });
+
+    </script>
