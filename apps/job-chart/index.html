@@ -445,10 +445,13 @@
         let chores = [];
         let completionStatus = {}; 
         let currentPoints = 0;
-        const pointsPerTask = 1;
+        // const pointsPerTask = 1; // Removed, points are now variable
         const rewardThreshold = 28; 
         const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-        const taskIcons = ['', '✔️', '🌟', '💖']; 
+        
+        const taskIcons = ['', '✔️', '🌟', '💖']; // Added star and heart
+        const taskPoints = [0, 1, 2, 3]; // Points for '', ✔️, 🌟, 💖 respectively
+
 
         function getChoreIconHTML(chore) {
             if (chore.iconType === 'emoji') {
@@ -514,17 +517,23 @@
         
         function handleTaskClick(cell, choreId, dayIndex) {
             const statusKey = `${choreId}_${dayIndex}`;
-            let currentStatus = completionStatus[statusKey] || 0;
-            const oldPoints = currentStatus > 0 ? pointsPerTask : 0;
-            currentStatus = (currentStatus + 1) % taskIcons.length;
-            completionStatus[statusKey] = currentStatus;
-            cell.innerHTML = taskIcons[currentStatus];
-            const newPoints = currentStatus > 0 ? pointsPerTask : 0;
-            currentPoints += (newPoints - oldPoints);
+            let oldStatus = completionStatus[statusKey] || 0;
+
+            const pointsForOldStatus = taskPoints[oldStatus];
+
+            let newStatus = (oldStatus + 1) % taskIcons.length;
+            completionStatus[statusKey] = newStatus;
+            cell.innerHTML = taskIcons[newStatus];
+
+            const pointsForNewStatus = taskPoints[newStatus];
+
+            currentPoints -= pointsForOldStatus;
+            currentPoints += pointsForNewStatus;
+            
             cell.style.animation = 'none'; 
             void cell.offsetWidth; 
             cell.style.animation = 'var(--completed-bounce)'; 
-            if (currentStatus > 0) {
+            if (newStatus > 0) {
                 createSparkles(cell);
             }
             updatePointsDisplay();
@@ -570,7 +579,7 @@
                 completionStatus = {};
                 currentPoints = 0;
                 localStorage.removeItem('lastRewardedPoints');
-                renderGrid();
+                renderGrid(); // This will re-render with 0s and call updatePointsDisplay
                 saveData();
             }
         }
@@ -596,24 +605,25 @@
             }
             const loadedPoints = localStorage.getItem('matildaCurrentPoints');
              if (loadedPoints !== null) { 
-                currentPoints = parseInt(loadedPoints);
+                // We will recalculate points anyway to ensure consistency with current point system
+                // currentPoints = parseInt(loadedPoints); 
             } else {
                 currentPoints = 0; 
             }
-            recalculatePoints();
+            recalculatePoints(); // Ensures points are correct according to current taskPoints
             updatePointsDisplay(); 
         }
         
         function recalculatePoints() {
             let calculatedPoints = 0;
-            chores.forEach(chore => {
-                days.forEach((day, dayIndex) => { 
-                    const statusKey = `${chore.id}_${dayIndex}`;
-                    if (completionStatus[statusKey] && completionStatus[statusKey] > 0) {
-                        calculatedPoints += pointsPerTask;
+            for (const statusKey in completionStatus) {
+                if (Object.prototype.hasOwnProperty.call(completionStatus, statusKey)) {
+                    const statusValue = completionStatus[statusKey];
+                    if (typeof statusValue === 'number' && statusValue >= 0 && statusValue < taskPoints.length) {
+                        calculatedPoints += taskPoints[statusValue];
                     }
-                });
-            });
+                }
+            }
             currentPoints = calculatedPoints;
         }
         
@@ -712,14 +722,15 @@
             const choreToDelete = chores.find(c => c.id === choreId);
             if (choreToDelete && confirm(`Are you sure you want to delete the chore "${choreToDelete.name}"?`)) {
                 chores = chores.filter(chore => chore.id !== choreId);
+                // Also remove associated completion statuses
                 Object.keys(completionStatus).forEach(key => {
                     if (key.startsWith(choreId + '_')) {
                         delete completionStatus[key];
                     }
                 });
-                recalculatePoints(); 
+                recalculatePoints(); // Recalculate points after removing chore statuses
                 renderGrid(); 
-                updatePointsDisplay();
+                // updatePointsDisplay(); // renderGrid already calls this
                 saveData();
             }
         }
@@ -740,7 +751,7 @@
             const dataToBackup = {
                 chores: chores,
                 completionStatus: completionStatus,
-                currentPoints: currentPoints,
+                currentPoints: currentPoints, // Save the current, accurately calculated points
                 lastRewardedPoints: localStorage.getItem('lastRewardedPoints') || '0'
             };
             const jsonString = JSON.stringify(dataToBackup, null, 2);
@@ -769,22 +780,23 @@
             reader.onload = (e) => {
                 try {
                     const loadedData = JSON.parse(e.target.result);
-                    if (loadedData && Array.isArray(loadedData.chores) && typeof loadedData.completionStatus === 'object' && typeof loadedData.currentPoints === 'number') {
+                    // Check for core components; currentPoints will be recalculated
+                    if (loadedData && Array.isArray(loadedData.chores) && typeof loadedData.completionStatus === 'object') {
                         chores = loadedData.chores;
                         completionStatus = loadedData.completionStatus;
-                        currentPoints = loadedData.currentPoints;
+                        // currentPoints will be set by recalculatePoints below
                         if (loadedData.lastRewardedPoints) {
                             localStorage.setItem('lastRewardedPoints', loadedData.lastRewardedPoints);
                         } else {
                             localStorage.removeItem('lastRewardedPoints');
                         }
-                        saveData(); 
-                        recalculatePoints(); 
+                        saveData(); // Save the newly loaded structure first
+                        recalculatePoints(); // This will set currentPoints correctly
                         renderGrid();
-                        updatePointsDisplay();
+                        updatePointsDisplay(); // Ensure UI reflects the loaded and recalculated state
                         alert("Data loaded successfully!");
                     } else {
-                        alert("Invalid data file format. Required fields: chores (array), completionStatus (object), currentPoints (number).");
+                        alert("Invalid data file format. Required fields: chores (array), completionStatus (object).");
                     }
                 } catch (error) {
                     alert("Error reading or parsing file: " + error.message);
