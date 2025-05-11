@@ -11,9 +11,10 @@
       color: #e0e0e0;
       font-family: sans-serif;
       overflow: hidden;
-      touch-action: none;
+      touch-action: none; /* Important for preventing default touch actions like scroll/zoom */
       -webkit-user-select: none;
       user-select: none;
+      -webkit-tap-highlight-color: transparent; /* Prevent tap highlight on iOS */
     }
 
     #app-container {
@@ -48,34 +49,48 @@
       box-sizing: border-box;
     }
 
-    /* New Styles for Top Right Controls */
+    /* --- MODIFIED STYLES for Top Right Controls --- */
     #top-right-controls {
-      position: absolute; /* Relative to app-container, position set in JS */
-      z-index: 102; /* Above panel and toggle, below brush preview */
+      position: fixed; /* Fixed to the viewport */
+      bottom: 15px;    /* Literal bottom of the screen */
+      right: 15px;     /* Literal right of the screen */
+      z-index: 102; /* Above panel toggle, below brush preview */
       display: flex;
-      gap: 8px;
+      flex-direction: column; /* Stack them vertically */
+      gap: 10px; /* Space between buttons */
     }
 
     #top-right-controls button {
-      padding: 8px 12px;
-      border: none;
-      border-radius: 8px;
-      background: #383838; 
+      background: rgba(50, 50, 50, 0.85); 
       color: white;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 12px; /* More rounded */
       cursor: pointer;
-      transition: background-color 0.2s;
-      font-size: 14px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      transition: background-color 0.2s, transform 0.1s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+      
+      /* Size increase */
+      width: 60px; /* Increased width */
+      height: 60px; /* Increased height */
+      font-size: 28px; /* Larger symbols */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0; /* Remove padding if using fixed width/height and flex centering */
     }
     #top-right-controls button:hover {
-      background: #4a4a4a;
+      background: rgba(70, 70, 70, 0.9);
+    }
+    #top-right-controls button:active {
+      transform: scale(0.95); /* Visual feedback on tap */
     }
     #top-right-controls button:disabled {
-      background: #2a2a2a;
-      color: #666;
+      background: rgba(40, 40, 40, 0.7);
+      color: #777;
       cursor: not-allowed;
+      transform: scale(1); /* No active transform when disabled */
     }
-    /* End New Styles */
+    /* --- END MODIFIED STYLES --- */
 
 
     #controls-panel {
@@ -149,7 +164,7 @@
     </div>
     <div id="brush-preview"></div>
 
-    <!-- New Top Right Controls -->
+    <!-- New Top Right Controls - Positioned Fixed Bottom Right -->
     <div id="top-right-controls">
         <button id="top-undo-btn" title="Undo">↶</button> <!-- Undo Arrow U+21B6 -->
         <button id="top-redo-btn" title="Redo">↷</button> <!-- Redo Arrow U+21B7 -->
@@ -184,6 +199,13 @@
   </div>
 
   <script>
+    // --- NEW: Prevent double-tap zoom globally ---
+    // Most effective is meta tag user-scalable=no.
+    // touch-action:none on body also helps. This is an extra layer.
+    document.addEventListener('dblclick', function(event) {
+      event.preventDefault();
+    }, { passive: false }); // passive: false is important for preventDefault to work
+
     const ERASER = "eraser";
     let brightnessOffset = 0;
     let depictClearAsBlack = false;
@@ -198,8 +220,7 @@
     const dataCtx = dataCanvas.getContext('2d', { willReadFrequently: true });
     const brushPreviewEl = document.getElementById('brush-preview');
     
-    // NEW: Top right controls elements
-    const topRightControlsContainer = document.getElementById('top-right-controls');
+    // const topRightControlsContainer = document.getElementById('top-right-controls'); // Ref kept if needed for future dynamic changes
     const topUndoBtn = document.getElementById('top-undo-btn');
     const topRedoBtn = document.getElementById('top-redo-btn');
 
@@ -263,7 +284,6 @@
       document.getElementById('undo-btn').disabled = !canUndo;
       document.getElementById('redo-btn').disabled = !canRedo;
       
-      // Update new top-right buttons
       if (topUndoBtn) topUndoBtn.disabled = !canUndo;
       if (topRedoBtn) topRedoBtn.disabled = !canRedo;
     }
@@ -367,7 +387,6 @@
     displayCanvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); }, { passive: false });
     document.addEventListener('touchend', stopDrawing);
 
-    // NEW: Named functions for Undo/Redo
     function handleUndo() {
       if (undoStack.length > 0) {
         redoStack.push(dataCtx.getImageData(0, 0, dataCanvas.width, dataCanvas.height));
@@ -375,7 +394,6 @@
         applyState(prevState);
       }
     }
-
     function handleRedo() {
       if (redoStack.length > 0) {
         undoStack.push(dataCtx.getImageData(0, 0, dataCanvas.width, dataCanvas.height));
@@ -389,7 +407,6 @@
       dataCtx.clearRect(0, 0, dataCanvas.width / dpr, dataCanvas.height / dpr); 
       redrawDisplayCanvas();
     };
-    // MODIFIED: Assign named functions to panel buttons
     document.getElementById('undo-btn').onclick = handleUndo;
     document.getElementById('redo-btn').onclick = handleRedo;
     
@@ -401,7 +418,6 @@
       link.click();
     };
 
-    // NEW: Event listeners for top buttons
     if (topUndoBtn) topUndoBtn.addEventListener('click', handleUndo);
     if (topRedoBtn) topRedoBtn.addEventListener('click', handleRedo);
 
@@ -473,22 +489,42 @@
     const panelToggleBtn = document.getElementById('panel-toggle-btn');
 
     panelToggleBtn.addEventListener('click', () => {
+      // const opening = !controlsPanel.classList.contains('open'); // Keep if needed for logic based on opening vs closing
       controlsPanel.classList.toggle('open');
-      requestAnimationFrame(() => {
-        const panelHeight = controlsPanel.offsetHeight;
+      
+      // Update button text and position after transition might have started
+      requestAnimationFrame(() => { 
+        const panelHeight = controlsPanel.offsetHeight; // Get actual height after class change
         if (controlsPanel.classList.contains('open')) {
             panelToggleBtn.textContent = '▼ Close';
             panelToggleBtn.style.bottom = panelHeight + 'px';
         } else {
             panelToggleBtn.textContent = '▲ Tools';
             panelToggleBtn.style.bottom = '0px';
-            clearTimeout(brushPreviewTimeout);
+            clearTimeout(brushPreviewTimeout); // Hide brush preview if panel is closed
             brushPreviewEl.style.display = 'none';
         }
       });
     });
 
-    // MODIFIED orientAndSizeUI
+    // --- NEW: Panel dismissal on outside tap ---
+    document.addEventListener('click', function(event) {
+        if (controlsPanel.classList.contains('open')) {
+            const clickedElement = event.target;
+
+            // If the click was on the toggle button itself, let its own handler manage it
+            if (clickedElement === panelToggleBtn || panelToggleBtn.contains(clickedElement)) {
+                return; 
+            }
+            // If the click was inside the panel, do nothing
+            if (controlsPanel.contains(clickedElement)) {
+                return; 
+            }
+            // Otherwise, panel is open and click was outside: close the panel
+            panelToggleBtn.click(); // Simulate a click on the toggle button
+        }
+    }, false); // Use bubble phase (default)
+
     function orientAndSizeUI() {
         const vw = window.innerWidth;
         const vh = window.innerHeight;
@@ -496,7 +532,7 @@
         
         appContainer.style.transformOrigin = 'top left';
 
-        if (vh > vw && vw < 768) { 
+        if (vh > vw && vw < 768) { // Portrait on phone-like screens, force landscape
             isRotated = true;
             currentAppRotation = 90;
             appContainer.style.width = vh + 'px'; 
@@ -504,7 +540,7 @@
             appContainer.style.transform = `rotate(${currentAppRotation}deg) translateY(-${vw}px)`;
             logicalWidth = vh; 
             logicalHeight = vw;
-        } else { 
+        } else { // Landscape or square, or large portrait (tablet/desktop)
             isRotated = false;
             currentAppRotation = 0;
             appContainer.style.width = vw + 'px';
@@ -514,31 +550,15 @@
             logicalHeight = vh;
         }
 
-        // NEW: Position top-right controls
-        const commonOffset = '10px'; 
-        if (topRightControlsContainer) { 
-            if (isRotated) {
-                // When appContainer is rotated 90deg clockwise and translated,
-                // its 'bottom right' corner corresponds to the screen's 'top right'.
-                topRightControlsContainer.style.bottom = commonOffset;
-                topRightControlsContainer.style.right = commonOffset;
-                topRightControlsContainer.style.top = 'auto'; // Clear previous
-                topRightControlsContainer.style.left = 'auto'; // Clear previous
-            } else {
-                // Normal 'top right' for non-rotated appContainer.
-                topRightControlsContainer.style.top = commonOffset;
-                topRightControlsContainer.style.right = commonOffset;
-                topRightControlsContainer.style.bottom = 'auto'; // Clear previous
-                topRightControlsContainer.style.left = 'auto'; // Clear previous
-            }
-        }
-
+        // Top-right controls are position:fixed via CSS, their position relative to viewport
+        // does not need to be adjusted here based on appContainer's rotation.
 
         displayCanvas.style.width = logicalWidth + 'px';
         displayCanvas.style.height = logicalHeight + 'px';
         
         let existingImageData = null;
         if(dataCanvas.width > 0 && dataCanvas.height > 0) {
+            // Only capture if dimensions are valid before potential resize
             existingImageData = dataCtx.getImageData(0, 0, dataCanvas.width, dataCanvas.height);
         }
 
@@ -564,19 +584,22 @@
         } else if (existingImageData && 
                    existingImageData.width === dataCanvas.width && 
                    existingImageData.height === dataCanvas.height) {
+            // Restore previous drawing if no undo history and dimensions match
             stateToApply = existingImageData;
         }
         
         applyState(stateToApply); 
         updateUndoRedoButtons();
         
+        // Ensure toggle button position is correct relative to panel, even on resize/orientation change
         if (controlsPanel.classList.contains('open')) {
             panelToggleBtn.textContent = '▼ Close';
-            requestAnimationFrame(() => { 
+            requestAnimationFrame(() => { // Defer to ensure panel offsetHeight is up-to-date
                  panelToggleBtn.style.bottom = controlsPanel.offsetHeight + 'px';
             });
         } else {
             panelToggleBtn.textContent = '▲ Tools';
+            panelToggleBtn.style.bottom = '0px'; // Ensure it's reset if panel was closed during resize
         }
         controlsPanel.style.maxHeight = (isRotated ? vw : vh) * 0.6 + 'px'; 
     }
