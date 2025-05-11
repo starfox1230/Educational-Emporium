@@ -60,17 +60,14 @@
             text-align: center;
             font-size: 2.8em;
             margin-bottom: 25px;
-            cursor: default;
-            user-select: none;
-            -webkit-user-select: none;
-            -ms-user-select: none;
-            touch-action: none;    /* disable default iOS long-press behaviors */
+            cursor: default; 
+            user-select: none; 
         }
 
         .chore-chart-wrapper {
-            background-color: var(--chore-col-bg);
+            background-color: var(--chore-col-bg); 
             border-radius: 10px;
-            overflow: hidden;
+            overflow: hidden; 
             border: 1px solid var(--grid-border);
         }
         
@@ -84,7 +81,7 @@
             border: 1px solid var(--grid-border);
             text-align: center;
             padding: 8px;
-            height: 70px;
+            height: 70px; 
             box-sizing: border-box;
         }
 
@@ -95,13 +92,14 @@
             font-size: 0.9em;
         }
         
-        .chore-chart th.chore-header-cell {
-            background-color: var(--chore-col-bg);
-            border-top-left-radius: 10px;
+        .chore-chart th.chore-header-cell { 
+             background-color: var(--chore-col-bg);
+             border-top-left-radius: 10px; 
         }
-        .chore-chart th.day-header-cell:last-of-type {
-            border-top-right-radius: 10px;
+        .chore-chart th.day-header-cell:last-of-type { 
+             border-top-right-radius: 10px;
         }
+
 
         .chore-chart td.chore-label-cell {
             background-color: var(--chore-col-bg);
@@ -110,7 +108,7 @@
             color: var(--title-purple);
             padding: 5px;
             vertical-align: middle;
-            position: relative;
+            position: relative; 
         }
         
         .chore-label-cell .chore-item-content {
@@ -121,13 +119,13 @@
             gap: 4px;
         }
 
-        .chore-label-cell .chore-icon-svg svg {
+        .chore-label-cell .chore-icon-svg svg { /* For SVGs */
             width: 32px;
             height: 32px;
             fill: var(--icon-color);
         }
-        .chore-label-cell .chore-icon-emoji {
-            font-size: 32px;
+        .chore-label-cell .chore-icon-emoji { /* For Emojis */
+             font-size: 32px; 
         }
         
         .chore-label-cell .chore-name {
@@ -137,9 +135,9 @@
         .chore-chart td.task-cell {
             background-color: var(--cell-bg);
             cursor: pointer;
-            font-size: 1.8em;
+            font-size: 1.8em; 
             transition: background-color 0.2s ease;
-            position: relative;
+            position: relative; 
         }
 
         .chore-chart td.task-cell:hover {
@@ -149,8 +147,8 @@
         .chore-chart tr:last-child td:first-child.chore-label-cell {
             border-bottom-left-radius: 10px;
         }
-        .chore-chart tr:last-child td:last-of-type.task-cell {
-            border-bottom-right-radius: 10px;
+        .chore-chart tr:last-child td:last-of-type.task-cell { 
+             border-bottom-right-radius: 10px;
         }
 
         .sparkle {
@@ -168,31 +166,32 @@
             margin-top: 25px;
             display: flex;
             gap: 10px;
-            justify-content: center;
+            justify-content: center; /* Center items for typical cases */
             align-items: center;
             flex-wrap: wrap;
         }
-        .controls > * {
-            margin-right: 10px;
+         .controls > * { /* For spacing between items */
+            margin-right: 10px; 
         }
         .controls > *:last-child {
             margin-right: 0;
         }
         .controls p {
-            flex-grow: 1;
-            text-align: center;
+             flex-grow: 1; /* Allows points to take available space if needed */
+             text-align: center; /* Ensure points are centered */
         }
+
 
         .controls button {
             background-color: var(--accent-color);
             color: white;
             border: none;
-            padding: 10px 15px;
+            padding: 10px 15px; 
             border-radius: 5px;
             cursor: pointer;
-            font-size: 0.9em;
+            font-size: 0.9em; 
             transition: background-color 0.2s ease;
-            white-space: nowrap;
+            white-space: nowrap; /* Prevent button text wrapping */
         }
 
         .controls button:hover {
@@ -208,10 +207,10 @@
             background-color: var(--button-subtle-hover-bg);
         }
         
-        .parent-controls {
-            display: none;
+        .parent-controls { 
+            display: none; 
             flex-direction: column;
-            gap: 15px;
+            gap: 15px; /* Increased gap for better separation */
             margin-top: 15px;
             padding: 15px;
             border: 1px dashed var(--accent-color);
@@ -221,13 +220,13 @@
 
         .parent-controls .parent-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Adjusted minmax */
             gap: 10px;
             align-items: center;
         }
         
         .parent-mode-active .parent-controls {
-            display: flex;
+            display: flex; 
         }
 
         .parent-controls input[type="text"], .parent-controls select {
@@ -235,31 +234,31 @@
             border-radius: 4px;
             border: 1px solid var(--grid-border);
             box-sizing: border-box;
-            width: 100%;
+            width: 100%; 
         }
-        .parent-controls button {
-            padding: 10px 15px;
-            font-size: 0.9em;
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-            width: 100%;
+        .parent-controls button { /* Default for buttons directly in parent-controls or in grid */
+             padding: 10px 15px;
+             font-size: 0.9em;
+             background-color: var(--accent-color);
+             color: white;
+             border: none;
+             border-radius: 5px;
+             cursor: pointer;
+             transition: background-color 0.2s ease;
+             width: 100%; /* Make buttons in grid take full width of their cell */
         }
-        .parent-controls button:hover {
+         .parent-controls button:hover {
             background-color: #8E44AD;
         }
 
-        .parent-controls .io-buttons-grid {
+        .parent-controls .io-buttons-grid { /* Specific grid for download/upload */
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
         }
         
         .delete-chore-btn {
-            display: none;
+            display: none; 
             position: absolute;
             top: 2px;
             right: 2px;
@@ -277,8 +276,9 @@
         }
         
         .parent-mode-active .delete-chore-btn {
-            display: block;
+            display: block; 
         }
+
 
         #reward-notification {
             position: fixed;
@@ -303,11 +303,37 @@
             top: 50px;
         }
 
+        /* Responsive adjustments */
         @media (max-width: 768px) {
-            /* responsive tweaks… */
+            body { padding: 10px; }
+            .container { padding: 15px; }
+            header h1 { font-size: 2.2em; margin-bottom: 20px; }
+            .chore-chart th, .chore-chart td { padding: 6px; height: 60px; }
+            .chore-chart th { font-size: 0.75em; }
+            .chore-label-cell .chore-icon-svg svg { width: 24px; height: 24px;}
+            .chore-label-cell .chore-icon-emoji { font-size: 24px; }
+            .chore-label-cell .chore-name { font-size: 0.8em; }
+            .chore-chart td.task-cell { font-size: 1.5em; }
+            .controls button { padding: 8px 12px; font-size: 0.85em; }
+             .parent-controls .parent-grid { grid-template-columns: 1fr; } /* Stack parent inputs */
         }
         @media (max-width: 480px) {
-            /* more responsive tweaks… */
+            header h1 { font-size: 1.8em; }
+            .chore-chart th { font-size: 0.6em; } 
+            .chore-label-cell .chore-icon-svg svg { width: 20px; height: 20px;}
+            .chore-label-cell .chore-icon-emoji { font-size: 20px; }
+            .chore-label-cell .chore-name { font-size: 0.7em; }
+            .chore-chart td.task-cell { font-size: 1.2em; }
+            .chore-chart td, .chore-chart th { padding: 4px; height: 50px;}
+            .chore-chart-wrapper {overflow-x: auto;} 
+            .chore-chart table {min-width: 320px;} 
+            .controls { 
+                flex-direction: row; /* Keep controls in a row */
+                justify-content: space-around; /* Distribute space */
+             }
+            .controls button { width: auto; /* Let buttons size by content */ flex-shrink: 0;}
+            .controls p { margin: 5px 0; text-align: center; flex-grow: 0;} /* Prevent points from growing too much */
+            .parent-controls .parent-grid, .parent-controls .io-buttons-grid { grid-template-columns: 1fr; } /* Stack inputs and IO buttons */
         }
     </style>
 </head>
@@ -321,9 +347,13 @@
                 <div class="chore-chart">
                     <table>
                         <thead>
-                            <tr id="chore-chart-header-row"></tr>
+                            <tr id="chore-chart-header-row">
+                                <!-- Header cells will be dynamically generated here -->
+                            </tr>
                         </thead>
-                        <tbody id="chore-grid-body"></tbody>
+                        <tbody id="chore-grid-body">
+                            <!-- Chore rows will be dynamically generated here -->
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -336,22 +366,26 @@
             
             <div class="parent-controls" id="parent-controls-section">
                 <h3>Parent Mode</h3>
-                <div class="parent-grid">
-                    <input type="text" id="new-chore-name" placeholder="New chore name">
-                    <select id="new-chore-icon-type">
-                        <option value="emoji">Emoji</option>
-                        <option value="svg">SVG (Preset Key)</option>
-                    </select>
-                    <input type="text" id="new-chore-icon-value" placeholder="Emoji (e.g. ✨) or SVG key">
+                <div> <!-- Group for new chore input -->
+                    <div class="parent-grid">
+                        <input type="text" id="new-chore-name" placeholder="New chore name">
+                        <select id="new-chore-icon-type">
+                            <option value="emoji">Emoji</option>
+                            <option value="svg">SVG (Preset Key)</option>
+                        </select>
+                        <input type="text" id="new-chore-icon-value" placeholder="Emoji (e.g. ✨) or SVG key">
+                    </div>
+                    <button id="add-chore-button" style="margin-top: 10px;">Add Chore</button>
                 </div>
-                <button id="add-chore-button">Add Chore</button>
-                <div class="io-buttons-grid">
+                
+                <div class="io-buttons-grid"> <!-- Grid for I/O buttons -->
                     <button id="download-data-button">Download Data</button>
                     <button id="upload-data-button">Upload Data</button>
                     <input type="file" id="upload-file-input" accept=".json" style="display: none;">
                 </div>
                 <button id="exit-parent-mode-button">Exit Parent Mode</button>
             </div>
+
         </main>
     </div>
 
@@ -377,109 +411,397 @@
         const uploadDataButton = document.getElementById('upload-data-button');
         const uploadFileInput = document.getElementById('upload-file-input');
 
-        const PARENT_PASSWORD = "roomjobs";
+
+        const PARENT_PASSWORD = "roomjobs"; 
         let isParentModeActive = false;
-        let currentView = 'weekly';
-        let chores = [], completionStatus = {}, currentPoints = 0;
-        const pointsPerTask = 1, rewardThreshold = 5;
-        const days = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
-        const taskIcons = ['', '✔️','🌟','💖'];
+        let currentView = 'weekly'; // 'weekly' or 'daily'
 
-        const svgIcons = {
-            /* … your SVG definitions … */
+        // SVG icons are still available if you want to add chores with them later.
+        // The keys would be like 'books_svg', 'dolls_svg', etc.
+        const svgIcons = { 
+            stuffies_svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c2.481 0 4.5-2.019 4.5-4.5S18.981 3 16.5 3C14.02 3 12 5.019 12 7.5c0 .88.25 1.691.681 2.385C11.625 9.319 10.5 8.458 10.5 7.5 10.5 5.019 8.481 3 6 3S1.5 5.019 1.5 7.5c0 .958.625 1.819 1.681 2.385C3.25 10.691 3 11.5 3 12.375c0 2.306 1.001 4.363 2.626 5.752C6.042 19.046 7.5 21 7.5 21h9s1.458-1.954 1.874-2.873C20.001 16.738 21 14.681 21 12.375c0-.875-.25-1.681-.681-2.385.944-.548 1.681-1.473 1.681-2.49C22 6.019 19.981 4 17.5 4S13 6.019 13 8.5c0 .958.625 1.819 1.681 2.385C14.75 11.691 14.5 12.5 14.5 13.375c0 1.422.499 2.729 1.32 3.768.091.112.185.222.28.332H7.9c.095-.11.189-.22.28-.332.821-1.039 1.32-2.346 1.32-3.768 0-.875-.25-1.681-.681-2.385C9.769 10.319 10.5 9.458 10.5 8.5 10.5 7.078 9.422 6 8 6S5.5 7.078 5.5 8.5c0 .958.625 1.819 1.681 2.385C7.25 11.691 7 12.5 7 13.375c0 1.763.708 3.35 1.846 4.52L7.5 20l-1.346-2.107A5.98 5.98 0 0 1 4.5 13.375C4.5 12.5 4.75 11.691 5.181 11C4.237 10.452 3.5 9.527 3.5 8.5 3.5 6.019 5.519 4 8 4s4.5 2.019 4.5 4.5c0 .958-.625 1.819-1.681 2.385C10.75 10.691 11 11.5 11 12.375c0 .479-.073.941-.209 1.381.711.301 1.36.713 1.909 1.232.55-.519 1.199-.931 1.909-1.232C14.427 13.316 14.354 12.854 14.354 12.375 14.354 11.5 14.604 10.691 15.035 11c-.944-.548-1.681-1.473-1.681-2.49C13.354 7.078 14.432 6 15.854 6s2.5 1.078 2.5 2.5c0 .958-.625 1.819-1.681 2.385C16.604 10.691 16.854 11.5 16.854 12.375c0 .479-.073.941-.209 1.381.711.301 1.36.713 1.909 1.232.55-.519 1.199-.931 1.909-1.232C19.927 13.316 19.854 12.854 19.854 12.375c0-.875.25-1.681.681-2.385.944-.548 1.681-1.473 1.681-2.49C20.354 6.019 18.335 4 15.854 4c-1.422 0-2.5.922-2.5 2.344V7.5c0 .88.25 1.691.681 2.385.001 0 .001 0 .001 0h.001C14.035 10.309 14.035 10.309 14.035 10.309zM8 18H6v-2h2v2zm8 0h-2v-2h2v2z"></path></svg>',
+            dolls_svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 5.5A3.5 3.5 0 0 0 8.5 9H7a5 5 0 0 1 10 0h-1.5a3.5 3.5 0 0 0-3.5-3.5zM12 14c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>',
+            books_svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V5h10v6z"/></svg>',
+            dirty_clothes_svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.5 6C18.5 5.17 17.83 4.5 17 4.5H14.82C14.4 3.34 13.3 2.5 12 2.5S9.6 3.34 9.18 4.5H7C6.17 4.5 5.5 5.17 5.5 6V7H4V19.5C4 20.33 4.67 21 5.5 21H18.5C19.33 21 20 20.33 20 19.5V7H18.5V6ZM12 4.5C12.55 4.5 13 4.95 13 5.5V6H11V5.5C11 4.95 11.45 4.5 12 4.5ZM18 19H6V9H18V19Z"/></svg>',
+            house_toys_svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8h5z"/></svg>',
+            medical_toys_svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.11 0-1.99.89-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.11-.9-2-2-2zm-1 11h-4v4h-4v-4H6v-4h4V6h4v4h4v4z"/></svg>',
+            mystery_things_svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v2h-2zm0 4h2v6h-2z"/></svg>'
         };
-
-        const initialChoresData = [
-            { id: 'stuffies', name: 'Stuffies', iconType: 'emoji', iconValue: '🧸' },
-            { id: 'dolls', name: 'Dolls', iconType: 'emoji', iconValue: '🎀' },
-            /* … etc … */
+        
+        const initialChoresData = [ // Using standard, widely supported emojis
+            { id: 'stuffies', name: 'Stuffies', iconType: 'emoji', iconValue: '🧸' }, // Teddy Bear
+            { id: 'dolls', name: 'Dolls', iconType: 'emoji', iconValue: '🎀' },     // Ribbon (as a stand-in for general "girly" toy)
+            { id: 'books', name: 'Books', iconType: 'emoji', iconValue: '📚' },      // Books
+            { id: 'dirty_clothes', name: 'Dirty Clothes', iconType: 'emoji', iconValue: '🧺' }, // Basket
+            { id: 'house_toys', name: 'House Toys', iconType: 'emoji', iconValue: '🏠' }, // House
+            { id: 'medical_toys', name: 'Medical Toys', iconType: 'emoji', iconValue: '🩹' },// Adhesive Bandage
+            { id: 'mystery_things', name: 'Mystery Things', iconType: 'emoji', iconValue: '📦' } // Package
         ];
 
-        function getChoreIconHTML(chore) { /* … */ }
-        function renderGrid() { /* … */ }
-        function handleTaskClick(cell, choreId, dayIndex) { /* … */ }
-        function createSparkles(cell) { /* … */ }
-        function updatePointsDisplay() { /* … */ }
-        function checkReward() { /* … */ }
-        function showRewardNotification() { /* … */ }
-        function resetWeek() { /* … */ }
-        function saveData() { /* … */ }
-        function loadData() { /* … */ }
-        function recalculatePoints() { /* … */ }
-        function promptParentPassword() {
-            if (isParentModeActive) return;
-            const pwd = prompt("Enter parent password:");
-            if (pwd === PARENT_PASSWORD) activateParentMode();
-            else if (pwd !== null) alert("Incorrect password.");
+        let chores = [];
+        let completionStatus = {}; 
+        let currentPoints = 0;
+        const pointsPerTask = 1;
+        const rewardThreshold = 5; 
+        const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+        const taskIcons = ['', '✔️', '🌟', '💖']; 
+
+        function getChoreIconHTML(chore) {
+            if (chore.iconType === 'emoji') {
+                return `<span class="chore-icon-emoji">${chore.iconValue}</span>`;
+            } else if (chore.iconType === 'svg' && svgIcons[chore.iconValue]) {
+                // For SVG, wrap in a div with a class for potential specific styling
+                return `<div class="chore-icon-svg">${svgIcons[chore.iconValue]}</div>`;
+            }
+            return `<span class="chore-icon-emoji">❓</span>`; // Default emoji question mark
         }
+
+        function renderGrid() {
+            choreChartHeaderRow.innerHTML = '';
+            choreGridBody.innerHTML = '';
+
+            const todayIndex = new Date().getDay(); 
+            const daysToDisplay = currentView === 'weekly' ? days : [days[todayIndex]];
+            const dayIndicesToDisplay = currentView === 'weekly' ? days.map((_, i) => i) : [todayIndex];
+
+            const emptyHeaderCell = document.createElement('th');
+            emptyHeaderCell.classList.add('chore-header-cell');
+            choreChartHeaderRow.appendChild(emptyHeaderCell);
+
+            daysToDisplay.forEach(day => {
+                const dayHeaderCell = document.createElement('th');
+                dayHeaderCell.classList.add('day-header-cell');
+                dayHeaderCell.textContent = day;
+                choreChartHeaderRow.appendChild(dayHeaderCell);
+            });
+
+
+            chores.forEach(chore => {
+                const row = document.createElement('tr');
+                row.dataset.choreId = chore.id;
+
+                const labelCell = document.createElement('td');
+                labelCell.classList.add('chore-label-cell');
+                labelCell.innerHTML = `
+                    <div class="chore-item-content">
+                        ${getChoreIconHTML(chore)}
+                        <span class="chore-name">${chore.name}</span>
+                    </div>
+                    <button class="delete-chore-btn" data-chore-id="${chore.id}">X</button>
+                `;
+                row.appendChild(labelCell);
+                
+                if (isParentModeActive) {
+                    const deleteBtn = labelCell.querySelector('.delete-chore-btn');
+                    if (deleteBtn) { 
+                        deleteBtn.style.display = 'block';
+                        deleteBtn.onclick = () => deleteChore(chore.id);
+                    }
+                }
+
+                dayIndicesToDisplay.forEach(dayIndex => {
+                    const cell = document.createElement('td');
+                    cell.classList.add('task-cell');
+                    cell.dataset.choreId = chore.id;
+                    cell.dataset.dayIndex = dayIndex;
+                    
+                    const statusKey = `${chore.id}_${dayIndex}`;
+                    const currentStatus = completionStatus[statusKey] || 0;
+                    cell.innerHTML = taskIcons[currentStatus];
+                    if (currentStatus > 0) cell.style.animation = 'none';
+
+                    cell.addEventListener('click', () => handleTaskClick(cell, chore.id, dayIndex));
+                    row.appendChild(cell);
+                });
+                choreGridBody.appendChild(row);
+            });
+            updatePointsDisplay();
+            toggleParentModeUI(); 
+        }
+        
+        function handleTaskClick(cell, choreId, dayIndex) {
+            const statusKey = `${choreId}_${dayIndex}`;
+            let currentStatus = completionStatus[statusKey] || 0;
+            
+            const oldPoints = currentStatus > 0 ? pointsPerTask : 0;
+
+            currentStatus = (currentStatus + 1) % taskIcons.length;
+            completionStatus[statusKey] = currentStatus;
+            
+            cell.innerHTML = taskIcons[currentStatus];
+            
+            const newPoints = currentStatus > 0 ? pointsPerTask : 0;
+            currentPoints += (newPoints - oldPoints);
+
+            cell.style.animation = 'none'; 
+            void cell.offsetWidth; 
+            cell.style.animation = 'var(--completed-bounce)'; 
+
+            if (currentStatus > 0) {
+                createSparkles(cell);
+            }
+
+            updatePointsDisplay();
+            checkReward();
+            saveData();
+        }
+
+        function createSparkles(cell) {
+            for (let i = 0; i < 5; i++) { 
+                const sparkle = document.createElement('div');
+                sparkle.classList.add('sparkle');
+                sparkle.style.left = `${Math.random() * 80 + 10}%`; 
+                sparkle.style.top = `${Math.random() * 80 + 10}%`;
+                sparkle.style.backgroundColor = ['gold', 'lightpink', 'lightblue'][Math.floor(Math.random() * 3)];
+                cell.appendChild(sparkle);
+                setTimeout(() => sparkle.remove(), 600); 
+            }
+        }
+
+        function updatePointsDisplay() {
+            totalPointsDisplay.textContent = currentPoints;
+        }
+
+        function checkReward() {
+            if (currentPoints > 0 && currentPoints % rewardThreshold === 0) {
+                 const lastRewardedPoints = parseInt(localStorage.getItem('lastRewardedPoints') || '0');
+                 if (currentPoints > lastRewardedPoints) {
+                    showRewardNotification();
+                    localStorage.setItem('lastRewardedPoints', currentPoints.toString());
+                 }
+            }
+        }
+
+        function showRewardNotification() {
+            rewardNotification.classList.add('show');
+            setTimeout(() => {
+                rewardNotification.classList.remove('show');
+            }, 3000); 
+        }
+
+        function resetWeek() {
+            if (confirm("Are you sure you want to reset the week? All progress will be lost.")) {
+                completionStatus = {};
+                currentPoints = 0;
+                localStorage.removeItem('lastRewardedPoints');
+                renderGrid();
+                saveData();
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('matildaChores', JSON.stringify(chores));
+            localStorage.setItem('matildaCompletionStatus', JSON.stringify(completionStatus));
+            localStorage.setItem('matildaCurrentPoints', currentPoints.toString());
+        }
+
+        function loadData() {
+            const loadedChores = localStorage.getItem('matildaChores');
+            if (loadedChores) {
+                chores = JSON.parse(loadedChores);
+            } else {
+                chores = JSON.parse(JSON.stringify(initialChoresData)); 
+            }
+
+            const loadedStatus = localStorage.getItem('matildaCompletionStatus');
+            if (loadedStatus) {
+                completionStatus = JSON.parse(loadedStatus);
+            } else {
+                completionStatus = {};
+            }
+
+            const loadedPoints = localStorage.getItem('matildaCurrentPoints');
+             if (loadedPoints !== null) { 
+                currentPoints = parseInt(loadedPoints);
+            } else {
+                currentPoints = 0; 
+            }
+            
+            recalculatePoints();
+            updatePointsDisplay(); 
+        }
+        
+        function recalculatePoints() {
+            let calculatedPoints = 0;
+            chores.forEach(chore => {
+                days.forEach((day, dayIndex) => { 
+                    const statusKey = `${chore.id}_${dayIndex}`;
+                    if (completionStatus[statusKey] && completionStatus[statusKey] > 0) {
+                        calculatedPoints += pointsPerTask;
+                    }
+                });
+            });
+            currentPoints = calculatedPoints;
+        }
+        
+        let pressTimer;
+        pageTitle.addEventListener('mousedown', startPress);
+        pageTitle.addEventListener('touchstart', startPress, { passive: false }); 
+        pageTitle.addEventListener('mouseup', cancelPress);
+        pageTitle.addEventListener('mouseleave', cancelPress);
+        pageTitle.addEventListener('touchend', cancelPress);
+
+        function startPress(e) {
+            if (e.type === 'touchstart') e.preventDefault(); 
+            pressTimer = window.setTimeout(() => {
+                promptParentPassword();
+            }, 2000); 
+        }
+        function cancelPress() {
+            clearTimeout(pressTimer);
+        }
+        
+        function promptParentPassword() {
+            if (isParentModeActive) return; 
+            const password = prompt("Enter parent password:");
+            if (password === PARENT_PASSWORD) {
+                activateParentMode();
+            } else if (password !== null) { 
+                alert("Incorrect password.");
+            }
+        }
+
         function activateParentMode() {
             isParentModeActive = true;
             document.body.classList.add('parent-mode-active');
-            renderGrid();
+            renderGrid(); 
         }
+        
         function deactivateParentMode() {
             isParentModeActive = false;
             document.body.classList.remove('parent-mode-active');
-            renderGrid();
+            renderGrid(); 
         }
+
         function toggleParentModeUI() {
             parentControlsSection.style.display = isParentModeActive ? 'flex' : 'none';
-            document.querySelectorAll('.delete-chore-btn')
-                .forEach(btn => btn.style.display = isParentModeActive ? 'block' : 'none');
-        }
-        function deleteChore(choreId) { /* … */ }
-        function toggleView() {
-            currentView = currentView === 'weekly' ? 'daily' : 'weekly';
-            toggleViewButton.textContent = currentView === 'weekly'
-                ? 'Switch to Daily View' : 'Switch to Weekly View';
-            renderGrid();
+            const deleteButtons = document.querySelectorAll('.delete-chore-btn');
+            deleteButtons.forEach(btn => {
+                if (btn) btn.style.display = isParentModeActive ? 'block' : 'none';
+            });
         }
 
-        // --- NEW LONG-PRESS SETUP (pointer + touch + mouse fallbacks) ---
-        let pressTimer = null;
-        function startPress(e) {
-            if (pressTimer !== null) return;
-            e.preventDefault();
-            pressTimer = window.setTimeout(() => {
-                pressTimer = null;
-                promptParentPassword();
-            }, 2000);
-        }
-        function cancelPress() {
-            if (pressTimer !== null) {
-                clearTimeout(pressTimer);
-                pressTimer = null;
+        exitParentModeButton.addEventListener('click', deactivateParentMode);
+
+        addChoreButton.addEventListener('click', () => {
+            const name = newChoreNameInput.value.trim();
+            const iconType = newChoreIconTypeInput.value;
+            const iconValue = newChoreIconValueInput.value.trim();
+
+            if (!name || !iconValue) {
+                alert("Please enter chore name and icon value.");
+                return;
+            }
+            if (iconType === 'svg' && !svgIcons[iconValue]) {
+                alert(`SVG key "${iconValue}" not recognized. Available SVG keys: ${Object.keys(svgIcons).join(', ')}`);
+                return;
+            }
+
+            const newChore = {
+                id: name.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now(), 
+                name: name,
+                iconType: iconType,
+                iconValue: iconValue
+            };
+            chores.push(newChore);
+            newChoreNameInput.value = '';
+            newChoreIconValueInput.value = '';
+            renderGrid();
+            saveData();
+        });
+
+        function deleteChore(choreId) {
+            const choreToDelete = chores.find(c => c.id === choreId);
+            if (choreToDelete && confirm(`Are you sure you want to delete the chore "${choreToDelete.name}"?`)) {
+                chores = chores.filter(chore => chore.id !== choreId);
+                Object.keys(completionStatus).forEach(key => {
+                    if (key.startsWith(choreId + '_')) {
+                        delete completionStatus[key];
+                    }
+                });
+                recalculatePoints(); 
+                renderGrid(); 
+                updatePointsDisplay();
+                saveData();
             }
         }
-        // pointer events (covers mouse & touch in modern browsers)
-        pageTitle.addEventListener('pointerdown', startPress);
-        pageTitle.addEventListener('pointerup',   cancelPress);
-        pageTitle.addEventListener('pointerleave',cancelPress);
-        pageTitle.addEventListener('pointercancel',cancelPress);
-        // fallback touch events
-        pageTitle.addEventListener('touchstart', startPress, { passive: false });
-        pageTitle.addEventListener('touchend',   cancelPress);
-        pageTitle.addEventListener('touchcancel',cancelPress);
-        pageTitle.addEventListener('touchmove',  cancelPress);
-        // fallback mouse events
-        pageTitle.addEventListener('mousedown', startPress);
-        pageTitle.addEventListener('mouseup',   cancelPress);
-        pageTitle.addEventListener('mouseleave',cancelPress);
-        // disable default context menu on long-press
-        pageTitle.addEventListener('contextmenu', e => e.preventDefault());
-        // ------------------------------------------------------------------
 
+        function toggleView() {
+            if (currentView === 'weekly') {
+                currentView = 'daily';
+                toggleViewButton.textContent = 'Switch to Weekly View';
+            } else {
+                currentView = 'weekly';
+                toggleViewButton.textContent = 'Switch to Daily View';
+            }
+            renderGrid();
+        }
         toggleViewButton.addEventListener('click', toggleView);
-        exitParentModeButton.addEventListener('click', deactivateParentMode);
-        addChoreButton.addEventListener('click', () => { /* … */ });
-        downloadDataButton.addEventListener('click', () => { /* … */ });
-        uploadDataButton.addEventListener('click', () => uploadFileInput.click());
-        uploadFileInput.addEventListener('change', (e) => { /* … */ });
-        resetWeekButton.addEventListener('click', resetWeek);
 
+        downloadDataButton.addEventListener('click', () => {
+            const dataToBackup = {
+                chores: chores,
+                completionStatus: completionStatus,
+                currentPoints: currentPoints,
+                lastRewardedPoints: localStorage.getItem('lastRewardedPoints') || '0'
+            };
+            const jsonString = JSON.stringify(dataToBackup, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'matilda_chores_data.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            alert("Data download initiated!");
+        });
+
+        uploadDataButton.addEventListener('click', () => {
+            uploadFileInput.click();
+        });
+
+        uploadFileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const loadedData = JSON.parse(e.target.result);
+                    if (loadedData && Array.isArray(loadedData.chores) && typeof loadedData.completionStatus === 'object' && typeof loadedData.currentPoints === 'number') {
+                        chores = loadedData.chores;
+                        completionStatus = loadedData.completionStatus;
+                        currentPoints = loadedData.currentPoints;
+                        if (loadedData.lastRewardedPoints) {
+                            localStorage.setItem('lastRewardedPoints', loadedData.lastRewardedPoints);
+                        } else {
+                            localStorage.removeItem('lastRewardedPoints');
+                        }
+                        saveData(); 
+                        recalculatePoints(); // Ensure points are correct after load
+                        renderGrid();
+                        updatePointsDisplay();
+                        alert("Data loaded successfully!");
+                    } else {
+                        alert("Invalid data file format. Required fields: chores (array), completionStatus (object), currentPoints (number).");
+                    }
+                } catch (error) {
+                    alert("Error reading or parsing file: " + error.message);
+                } finally {
+                    uploadFileInput.value = null; 
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        resetWeekButton.addEventListener('click', resetWeek);
+        
         loadData();
         renderGrid();
-        deactivateParentMode();
+        deactivateParentMode(); 
     </script>
 </body>
 </html>
