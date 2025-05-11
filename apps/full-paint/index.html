@@ -525,7 +525,23 @@
             panelToggleBtn.click(); // Simulate a click on the toggle button
         }
     }, false); // Use bubble phase (default)
+        // --- TAP ABOVE PANEL TO CLOSE IT ---
+    const canvasContainer = document.getElementById('canvas-container');
 
+    // Desktop click
+    canvasContainer.addEventListener('click', () => {
+      if (controlsPanel.classList.contains('open')) {
+        panelToggleBtn.click();
+      }
+    });
+
+    // Mobile touch
+    canvasContainer.addEventListener('touchstart', (e) => {
+      if (controlsPanel.classList.contains('open')) {
+        panelToggleBtn.click();
+        e.preventDefault();  // prevent it from also starting a draw
+      }
+    }, { passive: false });
     function orientAndSizeUI() {
         const vw = window.innerWidth;
         const vh = window.innerHeight;
