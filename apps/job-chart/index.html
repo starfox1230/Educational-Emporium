@@ -512,7 +512,7 @@
         const toggleViewButton = document.getElementById('toggle-view-button');
         const totalPointsDisplay = document.getElementById('total-points');
         const rewardNotification = document.getElementById('reward-notification');
-        const pageTitleElement = document.getElementById('page-title'); // Renamed for clarity
+        const pageTitleElement = document.getElementById('page-title'); 
         
         const parentControlsSection = document.getElementById('parent-controls-section');
         const newChoreNameInput = document.getElementById('new-chore-name');
@@ -538,10 +538,10 @@
         let editingChoreId = null;
         let currentWeekStartDate = null;
 
-        let appProfilesData = {}; // Stores all user profiles and their data
-        let currentUserId = null;   // ID of the currently active user
+        let appProfilesData = {}; 
+        let currentUserId = null;   
 
-        const svgIcons = {  /* ... SVG definitions remain the same ... */ 
+        const svgIcons = { 
             stuffies_svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c2.481 0 4.5-2.019 4.5-4.5S18.981 3 16.5 3C14.02 3 12 5.019 12 7.5c0 .88.25 1.691.681 2.385C11.625 9.319 10.5 8.458 10.5 7.5 10.5 5.019 8.481 3 6 3S1.5 5.019 1.5 7.5c0 .958.625 1.819 1.681 2.385C3.25 10.691 3 11.5 3 12.375c0 2.306 1.001 4.363 2.626 5.752C6.042 19.046 7.5 21 7.5 21h9s1.458-1.954 1.874-2.873C20.001 16.738 21 14.681 21 12.375c0-.875-.25-1.681-.681-2.385.944-.548 1.681-1.473 1.681-2.49C22 6.019 19.981 4 17.5 4S13 6.019 13 8.5c0 .958.625 1.819 1.681 2.385C14.75 11.691 14.5 12.5 14.5 13.375c0 1.422.499 2.729 1.32 3.768.091.112.185.222.28.332H7.9c.095-.11.189-.22.28-.332.821-1.039 1.32-2.346 1.32-3.768 0-.875-.25-1.681-.681-2.385C9.769 10.319 10.5 9.458 10.5 8.5 10.5 7.078 9.422 6 8 6S5.5 7.078 5.5 8.5c0 .958.625 1.819 1.681 2.385C7.25 11.691 7 12.5 7 13.375c0 1.763.708 3.35 1.846 4.52L7.5 20l-1.346-2.107A5.98 5.98 0 0 1 4.5 13.375C4.5 12.5 4.75 11.691 5.181 11C4.237 10.452 3.5 9.527 3.5 8.5 3.5 6.019 5.519 4 8 4s4.5 2.019 4.5 4.5c0 .958-.625 1.819-1.681 2.385C10.75 10.691 11 11.5 11 12.375c0 .479-.073.941-.209 1.381.711.301 1.36.713 1.909 1.232.55-.519 1.199-.931 1.909-1.232C14.427 13.316 14.354 12.854 14.354 12.375 14.354 11.5 14.604 10.691 15.035 11c-.944-.548-1.681-1.473-1.681-2.49C13.354 7.078 14.432 6 15.854 6s2.5 1.078 2.5 2.5c0 .958-.625 1.819-1.681 2.385C16.604 10.691 16.854 11.5 16.854 12.375c0 .479-.073.941-.209 1.381.711.301 1.36.713 1.909 1.232.55-.519 1.199-.931 1.909-1.232C19.927 13.316 19.854 12.854 19.854 12.375c0-.875.25-1.681.681-2.385.944-.548 1.681-1.473 1.681-2.49C20.354 6.019 18.335 4 15.854 4c-1.422 0-2.5.922-2.5 2.344V7.5c0 .88.25 1.691.681 2.385.001 0 .001 0 .001 0h.001C14.035 10.309 14.035 10.309 14.035 10.309zM8 18H6v-2h2v2zm8 0h-2v-2h2v2z"></path></svg>',
             dolls_svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 5.5A3.5 3.5 0 0 0 8.5 9H7a5 5 0 0 1 10 0h-1.5a3.5 3.5 0 0 0-3.5-3.5zM12 14c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>',
             books_svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V5h10v6z"/></svg>',
@@ -550,7 +550,7 @@
             medical_toys_svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.11 0-1.99.89-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.11-.9-2-2-2zm-1 11h-4v4h-4v-4H6v-4h4V6h4v4h4v4z"/></svg>',
             mystery_things_svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v2h-2zm0 4h2v6h-2z"/></svg>'
         };
-        const initialChoresDefinitionsTemplate = [ /* ... initial chore definitions remain the same ... */ 
+        const initialChoresDefinitionsTemplate = [ 
             { id: 'stuffies', name: 'Stuffies', iconType: 'emoji', iconValue: '🧸' }, 
             { id: 'dolls', name: 'Dolls', iconType: 'emoji', iconValue: '🎀' },     
             { id: 'books', name: 'Books', iconType: 'emoji', iconValue: '📚' },      
@@ -580,22 +580,22 @@
 
 
         // --- Date Helper Functions ---
-        function getWeekStartDate(d) { /* ... same ... */ 
+        function getWeekStartDate(d) { 
             const date = new Date(d);
             const day = date.getDay();
             const diff = date.getDate() - day;
             return new Date(date.setDate(diff));
         }
-        function getWeekEndDate(d) { /* ... same ... */
+        function getWeekEndDate(d) {
             const startDate = getWeekStartDate(d);
             const endDate = new Date(startDate);
             endDate.setDate(startDate.getDate() + 6);
             return endDate;
         }
-        function formatDateDisplay(date) { /* ... same ... */ 
+        function formatDateDisplay(date) { 
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         }
-        function getWeekId(date) { /* ... same ... */ 
+        function getWeekId(date) { 
             const d = new Date(date);
             d.setHours(0,0,0,0);
             const year = d.getFullYear();
@@ -603,12 +603,12 @@
             const day = d.getDate().toString().padStart(2, '0');
             return `${year}-${month}-${day}`;
         }
-        function isSameDay(date1, date2) { /* ... same ... */
+        function isSameDay(date1, date2) {
              return date1.getFullYear() === date2.getFullYear() &&
                    date1.getMonth() === date2.getMonth() &&
                    date1.getDate() === date2.getDate();
         }
-        function isCurrentRealWeek() { /* ... same ... */
+        function isCurrentRealWeek() {
             if (!currentWeekStartDate) return false;
             const today = new Date();
             const startOfThisRealWeek = getWeekStartDate(today);
@@ -617,19 +617,18 @@
 
         // --- Core Logic & UI Rendering ---
         function initApp() {
-            loadAllProfilesData(); // Loads appProfilesData and currentUserId
+            loadAllProfilesData(); 
             if (!currentUserId || !appProfilesData[currentUserId]) {
-                // No valid user found, prompt to create first user or pick if any exist
                 const userIds = Object.keys(appProfilesData);
                 if (userIds.length > 0) {
-                    switchUser(userIds[0]); // Default to first user if any
+                    switchUser(userIds[0]); 
                 } else {
-                    handleCreateNewUser("First User"); // Create a default first user
+                    handleCreateNewUser("First User"); 
                 }
             } else {
                 loadUser(currentUserId);
             }
-            deactivateParentMode(); // Ensure UI consistency
+            deactivateParentMode(); 
         }
 
         function loadUser(userId) {
@@ -637,26 +636,21 @@
             const userProfile = getCurrentUserProfile();
             if (!userProfile) {
                 console.error("Error: Attempted to load non-existent user:", userId);
-                // Fallback: prompt to create a user
                 handleCreateNewUser("New User");
                 return;
             }
 
             pageTitleElement.textContent = userProfile.profileName || "User's Chores";
-            
-            // Initialize week navigation to current real-world week for the new user
             navigateToWeek(getWeekStartDate(new Date())); 
-            
-            // Reset chore editing state when switching users
             resetChoreForm();
             if (isParentModeActive) {
-                 renderEditableChoresList(); // Update chore list for new user if in parent mode
+                 renderEditableChoresListForCurrentUser(); // CORRECTED
             }
             saveCurrentUserId();
         }
         
         function navigateToWeek(targetStartDate) {
-            if (!currentUserId) return; // Can't navigate without a user
+            if (!currentUserId) return; 
 
             currentWeekStartDate = getWeekStartDate(targetStartDate);
             currentWeekStartDate.setHours(0,0,0,0);
@@ -674,14 +668,14 @@
             updatePointsDisplay();
         }
 
-        function updateWeekDateDisplay() { /* ... same ... */
+        function updateWeekDateDisplay() {
             if (!currentWeekStartDate) return;
             const startDate = currentWeekStartDate;
             const endDate = getWeekEndDate(startDate);
             weekDatesDisplay.textContent = `${formatDateDisplay(startDate)} - ${formatDateDisplay(endDate)}`;
         }
         
-        function getChoreIconHTML(chore) { /* ... same ... */
+        function getChoreIconHTML(chore) {
             if (chore.iconType === 'emoji') {
                 return `<span class="chore-icon-emoji">${chore.iconValue}</span>`;
             } else if (chore.iconType === 'svg' && svgIcons[chore.iconValue]) {
@@ -726,7 +720,7 @@
 
             if (userChores.length === 0) {
                  choreGridBody.innerHTML = `<tr><td colspan="${daysToDisplayConfig.length + 1}" style="text-align:center; padding: 20px;">No chores defined for this user. Add some in Parent Mode!</td></tr>`;
-                 updatePointsDisplay(); // Ensure points show 0
+                 updatePointsDisplay(); 
                  return;
             }
 
@@ -765,7 +759,7 @@
                 });
                 choreGridBody.appendChild(row);
             });
-            toggleParentModeUIElements(); // Re-apply visibility for delete buttons after grid re-render
+            toggleParentModeUIElements(); 
         }
         
         function handleTaskClick(cell, choreId, dayIndex) {
@@ -796,7 +790,7 @@
             saveAllProfilesData();
         }
 
-        function createSparkles(cell) { /* ... same ... */ 
+        function createSparkles(cell) { 
              for (let i = 0; i < 5; i++) { 
                 const sparkle = document.createElement('div');
                 sparkle.classList.add('sparkle');
@@ -834,7 +828,7 @@
             }
         }
 
-        function showRewardNotification() { /* ... same ... */ 
+        function showRewardNotification() { 
             rewardNotification.classList.add('show');
             setTimeout(() => { rewardNotification.classList.remove('show'); }, 3000); 
         }
@@ -872,7 +866,6 @@
             const loadedProfiles = localStorage.getItem('choreApp_allProfilesData');
             appProfilesData = loadedProfiles ? JSON.parse(loadedProfiles) : {};
             currentUserId = localStorage.getItem('choreApp_currentUserId'); 
-            // Further validation of currentUserId happens in initApp
         }
         
         function recalculatePointsForUserWeek(userId, weekId) {
@@ -896,7 +889,7 @@
         let pressTimer;
         function startPress(e) { 
             if (e.type === 'touchstart') e.preventDefault(); 
-            pressTimer = window.setTimeout(showUserOrParentMenu, 1000); // 1 second
+            pressTimer = window.setTimeout(showUserOrParentMenu, 1000); 
         }
         function cancelPress(e) { clearTimeout(pressTimer); }
 
@@ -1009,14 +1002,14 @@
                 alert(`SVG key "${iconValue}" not recognized.`); return;
             }
 
-            if (editingChoreId) { // Update
+            if (editingChoreId) { 
                 const choreToUpdate = userChores.find(c => c.id === editingChoreId);
                 if (choreToUpdate) {
                     choreToUpdate.name = name;
                     choreToUpdate.iconType = iconType;
                     choreToUpdate.iconValue = iconValue;
                 }
-            } else { // Add new
+            } else { 
                 const newChore = {
                     id: name.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now(), 
                     name: name, iconType: iconType, iconValue: iconValue
@@ -1042,16 +1035,16 @@
             }
             userProfile.chores = userProfile.chores.filter(chore => chore.id !== choreIdToDelete);
             
-            for (const weekId in userProfile.appData) {
-                if (userProfile.appData[weekId] && userProfile.appData[weekId].completionStatus) {
+            for (const weekId_loop in userProfile.appData) { // Renamed weekId to avoid conflict
+                if (userProfile.appData[weekId_loop] && userProfile.appData[weekId_loop].completionStatus) {
                     let weekModified = false;
-                    Object.keys(userProfile.appData[weekId].completionStatus).forEach(key => {
+                    Object.keys(userProfile.appData[weekId_loop].completionStatus).forEach(key => {
                         if (key.startsWith(choreIdToDelete + '_')) {
-                            delete userProfile.appData[weekId].completionStatus[key];
+                            delete userProfile.appData[weekId_loop].completionStatus[key];
                             weekModified = true;
                         }
                     });
-                    if (weekModified) recalculatePointsForUserWeek(currentUserId, weekId);
+                    if (weekModified) recalculatePointsForUserWeek(currentUserId, weekId_loop);
                 }
             }
             if (editingChoreId === choreIdToDelete) resetChoreForm();
@@ -1077,7 +1070,7 @@
             message += "\nEnter number (or cancel):";
 
             const choice = prompt(message);
-            if (choice === null) return; // User cancelled
+            if (choice === null) return; 
 
             const choiceNum = parseInt(choice);
             if (isNaN(choiceNum)) { alert("Invalid choice."); return; }
@@ -1093,9 +1086,9 @@
 
         function switchUser(userIdToSwitchTo) {
             if (appProfilesData[userIdToSwitchTo]) {
-                if (isParentModeActive) deactivateParentMode(); // Exit parent mode on user switch for safety/clarity
+                if (isParentModeActive) deactivateParentMode(); 
                 currentUserId = userIdToSwitchTo;
-                loadUser(currentUserId); // This will update title, grid, etc.
+                loadUser(currentUserId); 
             } else {
                 alert("User not found.");
             }
@@ -1108,7 +1101,6 @@
                 return;
             }
 
-            // Check for duplicate profile names (optional, but good practice)
             const nameExists = Object.values(appProfilesData).some(p => p.profileName === profileName.trim());
             if (nameExists) {
                 if (!confirm(`A profile named "${profileName.trim()}" already exists. Create another one with this name?`)){
@@ -1119,13 +1111,13 @@
             const newUserId = 'user_' + Date.now();
             appProfilesData[newUserId] = {
                 profileName: profileName.trim(),
-                chores: JSON.parse(JSON.stringify(initialChoresDefinitionsTemplate)), // Give them a fresh copy
-                appData: {} // Empty weekly data
+                chores: JSON.parse(JSON.stringify(initialChoresDefinitionsTemplate)), 
+                appData: {} 
             };
             
-            if (isParentModeActive) deactivateParentMode(); // Exit parent mode for new user
-            switchUser(newUserId); // Switch to the newly created user
-            saveAllProfilesData(); // Save new profile structure
+            if (isParentModeActive) deactivateParentMode(); 
+            switchUser(newUserId); 
+            saveAllProfilesData(); 
             alert(`User profile "${profileName.trim()}" created!`);
         }
         
@@ -1139,7 +1131,7 @@
 
         exitParentModeButton.addEventListener('click', deactivateParentMode);
         
-        function updateToggleViewButtonText() { /* ... same, but check currentUserId ... */
+        function updateToggleViewButtonText() { 
             if (!currentUserId) {
                 toggleViewButton.disabled = true;
                 toggleViewButton.textContent = "N/A (No User)";
@@ -1154,7 +1146,7 @@
                 if (currentView === 'daily') currentView = 'weekly'; 
             }
         }
-        function toggleView() { /* ... same, but check currentUserId ... */
+        function toggleView() { 
             if (!currentUserId || !isCurrentRealWeek()) return; 
             currentView = (currentView === 'weekly') ? 'daily' : 'weekly';
             updateToggleViewButtonText();
@@ -1162,13 +1154,13 @@
         }
         toggleViewButton.addEventListener('click', toggleView);
 
-        prevWeekButton.addEventListener('click', () => { /* ... same, but check currentUserId ... */
+        prevWeekButton.addEventListener('click', () => { 
             if (!currentUserId || !currentWeekStartDate) return;
             const newStartDate = new Date(currentWeekStartDate);
             newStartDate.setDate(currentWeekStartDate.getDate() - 7);
             navigateToWeek(newStartDate);
         });
-        nextWeekButton.addEventListener('click', () => { /* ... same, but check currentUserId ... */
+        nextWeekButton.addEventListener('click', () => { 
             if (!currentUserId || !currentWeekStartDate) return;
             const newStartDate = new Date(currentWeekStartDate);
             newStartDate.setDate(currentWeekStartDate.getDate() + 7);
@@ -1177,8 +1169,8 @@
 
         downloadDataButton.addEventListener('click', () => {
             const dataToBackup = {
-                appProfilesData: appProfilesData, // All user data
-                currentUserId: currentUserId // To restore last active user
+                appProfilesData: appProfilesData, 
+                currentUserId: currentUserId 
             };
             const jsonString = JSON.stringify(dataToBackup, null, 2);
             const blob = new Blob([jsonString], { type: 'application/json' });
@@ -1197,12 +1189,13 @@
                     const loadedFullData = JSON.parse(e.target.result);
                     if (loadedFullData && typeof loadedFullData.appProfilesData === 'object') {
                         appProfilesData = loadedFullData.appProfilesData;
-                        currentUserId = loadedFullData.currentUserId || null; // Restore last user or null
+                        currentUserId = loadedFullData.currentUserId || null; 
                         
-                        // Recalculate points for all users and their weeks
-                        for (const userId in appProfilesData) {
-                            for (const weekId in appProfilesData[userId].appData) {
-                                recalculatePointsForUserWeek(userId, weekId);
+                        for (const userId_loop in appProfilesData) { 
+                            if (appProfilesData[userId_loop] && appProfilesData[userId_loop].appData) { 
+                                for (const weekId_loop in appProfilesData[userId_loop].appData) { 
+                                    recalculatePointsForUserWeek(userId_loop, weekId_loop);
+                                }
                             }
                         }
                         
@@ -1213,12 +1206,23 @@
                         saveAllProfilesData(); 
                         saveCurrentUserId();
 
+                        let userToLoadAfterUpload = null;
                         if (currentUserId && appProfilesData[currentUserId]) {
-                            loadUser(currentUserId);
+                            userToLoadAfterUpload = currentUserId;
                         } else if (Object.keys(appProfilesData).length > 0) {
-                            loadUser(Object.keys(appProfilesData)[0]); // Load first user if current is invalid
+                            userToLoadAfterUpload = Object.keys(appProfilesData)[0];
+                        }
+
+                        if (userToLoadAfterUpload) {
+                            loadUser(userToLoadAfterUpload);
                         } else {
-                            initApp(); // Re-init to prompt for user creation if no users loaded
+                            currentUserId = null; 
+                            saveCurrentUserId();
+                            pageTitleElement.textContent = "User's Chores";
+                            choreGridBody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 20px;">Data loaded, but no valid user profile found. Please create a new user.</td></tr>';
+                            totalPointsDisplay.textContent = "0";
+                            if(editableChoresListContainer) editableChoresListContainer.innerHTML = ''; 
+                            handleCreateNewUser("First User After Upload");
                         }
                         alert("All users' data loaded successfully!");
                     } else {
