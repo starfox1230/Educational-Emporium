@@ -54,18 +54,18 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
-        header h1#page-title { /* Targeting specifically for long-press styles */
+        header h1#page-title { 
             font-family: Georgia, 'Times New Roman', Times, serif;
             color: var(--title-purple);
             text-align: center;
             font-size: 2.8em;
             margin-bottom: 25px;
             cursor: default; 
-            user-select: none; /* Standard */
-            -webkit-user-select: none; /* Safari */
-            -moz-user-select: none; /* Firefox */
-            -ms-user-select: none; /* IE10+/Edge */
-            -webkit-touch-callout: none; /* iOS Safari - Disables callout (Copy/Share menu) */
+            user-select: none; 
+            -webkit-user-select: none; 
+            -moz-user-select: none; 
+            -ms-user-select: none; 
+            -webkit-touch-callout: none; 
         }
 
         .chore-chart-wrapper {
@@ -201,15 +201,6 @@
         .controls button:hover {
             background-color: #8E44AD;
         }
-
-        .controls .button-subtle {
-            background-color: var(--button-subtle-bg);
-            color: var(--button-subtle-text);
-            border: 1px solid var(--grid-border);
-        }
-        .controls .button-subtle:hover {
-            background-color: var(--button-subtle-hover-bg);
-        }
         
         .parent-controls { 
             display: none; 
@@ -240,19 +231,31 @@
             box-sizing: border-box;
             width: 100%; 
         }
-        .parent-controls button { 
-             padding: 10px 15px;
-             font-size: 0.9em;
-             background-color: var(--accent-color);
-             color: white;
-             border: none;
-             border-radius: 5px;
-             cursor: pointer;
-             transition: background-color 0.2s ease;
-             width: 100%; 
+        
+        /* Base style for buttons inside parent controls */
+        .parent-controls button {
+            padding: 10px 15px;
+            font-size: 0.9em;
+            background-color: var(--accent-color); /* Default accent color */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            width: 100%;
         }
-         .parent-controls button:hover {
-            background-color: #8E44AD;
+        .parent-controls button:hover {
+            background-color: #8E44AD; /* Darker accent */
+        }
+
+        /* Specific override for subtle buttons inside parent controls */
+        .parent-controls button.button-subtle {
+            background-color: var(--button-subtle-bg);
+            color: var(--button-subtle-text);
+            border: 1px solid var(--grid-border);
+        }
+        .parent-controls button.button-subtle:hover {
+            background-color: var(--button-subtle-hover-bg);
         }
 
         .parent-controls .io-buttons-grid { 
@@ -363,7 +366,7 @@
             <div class="controls">
                 <button id="toggle-view-button">Switch to Daily View</button>
                 <p>Total Points: <span id="total-points">0</span></p>
-                <button id="reset-week-button" class="button-subtle">Reset Week</button>
+                <!-- Reset button moved to parent controls -->
             </div>
             
             <div class="parent-controls" id="parent-controls-section">
@@ -385,6 +388,7 @@
                     <button id="upload-data-button">Upload Data</button>
                     <input type="file" id="upload-file-input" accept=".json" style="display: none;">
                 </div>
+                <button id="reset-week-button" class="button-subtle">Reset Week</button> <!-- MOVED HERE -->
                 <button id="exit-parent-mode-button">Exit Parent Mode</button>
             </div>
 
@@ -613,19 +617,17 @@
             currentPoints = calculatedPoints;
         }
         
-        // Parent Mode - Long Press Logic
         let pressTimer;
 
         function startPress(e) {
             console.log("startPress triggered by:", e.type);
-            // For touch events, prevent default behavior like scrolling or text selection callouts
             if (e.type === 'touchstart') {
                 e.preventDefault();
             }
             pressTimer = window.setTimeout(() => {
                 console.log("Timeout fired! Calling promptParentPassword.");
                 promptParentPassword();
-            }, 2000); // 2 seconds for long press
+            }, 2000); 
         }
 
         function cancelPress(e) {
@@ -640,14 +642,14 @@
                 return;
             }
             const password = prompt("Enter parent password:");
-            console.log("Password entered:", password); // Be careful logging passwords, even to console
+            console.log("Password entered:", password); 
             if (password === PARENT_PASSWORD) {
                 console.log("Password correct, activating parent mode.");
                 activateParentMode();
-            } else if (password !== null) { // User entered something incorrect
+            } else if (password !== null) { 
                 console.log("Password incorrect.");
                 alert("Incorrect password.");
-            } else { // User cancelled the prompt
+            } else { 
                 console.log("Prompt cancelled by user.");
             }
         }
@@ -672,14 +674,12 @@
             });
         }
 
-        // Event listeners for long-press
         pageTitle.addEventListener('mousedown', startPress);
-        pageTitle.addEventListener('touchstart', startPress, { passive: false }); // passive:false allows preventDefault
-
+        pageTitle.addEventListener('touchstart', startPress, { passive: false }); 
         pageTitle.addEventListener('mouseup', cancelPress);
-        pageTitle.addEventListener('mouseleave', cancelPress); // If mouse leaves element while pressed
+        pageTitle.addEventListener('mouseleave', cancelPress); 
         pageTitle.addEventListener('touchend', cancelPress);
-        pageTitle.addEventListener('touchcancel', cancelPress); // If touch is cancelled by system
+        pageTitle.addEventListener('touchcancel', cancelPress); 
 
         exitParentModeButton.addEventListener('click', deactivateParentMode);
 
