@@ -16,6 +16,9 @@
             --icon-color: #785A9B; /* For SVG icons if used */
             --accent-color: #9B59B6; /* For buttons, highlights */
             --completed-bounce: bounce-effect 0.3s ease;
+            --button-subtle-bg: #EAE0FF;
+            --button-subtle-hover-bg: #DCD0FF;
+            --button-subtle-text: var(--title-purple);
         }
 
         @keyframes bounce-effect {
@@ -89,11 +92,11 @@
             font-size: 0.9em;
         }
         
-        .chore-chart th.chore-header-cell { /* Top-left empty cell */
+        .chore-chart th.chore-header-cell { 
              background-color: var(--chore-col-bg);
              border-top-left-radius: 10px; 
         }
-        .chore-chart th.day-header-cell:last-of-type { /* Last day column header */
+        .chore-chart th.day-header-cell:last-of-type { 
              border-top-right-radius: 10px;
         }
 
@@ -116,13 +119,13 @@
             gap: 4px;
         }
 
-        .chore-label-cell .chore-icon svg { /* For SVGs */
+        .chore-label-cell .chore-icon-svg svg { /* For SVGs */
             width: 32px;
             height: 32px;
             fill: var(--icon-color);
         }
-        .chore-label-cell .chore-icon span { /* For Emojis */
-             font-size: 32px; /* Adjust emoji size here */
+        .chore-label-cell .chore-icon-emoji { /* For Emojis */
+             font-size: 32px; 
         }
         
         .chore-label-cell .chore-name {
@@ -144,7 +147,7 @@
         .chore-chart tr:last-child td:first-child.chore-label-cell {
             border-bottom-left-radius: 10px;
         }
-        .chore-chart tr:last-child td:last-of-type.task-cell { /* Last visible task cell */
+        .chore-chart tr:last-child td:last-of-type.task-cell { 
              border-bottom-right-radius: 10px;
         }
 
@@ -163,30 +166,51 @@
             margin-top: 25px;
             display: flex;
             gap: 10px;
-            justify-content: center;
+            justify-content: center; /* Center items for typical cases */
             align-items: center;
             flex-wrap: wrap;
         }
+         .controls > * { /* For spacing between items */
+            margin-right: 10px; 
+        }
+        .controls > *:last-child {
+            margin-right: 0;
+        }
+        .controls p {
+             flex-grow: 1; /* Allows points to take available space if needed */
+             text-align: center; /* Ensure points are centered */
+        }
+
 
         .controls button {
             background-color: var(--accent-color);
             color: white;
             border: none;
-            padding: 10px 15px; /* Adjusted padding */
+            padding: 10px 15px; 
             border-radius: 5px;
             cursor: pointer;
-            font-size: 0.9em; /* Adjusted font size */
+            font-size: 0.9em; 
             transition: background-color 0.2s ease;
+            white-space: nowrap; /* Prevent button text wrapping */
         }
 
         .controls button:hover {
             background-color: #8E44AD;
         }
+
+        .controls .button-subtle {
+            background-color: var(--button-subtle-bg);
+            color: var(--button-subtle-text);
+            border: 1px solid var(--grid-border);
+        }
+        .controls .button-subtle:hover {
+            background-color: var(--button-subtle-hover-bg);
+        }
         
         .parent-controls { 
             display: none; 
             flex-direction: column;
-            gap: 10px;
+            gap: 15px; /* Increased gap for better separation */
             margin-top: 15px;
             padding: 15px;
             border: 1px dashed var(--accent-color);
@@ -196,7 +220,7 @@
 
         .parent-controls .parent-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Adjusted minmax */
             gap: 10px;
             align-items: center;
         }
@@ -209,12 +233,28 @@
             padding: 8px;
             border-radius: 4px;
             border: 1px solid var(--grid-border);
-            margin-right: 5px;
             box-sizing: border-box;
-            width: 100%;
+            width: 100%; 
         }
-        .parent-controls button {
-             width: 100%;
+        .parent-controls button { /* Default for buttons directly in parent-controls or in grid */
+             padding: 10px 15px;
+             font-size: 0.9em;
+             background-color: var(--accent-color);
+             color: white;
+             border: none;
+             border-radius: 5px;
+             cursor: pointer;
+             transition: background-color 0.2s ease;
+             width: 100%; /* Make buttons in grid take full width of their cell */
+        }
+         .parent-controls button:hover {
+            background-color: #8E44AD;
+        }
+
+        .parent-controls .io-buttons-grid { /* Specific grid for download/upload */
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
         }
         
         .delete-chore-btn {
@@ -270,25 +310,30 @@
             header h1 { font-size: 2.2em; margin-bottom: 20px; }
             .chore-chart th, .chore-chart td { padding: 6px; height: 60px; }
             .chore-chart th { font-size: 0.75em; }
-            .chore-label-cell .chore-icon svg { width: 24px; height: 24px;}
-            .chore-label-cell .chore-icon span { font-size: 24px; }
+            .chore-label-cell .chore-icon-svg svg { width: 24px; height: 24px;}
+            .chore-label-cell .chore-icon-emoji { font-size: 24px; }
             .chore-label-cell .chore-name { font-size: 0.8em; }
             .chore-chart td.task-cell { font-size: 1.5em; }
             .controls button { padding: 8px 12px; font-size: 0.85em; }
+             .parent-controls .parent-grid { grid-template-columns: 1fr; } /* Stack parent inputs */
         }
         @media (max-width: 480px) {
             header h1 { font-size: 1.8em; }
             .chore-chart th { font-size: 0.6em; } 
-            .chore-label-cell .chore-icon svg { width: 20px; height: 20px;}
-            .chore-label-cell .chore-icon span { font-size: 20px; }
+            .chore-label-cell .chore-icon-svg svg { width: 20px; height: 20px;}
+            .chore-label-cell .chore-icon-emoji { font-size: 20px; }
             .chore-label-cell .chore-name { font-size: 0.7em; }
             .chore-chart td.task-cell { font-size: 1.2em; }
             .chore-chart td, .chore-chart th { padding: 4px; height: 50px;}
             .chore-chart-wrapper {overflow-x: auto;} 
-            .chore-chart table {min-width: 320px;} /* Adjusted min-width */
-            .controls { flex-direction: column; gap: 8px;}
-            .controls button { width: 80%; max-width: 200px;}
-            .controls p { margin: 5px 0;}
+            .chore-chart table {min-width: 320px;} 
+            .controls { 
+                flex-direction: row; /* Keep controls in a row */
+                justify-content: space-around; /* Distribute space */
+             }
+            .controls button { width: auto; /* Let buttons size by content */ flex-shrink: 0;}
+            .controls p { margin: 5px 0; text-align: center; flex-grow: 0;} /* Prevent points from growing too much */
+            .parent-controls .parent-grid, .parent-controls .io-buttons-grid { grid-template-columns: 1fr; } /* Stack inputs and IO buttons */
         }
     </style>
 </head>
@@ -314,27 +359,30 @@
             </div>
 
             <div class="controls">
-                <button id="reset-week-button">Reset Week</button>
                 <button id="toggle-view-button">Switch to Daily View</button>
                 <p>Total Points: <span id="total-points">0</span></p>
+                <button id="reset-week-button" class="button-subtle">Reset Week</button>
             </div>
             
             <div class="parent-controls" id="parent-controls-section">
                 <h3>Parent Mode</h3>
-                <div class="parent-grid">
-                    <input type="text" id="new-chore-name" placeholder="New chore name">
-                    <select id="new-chore-icon-type">
-                        <option value="emoji">Emoji</option>
-                        <option value="svg">SVG (Preset)</option>
-                    </select>
-                    <input type="text" id="new-chore-icon-value" placeholder="Emoji or SVG key (e.g., books)">
+                <div> <!-- Group for new chore input -->
+                    <div class="parent-grid">
+                        <input type="text" id="new-chore-name" placeholder="New chore name">
+                        <select id="new-chore-icon-type">
+                            <option value="emoji">Emoji</option>
+                            <option value="svg">SVG (Preset Key)</option>
+                        </select>
+                        <input type="text" id="new-chore-icon-value" placeholder="Emoji (e.g. ✨) or SVG key">
+                    </div>
+                    <button id="add-chore-button" style="margin-top: 10px;">Add Chore</button>
                 </div>
-                 <button id="add-chore-button">Add Chore</button>
-                 <div class="parent-grid">
+                
+                <div class="io-buttons-grid"> <!-- Grid for I/O buttons -->
                     <button id="download-data-button">Download Data</button>
                     <button id="upload-data-button">Upload Data</button>
                     <input type="file" id="upload-file-input" accept=".json" style="display: none;">
-                 </div>
+                </div>
                 <button id="exit-parent-mode-button">Exit Parent Mode</button>
             </div>
 
@@ -368,7 +416,9 @@
         let isParentModeActive = false;
         let currentView = 'weekly'; // 'weekly' or 'daily'
 
-        const svgIcons = { // Still available for custom addition
+        // SVG icons are still available if you want to add chores with them later.
+        // The keys would be like 'books_svg', 'dolls_svg', etc.
+        const svgIcons = { 
             stuffies_svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c2.481 0 4.5-2.019 4.5-4.5S18.981 3 16.5 3C14.02 3 12 5.019 12 7.5c0 .88.25 1.691.681 2.385C11.625 9.319 10.5 8.458 10.5 7.5 10.5 5.019 8.481 3 6 3S1.5 5.019 1.5 7.5c0 .958.625 1.819 1.681 2.385C3.25 10.691 3 11.5 3 12.375c0 2.306 1.001 4.363 2.626 5.752C6.042 19.046 7.5 21 7.5 21h9s1.458-1.954 1.874-2.873C20.001 16.738 21 14.681 21 12.375c0-.875-.25-1.681-.681-2.385.944-.548 1.681-1.473 1.681-2.49C22 6.019 19.981 4 17.5 4S13 6.019 13 8.5c0 .958.625 1.819 1.681 2.385C14.75 11.691 14.5 12.5 14.5 13.375c0 1.422.499 2.729 1.32 3.768.091.112.185.222.28.332H7.9c.095-.11.189-.22.28-.332.821-1.039 1.32-2.346 1.32-3.768 0-.875-.25-1.681-.681-2.385C9.769 10.319 10.5 9.458 10.5 8.5 10.5 7.078 9.422 6 8 6S5.5 7.078 5.5 8.5c0 .958.625 1.819 1.681 2.385C7.25 11.691 7 12.5 7 13.375c0 1.763.708 3.35 1.846 4.52L7.5 20l-1.346-2.107A5.98 5.98 0 0 1 4.5 13.375C4.5 12.5 4.75 11.691 5.181 11C4.237 10.452 3.5 9.527 3.5 8.5 3.5 6.019 5.519 4 8 4s4.5 2.019 4.5 4.5c0 .958-.625 1.819-1.681 2.385C10.75 10.691 11 11.5 11 12.375c0 .479-.073.941-.209 1.381.711.301 1.36.713 1.909 1.232.55-.519 1.199-.931 1.909-1.232C14.427 13.316 14.354 12.854 14.354 12.375 14.354 11.5 14.604 10.691 15.035 11c-.944-.548-1.681-1.473-1.681-2.49C13.354 7.078 14.432 6 15.854 6s2.5 1.078 2.5 2.5c0 .958-.625 1.819-1.681 2.385C16.604 10.691 16.854 11.5 16.854 12.375c0 .479-.073.941-.209 1.381.711.301 1.36.713 1.909 1.232.55-.519 1.199-.931 1.909-1.232C19.927 13.316 19.854 12.854 19.854 12.375c0-.875.25-1.681.681-2.385.944-.548 1.681-1.473 1.681-2.49C20.354 6.019 18.335 4 15.854 4c-1.422 0-2.5.922-2.5 2.344V7.5c0 .88.25 1.691.681 2.385.001 0 .001 0 .001 0h.001C14.035 10.309 14.035 10.309 14.035 10.309zM8 18H6v-2h2v2zm8 0h-2v-2h2v2z"></path></svg>',
             dolls_svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 5.5A3.5 3.5 0 0 0 8.5 9H7a5 5 0 0 1 10 0h-1.5a3.5 3.5 0 0 0-3.5-3.5zM12 14c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>',
             books_svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V5h10v6z"/></svg>',
@@ -378,14 +428,14 @@
             mystery_things_svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v2h-2zm0 4h2v6h-2z"/></svg>'
         };
         
-        const initialChoresData = [
-            { id: 'stuffies', name: 'Stuffies', iconType: 'emoji', iconValue: '🧸' },
-            { id: 'dolls', name: 'Dolls', iconType: 'emoji', iconValue: '👧' },
-            { id: 'books', name: 'Books', iconType: 'emoji', iconValue: '📚' },
-            { id: 'dirty_clothes', name: 'Dirty Clothes', iconType: 'emoji', iconValue: '🧺' },
-            { id: 'house_toys', name: 'House Toys', iconType: 'emoji', iconValue: '🏠' },
-            { id: 'medical_toys', name: 'Medical Toys', iconType: 'emoji', iconValue: '🩹' },
-            { id: 'mystery_things', name: 'Mystery Things', iconType: 'emoji', iconValue: '📦' }
+        const initialChoresData = [ // Using standard, widely supported emojis
+            { id: 'stuffies', name: 'Stuffies', iconType: 'emoji', iconValue: '🧸' }, // Teddy Bear
+            { id: 'dolls', name: 'Dolls', iconType: 'emoji', iconValue: '🎀' },     // Ribbon (as a stand-in for general "girly" toy)
+            { id: 'books', name: 'Books', iconType: 'emoji', iconValue: '📚' },      // Books
+            { id: 'dirty_clothes', name: 'Dirty Clothes', iconType: 'emoji', iconValue: '🧺' }, // Basket
+            { id: 'house_toys', name: 'House Toys', iconType: 'emoji', iconValue: '🏠' }, // House
+            { id: 'medical_toys', name: 'Medical Toys', iconType: 'emoji', iconValue: '🩹' },// Adhesive Bandage
+            { id: 'mystery_things', name: 'Mystery Things', iconType: 'emoji', iconValue: '📦' } // Package
         ];
 
         let chores = [];
@@ -398,22 +448,22 @@
 
         function getChoreIconHTML(chore) {
             if (chore.iconType === 'emoji') {
-                return `<span class="chore-icon">${chore.iconValue}</span>`;
+                return `<span class="chore-icon-emoji">${chore.iconValue}</span>`;
             } else if (chore.iconType === 'svg' && svgIcons[chore.iconValue]) {
-                return `<div class="chore-icon">${svgIcons[chore.iconValue]}</div>`;
+                // For SVG, wrap in a div with a class for potential specific styling
+                return `<div class="chore-icon-svg">${svgIcons[chore.iconValue]}</div>`;
             }
-            return `<span class="chore-icon">❓</span>`; // Default emoji icon
+            return `<span class="chore-icon-emoji">❓</span>`; // Default emoji question mark
         }
 
         function renderGrid() {
             choreChartHeaderRow.innerHTML = '';
             choreGridBody.innerHTML = '';
 
-            const todayIndex = new Date().getDay(); // 0 for Sunday, 1 for Monday, etc.
+            const todayIndex = new Date().getDay(); 
             const daysToDisplay = currentView === 'weekly' ? days : [days[todayIndex]];
             const dayIndicesToDisplay = currentView === 'weekly' ? days.map((_, i) => i) : [todayIndex];
 
-            // Render Header
             const emptyHeaderCell = document.createElement('th');
             emptyHeaderCell.classList.add('chore-header-cell');
             choreChartHeaderRow.appendChild(emptyHeaderCell);
@@ -426,7 +476,6 @@
             });
 
 
-            // Render Body
             chores.forEach(chore => {
                 const row = document.createElement('tr');
                 row.dataset.choreId = chore.id;
@@ -544,7 +593,6 @@
             localStorage.setItem('matildaChores', JSON.stringify(chores));
             localStorage.setItem('matildaCompletionStatus', JSON.stringify(completionStatus));
             localStorage.setItem('matildaCurrentPoints', currentPoints.toString());
-            // lastRewardedPoints is saved directly in checkReward
         }
 
         function loadData() {
@@ -576,7 +624,7 @@
         function recalculatePoints() {
             let calculatedPoints = 0;
             chores.forEach(chore => {
-                days.forEach((day, dayIndex) => { // Iterate over all 7 days for calculation
+                days.forEach((day, dayIndex) => { 
                     const statusKey = `${chore.id}_${dayIndex}`;
                     if (completionStatus[statusKey] && completionStatus[statusKey] > 0) {
                         calculatedPoints += pointsPerTask;
@@ -586,7 +634,6 @@
             currentPoints = calculatedPoints;
         }
         
-        // Parent Mode
         let pressTimer;
         pageTitle.addEventListener('mousedown', startPress);
         pageTitle.addEventListener('touchstart', startPress, { passive: false }); 
@@ -667,7 +714,6 @@
             const choreToDelete = chores.find(c => c.id === choreId);
             if (choreToDelete && confirm(`Are you sure you want to delete the chore "${choreToDelete.name}"?`)) {
                 chores = chores.filter(chore => chore.id !== choreId);
-                // Remove associated completion status entries
                 Object.keys(completionStatus).forEach(key => {
                     if (key.startsWith(choreId + '_')) {
                         delete completionStatus[key];
@@ -680,7 +726,6 @@
             }
         }
 
-        // View Toggle
         function toggleView() {
             if (currentView === 'weekly') {
                 currentView = 'daily';
@@ -693,7 +738,6 @@
         }
         toggleViewButton.addEventListener('click', toggleView);
 
-        // Data Download/Upload
         downloadDataButton.addEventListener('click', () => {
             const dataToBackup = {
                 chores: chores,
@@ -727,7 +771,7 @@
             reader.onload = (e) => {
                 try {
                     const loadedData = JSON.parse(e.target.result);
-                    if (loadedData && loadedData.chores && typeof loadedData.completionStatus === 'object' && typeof loadedData.currentPoints === 'number') {
+                    if (loadedData && Array.isArray(loadedData.chores) && typeof loadedData.completionStatus === 'object' && typeof loadedData.currentPoints === 'number') {
                         chores = loadedData.chores;
                         completionStatus = loadedData.completionStatus;
                         currentPoints = loadedData.currentPoints;
@@ -736,24 +780,23 @@
                         } else {
                             localStorage.removeItem('lastRewardedPoints');
                         }
-                        saveData(); // Persist new data to localStorage
+                        saveData(); 
+                        recalculatePoints(); // Ensure points are correct after load
                         renderGrid();
                         updatePointsDisplay();
                         alert("Data loaded successfully!");
                     } else {
-                        alert("Invalid data file format.");
+                        alert("Invalid data file format. Required fields: chores (array), completionStatus (object), currentPoints (number).");
                     }
                 } catch (error) {
                     alert("Error reading or parsing file: " + error.message);
                 } finally {
-                    uploadFileInput.value = null; // Reset file input
+                    uploadFileInput.value = null; 
                 }
             };
             reader.readAsText(file);
         });
 
-
-        // Initial setup
         resetWeekButton.addEventListener('click', resetWeek);
         
         loadData();
