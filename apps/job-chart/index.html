@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matilda's Room Jobs</title>
+    <title>User's Chores</title> <!-- Generic initial title -->
     <style>
         :root {
-            --page-bg: #F0E6FF; /* Lightest lavender for overall page */
+            --page-bg: #F0E6FF;
             --title-purple: #5D3A9B;
-            --header-bg: #DCD0FF; /* Table header (MON, TUE...) background */
-            --chore-col-bg: #EAE0FF; /* First column (chore names) background */
-            --cell-bg: #F8F0FF; /* Data cell background */
+            --header-bg: #DCD0FF;
+            --chore-col-bg: #EAE0FF;
+            --cell-bg: #F8F0FF;
             --grid-border: #BEA6E0;
             --text-dark: #4A2E87;
-            --icon-color: #785A9B; /* For SVG icons if used */
-            --accent-color: #9B59B6; /* For buttons, highlights */
+            --icon-color: #785A9B;
+            --accent-color: #9B59B6;
             --completed-bounce: bounce-effect 0.3s ease;
             --button-subtle-bg: #EAE0FF;
             --button-subtle-hover-bg: #DCD0FF;
@@ -62,7 +62,7 @@
             text-align: center;
             font-size: 2.8em;
             margin-bottom: 15px;
-            cursor: default; 
+            cursor: pointer; /* Changed to pointer to indicate interactivity */
             user-select: none; 
             -webkit-user-select: none; 
             -moz-user-select: none; 
@@ -100,7 +100,6 @@
             text-align: center;
             flex-grow: 1;
         }
-
 
         .chore-chart-wrapper {
             background-color: var(--chore-col-bg); 
@@ -235,7 +234,7 @@
             padding: 15px;
             border: 1px dashed var(--accent-color);
             border-radius: 8px;
-            background-color: #fdfaff; /* Slightly different from page for distinction */
+            background-color: #fdfaff;
         }
 
         .parent-controls h3, .parent-controls h4 {
@@ -285,7 +284,7 @@
             background-color: #8E44AD; 
         }
         .parent-controls button.button-subtle, 
-        .parent-controls button#cancel-edit-chore-button { /* Style cancel button similarly */
+        .parent-controls button#cancel-edit-chore-button {
             background-color: var(--button-subtle-bg);
             color: var(--button-subtle-text);
             border: 1px solid var(--grid-border);
@@ -296,12 +295,12 @@
         }
         .parent-controls .chore-form-buttons {
             display: grid;
-            grid-template-columns: 1fr; /* Default to 1 column */
+            grid-template-columns: 1fr;
             gap: 10px;
             margin-top: 10px;
         }
         .parent-controls .chore-form-buttons.two-buttons {
-            grid-template-columns: 1fr 1fr; /* Two columns when cancel is visible */
+            grid-template-columns: 1fr 1fr;
         }
 
 
@@ -331,7 +330,7 @@
         .editable-chore-item button {
             padding: 5px 10px;
             font-size: 0.8em;
-            width: auto; /* Override full width for these small buttons */
+            width: auto;
             flex-shrink: 0;
             background-color: var(--button-subtle-bg);
             color: var(--button-subtle-text);
@@ -346,12 +345,12 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
-            margin-top: 20px; /* Add some space above IO buttons */
+            margin-top: 20px;
             padding-top: 15px;
             border-top: 1px solid var(--grid-border);
         }
         
-        .delete-chore-btn { /* This is for the main grid, not the edit list */
+        .delete-chore-btn {
             display: none; 
             position: absolute;
             top: 2px;
@@ -372,7 +371,6 @@
         .parent-mode-active .delete-chore-btn {
             display: block; 
         }
-
 
         #reward-notification {
             position: fixed;
@@ -432,14 +430,14 @@
             .controls button { width: auto; flex-shrink: 0;}
             .controls p { margin: 5px 0; text-align: center; flex-grow: 0;} 
             .parent-controls .parent-grid, .parent-controls .io-buttons-grid { grid-template-columns: 1fr; } 
-            .parent-controls .chore-form-buttons.two-buttons { grid-template-columns: 1fr; } /* Stack on very small screens */
+            .parent-controls .chore-form-buttons.two-buttons { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1 id="page-title">MATILDA'S ROOM JOBS</h1>
+            <h1 id="page-title">User's Chores</h1> <!-- Will be updated by JS -->
         </header>
         <main>
             <div class="week-navigation">
@@ -485,21 +483,20 @@
                 </div>
                 
                 <div class="existing-chores-section">
-                    <h4>Existing Chores</h4>
+                    <h4>Existing Chores (for current user)</h4>
                     <div id="editable-chores-list">
                         <!-- Chore list will be populated here by JS -->
                     </div>
                 </div>
 
                 <div class="io-buttons-grid"> 
-                    <button id="download-data-button">Download Data</button>
-                    <button id="upload-data-button">Upload Data</button>
+                    <button id="download-data-button">Download ALL Users Data</button>
+                    <button id="upload-data-button">Upload ALL Users Data</button>
                     <input type="file" id="upload-file-input" accept=".json" style="display: none;">
                 </div>
-                <button id="reset-week-button" class="button-subtle">Reset THIS Week</button>
+                <button id="reset-week-button" class="button-subtle">Reset THIS User's Week</button>
                 <button id="exit-parent-mode-button">Exit Parent Mode</button>
             </div>
-
         </main>
     </div>
 
@@ -508,15 +505,15 @@
     </div>
 
     <script>
+        // DOM Elements
         const choreGridBody = document.getElementById('chore-grid-body');
         const choreChartHeaderRow = document.getElementById('chore-chart-header-row');
         const resetWeekButton = document.getElementById('reset-week-button');
         const toggleViewButton = document.getElementById('toggle-view-button');
         const totalPointsDisplay = document.getElementById('total-points');
         const rewardNotification = document.getElementById('reward-notification');
-        const pageTitle = document.getElementById('page-title');
+        const pageTitleElement = document.getElementById('page-title'); // Renamed for clarity
         
-        // Parent Controls Elements
         const parentControlsSection = document.getElementById('parent-controls-section');
         const newChoreNameInput = document.getElementById('new-chore-name');
         const newChoreIconTypeInput = document.getElementById('new-chore-icon-type');
@@ -526,7 +523,6 @@
         const editableChoresListContainer = document.getElementById('editable-chores-list');
         const choreFormButtonsContainer = document.querySelector('.chore-form-buttons');
 
-
         const exitParentModeButton = document.getElementById('exit-parent-mode-button');
         const downloadDataButton = document.getElementById('download-data-button');
         const uploadDataButton = document.getElementById('upload-data-button');
@@ -535,12 +531,17 @@
         const nextWeekButton = document.getElementById('next-week-button');
         const weekDatesDisplay = document.getElementById('week-dates-display');
 
+        // App State
         const PARENT_PASSWORD = ""; 
         let isParentModeActive = false;
         let currentView = 'weekly'; 
-        let editingChoreId = null; // ID of the chore being edited, null if adding new
+        let editingChoreId = null;
+        let currentWeekStartDate = null;
 
-        const svgIcons = { 
+        let appProfilesData = {}; // Stores all user profiles and their data
+        let currentUserId = null;   // ID of the currently active user
+
+        const svgIcons = {  /* ... SVG definitions remain the same ... */ 
             stuffies_svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c2.481 0 4.5-2.019 4.5-4.5S18.981 3 16.5 3C14.02 3 12 5.019 12 7.5c0 .88.25 1.691.681 2.385C11.625 9.319 10.5 8.458 10.5 7.5 10.5 5.019 8.481 3 6 3S1.5 5.019 1.5 7.5c0 .958.625 1.819 1.681 2.385C3.25 10.691 3 11.5 3 12.375c0 2.306 1.001 4.363 2.626 5.752C6.042 19.046 7.5 21 7.5 21h9s1.458-1.954 1.874-2.873C20.001 16.738 21 14.681 21 12.375c0-.875-.25-1.681-.681-2.385.944-.548 1.681-1.473 1.681-2.49C22 6.019 19.981 4 17.5 4S13 6.019 13 8.5c0 .958.625 1.819 1.681 2.385C14.75 11.691 14.5 12.5 14.5 13.375c0 1.422.499 2.729 1.32 3.768.091.112.185.222.28.332H7.9c.095-.11.189-.22.28-.332.821-1.039 1.32-2.346 1.32-3.768 0-.875-.25-1.681-.681-2.385C9.769 10.319 10.5 9.458 10.5 8.5 10.5 7.078 9.422 6 8 6S5.5 7.078 5.5 8.5c0 .958.625 1.819 1.681 2.385C7.25 11.691 7 12.5 7 13.375c0 1.763.708 3.35 1.846 4.52L7.5 20l-1.346-2.107A5.98 5.98 0 0 1 4.5 13.375C4.5 12.5 4.75 11.691 5.181 11C4.237 10.452 3.5 9.527 3.5 8.5 3.5 6.019 5.519 4 8 4s4.5 2.019 4.5 4.5c0 .958-.625 1.819-1.681 2.385C10.75 10.691 11 11.5 11 12.375c0 .479-.073.941-.209 1.381.711.301 1.36.713 1.909 1.232.55-.519 1.199-.931 1.909-1.232C14.427 13.316 14.354 12.854 14.354 12.375 14.354 11.5 14.604 10.691 15.035 11c-.944-.548-1.681-1.473-1.681-2.49C13.354 7.078 14.432 6 15.854 6s2.5 1.078 2.5 2.5c0 .958-.625 1.819-1.681 2.385C16.604 10.691 16.854 11.5 16.854 12.375c0 .479-.073.941-.209 1.381.711.301 1.36.713 1.909 1.232.55-.519 1.199-.931 1.909-1.232C19.927 13.316 19.854 12.854 19.854 12.375c0-.875.25-1.681.681-2.385.944-.548 1.681-1.473 1.681-2.49C20.354 6.019 18.335 4 15.854 4c-1.422 0-2.5.922-2.5 2.344V7.5c0 .88.25 1.691.681 2.385.001 0 .001 0 .001 0h.001C14.035 10.309 14.035 10.309 14.035 10.309zM8 18H6v-2h2v2zm8 0h-2v-2h2v2z"></path></svg>',
             dolls_svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 5.5A3.5 3.5 0 0 0 8.5 9H7a5 5 0 0 1 10 0h-1.5a3.5 3.5 0 0 0-3.5-3.5zM12 14c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>',
             books_svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V5h10v6z"/></svg>',
@@ -549,8 +550,7 @@
             medical_toys_svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.11 0-1.99.89-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.11-.9-2-2-2zm-1 11h-4v4h-4v-4H6v-4h4V6h4v4h4v4z"/></svg>',
             mystery_things_svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v2h-2zm0 4h2v6h-2z"/></svg>'
         };
-        
-        const initialChoresDefinitions = [ 
+        const initialChoresDefinitionsTemplate = [ /* ... initial chore definitions remain the same ... */ 
             { id: 'stuffies', name: 'Stuffies', iconType: 'emoji', iconValue: '🧸' }, 
             { id: 'dolls', name: 'Dolls', iconType: 'emoji', iconValue: '🎀' },     
             { id: 'books', name: 'Books', iconType: 'emoji', iconValue: '📚' },      
@@ -560,36 +560,42 @@
             { id: 'mystery_things', name: 'Mystery Things', iconType: 'emoji', iconValue: '📦' } 
         ];
 
-        let chores = []; // Holds chore definitions
-        let appData = {}; // Holds all weekly data
-        let currentWeekStartDate = null;
-
         const rewardThreshold = 28; 
         const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
         const taskIcons = ['', '✔️', '🌟', '💖'];
         const taskPoints = [0, 1, 2, 3];
 
+        // --- User Data Accessor Functions ---
+        function getCurrentUserProfile() {
+            return currentUserId ? appProfilesData[currentUserId] : null;
+        }
+        function getCurrentUserChores() {
+            const profile = getCurrentUserProfile();
+            return profile ? profile.chores : [];
+        }
+        function getCurrentUserAppData() {
+            const profile = getCurrentUserProfile();
+            return profile ? profile.appData : {};
+        }
+
 
         // --- Date Helper Functions ---
-        function getWeekStartDate(d) {
+        function getWeekStartDate(d) { /* ... same ... */ 
             const date = new Date(d);
             const day = date.getDay();
             const diff = date.getDate() - day;
             return new Date(date.setDate(diff));
         }
-
-        function getWeekEndDate(d) {
+        function getWeekEndDate(d) { /* ... same ... */
             const startDate = getWeekStartDate(d);
             const endDate = new Date(startDate);
             endDate.setDate(startDate.getDate() + 6);
             return endDate;
         }
-
-        function formatDateDisplay(date) {
+        function formatDateDisplay(date) { /* ... same ... */ 
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         }
-        
-        function getWeekId(date) {
+        function getWeekId(date) { /* ... same ... */ 
             const d = new Date(date);
             d.setHours(0,0,0,0);
             const year = d.getFullYear();
@@ -597,14 +603,13 @@
             const day = d.getDate().toString().padStart(2, '0');
             return `${year}-${month}-${day}`;
         }
-
-        function isSameDay(date1, date2) {
-            return date1.getFullYear() === date2.getFullYear() &&
+        function isSameDay(date1, date2) { /* ... same ... */
+             return date1.getFullYear() === date2.getFullYear() &&
                    date1.getMonth() === date2.getMonth() &&
                    date1.getDate() === date2.getDate();
         }
-
-        function isCurrentRealWeek() {
+        function isCurrentRealWeek() { /* ... same ... */
+            if (!currentWeekStartDate) return false;
             const today = new Date();
             const startOfThisRealWeek = getWeekStartDate(today);
             return isSameDay(currentWeekStartDate, startOfThisRealWeek);
@@ -612,33 +617,71 @@
 
         // --- Core Logic & UI Rendering ---
         function initApp() {
-            loadChoresDefinitions();
-            loadAppData();
-            const today = new Date();
-            navigateToWeek(getWeekStartDate(today));
-            deactivateParentMode(); // Also calls renderEditableChoresList
+            loadAllProfilesData(); // Loads appProfilesData and currentUserId
+            if (!currentUserId || !appProfilesData[currentUserId]) {
+                // No valid user found, prompt to create first user or pick if any exist
+                const userIds = Object.keys(appProfilesData);
+                if (userIds.length > 0) {
+                    switchUser(userIds[0]); // Default to first user if any
+                } else {
+                    handleCreateNewUser("First User"); // Create a default first user
+                }
+            } else {
+                loadUser(currentUserId);
+            }
+            deactivateParentMode(); // Ensure UI consistency
+        }
+
+        function loadUser(userId) {
+            currentUserId = userId;
+            const userProfile = getCurrentUserProfile();
+            if (!userProfile) {
+                console.error("Error: Attempted to load non-existent user:", userId);
+                // Fallback: prompt to create a user
+                handleCreateNewUser("New User");
+                return;
+            }
+
+            pageTitleElement.textContent = userProfile.profileName || "User's Chores";
+            
+            // Initialize week navigation to current real-world week for the new user
+            navigateToWeek(getWeekStartDate(new Date())); 
+            
+            // Reset chore editing state when switching users
+            resetChoreForm();
+            if (isParentModeActive) {
+                 renderEditableChoresList(); // Update chore list for new user if in parent mode
+            }
+            saveCurrentUserId();
         }
         
         function navigateToWeek(targetStartDate) {
+            if (!currentUserId) return; // Can't navigate without a user
+
             currentWeekStartDate = getWeekStartDate(targetStartDate);
             currentWeekStartDate.setHours(0,0,0,0);
+            
             const weekId = getWeekId(currentWeekStartDate);
-            if (!appData[weekId]) {
-                appData[weekId] = { completionStatus: {}, points: 0 };
+            const userAppData = getCurrentUserAppData();
+
+            if (!userAppData[weekId]) {
+                userAppData[weekId] = { completionStatus: {}, points: 0 };
             }
+            
             updateWeekDateDisplay();
             updateToggleViewButtonText();
             renderGrid();
             updatePointsDisplay();
         }
 
-        function updateWeekDateDisplay() {
+        function updateWeekDateDisplay() { /* ... same ... */
+            if (!currentWeekStartDate) return;
             const startDate = currentWeekStartDate;
             const endDate = getWeekEndDate(startDate);
             weekDatesDisplay.textContent = `${formatDateDisplay(startDate)} - ${formatDateDisplay(endDate)}`;
         }
         
-        function getChoreIconHTML(chore) {
+        function getChoreIconHTML(chore) { /* ... same ... */
             if (chore.iconType === 'emoji') {
                 return `<span class="chore-icon-emoji">${chore.iconValue}</span>`;
             } else if (chore.iconType === 'svg' && svgIcons[chore.iconValue]) {
@@ -650,9 +693,18 @@
         function renderGrid() {
             choreChartHeaderRow.innerHTML = '';
             choreGridBody.innerHTML = '';
+
+            if (!currentUserId || !currentWeekStartDate) {
+                choreGridBody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 20px;">Please select or create a user.</td></tr>';
+                return;
+            }
+
+            const userChores = getCurrentUserChores();
+            const userAppData = getCurrentUserAppData();
             const weekId = getWeekId(currentWeekStartDate);
-            const currentWeekData = appData[weekId] || { completionStatus: {}, points: 0 };
+            const currentWeekData = userAppData[weekId] || { completionStatus: {}, points: 0 };
             const weekCompletionStatus = currentWeekData.completionStatus;
+            
             let daysToDisplayConfig = days.map((day, index) => ({ name: day, index: index }));
 
             if (currentView === 'daily' && isCurrentRealWeek()) {
@@ -672,7 +724,13 @@
                 choreChartHeaderRow.appendChild(dayHeaderCell);
             });
 
-            chores.forEach(chore => {
+            if (userChores.length === 0) {
+                 choreGridBody.innerHTML = `<tr><td colspan="${daysToDisplayConfig.length + 1}" style="text-align:center; padding: 20px;">No chores defined for this user. Add some in Parent Mode!</td></tr>`;
+                 updatePointsDisplay(); // Ensure points show 0
+                 return;
+            }
+
+            userChores.forEach(chore => {
                 const row = document.createElement('tr');
                 row.dataset.choreId = chore.id;
                 const labelCell = document.createElement('td');
@@ -689,7 +747,7 @@
                 const deleteBtn = labelCell.querySelector('.delete-chore-btn');
                 if (deleteBtn) {
                     deleteBtn.style.display = isParentModeActive ? 'block' : 'none';
-                    deleteBtn.onclick = () => deleteChore(chore.id);
+                    deleteBtn.onclick = () => deleteChoreForCurrentUser(chore.id);
                 }
 
                 daysToDisplayConfig.forEach(dayConfig => {
@@ -707,23 +765,26 @@
                 });
                 choreGridBody.appendChild(row);
             });
-            // Call toggleParentModeUI separately if needed, or ensure it's called when mode changes
+            toggleParentModeUIElements(); // Re-apply visibility for delete buttons after grid re-render
         }
         
         function handleTaskClick(cell, choreId, dayIndex) {
+            if (!currentUserId || !currentWeekStartDate) return;
+
+            const userAppData = getCurrentUserAppData();
             const weekId = getWeekId(currentWeekStartDate);
-            if (!appData[weekId]) appData[weekId] = { completionStatus: {}, points: 0 };
+            if (!userAppData[weekId]) userAppData[weekId] = { completionStatus: {}, points: 0 };
             
             const statusKey = `${choreId}_${dayIndex}`;
-            let oldStatus = appData[weekId].completionStatus[statusKey] || 0;
+            let oldStatus = userAppData[weekId].completionStatus[statusKey] || 0;
             const pointsForOldStatus = taskPoints[oldStatus];
             let newStatus = (oldStatus + 1) % taskIcons.length;
-            appData[weekId].completionStatus[statusKey] = newStatus;
+            userAppData[weekId].completionStatus[statusKey] = newStatus;
             cell.innerHTML = taskIcons[newStatus];
             const pointsForNewStatus = taskPoints[newStatus];
 
-            appData[weekId].points -= pointsForOldStatus;
-            appData[weekId].points += pointsForNewStatus;
+            userAppData[weekId].points -= pointsForOldStatus;
+            userAppData[weekId].points += pointsForNewStatus;
             
             cell.style.animation = 'none'; 
             void cell.offsetWidth; 
@@ -731,12 +792,12 @@
             if (newStatus > 0) createSparkles(cell);
             
             updatePointsDisplay();
-            checkReward();
-            saveAllData();
+            checkRewardForCurrentUser();
+            saveAllProfilesData();
         }
 
-        function createSparkles(cell) {
-            for (let i = 0; i < 5; i++) { 
+        function createSparkles(cell) { /* ... same ... */ 
+             for (let i = 0; i < 5; i++) { 
                 const sparkle = document.createElement('div');
                 sparkle.classList.add('sparkle');
                 sparkle.style.left = `${Math.random() * 80 + 10}%`; 
@@ -748,61 +809,77 @@
         }
 
         function updatePointsDisplay() {
+            if (!currentUserId || !currentWeekStartDate) {
+                totalPointsDisplay.textContent = "0";
+                return;
+            }
+            const userAppData = getCurrentUserAppData();
             const weekId = getWeekId(currentWeekStartDate);
-            const pointsForWeek = appData[weekId] ? appData[weekId].points : 0;
+            const pointsForWeek = (userAppData && userAppData[weekId]) ? userAppData[weekId].points : 0;
             totalPointsDisplay.textContent = pointsForWeek;
         }
 
-        function checkReward() {
+        function checkRewardForCurrentUser() {
+            if (!currentUserId || !currentWeekStartDate) return;
+            const userAppData = getCurrentUserAppData();
             const weekId = getWeekId(currentWeekStartDate);
-            const pointsForWeek = appData[weekId] ? appData[weekId].points : 0;
+            const pointsForWeek = (userAppData && userAppData[weekId]) ? userAppData[weekId].points : 0;
+
             if (pointsForWeek > 0 && pointsForWeek % rewardThreshold === 0) {
-                 const rewardKey = `rewarded_${weekId}_${pointsForWeek}`; 
-                 if (!localStorage.getItem(rewardKey)) { // Check against global last rewarded is removed for simplicity with multi-week
+                 const rewardKey = `rewarded_${currentUserId}_${weekId}_${pointsForWeek}`; 
+                 if (!localStorage.getItem(rewardKey)) {
                     showRewardNotification();
                     localStorage.setItem(rewardKey, 'true');
                  }
             }
         }
 
-        function showRewardNotification() {
+        function showRewardNotification() { /* ... same ... */ 
             rewardNotification.classList.add('show');
             setTimeout(() => { rewardNotification.classList.remove('show'); }, 3000); 
         }
         
-        function resetCurrentWeekData() {
+        function resetCurrentUserWeekData() {
+            if (!currentUserId || !currentWeekStartDate) return;
+            const userAppData = getCurrentUserAppData();
             const weekId = getWeekId(currentWeekStartDate);
-            if (confirm(`Are you sure you want to reset data for the week of ${formatDateDisplay(currentWeekStartDate)}?`)) {
-                if (appData[weekId]) {
-                    appData[weekId].completionStatus = {};
-                    appData[weekId].points = 0;
+            if (confirm(`Are you sure you want to reset data for THIS USER for the week of ${formatDateDisplay(currentWeekStartDate)}?`)) {
+                if (userAppData[weekId]) {
+                    userAppData[weekId].completionStatus = {};
+                    userAppData[weekId].points = 0;
                 }
                 Object.keys(localStorage).forEach(key => {
-                    if (key.startsWith(`rewarded_${weekId}_`)) localStorage.removeItem(key);
+                    if (key.startsWith(`rewarded_${currentUserId}_${weekId}_`)) localStorage.removeItem(key);
                 });
                 renderGrid(); 
                 updatePointsDisplay();
-                saveAllData();
+                saveAllProfilesData();
             }
         }
         
-        // --- Data Persistence ---
-        function saveAllData() {
-            localStorage.setItem('matildaChoresDefinitions', JSON.stringify(chores));
-            localStorage.setItem('matildaAppData', JSON.stringify(appData));
+        // --- Data Persistence (All Users) ---
+        function saveAllProfilesData() {
+            localStorage.setItem('choreApp_allProfilesData', JSON.stringify(appProfilesData));
         }
-        function loadChoresDefinitions() {
-            const loadedChores = localStorage.getItem('matildaChoresDefinitions');
-            chores = loadedChores ? JSON.parse(loadedChores) : JSON.parse(JSON.stringify(initialChoresDefinitions));
+        function saveCurrentUserId() {
+            if (currentUserId) {
+                localStorage.setItem('choreApp_currentUserId', currentUserId);
+            } else {
+                localStorage.removeItem('choreApp_currentUserId');
+            }
         }
-        function loadAppData() {
-            const loadedAppData = localStorage.getItem('matildaAppData');
-            appData = loadedAppData ? JSON.parse(loadedAppData) : {};
+        function loadAllProfilesData() {
+            const loadedProfiles = localStorage.getItem('choreApp_allProfilesData');
+            appProfilesData = loadedProfiles ? JSON.parse(loadedProfiles) : {};
+            currentUserId = localStorage.getItem('choreApp_currentUserId'); 
+            // Further validation of currentUserId happens in initApp
         }
-        function recalculatePointsForWeek(weekId) {
-            if (!appData[weekId] || !appData[weekId].completionStatus) return 0;
+        
+        function recalculatePointsForUserWeek(userId, weekId) {
+            if (!appProfilesData[userId] || !appProfilesData[userId].appData || !appProfilesData[userId].appData[weekId]) return 0;
+            
             let calculatedPoints = 0;
-            const weekCompletionStatus = appData[weekId].completionStatus;
+            const weekCompletionStatus = appProfilesData[userId].appData[weekId].completionStatus;
             for (const statusKey in weekCompletionStatus) {
                 if (Object.prototype.hasOwnProperty.call(weekCompletionStatus, statusKey)) {
                     const statusValue = weekCompletionStatus[statusKey];
@@ -811,33 +888,60 @@
                     }
                 }
             }
-            appData[weekId].points = calculatedPoints;
+            appProfilesData[userId].appData[weekId].points = calculatedPoints;
             return calculatedPoints;
         }
         
-        // --- Parent Mode & Chore Management ---
+        // --- Parent Mode & Chore Management (User Specific) ---
         let pressTimer;
-        function startPress(e) { if (e.type === 'touchstart') e.preventDefault(); pressTimer = window.setTimeout(promptParentPassword, 2000); }
+        function startPress(e) { 
+            if (e.type === 'touchstart') e.preventDefault(); 
+            pressTimer = window.setTimeout(showUserOrParentMenu, 1000); // 1 second
+        }
         function cancelPress(e) { clearTimeout(pressTimer); }
+
+        function showUserOrParentMenu() {
+            const options = ["Enter Parent Mode", "Switch/Create User"];
+            let choiceMessage = "Choose an action:\n";
+            options.forEach((opt, index) => {
+                choiceMessage += `${index + 1}. ${opt}\n`;
+            });
+            const userChoice = prompt(choiceMessage + "\nEnter number (or cancel):");
+
+            if (userChoice === "1") {
+                promptParentPassword();
+            } else if (userChoice === "2") {
+                handleUserSwitchOrCreate();
+            }
+        }
+
         function promptParentPassword() {
-            if (isParentModeActive) return;
+            if (isParentModeActive) {
+                alert("Parent mode already active.");
+                return;
+            }
+            if (!currentUserId) {
+                alert("Please select or create a user profile first.");
+                return;
+            }
             const password = prompt("Enter parent password:");
             if (password === PARENT_PASSWORD) activateParentMode();
             else if (password !== null) alert("Incorrect password.");
         }
+
         function activateParentMode() {
             isParentModeActive = true;
             document.body.classList.add('parent-mode-active');
             toggleParentModeUIElements();
-            renderEditableChoresList(); 
+            renderEditableChoresListForCurrentUser(); 
         }
         function deactivateParentMode() {
             isParentModeActive = false;
             document.body.classList.remove('parent-mode-active');
             toggleParentModeUIElements();
-            resetChoreForm(); // Clear form if user exits parent mode while editing
+            resetChoreForm();
         }
-        function toggleParentModeUIElements() { // Shows/hides sections and updates delete buttons in grid
+        function toggleParentModeUIElements() {
             parentControlsSection.style.display = isParentModeActive ? 'flex' : 'none';
             const deleteButtonsInGrid = document.querySelectorAll('.delete-chore-btn');
             deleteButtonsInGrid.forEach(btn => {
@@ -845,13 +949,14 @@
             });
         }
 
-        function renderEditableChoresList() {
+        function renderEditableChoresListForCurrentUser() {
             editableChoresListContainer.innerHTML = '';
-            if (!chores || chores.length === 0) {
-                editableChoresListContainer.innerHTML = '<p style="text-align:center; color: var(--text-dark);">No chores defined yet.</p>';
+            const userChores = getCurrentUserChores();
+            if (!userChores || userChores.length === 0) {
+                editableChoresListContainer.innerHTML = '<p style="text-align:center; color: var(--text-dark);">No chores defined for this user yet.</p>';
                 return;
             }
-            chores.forEach(chore => {
+            userChores.forEach(chore => {
                 const item = document.createElement('div');
                 item.classList.add('editable-chore-item');
                 item.innerHTML = `
@@ -864,7 +969,8 @@
         }
 
         function populateChoreFormForEdit(choreId) {
-            const choreToEdit = chores.find(c => c.id === choreId);
+            const userChores = getCurrentUserChores();
+            const choreToEdit = userChores.find(c => c.id === choreId);
             if (!choreToEdit) return;
 
             editingChoreId = choreId;
@@ -888,6 +994,10 @@
         }
 
         saveChoreButton.addEventListener('click', () => {
+            if (!currentUserId) {
+                alert("No active user. Cannot save chore."); return;
+            }
+            const userChores = getCurrentUserChores();
             const name = newChoreNameInput.value.trim();
             const iconType = newChoreIconTypeInput.value;
             const iconValue = newChoreIconValueInput.value.trim();
@@ -896,91 +1006,170 @@
                 alert("Please enter chore name and icon value."); return;
             }
             if (iconType === 'svg' && !svgIcons[iconValue]) {
-                alert(`SVG key "${iconValue}" not recognized. Available SVG keys: ${Object.keys(svgIcons).join(', ')}`); return;
+                alert(`SVG key "${iconValue}" not recognized.`); return;
             }
 
-            if (editingChoreId) { // Update existing chore
-                const choreToUpdate = chores.find(c => c.id === editingChoreId);
+            if (editingChoreId) { // Update
+                const choreToUpdate = userChores.find(c => c.id === editingChoreId);
                 if (choreToUpdate) {
                     choreToUpdate.name = name;
                     choreToUpdate.iconType = iconType;
                     choreToUpdate.iconValue = iconValue;
                 }
-            } else { // Add new chore
+            } else { // Add new
                 const newChore = {
                     id: name.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now(), 
                     name: name, iconType: iconType, iconValue: iconValue
                 };
-                chores.push(newChore);
+                userChores.push(newChore);
             }
             
             resetChoreForm();
             renderGrid(); 
-            renderEditableChoresList();
-            saveAllData();
+            renderEditableChoresListForCurrentUser();
+            saveAllProfilesData();
         });
         
         cancelEditChoreButton.addEventListener('click', resetChoreForm);
 
-        function deleteChore(choreIdToDelete) { // This is for the delete buttons in the main grid
-            const choreDefToDelete = chores.find(c => c.id === choreIdToDelete);
-            if (!choreDefToDelete || !confirm(`Are you sure you want to delete the chore "${choreDefToDelete.name}"? This will remove it and its data from ALL weeks.`)) {
+        function deleteChoreForCurrentUser(choreIdToDelete) {
+            if (!currentUserId) return;
+            const userProfile = getCurrentUserProfile();
+            const choreDefToDelete = userProfile.chores.find(c => c.id === choreIdToDelete);
+
+            if (!choreDefToDelete || !confirm(`Are you sure you want to delete "${choreDefToDelete.name}" for THIS USER? Data for this chore will be removed from all their weeks.`)) {
                 return;
             }
-            chores = chores.filter(chore => chore.id !== choreIdToDelete);
-            for (const weekId in appData) {
-                if (appData[weekId] && appData[weekId].completionStatus) {
+            userProfile.chores = userProfile.chores.filter(chore => chore.id !== choreIdToDelete);
+            
+            for (const weekId in userProfile.appData) {
+                if (userProfile.appData[weekId] && userProfile.appData[weekId].completionStatus) {
                     let weekModified = false;
-                    Object.keys(appData[weekId].completionStatus).forEach(key => {
+                    Object.keys(userProfile.appData[weekId].completionStatus).forEach(key => {
                         if (key.startsWith(choreIdToDelete + '_')) {
-                            delete appData[weekId].completionStatus[key];
+                            delete userProfile.appData[weekId].completionStatus[key];
                             weekModified = true;
                         }
                     });
-                    if (weekModified) recalculatePointsForWeek(weekId);
+                    if (weekModified) recalculatePointsForUserWeek(currentUserId, weekId);
                 }
             }
-            if (editingChoreId === choreIdToDelete) resetChoreForm(); // If deleted chore was being edited
+            if (editingChoreId === choreIdToDelete) resetChoreForm();
             
             renderGrid(); 
-            renderEditableChoresList();
+            renderEditableChoresListForCurrentUser();
             updatePointsDisplay();
-            saveAllData();
+            saveAllProfilesData();
+        }
+
+        // --- User Switching and Creation ---
+        function handleUserSwitchOrCreate() {
+            const userIds = Object.keys(appProfilesData);
+            let message = "Switch User:\n";
+            if (userIds.length > 0) {
+                userIds.forEach((id, index) => {
+                    message += `${index + 1}. ${appProfilesData[id].profileName || id}\n`;
+                });
+                message += `${userIds.length + 1}. Create New User\n`;
+            } else {
+                message = "No users exist. Create New User:\n1. Create New User\n";
+            }
+            message += "\nEnter number (or cancel):";
+
+            const choice = prompt(message);
+            if (choice === null) return; // User cancelled
+
+            const choiceNum = parseInt(choice);
+            if (isNaN(choiceNum)) { alert("Invalid choice."); return; }
+
+            if (userIds.length > 0 && choiceNum >= 1 && choiceNum <= userIds.length) {
+                switchUser(userIds[choiceNum - 1]);
+            } else if ((userIds.length > 0 && choiceNum === userIds.length + 1) || (userIds.length === 0 && choiceNum === 1)) {
+                handleCreateNewUser();
+            } else {
+                alert("Invalid choice.");
+            }
+        }
+
+        function switchUser(userIdToSwitchTo) {
+            if (appProfilesData[userIdToSwitchTo]) {
+                if (isParentModeActive) deactivateParentMode(); // Exit parent mode on user switch for safety/clarity
+                currentUserId = userIdToSwitchTo;
+                loadUser(currentUserId); // This will update title, grid, etc.
+            } else {
+                alert("User not found.");
+            }
+        }
+        
+        function handleCreateNewUser(defaultName = "New User Profile") {
+            const profileName = prompt("Enter a name for the new user profile:", defaultName);
+            if (!profileName || profileName.trim() === "") {
+                alert("Profile name cannot be empty.");
+                return;
+            }
+
+            // Check for duplicate profile names (optional, but good practice)
+            const nameExists = Object.values(appProfilesData).some(p => p.profileName === profileName.trim());
+            if (nameExists) {
+                if (!confirm(`A profile named "${profileName.trim()}" already exists. Create another one with this name?`)){
+                    return;
+                }
+            }
+
+            const newUserId = 'user_' + Date.now();
+            appProfilesData[newUserId] = {
+                profileName: profileName.trim(),
+                chores: JSON.parse(JSON.stringify(initialChoresDefinitionsTemplate)), // Give them a fresh copy
+                appData: {} // Empty weekly data
+            };
+            
+            if (isParentModeActive) deactivateParentMode(); // Exit parent mode for new user
+            switchUser(newUserId); // Switch to the newly created user
+            saveAllProfilesData(); // Save new profile structure
+            alert(`User profile "${profileName.trim()}" created!`);
         }
         
         // --- View Toggling & Navigation Listeners ---
-        pageTitle.addEventListener('mousedown', startPress);
-        pageTitle.addEventListener('touchstart', startPress, { passive: false }); 
-        pageTitle.addEventListener('mouseup', cancelPress);
-        pageTitle.addEventListener('mouseleave', cancelPress); 
-        pageTitle.addEventListener('touchend', cancelPress);
-        pageTitle.addEventListener('touchcancel', cancelPress); 
+        pageTitleElement.addEventListener('mousedown', startPress);
+        pageTitleElement.addEventListener('touchstart', startPress, { passive: false }); 
+        pageTitleElement.addEventListener('mouseup', cancelPress);
+        pageTitleElement.addEventListener('mouseleave', cancelPress); 
+        pageTitleElement.addEventListener('touchend', cancelPress);
+        pageTitleElement.addEventListener('touchcancel', cancelPress); 
+
         exitParentModeButton.addEventListener('click', deactivateParentMode);
         
-        function updateToggleViewButtonText() {
+        function updateToggleViewButtonText() { /* ... same, but check currentUserId ... */
+            if (!currentUserId) {
+                toggleViewButton.disabled = true;
+                toggleViewButton.textContent = "N/A (No User)";
+                return;
+            }
              if (isCurrentRealWeek()) {
                 toggleViewButton.disabled = false;
                 toggleViewButton.textContent = currentView === 'weekly' ? "Switch to Today's View" : 'Switch to Full Week View';
             } else {
-                toggleViewButton.disabled = true; // Disable toggle for past/future weeks, always show full week
+                toggleViewButton.disabled = true; 
                 toggleViewButton.textContent = "Full Week View (Past/Future)";
-                if (currentView === 'daily') currentView = 'weekly'; // Force weekly for past/future
+                if (currentView === 'daily') currentView = 'weekly'; 
             }
         }
-        function toggleView() {
-            if (!isCurrentRealWeek()) return; // Should be disabled, but as a safeguard
+        function toggleView() { /* ... same, but check currentUserId ... */
+            if (!currentUserId || !isCurrentRealWeek()) return; 
             currentView = (currentView === 'weekly') ? 'daily' : 'weekly';
             updateToggleViewButtonText();
             renderGrid();
         }
         toggleViewButton.addEventListener('click', toggleView);
 
-        prevWeekButton.addEventListener('click', () => {
+        prevWeekButton.addEventListener('click', () => { /* ... same, but check currentUserId ... */
+            if (!currentUserId || !currentWeekStartDate) return;
             const newStartDate = new Date(currentWeekStartDate);
             newStartDate.setDate(currentWeekStartDate.getDate() - 7);
             navigateToWeek(newStartDate);
         });
-        nextWeekButton.addEventListener('click', () => {
+        nextWeekButton.addEventListener('click', () => { /* ... same, but check currentUserId ... */
+            if (!currentUserId || !currentWeekStartDate) return;
             const newStartDate = new Date(currentWeekStartDate);
             newStartDate.setDate(currentWeekStartDate.getDate() + 7);
             navigateToWeek(newStartDate);
@@ -988,16 +1177,16 @@
 
         downloadDataButton.addEventListener('click', () => {
             const dataToBackup = {
-                choresDefinitions: chores, appData: appData,
-                // No need to save lastRewardedPoints, as rewardKey is now week-specific
+                appProfilesData: appProfilesData, // All user data
+                currentUserId: currentUserId // To restore last active user
             };
             const jsonString = JSON.stringify(dataToBackup, null, 2);
             const blob = new Blob([jsonString], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url; a.download = 'matilda_chores_all_data.json';
+            a.href = url; a.download = 'all_users_chore_data.json';
             document.body.appendChild(a); a.click(); document.body.removeChild(a);
-            URL.revokeObjectURL(url); alert("All chore data download initiated!");
+            URL.revokeObjectURL(url); alert("All users' chore data download initiated!");
         });
         uploadDataButton.addEventListener('click', () => { uploadFileInput.click(); });
         uploadFileInput.addEventListener('change', (event) => {
@@ -1006,21 +1195,34 @@
             reader.onload = (e) => {
                 try {
                     const loadedFullData = JSON.parse(e.target.result);
-                    if (loadedFullData && Array.isArray(loadedFullData.choresDefinitions) && typeof loadedFullData.appData === 'object') {
-                        chores = loadedFullData.choresDefinitions;
-                        appData = loadedFullData.appData;
-                        for (const weekId in appData) recalculatePointsForWeek(weekId);
+                    if (loadedFullData && typeof loadedFullData.appProfilesData === 'object') {
+                        appProfilesData = loadedFullData.appProfilesData;
+                        currentUserId = loadedFullData.currentUserId || null; // Restore last user or null
                         
-                        Object.keys(localStorage).forEach(key => { // Clear old reward flags
+                        // Recalculate points for all users and their weeks
+                        for (const userId in appProfilesData) {
+                            for (const weekId in appProfilesData[userId].appData) {
+                                recalculatePointsForUserWeek(userId, weekId);
+                            }
+                        }
+                        
+                        Object.keys(localStorage).forEach(key => { 
                              if (key.startsWith(`rewarded_`)) localStorage.removeItem(key);
                         });
 
-                        saveAllData(); 
-                        navigateToWeek(getWeekStartDate(new Date())); 
-                        renderEditableChoresList(); // Update editable list with new chores
-                        alert("All data loaded successfully! Displaying current week.");
+                        saveAllProfilesData(); 
+                        saveCurrentUserId();
+
+                        if (currentUserId && appProfilesData[currentUserId]) {
+                            loadUser(currentUserId);
+                        } else if (Object.keys(appProfilesData).length > 0) {
+                            loadUser(Object.keys(appProfilesData)[0]); // Load first user if current is invalid
+                        } else {
+                            initApp(); // Re-init to prompt for user creation if no users loaded
+                        }
+                        alert("All users' data loaded successfully!");
                     } else {
-                        alert("Invalid data file format.");
+                        alert("Invalid data file format. Expected 'appProfilesData' object.");
                     }
                 } catch (error) {
                     alert("Error reading or parsing file: " + error.message);
@@ -1030,8 +1232,9 @@
             };
             reader.readAsText(file);
         });
-        resetWeekButton.addEventListener('click', resetCurrentWeekData);
+        resetWeekButton.addEventListener('click', resetCurrentUserWeekData);
         
+        // --- Initialize ---
         initApp();
     </script>
 </body>
