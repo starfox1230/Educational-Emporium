@@ -1326,7 +1326,7 @@
         // Title Long Press
         pageTitleElement.addEventListener('mousedown', (e) => {
             if (e.type === 'mousedown' && e.button !== 0) return; 
-            pressTimer = window.setTimeout(handleTitleLongPress, 1000);
+            pressTimer = window.setTimeout(handleTitleLongPress, 50);
         });
         pageTitleElement.addEventListener('touchstart', (e) => {
             e.preventDefault();
