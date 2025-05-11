@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User's Chores</title> <!-- Generic initial title -->
+    <title>User's Chores</title>
     <style>
         :root {
             --page-bg: #F0E6FF;
@@ -62,7 +62,7 @@
             text-align: center;
             font-size: 2.8em;
             margin-bottom: 15px;
-            cursor: pointer; /* Changed to pointer to indicate interactivity */
+            cursor: pointer; 
             user-select: none; 
             -webkit-user-select: none; 
             -moz-user-select: none; 
@@ -395,6 +395,128 @@
             top: 50px;
         }
 
+        /* Custom Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000; /* Ensure it's on top */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: var(--page-bg);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 450px;
+            position: relative;
+            color: var(--text-dark);
+        }
+
+        .modal-close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 1.8em;
+            color: var(--text-dark);
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        .modal-close-btn:hover {
+            color: var(--title-purple);
+        }
+
+        .modal-title {
+            color: var(--title-purple);
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .modal-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .modal-button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.2s ease;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .modal-button:hover {
+            background-color: #8E44AD;
+        }
+        .modal-button-subtle {
+            background-color: var(--button-subtle-bg);
+            color: var(--button-subtle-text);
+            border: 1px solid var(--grid-border);
+        }
+        .modal-button-subtle:hover {
+            background-color: var(--button-subtle-hover-bg);
+        }
+
+        .modal-user-list {
+            max-height: 150px; /* Or adjust as needed */
+            overflow-y: auto;
+            margin-bottom: 10px;
+            border: 1px solid var(--grid-border);
+            border-radius: 5px;
+        }
+        .modal-user-list-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--edit-list-item-border);
+            background-color: var(--edit-list-item-bg);
+            font-size: 1em;
+        }
+        .modal-user-list-item:last-child {
+            border-bottom: none;
+        }
+        .modal-user-list-item:hover {
+            background-color: var(--button-subtle-hover-bg);
+        }
+        #modal-new-user-name-input { /* Specific ID selector */
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid var(--grid-border);
+            box-sizing: border-box;
+            width: 100%;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+        .modal-form-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .modal-form-buttons .modal-button {
+            flex-grow: 1;
+        }
+
+
         @media (max-width: 768px) {
             body { padding: 10px; }
             .container { padding: 15px; }
@@ -415,6 +537,9 @@
             .week-navigation { flex-wrap: wrap; justify-content: center; }
             .week-navigation span#week-dates-display { font-size: 0.9em; order: -1; width: 100%; margin-bottom: 5px;}
             .week-navigation button { padding: 5px 8px; font-size: 0.75em;}
+            .modal-content { width: 95%; padding: 20px;}
+            .modal-title { font-size: 1.3em; margin-bottom: 15px;}
+            .modal-button {padding: 10px;}
             .chore-chart th { font-size: 0.6em; } 
             .chore-label-cell .chore-icon-svg svg { width: 20px; height: 20px;}
             .chore-label-cell .chore-icon-emoji { font-size: 20px; }
@@ -437,7 +562,7 @@
 <body>
     <div class="container">
         <header>
-            <h1 id="page-title">User's Chores</h1> <!-- Will be updated by JS -->
+            <h1 id="page-title">User's Chores</h1>
         </header>
         <main>
             <div class="week-navigation">
@@ -504,6 +629,35 @@
         🎉 You earned a reward! Keep up the great work! ⭐
     </div>
 
+    <!-- Custom Modal HTML -->
+    <div id="custom-modal-overlay" class="modal-overlay">
+        <div id="custom-modal" class="modal-content">
+            <button id="modal-close-button" class="modal-close-btn">×</button>
+            
+            <div id="modal-initial-menu" class="modal-section">
+                <h3 class="modal-title">Choose Action</h3>
+                <button id="modal-parent-mode-btn" class="modal-button">Enter Parent Mode</button>
+                <button id="modal-switch-user-btn" class="modal-button">Switch / Create User</button>
+            </div>
+
+            <div id="modal-user-management" class="modal-section" style="display: none;">
+                <h3 class="modal-title">Manage Users</h3>
+                <div id="modal-user-list" class="modal-user-list">
+                    <!-- User list populated by JS -->
+                </div>
+                <button id="modal-show-create-user-form-btn" class="modal-button">Create New User</button>
+                <div id="modal-new-user-form" style="display: none; margin-top: 15px;">
+                    <input type="text" id="modal-new-user-name-input" placeholder="New Profile Name">
+                    <div class="modal-form-buttons">
+                        <button id="modal-confirm-create-user-btn" class="modal-button">Create</button>
+                        <button id="modal-cancel-create-user-btn" class="modal-button modal-button-subtle">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <script>
         // DOM Elements
         const choreGridBody = document.getElementById('chore-grid-body');
@@ -530,6 +684,22 @@
         const prevWeekButton = document.getElementById('prev-week-button');
         const nextWeekButton = document.getElementById('next-week-button');
         const weekDatesDisplay = document.getElementById('week-dates-display');
+
+        // Modal DOM Elements
+        const customModalOverlay = document.getElementById('custom-modal-overlay');
+        const customModal = document.getElementById('custom-modal'); // Though direct interaction might be less
+        const modalCloseButton = document.getElementById('modal-close-button');
+        const modalInitialMenu = document.getElementById('modal-initial-menu');
+        const modalParentModeBtn = document.getElementById('modal-parent-mode-btn');
+        const modalSwitchUserBtn = document.getElementById('modal-switch-user-btn');
+        const modalUserManagement = document.getElementById('modal-user-management');
+        const modalUserList = document.getElementById('modal-user-list');
+        const modalShowCreateUserFormBtn = document.getElementById('modal-show-create-user-form-btn');
+        const modalNewUserForm = document.getElementById('modal-new-user-form');
+        const modalNewUserNameInput = document.getElementById('modal-new-user-name-input');
+        const modalConfirmCreateUserBtn = document.getElementById('modal-confirm-create-user-btn');
+        const modalCancelCreateUserBtn = document.getElementById('modal-cancel-create-user-btn');
+
 
         // App State
         const PARENT_PASSWORD = ""; 
@@ -578,7 +748,6 @@
             return profile ? profile.appData : {};
         }
 
-
         // --- Date Helper Functions ---
         function getWeekStartDate(d) { 
             const date = new Date(d);
@@ -615,15 +784,78 @@
             return isSameDay(currentWeekStartDate, startOfThisRealWeek);
         }
 
+        // --- Modal Logic ---
+        function showCustomModal(sectionToShow = 'initialMenu') {
+            modalInitialMenu.style.display = 'none';
+            modalUserManagement.style.display = 'none';
+            modalNewUserForm.style.display = 'none'; 
+
+            if (sectionToShow === 'initialMenu') {
+                modalInitialMenu.style.display = 'flex';
+            } else if (sectionToShow === 'userManagement') {
+                populateModalUserList();
+                modalUserManagement.style.display = 'flex';
+            } else if (sectionToShow === 'newUserFormWithinManagement') {
+                populateModalUserList(); 
+                modalUserManagement.style.display = 'flex';
+                modalNewUserForm.style.display = 'block'; 
+                modalNewUserNameInput.value = ''; // Clear previous input
+                modalNewUserNameInput.focus();
+            }
+            customModalOverlay.classList.add('show');
+        }
+
+        function hideCustomModal() {
+            customModalOverlay.classList.remove('show');
+            modalNewUserNameInput.value = '';
+        }
+
+        function populateModalUserList() {
+            modalUserList.innerHTML = '';
+            const userIds = Object.keys(appProfilesData);
+            if (userIds.length === 0) {
+                modalUserList.innerHTML = '<p style="text-align:center; padding:10px;">No users yet. Create one!</p>';
+            } else {
+                userIds.forEach(userId => {
+                    const userProfile = appProfilesData[userId];
+                    const listItem = document.createElement('div');
+                    listItem.classList.add('modal-user-list-item');
+                    listItem.textContent = userProfile.profileName || userId;
+                    listItem.dataset.userId = userId;
+                    listItem.addEventListener('click', () => {
+                        switchUser(userId);
+                        hideCustomModal();
+                    });
+                    modalUserList.appendChild(listItem);
+                });
+            }
+        }
+
+
         // --- Core Logic & UI Rendering ---
         function initApp() {
             loadAllProfilesData(); 
             if (!currentUserId || !appProfilesData[currentUserId]) {
                 const userIds = Object.keys(appProfilesData);
                 if (userIds.length > 0) {
-                    switchUser(userIds[0]); 
+                    currentUserId = userIds[0]; 
+                    loadUser(currentUserId);
                 } else {
-                    handleCreateNewUser("First User"); 
+                    // No users exist, prompt to create the very first one using the modal
+                    showCustomModal('newUserFormWithinManagement'); 
+                    // Slightly different flow: modal expects user management section to be technically active
+                    // To make it cleaner for first time, we might need a dedicated 'firstUser' modal state or a direct call.
+                    // For now, let's ensure the `handleCreateNewUserFromModal` is robust.
+                    // The 'userManagement' part of the modal will show "No users yet".
+                    // Or, call the non-modal one if it's truly the first time ever.
+                    // Let's use a flag or check to decide.
+                    if (Object.keys(appProfilesData).length === 0 && !currentUserId) {
+                         // This implies it's the very first run or all data was wiped.
+                         // We want them to create a user. Let's use the modal directly.
+                         // Show the user management section, which will guide to create new.
+                        pageTitleElement.textContent = "Create First User"; // Guide user
+                        showCustomModal('userManagement'); // This shows "No users" and "Create New"
+                    }
                 }
             } else {
                 loadUser(currentUserId);
@@ -631,12 +863,15 @@
             deactivateParentMode(); 
         }
 
+
         function loadUser(userId) {
             currentUserId = userId;
             const userProfile = getCurrentUserProfile();
             if (!userProfile) {
                 console.error("Error: Attempted to load non-existent user:", userId);
-                handleCreateNewUser("New User");
+                // Fallback if something went wrong during user creation/selection
+                pageTitleElement.textContent = "Error Loading User";
+                showCustomModal('userManagement'); // Guide to select/create
                 return;
             }
 
@@ -644,7 +879,7 @@
             navigateToWeek(getWeekStartDate(new Date())); 
             resetChoreForm();
             if (isParentModeActive) {
-                 renderEditableChoresListForCurrentUser(); // CORRECTED
+                 renderEditableChoresListForCurrentUser();
             }
             saveCurrentUserId();
         }
@@ -690,6 +925,8 @@
 
             if (!currentUserId || !currentWeekStartDate) {
                 choreGridBody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 20px;">Please select or create a user.</td></tr>';
+                totalPointsDisplay.textContent = "0"; // Ensure points reset
+                updateToggleViewButtonText(); // Update button state
                 return;
             }
 
@@ -887,28 +1124,13 @@
         
         // --- Parent Mode & Chore Management (User Specific) ---
         let pressTimer;
-        function startPress(e) { 
-            if (e.type === 'touchstart') e.preventDefault(); 
-            pressTimer = window.setTimeout(showUserOrParentMenu, 1000); 
+        function handleTitleLongPress() { // Renamed from startPress
+            showCustomModal('initialMenu');
         }
         function cancelPress(e) { clearTimeout(pressTimer); }
 
-        function showUserOrParentMenu() {
-            const options = ["Enter Parent Mode", "Switch/Create User"];
-            let choiceMessage = "Choose an action:\n";
-            options.forEach((opt, index) => {
-                choiceMessage += `${index + 1}. ${opt}\n`;
-            });
-            const userChoice = prompt(choiceMessage + "\nEnter number (or cancel):");
 
-            if (userChoice === "1") {
-                promptParentPassword();
-            } else if (userChoice === "2") {
-                handleUserSwitchOrCreate();
-            }
-        }
-
-        function promptParentPassword() {
+        function promptParentPassword() { // This is now called from the modal
             if (isParentModeActive) {
                 alert("Parent mode already active.");
                 return;
@@ -917,9 +1139,12 @@
                 alert("Please select or create a user profile first.");
                 return;
             }
-            const password = prompt("Enter parent password:");
-            if (password === PARENT_PASSWORD) activateParentMode();
-            else if (password !== null) alert("Incorrect password.");
+            const password = prompt("Enter parent password (for demo, just press OK):"); // Modified prompt for demo
+            if (password === PARENT_PASSWORD || PARENT_PASSWORD === "") { // Allow empty for demo
+                activateParentMode();
+            } else if (password !== null) {
+                alert("Incorrect password.");
+            }
         }
 
         function activateParentMode() {
@@ -1035,7 +1260,7 @@
             }
             userProfile.chores = userProfile.chores.filter(chore => chore.id !== choreIdToDelete);
             
-            for (const weekId_loop in userProfile.appData) { // Renamed weekId to avoid conflict
+            for (const weekId_loop in userProfile.appData) { 
                 if (userProfile.appData[weekId_loop] && userProfile.appData[weekId_loop].completionStatus) {
                     let weekModified = false;
                     Object.keys(userProfile.appData[weekId_loop].completionStatus).forEach(key => {
@@ -1055,80 +1280,88 @@
             saveAllProfilesData();
         }
 
-        // --- User Switching and Creation ---
-        function handleUserSwitchOrCreate() {
-            const userIds = Object.keys(appProfilesData);
-            let message = "Switch User:\n";
-            if (userIds.length > 0) {
-                userIds.forEach((id, index) => {
-                    message += `${index + 1}. ${appProfilesData[id].profileName || id}\n`;
-                });
-                message += `${userIds.length + 1}. Create New User\n`;
-            } else {
-                message = "No users exist. Create New User:\n1. Create New User\n";
-            }
-            message += "\nEnter number (or cancel):";
-
-            const choice = prompt(message);
-            if (choice === null) return; 
-
-            const choiceNum = parseInt(choice);
-            if (isNaN(choiceNum)) { alert("Invalid choice."); return; }
-
-            if (userIds.length > 0 && choiceNum >= 1 && choiceNum <= userIds.length) {
-                switchUser(userIds[choiceNum - 1]);
-            } else if ((userIds.length > 0 && choiceNum === userIds.length + 1) || (userIds.length === 0 && choiceNum === 1)) {
-                handleCreateNewUser();
-            } else {
-                alert("Invalid choice.");
-            }
-        }
-
-        function switchUser(userIdToSwitchTo) {
+        // --- User Switching and Creation (Modal based) ---
+        function switchUser(userIdToSwitchTo) { // Called from modal user list
             if (appProfilesData[userIdToSwitchTo]) {
                 if (isParentModeActive) deactivateParentMode(); 
                 currentUserId = userIdToSwitchTo;
                 loadUser(currentUserId); 
+                // hideCustomModal(); // Already handled by click listener in populateModalUserList
             } else {
                 alert("User not found.");
             }
         }
         
-        function handleCreateNewUser(defaultName = "New User Profile") {
-            const profileName = prompt("Enter a name for the new user profile:", defaultName);
-            if (!profileName || profileName.trim() === "") {
+        function handleCreateNewUserFromModal() { // Called from modal form
+            const profileName = modalNewUserNameInput.value.trim();
+            if (!profileName) {
                 alert("Profile name cannot be empty.");
+                modalNewUserNameInput.focus();
                 return;
             }
 
-            const nameExists = Object.values(appProfilesData).some(p => p.profileName === profileName.trim());
+            const nameExists = Object.values(appProfilesData).some(p => p.profileName === profileName);
             if (nameExists) {
-                if (!confirm(`A profile named "${profileName.trim()}" already exists. Create another one with this name?`)){
+                if (!confirm(`A profile named "${profileName}" already exists. Create another one with this name?`)){
                     return;
                 }
             }
 
             const newUserId = 'user_' + Date.now();
             appProfilesData[newUserId] = {
-                profileName: profileName.trim(),
+                profileName: profileName,
                 chores: JSON.parse(JSON.stringify(initialChoresDefinitionsTemplate)), 
                 appData: {} 
             };
             
             if (isParentModeActive) deactivateParentMode(); 
-            switchUser(newUserId); 
+            switchUser(newUserId); // This calls loadUser
             saveAllProfilesData(); 
-            alert(`User profile "${profileName.trim()}" created!`);
+            alert(`User profile "${profileName}" created!`);
+            modalNewUserNameInput.value = ''; 
+            hideCustomModal();
         }
         
-        // --- View Toggling & Navigation Listeners ---
-        pageTitleElement.addEventListener('mousedown', startPress);
-        pageTitleElement.addEventListener('touchstart', startPress, { passive: false }); 
+        // --- Event Listeners Setup ---
+        // Title Long Press
+        pageTitleElement.addEventListener('mousedown', (e) => {
+            if (e.type === 'mousedown' && e.button !== 0) return; 
+            pressTimer = window.setTimeout(handleTitleLongPress, 1000);
+        });
+        pageTitleElement.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            pressTimer = window.setTimeout(handleTitleLongPress, 1000);
+        }, { passive: false });
         pageTitleElement.addEventListener('mouseup', cancelPress);
         pageTitleElement.addEventListener('mouseleave', cancelPress); 
         pageTitleElement.addEventListener('touchend', cancelPress);
         pageTitleElement.addEventListener('touchcancel', cancelPress); 
 
+        // Modal Buttons
+        modalCloseButton.addEventListener('click', hideCustomModal);
+        customModalOverlay.addEventListener('click', (event) => { 
+            if (event.target === customModalOverlay) {
+                hideCustomModal();
+            }
+        });
+        modalParentModeBtn.addEventListener('click', () => {
+            hideCustomModal(); 
+            promptParentPassword(); 
+        });
+        modalSwitchUserBtn.addEventListener('click', () => {
+            showCustomModal('userManagement');
+        });
+        modalShowCreateUserFormBtn.addEventListener('click', () => {
+            showCustomModal('newUserFormWithinManagement');
+        });
+        modalConfirmCreateUserBtn.addEventListener('click', handleCreateNewUserFromModal);
+        modalCancelCreateUserBtn.addEventListener('click', () => {
+            modalNewUserForm.style.display = 'none'; 
+            modalNewUserNameInput.value = '';       
+            showCustomModal('userManagement'); 
+        });
+
+        // Other Controls
         exitParentModeButton.addEventListener('click', deactivateParentMode);
         
         function updateToggleViewButtonText() { 
@@ -1222,7 +1455,7 @@
                             choreGridBody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 20px;">Data loaded, but no valid user profile found. Please create a new user.</td></tr>';
                             totalPointsDisplay.textContent = "0";
                             if(editableChoresListContainer) editableChoresListContainer.innerHTML = ''; 
-                            handleCreateNewUser("First User After Upload");
+                            showCustomModal('userManagement'); // Guide to create user
                         }
                         alert("All users' data loaded successfully!");
                     } else {
