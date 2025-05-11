@@ -19,6 +19,8 @@
             --button-subtle-bg: #EAE0FF;
             --button-subtle-hover-bg: #DCD0FF;
             --button-subtle-text: var(--title-purple);
+            --edit-list-item-bg: #fdfaff;
+            --edit-list-item-border: #e0d4f5;
         }
 
         @keyframes bounce-effect {
@@ -59,7 +61,7 @@
             color: var(--title-purple);
             text-align: center;
             font-size: 2.8em;
-            margin-bottom: 15px; /* Reduced margin */
+            margin-bottom: 15px;
             cursor: default; 
             user-select: none; 
             -webkit-user-select: none; 
@@ -128,15 +130,6 @@
             font-size: 0.9em;
         }
         
-        .chore-chart th.chore-header-cell { 
-             background-color: var(--chore-col-bg);
-             /* border-top-left-radius: 10px; remove if week nav has top border */
-        }
-        .chore-chart th.day-header-cell:last-of-type { 
-             /* border-top-right-radius: 10px; remove if week nav has top border*/
-        }
-
-
         .chore-chart td.chore-label-cell {
             background-color: var(--chore-col-bg);
             font-weight: bold;
@@ -242,7 +235,19 @@
             padding: 15px;
             border: 1px dashed var(--accent-color);
             border-radius: 8px;
-            background-color: #fdfaff;
+            background-color: #fdfaff; /* Slightly different from page for distinction */
+        }
+
+        .parent-controls h3, .parent-controls h4 {
+            color: var(--title-purple);
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+        .parent-controls .chore-form-section {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--grid-border);
         }
 
         .parent-controls .parent-grid {
@@ -250,6 +255,7 @@
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
             gap: 10px;
             align-items: center;
+            margin-bottom:10px;
         }
         
         .parent-mode-active .parent-controls {
@@ -278,23 +284,74 @@
         .parent-controls button:hover {
             background-color: #8E44AD; 
         }
-
-        .parent-controls button.button-subtle {
+        .parent-controls button.button-subtle, 
+        .parent-controls button#cancel-edit-chore-button { /* Style cancel button similarly */
             background-color: var(--button-subtle-bg);
             color: var(--button-subtle-text);
             border: 1px solid var(--grid-border);
         }
-        .parent-controls button.button-subtle:hover {
+        .parent-controls button.button-subtle:hover,
+        .parent-controls button#cancel-edit-chore-button:hover {
             background-color: var(--button-subtle-hover-bg);
         }
+        .parent-controls .chore-form-buttons {
+            display: grid;
+            grid-template-columns: 1fr; /* Default to 1 column */
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .parent-controls .chore-form-buttons.two-buttons {
+            grid-template-columns: 1fr 1fr; /* Two columns when cancel is visible */
+        }
+
+
+        #editable-chores-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--edit-list-item-border);
+            border-radius: 5px;
+            padding: 5px;
+        }
+        .editable-chore-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            background-color: var(--edit-list-item-bg);
+            border-bottom: 1px solid var(--edit-list-item-border);
+            font-size: 0.9em;
+        }
+        .editable-chore-item:last-child {
+            border-bottom: none;
+        }
+        .editable-chore-item span {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+        .editable-chore-item button {
+            padding: 5px 10px;
+            font-size: 0.8em;
+            width: auto; /* Override full width for these small buttons */
+            flex-shrink: 0;
+            background-color: var(--button-subtle-bg);
+            color: var(--button-subtle-text);
+             border: 1px solid var(--grid-border);
+        }
+         .editable-chore-item button:hover {
+            background-color: var(--button-subtle-hover-bg);
+        }
+
 
         .parent-controls .io-buttons-grid { 
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
+            margin-top: 20px; /* Add some space above IO buttons */
+            padding-top: 15px;
+            border-top: 1px solid var(--grid-border);
         }
         
-        .delete-chore-btn {
+        .delete-chore-btn { /* This is for the main grid, not the edit list */
             display: none; 
             position: absolute;
             top: 2px;
@@ -375,6 +432,7 @@
             .controls button { width: auto; flex-shrink: 0;}
             .controls p { margin: 5px 0; text-align: center; flex-grow: 0;} 
             .parent-controls .parent-grid, .parent-controls .io-buttons-grid { grid-template-columns: 1fr; } 
+            .parent-controls .chore-form-buttons.two-buttons { grid-template-columns: 1fr; } /* Stack on very small screens */
         }
     </style>
 </head>
@@ -410,18 +468,29 @@
             
             <div class="parent-controls" id="parent-controls-section">
                 <h3>Parent Mode</h3>
-                <div> 
+                <div class="chore-form-section">
+                    <h4>Add New / Edit Chore</h4>
                     <div class="parent-grid">
-                        <input type="text" id="new-chore-name" placeholder="New chore name">
+                        <input type="text" id="new-chore-name" placeholder="Chore name">
                         <select id="new-chore-icon-type">
                             <option value="emoji">Emoji</option>
                             <option value="svg">SVG (Preset Key)</option>
                         </select>
                         <input type="text" id="new-chore-icon-value" placeholder="Emoji (e.g. ✨) or SVG key">
                     </div>
-                    <button id="add-chore-button" style="margin-top: 10px;">Add Chore</button>
+                    <div class="chore-form-buttons">
+                        <button id="save-chore-button">Add Chore</button>
+                        <button id="cancel-edit-chore-button" style="display: none;">Cancel Edit</button>
+                    </div>
                 </div>
                 
+                <div class="existing-chores-section">
+                    <h4>Existing Chores</h4>
+                    <div id="editable-chores-list">
+                        <!-- Chore list will be populated here by JS -->
+                    </div>
+                </div>
+
                 <div class="io-buttons-grid"> 
                     <button id="download-data-button">Download Data</button>
                     <button id="upload-data-button">Upload Data</button>
@@ -446,11 +515,18 @@
         const totalPointsDisplay = document.getElementById('total-points');
         const rewardNotification = document.getElementById('reward-notification');
         const pageTitle = document.getElementById('page-title');
+        
+        // Parent Controls Elements
         const parentControlsSection = document.getElementById('parent-controls-section');
-        const addChoreButton = document.getElementById('add-chore-button');
         const newChoreNameInput = document.getElementById('new-chore-name');
         const newChoreIconTypeInput = document.getElementById('new-chore-icon-type');
         const newChoreIconValueInput = document.getElementById('new-chore-icon-value');
+        const saveChoreButton = document.getElementById('save-chore-button');
+        const cancelEditChoreButton = document.getElementById('cancel-edit-chore-button');
+        const editableChoresListContainer = document.getElementById('editable-chores-list');
+        const choreFormButtonsContainer = document.querySelector('.chore-form-buttons');
+
+
         const exitParentModeButton = document.getElementById('exit-parent-mode-button');
         const downloadDataButton = document.getElementById('download-data-button');
         const uploadDataButton = document.getElementById('upload-data-button');
@@ -461,7 +537,8 @@
 
         const PARENT_PASSWORD = ""; 
         let isParentModeActive = false;
-        let currentView = 'weekly'; // 'weekly' or 'daily'
+        let currentView = 'weekly'; 
+        let editingChoreId = null; // ID of the chore being edited, null if adding new
 
         const svgIcons = { 
             stuffies_svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c2.481 0 4.5-2.019 4.5-4.5S18.981 3 16.5 3C14.02 3 12 5.019 12 7.5c0 .88.25 1.691.681 2.385C11.625 9.319 10.5 8.458 10.5 7.5 10.5 5.019 8.481 3 6 3S1.5 5.019 1.5 7.5c0 .958.625 1.819 1.681 2.385C3.25 10.691 3 11.5 3 12.375c0 2.306 1.001 4.363 2.626 5.752C6.042 19.046 7.5 21 7.5 21h9s1.458-1.954 1.874-2.873C20.001 16.738 21 14.681 21 12.375c0-.875-.25-1.681-.681-2.385.944-.548 1.681-1.473 1.681-2.49C22 6.019 19.981 4 17.5 4S13 6.019 13 8.5c0 .958.625 1.819 1.681 2.385C14.75 11.691 14.5 12.5 14.5 13.375c0 1.422.499 2.729 1.32 3.768.091.112.185.222.28.332H7.9c.095-.11.189-.22.28-.332.821-1.039 1.32-2.346 1.32-3.768 0-.875-.25-1.681-.681-2.385C9.769 10.319 10.5 9.458 10.5 8.5 10.5 7.078 9.422 6 8 6S5.5 7.078 5.5 8.5c0 .958.625 1.819 1.681 2.385C7.25 11.691 7 12.5 7 13.375c0 1.763.708 3.35 1.846 4.52L7.5 20l-1.346-2.107A5.98 5.98 0 0 1 4.5 13.375C4.5 12.5 4.75 11.691 5.181 11C4.237 10.452 3.5 9.527 3.5 8.5 3.5 6.019 5.519 4 8 4s4.5 2.019 4.5 4.5c0 .958-.625 1.819-1.681 2.385C10.75 10.691 11 11.5 11 12.375c0 .479-.073.941-.209 1.381.711.301 1.36.713 1.909 1.232.55-.519 1.199-.931 1.909-1.232C14.427 13.316 14.354 12.854 14.354 12.375 14.354 11.5 14.604 10.691 15.035 11c-.944-.548-1.681-1.473-1.681-2.49C13.354 7.078 14.432 6 15.854 6s2.5 1.078 2.5 2.5c0 .958-.625 1.819-1.681 2.385C16.604 10.691 16.854 11.5 16.854 12.375c0 .479-.073.941-.209 1.381.711.301 1.36.713 1.909 1.232.55-.519 1.199-.931 1.909-1.232C19.927 13.316 19.854 12.854 19.854 12.375c0-.875.25-1.681.681-2.385.944-.548 1.681-1.473 1.681-2.49C20.354 6.019 18.335 4 15.854 4c-1.422 0-2.5.922-2.5 2.344V7.5c0 .88.25 1.691.681 2.385.001 0 .001 0 .001 0h.001C14.035 10.309 14.035 10.309 14.035 10.309zM8 18H6v-2h2v2zm8 0h-2v-2h2v2z"></path></svg>',
@@ -484,8 +561,8 @@
         ];
 
         let chores = []; // Holds chore definitions
-        let appData = {}; // Holds all weekly data: appData[weekId] = { completionStatus: {}, points: 0 }
-        let currentWeekStartDate = null; // Date object for Sunday of the current week
+        let appData = {}; // Holds all weekly data
+        let currentWeekStartDate = null;
 
         const rewardThreshold = 28; 
         const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -496,7 +573,7 @@
         // --- Date Helper Functions ---
         function getWeekStartDate(d) {
             const date = new Date(d);
-            const day = date.getDay(); // 0 for Sunday, 1 for Monday, ...
+            const day = date.getDay();
             const diff = date.getDate() - day;
             return new Date(date.setDate(diff));
         }
@@ -508,13 +585,13 @@
             return endDate;
         }
 
-        function formatDateDisplay(date) { // For month-day display
+        function formatDateDisplay(date) {
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         }
         
-        function getWeekId(date) { // Creates YYYY-MM-DD string for the start of the week (Sunday)
+        function getWeekId(date) {
             const d = new Date(date);
-            d.setHours(0,0,0,0); // Normalize time
+            d.setHours(0,0,0,0);
             const year = d.getFullYear();
             const month = (d.getMonth() + 1).toString().padStart(2, '0');
             const day = d.getDate().toString().padStart(2, '0');
@@ -533,29 +610,26 @@
             return isSameDay(currentWeekStartDate, startOfThisRealWeek);
         }
 
-        // --- Core Logic ---
+        // --- Core Logic & UI Rendering ---
         function initApp() {
             loadChoresDefinitions();
             loadAppData();
             const today = new Date();
-            navigateToWeek(getWeekStartDate(today)); // Navigate to current week
-            deactivateParentMode();
+            navigateToWeek(getWeekStartDate(today));
+            deactivateParentMode(); // Also calls renderEditableChoresList
         }
         
         function navigateToWeek(targetStartDate) {
-            currentWeekStartDate = getWeekStartDate(targetStartDate); // Ensure it's always a Sunday
-            currentWeekStartDate.setHours(0,0,0,0); // Normalize time for consistency
-
+            currentWeekStartDate = getWeekStartDate(targetStartDate);
+            currentWeekStartDate.setHours(0,0,0,0);
             const weekId = getWeekId(currentWeekStartDate);
-
             if (!appData[weekId]) {
                 appData[weekId] = { completionStatus: {}, points: 0 };
             }
-            
             updateWeekDateDisplay();
             updateToggleViewButtonText();
-            renderGrid(); // This will use data from appData[weekId]
-            updatePointsDisplay(); // This will use data from appData[weekId]
+            renderGrid();
+            updatePointsDisplay();
         }
 
         function updateWeekDateDisplay() {
@@ -576,19 +650,16 @@
         function renderGrid() {
             choreChartHeaderRow.innerHTML = '';
             choreGridBody.innerHTML = '';
-
             const weekId = getWeekId(currentWeekStartDate);
             const currentWeekData = appData[weekId] || { completionStatus: {}, points: 0 };
             const weekCompletionStatus = currentWeekData.completionStatus;
-
             let daysToDisplayConfig = days.map((day, index) => ({ name: day, index: index }));
 
             if (currentView === 'daily' && isCurrentRealWeek()) {
                 const todayRealDate = new Date();
-                const todayDayIndex = todayRealDate.getDay(); // 0 for Sun, 1 for Mon...
+                const todayDayIndex = todayRealDate.getDay();
                 daysToDisplayConfig = [{ name: days[todayDayIndex], index: todayDayIndex }];
             }
-            // If currentView is 'daily' but not isCurrentRealWeek(), it shows all 7 days of that selected week.
 
             const emptyHeaderCell = document.createElement('th');
             emptyHeaderCell.classList.add('chore-header-cell');
@@ -617,41 +688,35 @@
                 
                 const deleteBtn = labelCell.querySelector('.delete-chore-btn');
                 if (deleteBtn) {
-                    deleteBtn.style.display = isParentModeActive ? 'block' : 'none'; // Initial state
+                    deleteBtn.style.display = isParentModeActive ? 'block' : 'none';
                     deleteBtn.onclick = () => deleteChore(chore.id);
                 }
-
 
                 daysToDisplayConfig.forEach(dayConfig => {
                     const dayIndex = dayConfig.index;
                     const cell = document.createElement('td');
                     cell.classList.add('task-cell');
                     cell.dataset.choreId = chore.id;
-                    cell.dataset.dayIndex = dayIndex; // This dayIndex is 0-6 within its week
-                    
+                    cell.dataset.dayIndex = dayIndex;
                     const statusKey = `${chore.id}_${dayIndex}`;
                     const currentStatus = weekCompletionStatus[statusKey] || 0;
                     cell.innerHTML = taskIcons[currentStatus];
                     if (currentStatus > 0) cell.style.animation = 'none';
-                    
                     cell.addEventListener('click', () => handleTaskClick(cell, chore.id, dayIndex));
                     row.appendChild(cell);
                 });
                 choreGridBody.appendChild(row);
             });
-            toggleParentModeUI(); // Ensures delete buttons are correctly shown/hidden after render
+            // Call toggleParentModeUI separately if needed, or ensure it's called when mode changes
         }
         
         function handleTaskClick(cell, choreId, dayIndex) {
             const weekId = getWeekId(currentWeekStartDate);
-            if (!appData[weekId]) { // Should not happen if navigateToWeek initializes correctly
-                appData[weekId] = { completionStatus: {}, points: 0 };
-            }
+            if (!appData[weekId]) appData[weekId] = { completionStatus: {}, points: 0 };
             
             const statusKey = `${choreId}_${dayIndex}`;
             let oldStatus = appData[weekId].completionStatus[statusKey] || 0;
             const pointsForOldStatus = taskPoints[oldStatus];
-
             let newStatus = (oldStatus + 1) % taskIcons.length;
             appData[weekId].completionStatus[statusKey] = newStatus;
             cell.innerHTML = taskIcons[newStatus];
@@ -663,11 +728,10 @@
             cell.style.animation = 'none'; 
             void cell.offsetWidth; 
             cell.style.animation = 'var(--completed-bounce)'; 
-            if (newStatus > 0) {
-                createSparkles(cell);
-            }
-            updatePointsDisplay(); // Uses appData[weekId].points
-            checkReward(); // Uses appData[weekId].points for currentPoints
+            if (newStatus > 0) createSparkles(cell);
+            
+            updatePointsDisplay();
+            checkReward();
             saveAllData();
         }
 
@@ -692,73 +756,51 @@
         function checkReward() {
             const weekId = getWeekId(currentWeekStartDate);
             const pointsForWeek = appData[weekId] ? appData[weekId].points : 0;
-
             if (pointsForWeek > 0 && pointsForWeek % rewardThreshold === 0) {
-                 const lastRewardedPoints = parseInt(localStorage.getItem('matildaLastRewardedPoints') || '0');
-                 // Make reward notification specific to not re-trigger for same point value if user navigates away and back
                  const rewardKey = `rewarded_${weekId}_${pointsForWeek}`; 
-                 if (pointsForWeek > lastRewardedPoints && !localStorage.getItem(rewardKey)) {
+                 if (!localStorage.getItem(rewardKey)) { // Check against global last rewarded is removed for simplicity with multi-week
                     showRewardNotification();
-                    localStorage.setItem('matildaLastRewardedPoints', pointsForWeek.toString()); // Still track highest point for overall reward
-                    localStorage.setItem(rewardKey, 'true'); // Mark this specific week/point combo as rewarded
+                    localStorage.setItem(rewardKey, 'true');
                  }
             }
         }
 
         function showRewardNotification() {
             rewardNotification.classList.add('show');
-            setTimeout(() => {
-                rewardNotification.classList.remove('show');
-            }, 3000); 
+            setTimeout(() => { rewardNotification.classList.remove('show'); }, 3000); 
         }
         
         function resetCurrentWeekData() {
             const weekId = getWeekId(currentWeekStartDate);
-            if (confirm(`Are you sure you want to reset data for the week of ${formatDateDisplay(currentWeekStartDate)}? All progress for THIS week will be lost.`)) {
+            if (confirm(`Are you sure you want to reset data for the week of ${formatDateDisplay(currentWeekStartDate)}?`)) {
                 if (appData[weekId]) {
                     appData[weekId].completionStatus = {};
                     appData[weekId].points = 0;
                 }
-                // Remove any week-specific reward flags for this week
                 Object.keys(localStorage).forEach(key => {
-                    if (key.startsWith(`rewarded_${weekId}_`)) {
-                        localStorage.removeItem(key);
-                    }
+                    if (key.startsWith(`rewarded_${weekId}_`)) localStorage.removeItem(key);
                 });
-                // We don't reset matildaLastRewardedPoints here, as that's a global high score for rewards.
-                renderGrid(); // Re-render with 0s
+                renderGrid(); 
                 updatePointsDisplay();
                 saveAllData();
             }
         }
         
+        // --- Data Persistence ---
         function saveAllData() {
             localStorage.setItem('matildaChoresDefinitions', JSON.stringify(chores));
             localStorage.setItem('matildaAppData', JSON.stringify(appData));
         }
-
         function loadChoresDefinitions() {
             const loadedChores = localStorage.getItem('matildaChoresDefinitions');
-            if (loadedChores) {
-                chores = JSON.parse(loadedChores);
-            } else {
-                chores = JSON.parse(JSON.stringify(initialChoresDefinitions)); 
-            }
+            chores = loadedChores ? JSON.parse(loadedChores) : JSON.parse(JSON.stringify(initialChoresDefinitions));
         }
         function loadAppData() {
             const loadedAppData = localStorage.getItem('matildaAppData');
-            if (loadedAppData) {
-                appData = JSON.parse(loadedAppData);
-                // Optional: Iterate through appData and recalculate points if taskPoints changed
-                // For now, assume stored points are correct.
-            } else {
-                appData = {};
-            }
+            appData = loadedAppData ? JSON.parse(loadedAppData) : {};
         }
-        
         function recalculatePointsForWeek(weekId) {
             if (!appData[weekId] || !appData[weekId].completionStatus) return 0;
-
             let calculatedPoints = 0;
             const weekCompletionStatus = appData[weekId].completionStatus;
             for (const statusKey in weekCompletionStatus) {
@@ -773,77 +815,119 @@
             return calculatedPoints;
         }
         
+        // --- Parent Mode & Chore Management ---
         let pressTimer;
-        function startPress(e) {
-            if (e.type === 'touchstart') e.preventDefault();
-            pressTimer = window.setTimeout(promptParentPassword, 2000); 
-        }
+        function startPress(e) { if (e.type === 'touchstart') e.preventDefault(); pressTimer = window.setTimeout(promptParentPassword, 2000); }
         function cancelPress(e) { clearTimeout(pressTimer); }
-        
         function promptParentPassword() {
             if (isParentModeActive) return;
             const password = prompt("Enter parent password:");
             if (password === PARENT_PASSWORD) activateParentMode();
             else if (password !== null) alert("Incorrect password.");
         }
-
         function activateParentMode() {
             isParentModeActive = true;
             document.body.classList.add('parent-mode-active');
-            toggleParentModeUI(); // Update UI immediately
+            toggleParentModeUIElements();
+            renderEditableChoresList(); 
         }
-        
         function deactivateParentMode() {
             isParentModeActive = false;
             document.body.classList.remove('parent-mode-active');
-            toggleParentModeUI(); // Update UI immediately
+            toggleParentModeUIElements();
+            resetChoreForm(); // Clear form if user exits parent mode while editing
         }
-
-        function toggleParentModeUI() { // Called to sync UI with isParentModeActive
+        function toggleParentModeUIElements() { // Shows/hides sections and updates delete buttons in grid
             parentControlsSection.style.display = isParentModeActive ? 'flex' : 'none';
-            const deleteButtons = document.querySelectorAll('.delete-chore-btn');
-            deleteButtons.forEach(btn => {
+            const deleteButtonsInGrid = document.querySelectorAll('.delete-chore-btn');
+            deleteButtonsInGrid.forEach(btn => {
                 if (btn) btn.style.display = isParentModeActive ? 'block' : 'none';
             });
         }
 
-        pageTitle.addEventListener('mousedown', startPress);
-        pageTitle.addEventListener('touchstart', startPress, { passive: false }); 
-        pageTitle.addEventListener('mouseup', cancelPress);
-        pageTitle.addEventListener('mouseleave', cancelPress); 
-        pageTitle.addEventListener('touchend', cancelPress);
-        pageTitle.addEventListener('touchcancel', cancelPress); 
-        exitParentModeButton.addEventListener('click', deactivateParentMode);
+        function renderEditableChoresList() {
+            editableChoresListContainer.innerHTML = '';
+            if (!chores || chores.length === 0) {
+                editableChoresListContainer.innerHTML = '<p style="text-align:center; color: var(--text-dark);">No chores defined yet.</p>';
+                return;
+            }
+            chores.forEach(chore => {
+                const item = document.createElement('div');
+                item.classList.add('editable-chore-item');
+                item.innerHTML = `
+                    <span>${getChoreIconHTML(chore)} ${chore.name}</span>
+                    <button data-chore-id="${chore.id}">Edit</button>
+                `;
+                item.querySelector('button').addEventListener('click', () => populateChoreFormForEdit(chore.id));
+                editableChoresListContainer.appendChild(item);
+            });
+        }
 
-        addChoreButton.addEventListener('click', () => {
+        function populateChoreFormForEdit(choreId) {
+            const choreToEdit = chores.find(c => c.id === choreId);
+            if (!choreToEdit) return;
+
+            editingChoreId = choreId;
+            newChoreNameInput.value = choreToEdit.name;
+            newChoreIconTypeInput.value = choreToEdit.iconType;
+            newChoreIconValueInput.value = choreToEdit.iconValue;
+
+            saveChoreButton.textContent = 'Update Chore';
+            cancelEditChoreButton.style.display = 'block';
+            choreFormButtonsContainer.classList.add('two-buttons');
+        }
+
+        function resetChoreForm() {
+            editingChoreId = null;
+            newChoreNameInput.value = '';
+            newChoreIconTypeInput.value = 'emoji';
+            newChoreIconValueInput.value = '';
+            saveChoreButton.textContent = 'Add Chore';
+            cancelEditChoreButton.style.display = 'none';
+            choreFormButtonsContainer.classList.remove('two-buttons');
+        }
+
+        saveChoreButton.addEventListener('click', () => {
             const name = newChoreNameInput.value.trim();
             const iconType = newChoreIconTypeInput.value;
             const iconValue = newChoreIconValueInput.value.trim();
+
             if (!name || !iconValue) {
                 alert("Please enter chore name and icon value."); return;
             }
             if (iconType === 'svg' && !svgIcons[iconValue]) {
-                alert(`SVG key "${iconValue}" not recognized. Available keys: ${Object.keys(svgIcons).join(', ')}`); return;
+                alert(`SVG key "${iconValue}" not recognized. Available SVG keys: ${Object.keys(svgIcons).join(', ')}`); return;
             }
-            const newChore = {
-                id: name.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now(), 
-                name: name, iconType: iconType, iconValue: iconValue
-            };
-            chores.push(newChore);
-            newChoreNameInput.value = ''; newChoreIconValueInput.value = '';
-            renderGrid(); // Re-render to show new chore
+
+            if (editingChoreId) { // Update existing chore
+                const choreToUpdate = chores.find(c => c.id === editingChoreId);
+                if (choreToUpdate) {
+                    choreToUpdate.name = name;
+                    choreToUpdate.iconType = iconType;
+                    choreToUpdate.iconValue = iconValue;
+                }
+            } else { // Add new chore
+                const newChore = {
+                    id: name.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now(), 
+                    name: name, iconType: iconType, iconValue: iconValue
+                };
+                chores.push(newChore);
+            }
+            
+            resetChoreForm();
+            renderGrid(); 
+            renderEditableChoresList();
             saveAllData();
         });
+        
+        cancelEditChoreButton.addEventListener('click', resetChoreForm);
 
-        function deleteChore(choreIdToDelete) {
+        function deleteChore(choreIdToDelete) { // This is for the delete buttons in the main grid
             const choreDefToDelete = chores.find(c => c.id === choreIdToDelete);
             if (!choreDefToDelete || !confirm(`Are you sure you want to delete the chore "${choreDefToDelete.name}"? This will remove it and its data from ALL weeks.`)) {
                 return;
             }
-
             chores = chores.filter(chore => chore.id !== choreIdToDelete);
-
-            // Remove data for this chore from all weeks in appData
             for (const weekId in appData) {
                 if (appData[weekId] && appData[weekId].completionStatus) {
                     let weekModified = false;
@@ -853,37 +937,41 @@
                             weekModified = true;
                         }
                     });
-                    if (weekModified) {
-                        recalculatePointsForWeek(weekId);
-                    }
+                    if (weekModified) recalculatePointsForWeek(weekId);
                 }
             }
-            renderGrid(); // Re-render the current week's grid
-            updatePointsDisplay(); // Update points for current week
+            if (editingChoreId === choreIdToDelete) resetChoreForm(); // If deleted chore was being edited
+            
+            renderGrid(); 
+            renderEditableChoresList();
+            updatePointsDisplay();
             saveAllData();
         }
         
+        // --- View Toggling & Navigation Listeners ---
+        pageTitle.addEventListener('mousedown', startPress);
+        pageTitle.addEventListener('touchstart', startPress, { passive: false }); 
+        pageTitle.addEventListener('mouseup', cancelPress);
+        pageTitle.addEventListener('mouseleave', cancelPress); 
+        pageTitle.addEventListener('touchend', cancelPress);
+        pageTitle.addEventListener('touchcancel', cancelPress); 
+        exitParentModeButton.addEventListener('click', deactivateParentMode);
+        
         function updateToggleViewButtonText() {
-            if (isCurrentRealWeek()) {
+             if (isCurrentRealWeek()) {
                 toggleViewButton.disabled = false;
                 toggleViewButton.textContent = currentView === 'weekly' ? "Switch to Today's View" : 'Switch to Full Week View';
             } else {
-                 // On past/future weeks, "Today's View" shows all 7 days anyway, so effectively it's always "Full Week"
-                toggleViewButton.disabled = false; // Or true if you want to disable toggling
-                toggleViewButton.textContent = currentView === 'weekly' ? "Switch to Daily (Full Week)" : "Switch to Weekly";
-                // A bit clunky, alternative: disable toggle on non-current weeks or always show "Full Week"
+                toggleViewButton.disabled = true; // Disable toggle for past/future weeks, always show full week
+                toggleViewButton.textContent = "Full Week View (Past/Future)";
+                if (currentView === 'daily') currentView = 'weekly'; // Force weekly for past/future
             }
         }
-
-
         function toggleView() {
-            if (currentView === 'weekly') {
-                currentView = 'daily';
-            } else {
-                currentView = 'weekly';
-            }
+            if (!isCurrentRealWeek()) return; // Should be disabled, but as a safeguard
+            currentView = (currentView === 'weekly') ? 'daily' : 'weekly';
             updateToggleViewButtonText();
-            renderGrid(); // Re-render based on new view and current week context
+            renderGrid();
         }
         toggleViewButton.addEventListener('click', toggleView);
 
@@ -892,7 +980,6 @@
             newStartDate.setDate(currentWeekStartDate.getDate() - 7);
             navigateToWeek(newStartDate);
         });
-
         nextWeekButton.addEventListener('click', () => {
             const newStartDate = new Date(currentWeekStartDate);
             newStartDate.setDate(currentWeekStartDate.getDate() + 7);
@@ -901,27 +988,20 @@
 
         downloadDataButton.addEventListener('click', () => {
             const dataToBackup = {
-                choresDefinitions: chores,
-                appData: appData,
-                lastRewardedPoints: localStorage.getItem('matildaLastRewardedPoints') || '0'
-                // Include any other global settings if they exist
+                choresDefinitions: chores, appData: appData,
+                // No need to save lastRewardedPoints, as rewardKey is now week-specific
             };
             const jsonString = JSON.stringify(dataToBackup, null, 2);
             const blob = new Blob([jsonString], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = 'matilda_chores_all_data.json';
+            a.href = url; a.download = 'matilda_chores_all_data.json';
             document.body.appendChild(a); a.click(); document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            alert("All chore data download initiated!");
+            URL.revokeObjectURL(url); alert("All chore data download initiated!");
         });
-
         uploadDataButton.addEventListener('click', () => { uploadFileInput.click(); });
-
         uploadFileInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (!file) return;
+            const file = event.target.files[0]; if (!file) return;
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
@@ -929,28 +1009,18 @@
                     if (loadedFullData && Array.isArray(loadedFullData.choresDefinitions) && typeof loadedFullData.appData === 'object') {
                         chores = loadedFullData.choresDefinitions;
                         appData = loadedFullData.appData;
+                        for (const weekId in appData) recalculatePointsForWeek(weekId);
                         
-                        // Recalculate points for all loaded weeks to ensure consistency if point values changed
-                        for (const weekId in appData) {
-                            recalculatePointsForWeek(weekId);
-                        }
-
-                        if (loadedFullData.lastRewardedPoints) {
-                            localStorage.setItem('matildaLastRewardedPoints', loadedFullData.lastRewardedPoints);
-                        } else {
-                            localStorage.removeItem('matildaLastRewardedPoints');
-                        }
-                        // Remove all old week-specific reward flags as they might not apply to new data
-                        Object.keys(localStorage).forEach(key => {
+                        Object.keys(localStorage).forEach(key => { // Clear old reward flags
                              if (key.startsWith(`rewarded_`)) localStorage.removeItem(key);
                         });
 
                         saveAllData(); 
-                        // Navigate to the current real-world week after loading
                         navigateToWeek(getWeekStartDate(new Date())); 
+                        renderEditableChoresList(); // Update editable list with new chores
                         alert("All data loaded successfully! Displaying current week.");
                     } else {
-                        alert("Invalid data file format. Required fields: choresDefinitions (array), appData (object).");
+                        alert("Invalid data file format.");
                     }
                 } catch (error) {
                     alert("Error reading or parsing file: " + error.message);
@@ -960,12 +1030,9 @@
             };
             reader.readAsText(file);
         });
-
         resetWeekButton.addEventListener('click', resetCurrentWeekData);
         
-        // --- Initialize ---
         initApp();
-
     </script>
 </body>
 </html>
