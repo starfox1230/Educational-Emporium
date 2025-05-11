@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User's Chores</title>
     <style>
-        :root {
+        :root { /* Default theme (Classic Lavender) values as fallback or initial state before JS applies a theme */
             --page-bg: #F0E6FF;
             --title-purple: #5D3A9B;
             --header-bg: #DCD0FF;
@@ -18,7 +18,7 @@
             --completed-bounce: bounce-effect 0.3s ease;
             --button-subtle-bg: #EAE0FF;
             --button-subtle-hover-bg: #DCD0FF;
-            --button-subtle-text: var(--title-purple);
+            --button-subtle-text: #5D3A9B; /* Direct value from defaultLavender */
             --edit-list-item-bg: #fdfaff;
             --edit-list-item-border: #e0d4f5;
         }
@@ -45,6 +45,7 @@
             align-items: center;
             min-height: 100vh;
             box-sizing: border-box;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         .container {
@@ -54,6 +55,7 @@
             padding: 20px;
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
         }
 
         header h1#page-title { 
@@ -68,6 +70,7 @@
             -moz-user-select: none; 
             -ms-user-select: none; 
             -webkit-touch-callout: none; 
+            transition: color 0.3s ease;
         }
 
         .week-navigation {
@@ -78,6 +81,7 @@
             padding: 5px 0;
             border-bottom: 1px solid var(--grid-border);
             border-top: 1px solid var(--grid-border);
+            transition: border-color 0.3s ease;
         }
 
         .week-navigation button {
@@ -88,7 +92,7 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 0.9em;
-            transition: background-color 0.2s ease;
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
         }
         .week-navigation button:hover {
             background-color: var(--button-subtle-hover-bg);
@@ -99,6 +103,7 @@
             font-weight: bold;
             text-align: center;
             flex-grow: 1;
+            transition: color 0.3s ease;
         }
 
         .chore-chart-wrapper {
@@ -106,6 +111,7 @@
             border-radius: 10px;
             overflow: hidden; 
             border: 1px solid var(--grid-border);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
         
         .chore-chart table {
@@ -120,6 +126,7 @@
             padding: 8px;
             height: 70px; 
             box-sizing: border-box;
+            transition: border-color 0.3s ease;
         }
 
         .chore-chart th {
@@ -127,6 +134,7 @@
             color: var(--title-purple);
             font-weight: bold;
             font-size: 0.9em;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         
         .chore-chart td.chore-label-cell {
@@ -137,6 +145,7 @@
             padding: 5px;
             vertical-align: middle;
             position: relative; 
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         
         .chore-label-cell .chore-item-content {
@@ -151,6 +160,7 @@
             width: 32px;
             height: 32px;
             fill: var(--icon-color);
+            transition: fill 0.3s ease;
         }
         .chore-label-cell .chore-icon-emoji { 
              font-size: 32px; 
@@ -164,12 +174,12 @@
             background-color: var(--cell-bg);
             cursor: pointer;
             font-size: 1.8em; 
-            transition: background-color 0.2s ease;
+            transition: background-color 0.2s ease; /* Keep short for responsiveness */
             position: relative; 
         }
 
         .chore-chart td.task-cell:hover {
-            background-color: #e8dfff;
+            background-color: var(--button-subtle-hover-bg); 
         }
         
         .chore-chart tr:last-child td:first-child.chore-label-cell {
@@ -183,7 +193,6 @@
             position: absolute;
             width: 10px;
             height: 10px;
-            background-color: gold;
             border-radius: 50%;
             pointer-events: none;
             animation: sparkle-effect 0.6s forwards;
@@ -207,6 +216,8 @@
         .controls p {
              flex-grow: 1; 
              text-align: center; 
+             color: var(--text-dark);
+             transition: color 0.3s ease;
         }
 
 
@@ -223,7 +234,7 @@
         }
 
         .controls button:hover {
-            background-color: #8E44AD;
+             filter: brightness(90%);
         }
         
         .parent-controls { 
@@ -234,19 +245,22 @@
             padding: 15px;
             border: 1px dashed var(--accent-color);
             border-radius: 8px;
-            background-color: #fdfaff;
+            background-color: var(--edit-list-item-bg);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         .parent-controls h3, .parent-controls h4 {
             color: var(--title-purple);
             margin-top: 0;
             margin-bottom: 10px;
+            transition: color 0.3s ease;
         }
 
         .parent-controls .chore-form-section {
             margin-bottom: 20px;
             padding-bottom: 15px;
             border-bottom: 1px solid var(--grid-border);
+            transition: border-color 0.3s ease;
         }
 
         .parent-controls .parent-grid {
@@ -265,8 +279,11 @@
             padding: 8px;
             border-radius: 4px;
             border: 1px solid var(--grid-border);
+            background-color: var(--cell-bg); 
+            color: var(--text-dark); 
             box-sizing: border-box;
             width: 100%; 
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
         
         .parent-controls button {
@@ -281,13 +298,14 @@
             width: 100%;
         }
         .parent-controls button:hover {
-            background-color: #8E44AD; 
+             filter: brightness(90%);
         }
         .parent-controls button.button-subtle, 
         .parent-controls button#cancel-edit-chore-button {
             background-color: var(--button-subtle-bg);
             color: var(--button-subtle-text);
             border: 1px solid var(--grid-border);
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
         }
         .parent-controls button.button-subtle:hover,
         .parent-controls button#cancel-edit-chore-button:hover {
@@ -310,6 +328,8 @@
             border: 1px solid var(--edit-list-item-border);
             border-radius: 5px;
             padding: 5px;
+            background-color: var(--cell-bg); 
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
         .editable-chore-item {
             display: flex;
@@ -319,6 +339,8 @@
             background-color: var(--edit-list-item-bg);
             border-bottom: 1px solid var(--edit-list-item-border);
             font-size: 0.9em;
+            color: var(--text-dark); 
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
         }
         .editable-chore-item:last-child {
             border-bottom: none;
@@ -334,13 +356,12 @@
             flex-shrink: 0;
             background-color: var(--button-subtle-bg);
             color: var(--button-subtle-text);
-             border: 1px solid var(--grid-border);
+            border: 1px solid var(--grid-border);
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
         }
          .editable-chore-item button:hover {
             background-color: var(--button-subtle-hover-bg);
         }
-
-        /* Removed io-buttons-grid from parent controls, as they are in modal */
         
         .delete-chore-btn {
             display: none; 
@@ -409,14 +430,15 @@
         }
 
         .modal-content {
-            background-color: var(--page-bg);
+            background-color: var(--page-bg); 
             padding: 25px;
             border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             width: 90%;
             max-width: 450px;
             position: relative;
-            color: var(--text-dark);
+            color: var(--text-dark); 
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         .modal-close-btn {
@@ -424,21 +446,23 @@
             top: 10px;
             right: 15px;
             font-size: 1.8em;
-            color: var(--text-dark);
+            color: var(--text-dark); 
             background: none;
             border: none;
             cursor: pointer;
+            transition: color 0.3s ease;
         }
         .modal-close-btn:hover {
-            color: var(--title-purple);
+            color: var(--title-purple); 
         }
 
         .modal-title {
-            color: var(--title-purple);
+            color: var(--title-purple); 
             text-align: center;
             margin-top: 0;
             margin-bottom: 20px;
             font-size: 1.5em;
+            transition: color 0.3s ease;
         }
 
         .modal-section {
@@ -448,8 +472,8 @@
         }
 
         .modal-button {
-            background-color: var(--accent-color);
-            color: white;
+            background-color: var(--accent-color); 
+            color: white; 
             border: none;
             padding: 12px 15px;
             border-radius: 5px;
@@ -460,45 +484,52 @@
             box-sizing: border-box;
         }
         .modal-button:hover {
-            background-color: #8E44AD;
+            filter: brightness(90%);
         }
-        .modal-button.modal-button-subtle { /* More specific for subtle buttons in modal */
-            background-color: var(--button-subtle-bg);
-            color: var(--button-subtle-text);
-            border: 1px solid var(--grid-border);
+        .modal-button.modal-button-subtle { 
+            background-color: var(--button-subtle-bg); 
+            color: var(--button-subtle-text); 
+            border: 1px solid var(--grid-border); 
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
         }
         .modal-button.modal-button-subtle:hover {
-            background-color: var(--button-subtle-hover-bg);
+            background-color: var(--button-subtle-hover-bg); 
         }
 
         .modal-user-list {
             max-height: 150px; 
             overflow-y: auto;
             margin-bottom: 10px;
-            border: 1px solid var(--grid-border);
+            border: 1px solid var(--grid-border); 
             border-radius: 5px;
+            transition: border-color 0.3s ease;
         }
         .modal-user-list-item {
             padding: 10px;
             cursor: pointer;
-            border-bottom: 1px solid var(--edit-list-item-border);
-            background-color: var(--edit-list-item-bg);
+            border-bottom: 1px solid var(--edit-list-item-border); 
+            background-color: var(--edit-list-item-bg); 
             font-size: 1em;
+            color: var(--text-dark); 
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
         }
         .modal-user-list-item:last-child {
             border-bottom: none;
         }
         .modal-user-list-item:hover {
-            background-color: var(--button-subtle-hover-bg);
+            background-color: var(--button-subtle-hover-bg); 
         }
-        #modal-new-user-name-input { 
+        #modal-new-user-name-input, #modal-profile-name-input {
             padding: 10px;
             border-radius: 4px;
-            border: 1px solid var(--grid-border);
+            border: 1px solid var(--grid-border); 
+            background-color: var(--cell-bg); 
+            color: var(--text-dark); 
             box-sizing: border-box;
             width: 100%;
             margin-bottom: 10px;
             font-size: 1em;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
         .modal-form-buttons {
             display: flex;
@@ -506,6 +537,43 @@
         }
         .modal-form-buttons .modal-button {
             flex-grow: 1;
+        }
+
+        /* Theme Swatches in Modal */
+        .theme-swatches-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
+        .theme-swatch {
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            text-align: center;
+            font-size: 0.8em;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .theme-swatch.selected {
+            border-color: var(--accent-color); 
+            box-shadow: 0 0 5px var(--accent-color);
+        }
+        .theme-swatch-colors {
+            display: flex;
+            margin-bottom: 5px;
+        }
+        .theme-swatch-color-block {
+            width: 15px;
+            height: 15px;
+            margin-right: 3px;
+            border: 1px solid rgba(0,0,0,0.2);
         }
 
 
@@ -532,6 +600,7 @@
             .modal-content { width: 95%; padding: 20px;}
             .modal-title { font-size: 1.3em; margin-bottom: 15px;}
             .modal-button {padding: 10px;}
+            .theme-swatches-container { grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));}
             .chore-chart th { font-size: 0.6em; } 
             .chore-label-cell .chore-icon-svg svg { width: 20px; height: 20px;}
             .chore-label-cell .chore-icon-emoji { font-size: 20px; }
@@ -605,8 +674,6 @@
                         <!-- Chore list will be populated here by JS -->
                     </div>
                 </div>
-
-                <!-- Download/Upload buttons are now in the modal -->
                 <button id="reset-week-button" class="button-subtle">Reset THIS User's Week</button>
                 <button id="exit-parent-mode-button">Exit Parent Mode</button>
             </div>
@@ -622,33 +689,50 @@
         <div id="custom-modal" class="modal-content">
             <button id="modal-close-button" class="modal-close-btn">×</button>
             
+            <!-- Initial Menu -->
             <div id="modal-initial-menu" class="modal-section">
                 <h3 class="modal-title">Main Menu</h3>
+                <button id="modal-profile-settings-btn" class="modal-button">Profile Settings</button>
                 <button id="modal-parent-mode-btn" class="modal-button">Enter Parent Mode</button>
                 <button id="modal-switch-user-btn" class="modal-button">Switch / Create User</button>
                 <button id="modal-download-data-btn" class="modal-button modal-button-subtle">Download All Users Data</button>
                 <button id="modal-upload-data-btn" class="modal-button modal-button-subtle">Upload All Users Data</button>
-                 <input type="file" id="modal-upload-file-input" accept=".json" style="display: none;"> <!-- For modal upload -->
+                <input type="file" id="modal-upload-file-input" accept=".json" style="display: none;">
             </div>
 
+            <!-- User Management -->
             <div id="modal-user-management" class="modal-section" style="display: none;">
                 <h3 class="modal-title">Manage Users</h3>
-                <div id="modal-user-list" class="modal-user-list">
-                    <!-- User list populated by JS -->
-                </div>
+                <div id="modal-user-list" class="modal-user-list"></div>
                 <button id="modal-show-create-user-form-btn" class="modal-button">Create New User</button>
-                 <button id="modal-back-to-main-menu-btn" class="modal-button modal-button-subtle" style="margin-top:10px;">Back to Main Menu</button>
                 <div id="modal-new-user-form" style="display: none; margin-top: 15px;">
                     <input type="text" id="modal-new-user-name-input" placeholder="New Profile Name">
                     <div class="modal-form-buttons">
                         <button id="modal-confirm-create-user-btn" class="modal-button">Create</button>
-                        <button id="modal-cancel-create-user-btn" class="modal-button modal-button-subtle">Cancel</button>
+                        <button id="modal-cancel-create-user-btn" class="modal-button modal-button-subtle">Cancel Creation</button>
                     </div>
                 </div>
+                <button id="modal-back-to-main-menu-user-mgmt-btn" class="modal-button modal-button-subtle" style="margin-top:10px;">Back to Main Menu</button>
+            </div>
+
+            <!-- Profile Settings -->
+            <div id="modal-profile-settings" class="modal-section" style="display:none;">
+                <h3 class="modal-title">Profile Settings</h3>
+                <div>
+                    <label for="modal-profile-name-input" style="display:block; margin-bottom:5px; font-weight:bold;">Profile Name:</label>
+                    <input type="text" id="modal-profile-name-input" placeholder="Profile Display Name">
+                </div>
+                <div style="margin-top:15px;">
+                    <h4 style="margin-bottom:10px; text-align:center; color: var(--title-purple);">Select Theme:</h4>
+                    <div id="modal-theme-swatches-container" class="theme-swatches-container">
+                        <!-- Theme swatches populated by JS -->
+                    </div>
+                </div>
+                <button id="modal-save-profile-settings-btn" class="modal-button" style="margin-top:10px;">Save Settings</button>
+                <button id="modal-back-to-main-menu-profile-btn" class="modal-button modal-button-subtle" style="margin-top:5px;">Back to Main Menu</button>
             </div>
         </div>
     </div>
-
 
     <script>
         // DOM Elements
@@ -659,7 +743,6 @@
         const totalPointsDisplay = document.getElementById('total-points');
         const rewardNotification = document.getElementById('reward-notification');
         const pageTitleElement = document.getElementById('page-title'); 
-        
         const parentControlsSection = document.getElementById('parent-controls-section');
         const newChoreNameInput = document.getElementById('new-chore-name');
         const newChoreIconTypeInput = document.getElementById('new-chore-icon-type');
@@ -668,12 +751,7 @@
         const cancelEditChoreButton = document.getElementById('cancel-edit-chore-button');
         const editableChoresListContainer = document.getElementById('editable-chores-list');
         const choreFormButtonsContainer = document.querySelector('.chore-form-buttons');
-
         const exitParentModeButton = document.getElementById('exit-parent-mode-button');
-        // const downloadDataButton = document.getElementById('download-data-button'); // Removed from parent controls
-        // const uploadDataButton = document.getElementById('upload-data-button');   // Removed from parent controls
-        // const uploadFileInput = document.getElementById('upload-file-input');     // Will use modal's input
-
         const prevWeekButton = document.getElementById('prev-week-button');
         const nextWeekButton = document.getElementById('next-week-button');
         const weekDatesDisplay = document.getElementById('week-dates-display');
@@ -694,7 +772,13 @@
         const modalDownloadDataBtn = document.getElementById('modal-download-data-btn');
         const modalUploadDataBtn = document.getElementById('modal-upload-data-btn');
         const modalUploadFileInput = document.getElementById('modal-upload-file-input');
-        const modalBackToMainMenuBtn = document.getElementById('modal-back-to-main-menu-btn');
+        const modalBackToMainMenuUserMgmtBtn = document.getElementById('modal-back-to-main-menu-user-mgmt-btn');
+        const modalProfileSettingsBtn = document.getElementById('modal-profile-settings-btn');
+        const modalProfileSettings = document.getElementById('modal-profile-settings');
+        const modalProfileNameInput = document.getElementById('modal-profile-name-input');
+        const modalThemeSwatchesContainer = document.getElementById('modal-theme-swatches-container');
+        const modalSaveProfileSettingsBtn = document.getElementById('modal-save-profile-settings-btn');
+        const modalBackToMainMenuProfileBtn = document.getElementById('modal-back-to-main-menu-profile-btn');
 
 
         // App State
@@ -703,9 +787,69 @@
         let currentView = 'weekly'; 
         let editingChoreId = null;
         let currentWeekStartDate = null;
-
         let appProfilesData = {}; 
         let currentUserId = null;   
+
+        // --- Theme Definitions ---
+        const themes = {
+            defaultLavender: {
+                '--page-bg': '#F0E6FF', '--title-purple': '#5D3A9B', '--header-bg': '#DCD0FF',
+                '--chore-col-bg': '#EAE0FF', '--cell-bg': '#F8F0FF', '--grid-border': '#BEA6E0',
+                '--text-dark': '#4A2E87', '--icon-color': '#785A9B', '--accent-color': '#9B59B6',
+                '--button-subtle-bg': '#EAE0FF', '--button-subtle-hover-bg': '#DCD0FF',
+                '--button-subtle-text': '#5D3A9B', '--edit-list-item-bg': '#fdfaff',
+                '--edit-list-item-border': '#e0d4f5', 'displayName': 'Classic Lavender'
+            },
+            pinkBlossom: {
+                '--page-bg': '#FFF0F5', '--title-purple': '#DB7093', '--header-bg': '#FFC0CB', 
+                '--chore-col-bg': '#FFE4E1', '--cell-bg': '#FFF5FA', '--grid-border': '#FFB6C1', 
+                '--text-dark': '#C71585', '--icon-color': '#DB7093', '--accent-color': '#FF69B4',
+                '--button-subtle-bg': '#FFE4E1', '--button-subtle-hover-bg': '#FFDAE9', 
+                '--button-subtle-text': '#DB7093', '--edit-list-item-bg': '#FFF5FA',
+                '--edit-list-item-border': '#FFDAE0', 'displayName': 'Pink Blossom'
+            },
+            sunnyCitrus: {
+                '--page-bg': '#FFF8DC', '--title-purple': '#FFA500', '--header-bg': '#FFDEAD',
+                '--chore-col-bg': '#FFFACD', '--cell-bg': '#FFFFF0', '--grid-border': '#FFD700',
+                '--text-dark': '#D2691E', '--icon-color': '#FFA500', '--accent-color': '#FFB347', 
+                '--button-subtle-bg': '#FFFACD', '--button-subtle-hover-bg': '#FFEEB5',
+                '--button-subtle-text': '#E69500', '--edit-list-item-bg': '#FFFFF0', 
+                '--edit-list-item-border': '#FFF0C1', 'displayName': 'Sunny Citrus'
+            },
+            oceanBreeze: {
+                '--page-bg': '#E0FFFF', '--title-purple': '#008B8B', '--header-bg': '#AFEEEE',
+                '--chore-col-bg': '#B0E0E6', '--cell-bg': '#F0FFFF', '--grid-border': '#7FFFD4',
+                '--text-dark': '#2F4F4F', '--icon-color': '#008B8B', '--accent-color': '#40E0D0',
+                '--button-subtle-bg': '#B0E0E6', '--button-subtle-hover-bg': '#90D0D6',
+                '--button-subtle-text': '#008B8B', '--edit-list-item-bg': '#F0FFFF',
+                '--edit-list-item-border': '#C1F0F0', 'displayName': 'Ocean Breeze'
+            },
+            forestHike: {
+                '--page-bg': '#F0FFF0', '--title-purple': '#228B22', '--header-bg': '#98FB98',
+                '--chore-col-bg': '#90EE90', '--cell-bg': '#F5FFFA', '--grid-border': '#8FBC8F',
+                '--text-dark': '#006400', '--icon-color': '#228B22', '--accent-color': '#3CB371',
+                '--button-subtle-bg': '#90EE90', '--button-subtle-hover-bg': '#80DD80',
+                '--button-subtle-text': '#228B22', '--edit-list-item-bg': '#F5FFFA',
+                '--edit-list-item-border': '#D0F5D0', 'displayName': 'Forest Hike'
+            },
+            midnightPurpleDark: {
+                '--page-bg': '#1A1A2E', '--title-purple': '#E0B0FF', '--header-bg': '#2E294E',
+                '--chore-col-bg': '#242038', '--cell-bg': '#1F1C30', '--grid-border': '#4A0072',
+                '--text-dark': '#D8BFD8', '--icon-color': '#C39BD3', '--accent-color': '#9B59B6',
+                '--button-subtle-bg': '#2E294E', '--button-subtle-hover-bg': '#3C375E',
+                '--button-subtle-text': '#E0B0FF', '--edit-list-item-bg': '#1F1C30',
+                '--edit-list-item-border': '#2E294E', 'displayName': 'Midnight Purple (Dark)'
+            },
+            twilightBlueDark: {
+                '--page-bg': '#0F172A', '--title-purple': '#93C5FD', '--header-bg': '#1E293B',
+                '--chore-col-bg': '#334155', '--cell-bg': '#1A202C', '--grid-border': '#475569',
+                '--text-dark': '#E2E8F0', '--icon-color': '#60A5FA', '--accent-color': '#3B82F6',
+                '--button-subtle-bg': '#334155', '--button-subtle-hover-bg': '#475569',
+                '--button-subtle-text': '#93C5FD', '--edit-list-item-bg': '#1A202C',
+                '--edit-list-item-border': '#334155', 'displayName': 'Twilight Blue (Dark)'
+            }
+        };
+        const DEFAULT_THEME_KEY = 'defaultLavender';
 
         const svgIcons = { 
             stuffies_svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c2.481 0 4.5-2.019 4.5-4.5S18.981 3 16.5 3C14.02 3 12 5.019 12 7.5c0 .88.25 1.691.681 2.385C11.625 9.319 10.5 8.458 10.5 7.5 10.5 5.019 8.481 3 6 3S1.5 5.019 1.5 7.5c0 .958.625 1.819 1.681 2.385C3.25 10.691 3 11.5 3 12.375c0 2.306 1.001 4.363 2.626 5.752C6.042 19.046 7.5 21 7.5 21h9s1.458-1.954 1.874-2.873C20.001 16.738 21 14.681 21 12.375c0-.875-.25-1.681-.681-2.385.944-.548 1.681-1.473 1.681-2.49C22 6.019 19.981 4 17.5 4S13 6.019 13 8.5c0 .958.625 1.819 1.681 2.385C14.75 11.691 14.5 12.5 14.5 13.375c0 1.422.499 2.729 1.32 3.768.091.112.185.222.28.332H7.9c.095-.11.189-.22.28-.332.821-1.039 1.32-2.346 1.32-3.768 0-.875-.25-1.681-.681-2.385C9.769 10.319 10.5 9.458 10.5 8.5 10.5 7.078 9.422 6 8 6S5.5 7.078 5.5 8.5c0 .958.625 1.819 1.681 2.385C7.25 11.691 7 12.5 7 13.375c0 1.763.708 3.35 1.846 4.52L7.5 20l-1.346-2.107A5.98 5.98 0 0 1 4.5 13.375C4.5 12.5 4.75 11.691 5.181 11C4.237 10.452 3.5 9.527 3.5 8.5 3.5 6.019 5.519 4 8 4s4.5 2.019 4.5 4.5c0 .958-.625 1.819-1.681 2.385C10.75 10.691 11 11.5 11 12.375c0 .479-.073.941-.209 1.381.711.301 1.36.713 1.909 1.232.55-.519 1.199-.931 1.909-1.232C14.427 13.316 14.354 12.854 14.354 12.375 14.354 11.5 14.604 10.691 15.035 11c-.944-.548-1.681-1.473-1.681-2.49C13.354 7.078 14.432 6 15.854 6s2.5 1.078 2.5 2.5c0 .958-.625 1.819-1.681 2.385C16.604 10.691 16.854 11.5 16.854 12.375c0 .479-.073.941-.209 1.381.711.301 1.36.713 1.909 1.232.55-.519 1.199-.931 1.909-1.232C19.927 13.316 19.854 12.854 19.854 12.375c0-.875.25-1.681.681-2.385.944-.548 1.681-1.473 1.681-2.49C20.354 6.019 18.335 4 15.854 4c-1.422 0-2.5.922-2.5 2.344V7.5c0 .88.25 1.691.681 2.385.001 0 .001 0 .001 0h.001C14.035 10.309 14.035 10.309 14.035 10.309zM8 18H6v-2h2v2zm8 0h-2v-2h2v2z"></path></svg>',
@@ -742,6 +886,21 @@
         function getCurrentUserAppData() {
             const profile = getCurrentUserProfile();
             return profile ? profile.appData : {};
+        }
+        function getCurrentUserThemeKey() {
+            const profile = getCurrentUserProfile();
+            return profile && profile.theme ? profile.theme : DEFAULT_THEME_KEY;
+        }
+
+        // --- Theme Application ---
+        function applyTheme(themeKey) {
+            const theme = themes[themeKey] || themes[DEFAULT_THEME_KEY];
+            const root = document.documentElement;
+            for (const [property, value] of Object.entries(theme)) {
+                if (property !== 'displayName') { // displayName is for UI, not a CSS var
+                    root.style.setProperty(property, value);
+                }
+            }
         }
 
         // --- Date Helper Functions ---
@@ -784,6 +943,7 @@
         function showCustomModal(sectionToShow = 'initialMenu') {
             modalInitialMenu.style.display = 'none';
             modalUserManagement.style.display = 'none';
+            modalProfileSettings.style.display = 'none';
             modalNewUserForm.style.display = 'none'; 
 
             if (sectionToShow === 'initialMenu') {
@@ -797,6 +957,9 @@
                 modalNewUserForm.style.display = 'block'; 
                 modalNewUserNameInput.value = ''; 
                 modalNewUserNameInput.focus();
+            } else if (sectionToShow === 'profileSettings') {
+                populateProfileSettingsModal();
+                modalProfileSettings.style.display = 'flex';
             }
             customModalOverlay.classList.add('show');
         }
@@ -827,6 +990,55 @@
             }
         }
 
+        function populateProfileSettingsModal() {
+            const userProfile = getCurrentUserProfile();
+            if (!userProfile) {
+                alert("No active user to configure settings for.");
+                showCustomModal('initialMenu'); 
+                return;
+            }
+            modalProfileNameInput.value = userProfile.profileName || "";
+            
+            modalThemeSwatchesContainer.innerHTML = '';
+            const currentTheme = getCurrentUserThemeKey();
+
+            for (const themeKey in themes) {
+                const theme = themes[themeKey];
+                const swatch = document.createElement('div');
+                swatch.classList.add('theme-swatch');
+                if (themeKey === currentTheme) {
+                    swatch.classList.add('selected');
+                }
+                swatch.dataset.themeKey = themeKey;
+                swatch.style.backgroundColor = theme['--page-bg']; 
+                swatch.style.color = theme['--text-dark'];     
+
+                const colorsDiv = document.createElement('div');
+                colorsDiv.classList.add('theme-swatch-colors');
+                const swatchColorBlocks = [theme['--title-purple'], theme['--accent-color'], theme['--header-bg']];
+                swatchColorBlocks.forEach(color => {
+                    const block = document.createElement('div');
+                    block.classList.add('theme-swatch-color-block');
+                    block.style.backgroundColor = color;
+                    colorsDiv.appendChild(block);
+                });
+                swatch.appendChild(colorsDiv);
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = theme.displayName;
+                swatch.appendChild(nameSpan);
+
+                swatch.addEventListener('click', () => {
+                    applyThemeToCurrentUser(themeKey); // This applies visually and sets userProfile.theme
+                    // Visually update selected swatch in the modal
+                    modalThemeSwatchesContainer.querySelectorAll('.theme-swatch').forEach(s => s.classList.remove('selected'));
+                    swatch.classList.add('selected');
+                });
+                modalThemeSwatchesContainer.appendChild(swatch);
+            }
+        }
+
+
         // --- Core Logic & UI Rendering ---
         function initApp() {
             loadAllProfilesData(); 
@@ -837,6 +1049,7 @@
                     loadUser(currentUserId);
                 } else {
                     pageTitleElement.textContent = "Create First User"; 
+                    applyTheme(DEFAULT_THEME_KEY); 
                     showCustomModal('userManagement'); 
                 }
             } else {
@@ -852,10 +1065,12 @@
             if (!userProfile) {
                 console.error("Error: Attempted to load non-existent user:", userId);
                 pageTitleElement.textContent = "Error Loading User";
+                applyTheme(DEFAULT_THEME_KEY); 
                 showCustomModal('userManagement'); 
                 return;
             }
 
+            applyTheme(userProfile.theme || DEFAULT_THEME_KEY);
             pageTitleElement.textContent = userProfile.profileName || "User's Chores";
             navigateToWeek(getWeekStartDate(new Date())); 
             resetChoreForm();
@@ -1254,7 +1469,7 @@
             saveAllProfilesData();
         }
 
-        // --- User Switching and Creation (Modal based) ---
+        // --- User Switching, Creation, Profile Settings (Modal based) ---
         function switchUser(userIdToSwitchTo) { 
             if (appProfilesData[userIdToSwitchTo]) {
                 if (isParentModeActive) deactivateParentMode(); 
@@ -1272,21 +1487,17 @@
                 modalNewUserNameInput.focus();
                 return;
             }
-
             const nameExists = Object.values(appProfilesData).some(p => p.profileName === profileName);
             if (nameExists) {
-                if (!confirm(`A profile named "${profileName}" already exists. Create another one with this name?`)){
-                    return;
-                }
+                if (!confirm(`A profile named "${profileName}" already exists. Create another one with this name?`)){ return; }
             }
-
             const newUserId = 'user_' + Date.now();
             appProfilesData[newUserId] = {
                 profileName: profileName,
+                theme: DEFAULT_THEME_KEY, // Assign default theme
                 chores: JSON.parse(JSON.stringify(initialChoresDefinitionsTemplate)), 
                 appData: {} 
             };
-            
             if (isParentModeActive) deactivateParentMode(); 
             switchUser(newUserId); 
             saveAllProfilesData(); 
@@ -1294,66 +1505,82 @@
             modalNewUserNameInput.value = ''; 
             hideCustomModal();
         }
-        
-        // --- Event Listeners Setup ---
-        // Title Click (replaces long press)
-        pageTitleElement.addEventListener('click', () => {
-            showCustomModal('initialMenu');
-        });
-        pageTitleElement.addEventListener('touchend', (e) => { // For mobile, treat as click
-             // Basic check to prevent firing if user was scrolling/dragging
-            if (pageTitleElement.classList.contains('dragging')) {
-                pageTitleElement.classList.remove('dragging');
+
+        function applyThemeToCurrentUser(themeKey) {
+            const userProfile = getCurrentUserProfile();
+            if (userProfile) {
+                userProfile.theme = themeKey;
+                applyTheme(themeKey); 
+                // Theme is saved when "Save Profile Settings" is clicked.
+            }
+        }
+
+        function saveProfileSettings() {
+            const userProfile = getCurrentUserProfile();
+            if (!userProfile) {
+                alert("No active user to save settings for.");
                 return;
             }
+            const newProfileName = modalProfileNameInput.value.trim();
+            if (!newProfileName) {
+                alert("Profile name cannot be empty.");
+                modalProfileNameInput.focus();
+                return;
+            }
+            
+            const otherUsers = Object.entries(appProfilesData).filter(([id, _]) => id !== currentUserId);
+            const nameExistsElsewhere = otherUsers.some(([_,p]) => p.profileName === newProfileName);
+            
+            if (newProfileName !== userProfile.profileName && nameExistsElsewhere) {
+                 if (!confirm(`Another profile is already named "${newProfileName}". Continue with this name?`)) {
+                    return;
+                 }
+            }
+
+            userProfile.profileName = newProfileName;
+            pageTitleElement.textContent = newProfileName; 
+
+            // userProfile.theme is already updated by applyThemeToCurrentUser
+            saveAllProfilesData();
+            alert("Profile settings saved!");
+            hideCustomModal();
+        }
+        
+        // --- Event Listeners Setup ---
+        pageTitleElement.addEventListener('click', () => showCustomModal('initialMenu'));
+        // Simple touchend for mobile tap (no complex drag detection needed for this approach)
+        pageTitleElement.addEventListener('touchend', (e) => {
+            e.preventDefault(); // Prevent double event if click also fires
             showCustomModal('initialMenu');
         });
-        // Helper for touchend to detect scroll vs tap (optional, basic version here)
-        let touchstartX = 0;
-        let touchendX = 0;
-        let touchstartY = 0;
-        let touchendY = 0;
-
-        pageTitleElement.addEventListener('touchstart', e => {
-            touchstartX = e.changedTouches[0].screenX;
-            touchstartY = e.changedTouches[0].screenY;
-            pageTitleElement.classList.remove('dragging');
-        }, { passive: true });
-
-        pageTitleElement.addEventListener('touchmove', e => {
-            touchendX = e.changedTouches[0].screenX;
-            touchendY = e.changedTouches[0].screenY;
-            // If moved more than a few pixels, consider it a drag
-            if (Math.abs(touchendX - touchstartX) > 5 || Math.abs(touchendY - touchstartY) > 5) {
-                pageTitleElement.classList.add('dragging');
-            }
-        }, { passive: true });
 
 
         // Modal Buttons
         modalCloseButton.addEventListener('click', hideCustomModal);
         customModalOverlay.addEventListener('click', (event) => { 
-            if (event.target === customModalOverlay) {
-                hideCustomModal();
-            }
+            if (event.target === customModalOverlay) hideCustomModal();
         });
         modalParentModeBtn.addEventListener('click', () => {
             hideCustomModal(); 
             promptParentPassword(); 
         });
-        modalSwitchUserBtn.addEventListener('click', () => {
-            showCustomModal('userManagement');
-        });
-        modalShowCreateUserFormBtn.addEventListener('click', () => {
-            showCustomModal('newUserFormWithinManagement');
-        });
+        modalSwitchUserBtn.addEventListener('click', () => showCustomModal('userManagement'));
+        modalShowCreateUserFormBtn.addEventListener('click', () => showCustomModal('newUserFormWithinManagement'));
         modalConfirmCreateUserBtn.addEventListener('click', handleCreateNewUserFromModal);
-        modalCancelCreateUserBtn.addEventListener('click', () => {
-            showCustomModal('userManagement'); 
+        modalCancelCreateUserBtn.addEventListener('click', () => showCustomModal('userManagement'));
+        modalBackToMainMenuUserMgmtBtn.addEventListener('click', () => showCustomModal('initialMenu'));
+
+        modalProfileSettingsBtn.addEventListener('click', () => {
+            if (!currentUserId) {
+                alert("Please select or create a user profile first to access settings.");
+                showCustomModal('userManagement'); 
+                return;
+            }
+            showCustomModal('profileSettings');
         });
-        modalBackToMainMenuBtn.addEventListener('click', () => {
-            showCustomModal('initialMenu');
-        });
+        modalSaveProfileSettingsBtn.addEventListener('click', saveProfileSettings);
+        modalBackToMainMenuProfileBtn.addEventListener('click', () => showCustomModal('initialMenu'));
+
 
         modalDownloadDataBtn.addEventListener('click', () => {
             hideCustomModal();
@@ -1370,11 +1597,10 @@
             URL.revokeObjectURL(url); alert("All users' chore data download initiated!");
         });
         modalUploadDataBtn.addEventListener('click', () => { 
-            // Don't hide modal yet, user needs to select file
             modalUploadFileInput.click(); 
         });
         modalUploadFileInput.addEventListener('change', (event) => {
-            hideCustomModal(); // Hide after file is selected
+            hideCustomModal(); 
             const file = event.target.files[0]; if (!file) return;
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -1390,28 +1616,28 @@
                                     recalculatePointsForUserWeek(userId_loop, weekId_loop);
                                 }
                             }
+                            if (!appProfilesData[userId_loop].theme) { // Ensure loaded profiles have a theme
+                                appProfilesData[userId_loop].theme = DEFAULT_THEME_KEY;
+                            }
                         }
-                        
                         Object.keys(localStorage).forEach(key => { 
                              if (key.startsWith(`rewarded_`)) localStorage.removeItem(key);
                         });
-
                         saveAllProfilesData(); 
                         saveCurrentUserId();
-
                         let userToLoadAfterUpload = null;
                         if (currentUserId && appProfilesData[currentUserId]) {
                             userToLoadAfterUpload = currentUserId;
                         } else if (Object.keys(appProfilesData).length > 0) {
                             userToLoadAfterUpload = Object.keys(appProfilesData)[0];
                         }
-
                         if (userToLoadAfterUpload) {
                             loadUser(userToLoadAfterUpload);
                         } else {
                             currentUserId = null; 
                             saveCurrentUserId();
                             pageTitleElement.textContent = "User's Chores";
+                            applyTheme(DEFAULT_THEME_KEY);
                             choreGridBody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 20px;">Data loaded, but no valid user profile found. Please create a new user.</td></tr>';
                             totalPointsDisplay.textContent = "0";
                             if(editableChoresListContainer) editableChoresListContainer.innerHTML = ''; 
@@ -1424,12 +1650,11 @@
                 } catch (error) {
                     alert("Error reading or parsing file: " + error.message);
                 } finally {
-                    modalUploadFileInput.value = null; // Reset file input
+                    modalUploadFileInput.value = null; 
                 }
             };
             reader.readAsText(file);
         });
-
 
         // Other Controls
         exitParentModeButton.addEventListener('click', deactivateParentMode);
@@ -1449,27 +1674,9 @@
                 if (currentView === 'daily') currentView = 'weekly'; 
             }
         }
-        function toggleView() { 
-            if (!currentUserId || !isCurrentRealWeek()) return; 
-            currentView = (currentView === 'weekly') ? 'daily' : 'weekly';
-            updateToggleViewButtonText();
-            renderGrid();
-        }
-        toggleViewButton.addEventListener('click', toggleView);
-
-        prevWeekButton.addEventListener('click', () => { 
-            if (!currentUserId || !currentWeekStartDate) return;
-            const newStartDate = new Date(currentWeekStartDate);
-            newStartDate.setDate(currentWeekStartDate.getDate() - 7);
-            navigateToWeek(newStartDate);
-        });
-        nextWeekButton.addEventListener('click', () => { 
-            if (!currentUserId || !currentWeekStartDate) return;
-            const newStartDate = new Date(currentWeekStartDate);
-            newStartDate.setDate(currentWeekStartDate.getDate() + 7);
-            navigateToWeek(newStartDate);
-        });
-
+        toggleViewButton.addEventListener('click', () => { if (!currentUserId || !isCurrentRealWeek()) return; currentView = (currentView === 'weekly') ? 'daily' : 'weekly'; updateToggleViewButtonText(); renderGrid(); });
+        prevWeekButton.addEventListener('click', () => { if (!currentUserId || !currentWeekStartDate) return; const newStartDate = new Date(currentWeekStartDate); newStartDate.setDate(currentWeekStartDate.getDate() - 7); navigateToWeek(newStartDate); });
+        nextWeekButton.addEventListener('click', () => { if (!currentUserId || !currentWeekStartDate) return; const newStartDate = new Date(currentWeekStartDate); newStartDate.setDate(currentWeekStartDate.getDate() + 7); navigateToWeek(newStartDate); });
         resetWeekButton.addEventListener('click', resetCurrentUserWeekData);
         
         // --- Initialize ---
