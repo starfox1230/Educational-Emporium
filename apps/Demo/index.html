@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-  <title>Sight Words Quiz Deluxe - Enhanced Read Mode</title>
+  <title>Sight Words Quiz Deluxe - Enhanced Read Mode & TTS Fix</title>
 
   <!-- Google Font + Animate.css -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"/>
@@ -55,7 +55,7 @@
 
     #quiz-container{ display:flex;justify-content:center;align-items:center; min-height: 30vh; padding:1rem; margin-top: 70px; height: calc(100vh - 70px - 70px); }
     #listen-pick-word-area { display: flex; justify-content: center; align-items: center; width: 100%; }
-    #read-pick-sound-area { display: none; flex-direction: column; justify-content: center; align-items: center; width: 100%; gap: 1.5rem; /* Added gap */ }
+    #read-pick-sound-area { display: none; flex-direction: column; justify-content: center; align-items: center; width: 100%; gap: 1.5rem; }
     .word-display-box { background: var(--btn-bg); border: 3px solid var(--brand-dark); border-radius: var(--btn-radius); padding: 1.5rem 2rem; font-size: 2.5rem; font-weight: 600; color: var(--fg); min-width: 200px; text-align: center; box-shadow: 0 4px 8px var(--shadow-color); }
     #sound-choices-container { display: flex; justify-content: center; gap: 1rem; }
     
@@ -68,25 +68,13 @@
     .sound-btn { font-size: 2rem !important; padding: 1rem 1.5rem !important; }
     .sound-btn-selected {
         border-color: var(--selected-border-color) !important;
-        box-shadow: 0 0 0 3px var(--selected-border-color), 0 4px 6px var(--shadow-color) !important; /* Blue outline + existing shadow */
+        box-shadow: 0 0 0 3px var(--selected-border-color), 0 4px 6px var(--shadow-color) !important;
     }
 
-    #submit-answer-btn {
-        padding: 0.8rem 2rem;
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: white;
-        background-color: var(--brand);
-        border: none;
-        border-radius: var(--btn-radius);
-        cursor: pointer;
-        transition: background-color var(--transition), transform var(--transition);
-        box-shadow: 0 4px 6px var(--shadow-color);
-    }
+    #submit-answer-btn { padding: 0.8rem 2rem; font-size: 1.2rem; font-weight: 600; color: white; background-color: var(--brand); border: none; border-radius: var(--btn-radius); cursor: pointer; transition: background-color var(--transition), transform var(--transition); box-shadow: 0 4px 6px var(--shadow-color); }
     #submit-answer-btn:hover { background-color: var(--brand-dark); transform: translateY(-2px); }
     #submit-answer-btn:active { transform: scale(0.98); }
     #submit-answer-btn:disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; }
-
 
     #controls{ position: fixed; bottom: 0; left: 0; width: 100%; display:flex;justify-content:space-around; align-items:center; padding:0.5rem 1rem; height: 70px; background-color: rgba(255,255,255,0.3); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 50; }
     #timer-display{ padding:.6rem 1rem;background:var(--btn-bg);border:2px solid var(--btn-border);border-radius:var(--btn-radius); font-weight:600;cursor:pointer; box-shadow: 0 2px 4px var(--shadow-color); font-size: 0.9rem; }
@@ -126,8 +114,17 @@
   <div id="mascot-container"> <lottie-player src="https://lottie.host/449f9829-8f92-4a63-85a2-def249781a91/p021aHdt2x.json" background="transparent" speed="1" loop autoplay></lottie-player> </div>
 
   <script>
-    // --- WEB AUDIO API & VANTA (condensed, no changes) ---
+    // --- WEB AUDIO API (condensed) ---
     const audioCtx = new (window.AudioContext||window.webkitAudioContext)(); if (audioCtx) { window.addEventListener('pointerdown', () => { if (audioCtx.state === 'suspended') audioCtx.resume(); }, { once: true }); } function playOsc({ type='sine', freq=440, dur=0.3, modFreq, modIndex, vol=1 }) { if (!audioCtx) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); if (modFreq && modIndex) { const mod = audioCtx.createOscillator(); const mGain = audioCtx.createGain(); mod.frequency.setValueAtTime(modFreq, audioCtx.currentTime); mGain.gain.setValueAtTime(modIndex, audioCtx.currentTime); mod.connect(mGain).connect(osc.frequency); mod.start(audioCtx.currentTime); mod.stop(audioCtx.currentTime + dur); } osc.connect(gain); gain.connect(audioCtx.destination); gain.gain.setValueAtTime(vol, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur); osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + dur); } function playBell() { if (!audioCtx) return; playOsc({ type:'sine', freq:660, dur:0.3, vol: 0.6 }); setTimeout(() => playOsc({ type:'sine', freq:880, dur:0.3, vol: 0.6 }), 120); } function playBuzz() { if (!audioCtx) return; playOsc({ type:'square', freq:150, dur:0.4, vol: 0.4 }); }
+    
+    // --- PRONUNCIATION MAP for TTS ---
+    const pronunciationMap = {
+      "I": "I." // TTS will read "I." which usually forces the pronoun "I" sound
+      // Add other problematic words here if they arise, e.g.:
+      // "a": "a." 
+    };
+
+    // --- VANTA.JS DYNAMIC BACKGROUNDS (condensed) ---
     let vantaEffect = null; const vantaElement = document.body; let vantaBackgroundKeys = []; let currentBackgroundKey = null; const baseGlobalParams = { mouseControls: true, touchControls: true, gyroControls: false, minHeight: 200.00, minWidth: 200.00, scale: 1.00, scaleMobile: 1.00, }; const effectConfigurations = { "FOG_Soft_Blue": { effect: "FOG", params: { highlightColor: 0x80deea, midtoneColor: 0x26c6da, lowlightColor: 0x00acc1, baseColor: 0xf4f6f8, blurFactor: 0.6, zoom: 1.2, speed: 1.0 }}, "WAVES_Ocean": { effect: "WAVES", params: { color: 0x005577, shininess: 30, waveHeight: 15, waveSpeed: 0.8, zoom: 1.0 }}, "BIRDS_Day_Sky": { effect: "BIRDS", params: { backgroundColor: 0x87ceeb, color1: 0x444444, color2: 0x666666, birdSize: 1.0, wingSpan: 20.00, speedLimit: 3.00, separation: 20.00, alignment: 20.00, cohesion: 20.00, quantity: 4 }}, "NET_Cyber_Grid": { effect: "NET", params: { color: 0x00ffff, backgroundColor: 0x000022, points: 10.00, maxDistance: 20.00, spacing: 15.00, showDots: true }}, "CELLS_Bio_Blue": { effect: "CELLS", params: { color1: 0x2196f3, color2: 0x90caf9, size: 3.0, speed: 1.0 }}, "CLOUDS_Sunny_Day": { effect: "CLOUDS", params: { skyColor: 0x68b8d7, cloudColor: 0xadc1de, cloudShadowColor: 0x183550, sunColor: 0xff9919, sunGlareColor: 0xff6633, sunlightColor: 0xff9933, speed: 1.0 }}, "DOTS_Starfield": { effect: "DOTS", params: { color: 0xffffff, color2: 0xdddddd, backgroundColor: 0x000011, size: 3.00, spacing: 30.00, showLines: false }}, "RINGS_Golden_Aura": { effect: "RINGS", params: { backgroundColor: 0x110022, color: 0xffd700, strength: 2.00 }}, "HALO_Gentle_Sun": { effect: "HALO", params: { baseColor: 0xffe082, backgroundColor: 0xfff8e1, amplitudeFactor: 0.5, size: 1.0 }}, "FOG_Mystic_Purple": { effect: "FOG", params: { highlightColor: 0xff00ff, midtoneColor: 0xaa00aa, lowlightColor: 0x550055, baseColor: 0x300030, blurFactor: 0.7, zoom: 1.0, speed: 0.8 }}, "WAVES_Lava": { effect: "WAVES", params: { color: 0xff3300, shininess: 10, waveHeight: 25, waveSpeed: 0.4, zoom: 0.75 }}, "BIRDS_Sunset": { effect: "BIRDS", params: { backgroundColor: 0xffa07a, color1: 0x5d4037, color2: 0x000000, birdSize: 1.2, wingSpan: 25.00, quantity: 3, speedLimit: 2.00 }}, "NET_Golden_Web": { effect: "NET", params: { color: 0xffd700, backgroundColor: 0x301934, points: 8.00, maxDistance: 25.00, spacing: 20.00, showDots: true }}, "CELLS_Pulsing_Red": { effect: "CELLS", params: { color1: 0xf44336, color2: 0xffcdd2, size: 4.5, speed: 0.5 }}, "CLOUDS_Evening_Sky": { effect: "CLOUDS", params: { skyColor: 0x334d5c, cloudColor: 0x8e8e8e, cloudShadowColor: 0x2e2e2e, sunColor: 0xf57c00, sunGlareColor: 0xffb74d, sunlightColor: 0xffa726, speed: 0.6 }}, "DOTS_Colorful_Grid": { effect: "DOTS", params: { color: 0xff00ff, color2: 0x00ff00, backgroundColor: 0x222222, size: 5.00, spacing: 25.00, showLines: true }}, "RINGS_Blue_Energy": { effect: "RINGS", params: { backgroundColor: 0x001020, color: 0x00aaff, strength: 3.50 }}, "HALO_Deep_Space": { effect: "HALO", params: { baseColor: 0x7e57c2, backgroundColor: 0x1a001a, amplitudeFactor: 1.5, size: 1.2, xOffset: 0.2, yOffset: 0.1 }} }; function applyVantaEffect(configKey) { if (vantaEffect) { try { vantaEffect.destroy(); } catch (e) { console.error("Err destroy vanta:", e); } vantaEffect = null; } const config = effectConfigurations[configKey]; if (!config || typeof VANTA === 'undefined' || typeof VANTA[config.effect] !== 'function') { console.error(`Vanta effect ${configKey} error.`); return; } const finalParams = { el: vantaElement, ...baseGlobalParams, ...config.params }; try { vantaEffect = VANTA[config.effect](finalParams); currentBackgroundKey = configKey; } catch (error) { console.error(`Err init Vanta '${config.effect}':`, error); vantaEffect = null; } }
 
     const words = [ "a","all","am","and","away","be","big","blue","but","can","come", "did","down","find","for","funny","go","good","he","help","here","I", "in","is","it","like","little","look","make","me","my","no","not", "on","one","play","ran","red","run","said","see","so","that","the", "three","to","two","up","was","we","what","where","yellow","yes","you" ];
@@ -153,14 +150,14 @@
     // --- GAME STATE ---
     let circleTimerInstance;
     let questionTimeoutId; 
-    let questionAnsweredThisTurn = false; // Used to gate processing after submit/timeout
+    let questionAnsweredThisTurn = false;
     let score = 0;
     let timeLimit = 10; 
     let currentCorrectWord = "";
     let currentStreak = 0;
     const streakThresholds = {3: "Streak x3!", 5: "Super Streak x5!", 10: "AMAZING x10!"};
     let currentGameMode = localStorage.getItem('sightWordsGameMode') || 'listenAndPickWord';
-    let selectedSoundButton = null; // For Read & Pick Sound mode
+    let selectedSoundButton = null;
 
     // ---- INITIALIZATION ----
     document.addEventListener('DOMContentLoaded', () => {
@@ -188,7 +185,7 @@
             readPickSoundArea.style.display = 'flex';
             modeToggleBtn.textContent = 'Mode: Read';
             listenBtn.innerHTML = '📖';
-            submitAnswerBtn.disabled = true; // Initially disable submit
+            if(submitAnswerBtn) submitAnswerBtn.disabled = true;
         }
     }
 
@@ -209,9 +206,22 @@
         if (submitAnswerBtn) submitAnswerBtn.disabled = true;
     }
 
-    function initCircularTimer() { /* ... */ const timerContainer = document.getElementById('circular-timer'); if (!timerContainer) return; circleTimerInstance = new ProgressBar.Circle(timerContainer, { strokeWidth: 10, easing: 'linear', color: 'var(--brand)', trailColor: 'rgba(224, 224, 224, 0.5)', trailWidth: 10, svgStyle: { width: '100%', height: '100%' }, text: { style: { color: 'var(--fg)', position: 'absolute', left: '50%', top: '50%', padding: 0, margin: 0, transform: { prefix: true, value: 'translate(-50%, -50%)' }, fontSize: '1.4em', fontWeight: '600', }, autoStyleContainer: false }, step: function(state, circle) { if (timeLimit > 0) { const timeLeft = Math.ceil(timeLimit * (1 - circle.value())); circle.setText(timeLeft > 0 ? timeLeft : '0'); if (timeLeft <= timeLimit * 0.3) circle.path.setAttribute('stroke', '#f44336'); else if (timeLeft <= timeLimit * 0.6) circle.path.setAttribute('stroke', '#ff9800'); else circle.path.setAttribute('stroke', 'var(--brand)'); } else { circle.setText('∞'); circle.path.setAttribute('stroke', 'var(--brand)'); } } }); }
-    function speak(txt){ /* ... */ if('speechSynthesis' in window){ speechSynthesis.cancel(); let u = new SpeechSynthesisUtterance(txt); u.rate = 0.9; u.pitch = 1.1; speechSynthesis.speak(u); } }
-    function startCountdown(onDoneCallback){ /* ... */ clearTimeout(questionTimeoutId); if(circleTimerInstance){ circleTimerInstance.set(0); circleTimerInstance.setText(timeLimit > 0 ? String(timeLimit) : '∞'); circleTimerInstance.path.setAttribute('stroke', 'var(--brand)'); if(timeLimit <= 0) return; circleTimerInstance.animate(1.0, { duration: timeLimit * 1000 }); questionTimeoutId = setTimeout(() => { if (!questionAnsweredThisTurn) onDoneCallback(); }, timeLimit * 1000); } }
+    function initCircularTimer() { const timerContainer = document.getElementById('circular-timer'); if (!timerContainer) return; circleTimerInstance = new ProgressBar.Circle(timerContainer, { strokeWidth: 10, easing: 'linear', color: 'var(--brand)', trailColor: 'rgba(224, 224, 224, 0.5)', trailWidth: 10, svgStyle: { width: '100%', height: '100%' }, text: { style: { color: 'var(--fg)', position: 'absolute', left: '50%', top: '50%', padding: 0, margin: 0, transform: { prefix: true, value: 'translate(-50%, -50%)' }, fontSize: '1.4em', fontWeight: '600', }, autoStyleContainer: false }, step: function(state, circle) { if (timeLimit > 0) { const timeLeft = Math.ceil(timeLimit * (1 - circle.value())); circle.setText(timeLeft > 0 ? timeLeft : '0'); if (timeLeft <= timeLimit * 0.3) circle.path.setAttribute('stroke', '#f44336'); else if (timeLeft <= timeLimit * 0.6) circle.path.setAttribute('stroke', '#ff9800'); else circle.path.setAttribute('stroke', 'var(--brand)'); } else { circle.setText('∞'); circle.path.setAttribute('stroke', 'var(--brand)'); } } }); }
+    
+    // --- Speak helper (MODIFIED with pronunciationMap) ---
+    function speak(txt){
+      if('speechSynthesis' in window){
+        speechSynthesis.cancel();
+        let textToSpeak = pronunciationMap[txt] || txt;
+        let u = new SpeechSynthesisUtterance(textToSpeak);
+        u.rate = 0.9; 
+        u.pitch = 1.1;
+        speechSynthesis.speak(u);
+      }
+    }
+    // --- END Speak helper ---
+
+    function startCountdown(onDoneCallback){ clearTimeout(questionTimeoutId); if(circleTimerInstance){ circleTimerInstance.set(0); circleTimerInstance.setText(timeLimit > 0 ? String(timeLimit) : '∞'); circleTimerInstance.path.setAttribute('stroke', 'var(--brand)'); if(timeLimit <= 0) return; circleTimerInstance.animate(1.0, { duration: timeLimit * 1000 }); questionTimeoutId = setTimeout(() => { if (!questionAnsweredThisTurn) onDoneCallback(); }, timeLimit * 1000); } }
 
     function nextQ(){
       resetQuestionState();
@@ -235,11 +245,11 @@
             btn.disabled = false;
             btn.className = 'choice-btn sound-btn';
         });
-        submitAnswerBtn.disabled = true; // Ensure submit is disabled at start of new question
+        if(submitAnswerBtn) submitAnswerBtn.disabled = true;
       }
 
       startCountdown(()=>{ 
-        if (questionAnsweredThisTurn) return; // Already handled by submission
+        if (questionAnsweredThisTurn) return;
         questionAnsweredThisTurn = true;
         disableAllChoiceButtons();
         playBuzz(); 
@@ -260,12 +270,12 @@
         questionAnsweredThisTurn = true;
 
         clearTimeout(questionTimeoutId);
-        disableAllChoiceButtons(); // Disables all, including submit if it was enabled
+        disableAllChoiceButtons();
 
         if(isCorrect){
           playBell();
           scoreVal.textContent = ++score;
-          if (score > 0 && score % 10 === 0 && vantaBackgroundKeys.length > 0) { /* Vanta change */ const bgIndex = (score / 10) % vantaBackgroundKeys.length; if (vantaBackgroundKeys[bgIndex] !== currentBackgroundKey) applyVantaEffect(vantaBackgroundKeys[bgIndex]); }
+          if (score > 0 && score % 10 === 0 && vantaBackgroundKeys.length > 0) { const bgIndex = (score / 10) % vantaBackgroundKeys.length; if (vantaBackgroundKeys[bgIndex] !== currentBackgroundKey) applyVantaEffect(vantaBackgroundKeys[bgIndex]); }
           targetButtonElement.classList.add('correct', 'animate__animated', 'animate__pulse');
           myConfetti({ particleCount:80, spread:100, origin: { y: 0.6 } });
           showFloatingScore("+1 Awesome!", targetButtonElement);
@@ -281,7 +291,6 @@
         }
         
         targetButtonElement.addEventListener('animationend',()=>{ targetButtonElement.classList.remove('animate__animated', 'animate__pulse', 'animate__shakeX', 'sound-btn-selected'); }, { once:true });
-        // Ensure selected class is removed from all sound buttons after feedback regardless of which was target
         soundChoiceBtns.forEach(btn => btn.classList.remove('sound-btn-selected'));
         
         setTimeout(nextQ, isCorrect ? 1000 : 1800); 
@@ -298,22 +307,17 @@
     soundChoiceBtns.forEach(btn => { // Read & Pick Sound Mode - Selection Step
         btn.addEventListener('click', () => {
             if (questionAnsweredThisTurn || currentGameMode !== 'readAndPickSound') return;
-            
             const wordToSpeak = btn.dataset.wordToSpeak;
             speak(wordToSpeak);
-
-            if (selectedSoundButton && selectedSoundButton !== btn) {
-                selectedSoundButton.classList.remove('sound-btn-selected');
-            }
+            if (selectedSoundButton && selectedSoundButton !== btn) { selectedSoundButton.classList.remove('sound-btn-selected'); }
             btn.classList.add('sound-btn-selected');
             selectedSoundButton = btn;
-            submitAnswerBtn.disabled = false;
+            if(submitAnswerBtn) submitAnswerBtn.disabled = false;
         });
     });
 
     submitAnswerBtn.addEventListener('click', () => { // Read & Pick Sound Mode - Submission Step
         if (questionAnsweredThisTurn || currentGameMode !== 'readAndPickSound' || !selectedSoundButton) return;
-        
         const wordSpokenBySelectedButton = selectedSoundButton.dataset.wordToSpeak;
         const isCorrect = wordSpokenBySelectedButton === currentCorrectWord;
         handleAnswer(isCorrect, selectedSoundButton);
@@ -323,8 +327,8 @@
     timerDisp.addEventListener('click',()=>{ timerSel.style.display = timerSel.style.display==='block'?'none':'block'; timerSel.value = timeLimit; });
     timerSel.addEventListener('change',()=>{ timeLimit = +timerSel.value; timerDisp.textContent = timeLimit > 0 ? timeLimit+'s ⏱️' : 'Untimed ⏱️'; timerSel.style.display='none';});
 
-    function showFloatingScore(message, targetButton, isError = false) { /* ... */ const floatEl = document.createElement('div'); floatEl.textContent = message; floatEl.classList.add('floating-effect'); floatEl.classList.add(isError ? 'floating-message' : 'floating-score'); if(isError) {floatEl.style.backgroundColor = 'var(--incorrect-bg)'; floatEl.style.color = '#333';} document.body.appendChild(floatEl); const btnRect = targetButton.getBoundingClientRect(); floatEl.style.left = `${btnRect.left + btnRect.width / 2 - floatEl.offsetWidth / 2}px`; floatEl.style.top = `${btnRect.top - floatEl.offsetHeight - 10}px`; gsap.to(floatEl, { y: -60, opacity: 0, duration: 1.8, ease: 'power1.out', onComplete: () => floatEl.remove() }); }
-    function showFloatingMessage(text, bgColor = 'var(--brand)', textColor = 'white') { /* ... */ const msgEl = document.createElement('div'); msgEl.textContent = text; msgEl.classList.add('floating-effect', 'floating-message'); msgEl.style.backgroundColor = bgColor; msgEl.style.color = textColor; msgEl.style.left = '50%'; msgEl.style.top = '15%'; msgEl.style.transform = 'translateX(-50%)'; msgEl.style.padding = '0.8rem 1.5rem'; msgEl.style.fontSize = '1.5em'; document.body.appendChild(msgEl); gsap.fromTo(msgEl, { opacity: 0, y: -20, scale: 0.8 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'back.out(1.7)' } ); setTimeout(() => { gsap.to(msgEl, { opacity: 0, y: 20, scale: 0.8, duration: 0.5, ease: 'back.in(1.7)', onComplete: () => msgEl.remove() }); }, 2300); }
+    function showFloatingScore(message, targetButton, isError = false) { const floatEl = document.createElement('div'); floatEl.textContent = message; floatEl.classList.add('floating-effect'); floatEl.classList.add(isError ? 'floating-message' : 'floating-score'); if(isError) {floatEl.style.backgroundColor = 'var(--incorrect-bg)'; floatEl.style.color = '#333';} document.body.appendChild(floatEl); const btnRect = targetButton.getBoundingClientRect(); floatEl.style.left = `${btnRect.left + btnRect.width / 2 - floatEl.offsetWidth / 2}px`; floatEl.style.top = `${btnRect.top - floatEl.offsetHeight - 10}px`; gsap.to(floatEl, { y: -60, opacity: 0, duration: 1.8, ease: 'power1.out', onComplete: () => floatEl.remove() }); }
+    function showFloatingMessage(text, bgColor = 'var(--brand)', textColor = 'white') { const msgEl = document.createElement('div'); msgEl.textContent = text; msgEl.classList.add('floating-effect', 'floating-message'); msgEl.style.backgroundColor = bgColor; msgEl.style.color = textColor; msgEl.style.left = '50%'; msgEl.style.top = '15%'; msgEl.style.transform = 'translateX(-50%)'; msgEl.style.padding = '0.8rem 1.5rem'; msgEl.style.fontSize = '1.5em'; document.body.appendChild(msgEl); gsap.fromTo(msgEl, { opacity: 0, y: -20, scale: 0.8 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'back.out(1.7)' } ); setTimeout(() => { gsap.to(msgEl, { opacity: 0, y: 20, scale: 0.8, duration: 0.5, ease: 'back.in(1.7)', onComplete: () => msgEl.remove() }); }, 2300); }
   </script>
 </body>
 </html>
