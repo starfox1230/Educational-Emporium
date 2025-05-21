@@ -2,98 +2,68 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Howler Sound Test</title>
+  <title>Howler Unlock Pattern Test</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
-    body { font-family: sans-serif; padding: 2rem; background: #f4f4f4; }
-    h1 { margin-bottom: 1rem; }
+    body { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center; 
+      height: 100vh; 
+      margin: 0; 
+      font-family: sans-serif; 
+      background: #f4f4f4; 
+    }
     button {
-      display: block;
-      width: 100%;
-      max-width: 300px;
-      margin: .5rem 0;
-      padding: 1rem;
-      font-size: 1rem;
+      padding: 1rem 2rem;
+      font-size: 1.2rem;
       border: none;
       border-radius: 8px;
       background: #26c6da;
       color: white;
       cursor: pointer;
+      margin: .5rem;
     }
-    button:nth-child(odd) { background: #00acc1; }
+    #log {
+      margin-top: 1rem;
+      font-size: .9rem;
+      color: #333;
+    }
   </style>
 </head>
 <body>
 
-  <h1>🔊 Sound Test</h1>
+  <button id="play-btn">Play Howler Sound</button>
+  <div id="log">Tap the button to test…</div>
 
-  <button id="btn-default">1️⃣ Howl (WebAudio, direct)</button>
-  <button id="btn-html5">2️⃣ Howl (html5: true)</button>
-  <button id="btn-resume">3️⃣ Howl (resume AudioContext)</button>
-  <button id="btn-audio">4️⃣ Native Audio() fallback</button>
-
-  <!-- Howler.js from CDN -->
+  <!-- Howler.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
   <script>
-    // same sample sound for all tests
-    const SOUND_SRC = ['https://cdn.pixabay.com/download/audio/2022/03/15/audio_e8e5cbb2b4.mp3?filename=correct-2-46134.mp3'];
-
-    // 1. Default Howl (WebAudio by default)
-    const soundDefault = new Howl({
-      src: SOUND_SRC,
+    // 1) prepare a simple chime
+    const testSound = new Howl({
+      src: ['https://cdn.pixabay.com/download/audio/2022/03/15/audio_e8e5cbb2b4.mp3?filename=correct-2-46134.mp3'],
       volume: 0.7,
-      preload: true
+      preload: true   // start loading as soon as possible
     });
 
-    // 2. Howl with html5: true
-    const soundHtml5 = new Howl({
-      src: SOUND_SRC,
-      volume: 0.7,
-      html5: true,
-      preload: true
-    });
+    // 2) on button tap, resume Howler.ctx if suspended, then play
+    document.getElementById('play-btn').addEventListener('click', () => {
+      const log = msg => document.getElementById('log').textContent = msg;
 
-    // 3. Howl + manual resume of AudioContext on demand
-    const soundResume = new Howl({
-      src: SOUND_SRC,
-      volume: 0.7,
-      preload: true
-    });
-
-    function testDefault() {
-      console.log('Default state:', soundDefault.state());
-      soundDefault.play();
-    }
-    function testHtml5() {
-      console.log('HTML5 state:', soundHtml5.state());
-      soundHtml5.play();
-    }
-    function testResume() {
-      // Try resume AudioContext first, then play
       if (Howler.ctx && Howler.ctx.state === 'suspended') {
+        log('Resuming Howler AudioContext…');
         Howler.ctx.resume().then(() => {
-          console.log('AudioContext resumed');
-          soundResume.play();
+          log('AudioContext resumed, now playing.');
+          testSound.play();
+        }).catch(err => {
+          log('Resume failed: ' + err);
         });
       } else {
-        soundResume.play();
+        log('AudioContext already running, playing now.');
+        testSound.play();
       }
-    }
-
-    // 4. Native HTML5 Audio fallback
-    const audioFallback = new Audio(SOUND_SRC[0]);
-    audioFallback.preload = 'auto';
-    function testAudio() {
-      console.log('Audio src:', audioFallback.src);
-      audioFallback.currentTime = 0;
-      audioFallback.play().catch(e => console.warn('Audio() play error:', e));
-    }
-
-    // wire up buttons
-    document.getElementById('btn-default').addEventListener('click', testDefault);
-    document.getElementById('btn-html5').addEventListener('click', testHtml5);
-    document.getElementById('btn-resume').addEventListener('click', testResume);
-    document.getElementById('btn-audio').addEventListener('click', testAudio);
+    });
   </script>
 </body>
 </html>
