@@ -404,7 +404,124 @@
     }
 
     // --- MINI-GAME DEFINITIONS ---
-
+    const CatchTheStarGame = {
+        name: "Catch the Star",
+        score: 0,
+        gameTimerId: null,
+        starIntervalId: null,
+        timerIntervalId: null,
+        container: null,
+        onCompleteCallback: null,
+        duration: 20000, // 20 seconds
+        starsOnScreen: [],
+        elements: {},
+    
+        start: function(containerElement, onComplete) {
+            this.container = containerElement;
+            this.onCompleteCallback = onComplete;
+            this.score = 0;
+            this.starsOnScreen = [];
+            this.container.innerHTML = '';
+    
+            speak("Catch the falling stars!");
+    
+            // Info bar for score & timer
+            const infoBar = document.createElement('div');
+            infoBar.className = 'minigame-info-bar';
+            this.elements.scoreDisplay = document.createElement('div');
+            this.elements.scoreDisplay.className = 'minigame-score';
+            infoBar.appendChild(this.elements.scoreDisplay);
+            this.updateScoreDisplay();
+    
+            const timerContainer = document.createElement('div');
+            timerContainer.className = 'minigame-timer-bar-container';
+            this.elements.timerBar = document.createElement('div');
+            this.elements.timerBar.className = 'minigame-timer-bar';
+            timerContainer.appendChild(this.elements.timerBar);
+            infoBar.appendChild(timerContainer);
+            this.container.appendChild(infoBar);
+    
+            let timeLeft = this.duration;
+            this.elements.timerBar.style.width = '100%';
+            this.timerIntervalId = setInterval(() => {
+                timeLeft -= 100;
+                const progress = Math.max(0, (timeLeft / this.duration) * 100);
+                this.elements.timerBar.style.width = `${progress}%`;
+                if (timeLeft <= 0) clearInterval(this.timerIntervalId);
+            }, 100);
+    
+            this.starIntervalId = setInterval(() => this.spawnStar(), 700);
+            this.gameTimerId = setTimeout(() => this.endGame(), this.duration);
+        },
+    
+        spawnStar: function() {
+            if (!this.container || this.starsOnScreen.length > 10) return;
+            const star = document.createElement('div');
+            star.style.position = 'absolute';
+            star.style.width = '40px';
+            star.style.height = '40px';
+            star.style.left = `${Math.random() * (this.container.clientWidth - 40)}px`;
+            star.style.top = `-40px`;
+            star.style.fontSize = '2.2rem';
+            star.style.userSelect = 'none';
+            star.style.cursor = 'pointer';
+            star.style.transition = 'top 1.7s linear';
+            star.textContent = '⭐';
+            this.container.appendChild(star);
+            this.starsOnScreen.push(star);
+    
+            // Move down
+            setTimeout(() => {
+                star.style.top = `${this.container.clientHeight - 40}px`;
+            }, 30);
+    
+            // Remove if not caught
+            const removeTimeout = setTimeout(() => {
+                if (this.container.contains(star)) {
+                    this.container.removeChild(star);
+                    this.starsOnScreen = this.starsOnScreen.filter(s => s !== star);
+                }
+            }, 1700);
+    
+            star.addEventListener('click', () => {
+                clearTimeout(removeTimeout);
+                playBell();
+                const rect = star.getBoundingClientRect();
+                const x = (rect.left + rect.right) / 2 / window.innerWidth;
+                const y = (rect.top + rect.bottom) / 2 / window.innerHeight;
+                myConfetti({ particleCount: 15, spread: 35, origin: { x: x, y: y }, scalar: 0.5 });
+                this.score++;
+                speak(this.score, 1.2, 1.3);
+                this.updateScoreDisplay();
+                this.container.removeChild(star);
+                this.starsOnScreen = this.starsOnScreen.filter(s => s !== star);
+            }, { once: true });
+        },
+    
+        updateScoreDisplay: function() {
+            if(this.elements.scoreDisplay) this.elements.scoreDisplay.textContent = `Stars: ${this.score}`;
+        },
+    
+        endGame: function() {
+            clearInterval(this.starIntervalId);
+            clearInterval(this.timerIntervalId);
+            clearTimeout(this.gameTimerId);
+            this.starsOnScreen.forEach(s => s.remove());
+            this.starsOnScreen = [];
+            speak(`You caught ${this.score} stars!`);
+            if(this.onCompleteCallback) this.onCompleteCallback(this.score);
+        },
+    
+        destroy: function() {
+            clearInterval(this.starIntervalId);
+            clearInterval(this.timerIntervalId);
+            clearTimeout(this.gameTimerId);
+            this.starsOnScreen.forEach(s => s.remove());
+            this.starsOnScreen = [];
+            if (this.container) this.container.innerHTML = '';
+            this.elements = {};
+        }
+    };
     const BalloonPopGame = {
         name: "Balloon Pop",
         score: 0,
@@ -674,7 +791,7 @@
 
     // --- MINI-GAME SYSTEM ---
     function initMiniGameSystem() {
-        availableMiniGames.push(BalloonPopGame, BouncePartyGame); // Register games
+        availableMiniGames.push(CatchTheStarGame, BalloonPopGame, BouncePartyGame); // Register games
         
         toggleMiniGamesBtn.textContent = `Mini-Games: ${miniGamesEnabled ? 'On' : 'Off'}`;
         if (miniGamesEnabled) {
