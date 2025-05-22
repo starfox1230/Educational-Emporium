@@ -86,11 +86,43 @@
     .floating-message { background: var(--brand); }
 
     /* Level Selection Styles */
-    #level-controls-container { position: relative; margin-left: auto; display: flex; align-items: center;}
-    #levels-toggle-btn { padding: 0.6rem 1rem; font-size: 0.9rem; font-weight: 600; background-color: var(--btn-bg); border: 2px solid var(--btn-border); border-radius: var(--btn-radius); cursor: pointer; box-shadow: 0 2px 4px var(--shadow-color); }
-    #levels-dropdown-menu { display: none; position: absolute; top: calc(100% + 5px); right: 0; background-color: white; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 100; padding: 0.5rem 0; min-width: 150px; }
+    #level-controls-container {
+      position: relative;
+      display: flex;
+      flex-direction: column;     /* Stack buttons vertically */
+      align-items: flex-end;      /* Right-align both buttons */
+      gap: 0.2rem;                /* Reduced vertical space between buttons for compactness in top bar */
+    }
+    #levels-toggle-btn, #toggle-minigames-btn { /* Shared styles for consistency */
+        padding: 0.4rem 0.8rem; /* Adjusted padding for smaller buttons */
+        font-size: 0.8rem; /* Adjusted font size */
+        font-weight: 600; 
+        background-color: var(--btn-bg); 
+        border: 2px solid var(--btn-border); 
+        border-radius: var(--btn-radius); 
+        cursor: pointer; 
+        box-shadow: 0 2px 4px var(--shadow-color);
+        width: 120px; /* Fixed width for buttons */
+        text-align: center; 
+    }
+    #levels-dropdown-menu { 
+        display: none; 
+        position: absolute; 
+        /* Positioned relative to the #level-controls-container, below the "Levels" button */
+        /* The "Levels" button is the second child. Its top edge is after the first button and the gap. */
+        /* Height of one button (approx 30-35px after padding reduction) + gap */
+        top: calc( (0.4rem * 2 + 0.8rem + 2px * 2) + 0.2rem + (0.4rem * 2 + 0.8rem + 2px * 2) ); /* Height of minigame + gap + height of level button */
+        right: 0; 
+        background-color: white; 
+        border: 1px solid #ccc; 
+        border-radius: 8px; 
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+        z-index: 100; 
+        padding: 0.5rem 0; 
+        min-width: 120px; /* Match button width */
+    }
     #levels-dropdown-menu.visible { display: block; }
-    .level-item { padding: 0.75rem 1.25rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; }
+    .level-item { padding: 0.6rem 1rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; font-size:0.8rem; }
     .level-item:hover { background-color: #f0f0f0; }
     .level-item.selected { background-color: var(--brand-light); color: var(--brand-dark); font-weight: 600; }
     .level-item .long-press-indicator { font-size: 0.7em; color: #777; margin-left: 8px; }
@@ -115,18 +147,6 @@
     .hidden { display: none !important; }
 
     /* Mini-Game Styles */
-    #toggle-minigames-btn {
-        padding: 0.6rem 0.8rem;
-        font-size: 0.9rem;
-        background-color: var(--btn-bg);
-        border: 2px solid var(--btn-border);
-        border-radius: var(--btn-radius);
-        box-shadow: 0 2px 4px var(--shadow-color);
-        cursor: pointer;
-        margin-left: 10px; /* Space from level selector */
-        font-weight: 600;
-        color: var(--fg);
-    }
     #toggle-minigames-btn.active-minigame-toggle { /* Unique class to avoid conflict */
         background-color: var(--brand-light);
         color: var(--brand-dark);
@@ -190,9 +210,6 @@
         position: absolute;
         cursor: pointer;
         user-select: none;
-        /* bottom: -100px; will be set by JS for animation start */
-        /* left: will be random */
-        /* background-color: will be random */
         display: flex;
         justify-content: center;
         align-items: flex-end; /* for the string */
@@ -238,11 +255,11 @@
     <div id="score">Score: <span id="score-val">0</span></div>
     <div id="timer-wrapper"><div id="circular-timer"></div></div>
     <div id="level-controls-container">
+        <button id="toggle-minigames-btn">Mini-Games: Off</button>
         <button id="levels-toggle-btn">Levels</button>
         <div id="levels-dropdown-menu">
             <!-- Level items will be populated by JS -->
         </div>
-        <button id="toggle-minigames-btn">Mini-Games: Off</button>
     </div>
   </div>
 
@@ -463,7 +480,7 @@
             balloon.addEventListener('animationend', () => {
                 const index = this.balloonsOnScreen.indexOf(balloon);
                 if (index > -1) this.balloonsOnScreen.splice(index, 1);
-                balloon.remove();
+                if (balloon.parentNode) balloon.remove(); // Check if still in DOM
             }, { once: true });
         },
 
@@ -481,7 +498,7 @@
             speak(this.score, 1.2, 1.3); // Faster, higher pitch for pops
             this.updateScoreDisplay();
 
-            balloonElement.remove(); // Remove from DOM
+            if (balloonElement.parentNode) balloonElement.remove(); // Remove from DOM
             const index = this.balloonsOnScreen.indexOf(balloonElement);
             if (index > -1) this.balloonsOnScreen.splice(index, 1);
         },
@@ -500,7 +517,7 @@
             this.gameTimerId = null;
             
             // Remove any remaining balloons quickly
-            this.balloonsOnScreen.forEach(b => b.remove());
+            this.balloonsOnScreen.forEach(b => { if (b.parentNode) b.remove() });
             this.balloonsOnScreen = [];
 
             speak(`You popped ${this.score} balloons!`);
@@ -511,7 +528,7 @@
             clearInterval(this.balloonIntervalId);
             clearInterval(this.timerIntervalId);
             clearTimeout(this.gameTimerId);
-            this.balloonsOnScreen.forEach(b => b.remove());
+            this.balloonsOnScreen.forEach(b => { if (b.parentNode) b.remove() });
             this.balloonsOnScreen = [];
             if (this.container) this.container.innerHTML = '';
             this.elements = {};
@@ -567,7 +584,8 @@
             this.ballElement.style.left = `${ballInitialX}px`;
             this.ballElement.style.top = `${this.ballPosY}px`; // Use top for Y positioning
 
-            this.ballElement.addEventListener('click', () => this.handleTap());
+            this.boundHandleTap = this.handleTap.bind(this); // Bind once
+            this.ballElement.addEventListener('click', this.boundHandleTap);
             
             this.gameLoop = this.gameLoop.bind(this); // Bind context for rAF
             this.animationFrameId = requestAnimationFrame(this.gameLoop);
@@ -632,6 +650,10 @@
             clearTimeout(this.gameTimerId);
             this.gameTimerId = null;
             
+            if (this.ballElement && this.boundHandleTap) {
+                this.ballElement.removeEventListener('click', this.boundHandleTap);
+            }
+
             speak(`You bounced the ball ${this.score} times!`);
             if(this.onCompleteCallback) this.onCompleteCallback(this.score);
         },
@@ -640,6 +662,9 @@
             cancelAnimationFrame(this.animationFrameId);
             clearInterval(this.timerDisplayIntervalId);
             clearTimeout(this.gameTimerId);
+            if (this.ballElement && this.boundHandleTap) {
+                this.ballElement.removeEventListener('click', this.boundHandleTap);
+            }
             if (this.container) this.container.innerHTML = '';
             this.ballElement = null;
             this.elements = {};
@@ -670,9 +695,9 @@
             resumeQuizAfterMiniGame(undefined); 
             return;
         }
+        isMiniGameActive = true; // Set flag before starting
 
         miniGameArea.classList.add('active');
-        // Make mini-game area focusable for potential keyboard controls later
         miniGameArea.setAttribute('tabindex', '-1');
         miniGameArea.focus();
 
@@ -680,21 +705,17 @@
         const gameToPlay = availableMiniGames[currentMiniGameIdx];
         currentMiniGameIdx = (currentMiniGameIdx + 1) % availableMiniGames.length;
         
-        // Ensure the game object's state is clean, especially if it's not a class instance
-        // The start method of each game is responsible for resetting its internal state.
-        
         gameToPlay.start(miniGameArea, (miniGameScore) => {
-            // This is the onComplete callback from the mini-game
-            gameToPlay.destroy(); // Important: ensure game cleans itself up
+            gameToPlay.destroy(); 
             miniGameArea.classList.remove('active');
-            resumeQuizAfterMiniGame(miniGameScore);
+            resumeQuizAfterMiniGame(miniGameScore); // isMiniGameActive will be reset here
         });
     }
 
     function resumeQuizAfterMiniGame(miniGameScore) {
-        isMiniGameActive = false;
+        isMiniGameActive = false; // Reset flag
         
-        quizCont.style.display = 'flex'; // Or original display type
+        quizCont.style.display = 'flex'; 
         controlsBar.style.display = 'flex';
         quizCont.classList.add('animate__animated', 'animate__fadeInCustom');
         controlsBar.classList.add('animate__animated', 'animate__fadeInCustom');
@@ -702,22 +723,24 @@
         const animationEndHandler = () => {
             quizCont.classList.remove('animate__animated', 'animate__fadeInCustom');
             controlsBar.classList.remove('animate__animated', 'animate__fadeInCustom');
-            quizCont.removeEventListener('animationend', animationEndHandler); // Clean up listener
+            // quizCont.removeEventListener('animationend', animationEndHandler); // GSAP might not fire animationend
             
             if (miniGameScore !== undefined) {
                 showFloatingMessage(`Mini-Game: ${miniGameScore} points!`, 'var(--brand-light)', 'var(--fg)');
             }
-            setTimeout(nextQ, 300); // Resume quiz with a slight delay for message
+            setTimeout(nextQ, 300); 
         };
-        quizCont.addEventListener('animationend', animationEndHandler, { once: true });
-
-        // Fallback if animationend doesn't fire (e.g., display:none)
-        setTimeout(() => { // Ensure it proceeds even if animationend doesn't fire
-            if (quizCont.classList.contains('animate__fadeInCustom')) {
-                // If animation is still "pending", force cleanup and proceed
-                animationEndHandler();
-            }
-        }, 500); // Max wait for fade in animation
+        // Use GSAP for fade in if available, otherwise rely on CSS animation timeout
+        if (typeof gsap !== 'undefined') {
+            gsap.fromTo([quizCont, controlsBar], {opacity: 0}, {opacity: 1, duration: 0.3, onComplete: animationEndHandler});
+        } else {
+             quizCont.addEventListener('animationend', animationEndHandler, { once: true });
+             setTimeout(() => { 
+                if (quizCont.classList.contains('animate__fadeInCustom')) {
+                    animationEndHandler();
+                }
+            }, 500);
+        }
     }
 
 
@@ -731,10 +754,10 @@
     function disableAllChoiceButtons() { /* ... same ... */ wordChoiceBtns.forEach(b => b.disabled = true); soundChoiceBtns.forEach(b => b.disabled = true); if (submitAnswerBtn) submitAnswerBtn.disabled = true; }
 
     function handleAnswer(isCorrect, targetButtonElement) {
-        if (questionAnsweredThisTurn) return;
+        if (questionAnsweredThisTurn || isMiniGameActive) return; // Prevent handling if mini-game is starting/active
         questionAnsweredThisTurn = true;
 
-        clearTimeout(questionTimeoutId); // Stop countdown for this question
+        clearTimeout(questionTimeoutId); 
         disableAllChoiceButtons();
 
         if(isCorrect){
@@ -761,40 +784,41 @@
 
         targetButtonElement.addEventListener('animationend', () => {
             targetButtonElement.classList.remove('animate__animated', 'animate__pulse', 'animate__shakeX');
-            // Also remove 'sound-btn-selected' if it was a sound button
             if (targetButtonElement.classList.contains('sound-btn')) {
                  targetButtonElement.classList.remove('sound-btn-selected');
             }
-            // General cleanup for all sound buttons if one was selected previously
             soundChoiceBtns.forEach(btn => btn.classList.remove('sound-btn-selected'));
 
-
-            if (isMiniGameDue && !isMiniGameActive) {
-                isMiniGameActive = true;
+            if (isMiniGameDue) { // Check here, as isMiniGameActive is now set inside triggerMiniGame
                 
-                quizCont.classList.add('animate__animated', 'animate__fadeOutCustom');
-                controlsBar.classList.add('animate__animated', 'animate__fadeOutCustom');
+                quizCont.style.opacity = 1; // Ensure it's visible before fading out
+                controlsBar.style.opacity = 1;
 
                 const fadeOutHandler = () => {
                     quizCont.style.display = 'none';
                     controlsBar.style.display = 'none';
-                    quizCont.classList.remove('animate__animated', 'animate__fadeOutCustom');
-                    controlsBar.classList.remove('animate__animated', 'animate__fadeOutCustom');
-                    quizCont.removeEventListener('animationend', fadeOutHandler);
-                    
-                    triggerMiniGame();
+                    triggerMiniGame(); // isMiniGameActive will be true inside this call
                 };
-                quizCont.addEventListener('animationend', fadeOutHandler, { once: true });
-                // Fallback for fadeOutHandler
-                setTimeout(() => {
-                    if (quizCont.classList.contains('animate__fadeOutCustom')) {
+
+                if (typeof gsap !== 'undefined') {
+                    gsap.to([quizCont, controlsBar], {opacity: 0, duration: 0.3, onComplete: fadeOutHandler});
+                } else {
+                    quizCont.classList.add('animate__animated', 'animate__fadeOutCustom');
+                    controlsBar.classList.add('animate__animated', 'animate__fadeOutCustom');
+                    quizCont.addEventListener('animationend', function tempFadeOutListener() {
+                        quizCont.classList.remove('animate__animated', 'animate__fadeOutCustom');
+                        controlsBar.classList.remove('animate__animated', 'animate__fadeOutCustom');
                         fadeOutHandler();
-                    }
-                }, 400);
-
-
+                        quizCont.removeEventListener('animationend', tempFadeOutListener);
+                    }, { once: true });
+                     setTimeout(() => { 
+                        if (quizCont.classList.contains('animate__fadeOutCustom')) {
+                            fadeOutHandler();
+                        }
+                    }, 400);
+                }
             } else {
-                setTimeout(nextQ, 100); // Short delay after animation for next question
+                setTimeout(nextQ, 100); 
             }
         }, { once: true });
     }
@@ -809,7 +833,7 @@
     function showFloatingMessage(text, bgColor = 'var(--brand)', textColor = 'white') { /* ... same ... */ const msgEl = document.createElement('div'); msgEl.textContent = text; msgEl.classList.add('floating-effect', 'floating-message'); msgEl.style.backgroundColor = bgColor; msgEl.style.color = textColor; msgEl.style.left = '50%'; msgEl.style.top = '15%'; msgEl.style.transform = 'translateX(-50%)'; msgEl.style.padding = '0.8rem 1.5rem'; msgEl.style.fontSize = '1.5em'; document.body.appendChild(msgEl); gsap.fromTo(msgEl, { opacity: 0, y: -20, scale: 0.8 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'back.out(1.7)' } ); setTimeout(() => { gsap.to(msgEl, { opacity: 0, y: 20, scale: 0.8, duration: 0.5, ease: 'back.in(1.7)', onComplete: () => msgEl.remove() }); }, 2300); }
 
     // --- LEVEL MANAGEMENT (same as before) ---
-    function initLevelManagement() { /* ... same ... */ const storedLevels = localStorage.getItem('sightWordsSelectedLevels'); selectedLevels = storedLevels ? JSON.parse(storedLevels) : ['A']; Object.keys(allLevelWords).forEach(levelKey => { const levelItem = document.createElement('div'); levelItem.classList.add('level-item'); levelItem.dataset.level = levelKey; levelItem.textContent = `Level ${levelKey}`; const longPressHint = document.createElement('span'); longPressHint.classList.add('long-press-indicator'); longPressHint.textContent = '(hold to customize)'; levelItem.appendChild(longPressHint); if (selectedLevels.includes(levelKey)) { levelItem.classList.add('selected'); } levelItem.addEventListener('mousedown', (e) => handleLevelInteractionStart(e, levelKey)); levelItem.addEventListener('touchstart', (e) => handleLevelInteractionStart(e, levelKey), { passive: false }); levelItem.addEventListener('mouseup', handleLevelInteractionEnd); levelItem.addEventListener('mouseleave', handleLevelInteractionEnd); levelItem.addEventListener('touchend', handleLevelInteractionEnd); levelItem.addEventListener('touchcancel', handleLevelInteractionEnd); levelsDropdownMenu.appendChild(levelItem); }); levelsToggleBtn.addEventListener('click', () => { levelsDropdownMenu.classList.toggle('visible'); }); document.addEventListener('click', (event) => { if (!levelsToggleBtn.contains(event.target) && !levelsDropdownMenu.contains(event.target)) { levelsDropdownMenu.classList.remove('visible'); } }); modalSaveBtn.addEventListener('click', saveCustomWordSelection); modalCloseBtn.addEventListener('click', closeWordSelectionModal); modalSelectAllBtn.addEventListener('click', () => toggleAllModalWords(true)); modalDeselectAllBtn.addEventListener('click', () => toggleAllModalWords(false)); updateActiveQuizWords(); }
+    function initLevelManagement() { /* ... same ... */ const storedLevels = localStorage.getItem('sightWordsSelectedLevels'); selectedLevels = storedLevels ? JSON.parse(storedLevels) : ['A']; Object.keys(allLevelWords).forEach(levelKey => { const levelItem = document.createElement('div'); levelItem.classList.add('level-item'); levelItem.dataset.level = levelKey; levelItem.textContent = `Level ${levelKey}`; const longPressHint = document.createElement('span'); longPressHint.classList.add('long-press-indicator'); longPressHint.textContent = '(hold to customize)'; levelItem.appendChild(longPressHint); if (selectedLevels.includes(levelKey)) { levelItem.classList.add('selected'); } levelItem.addEventListener('mousedown', (e) => handleLevelInteractionStart(e, levelKey)); levelItem.addEventListener('touchstart', (e) => handleLevelInteractionStart(e, levelKey), { passive: false }); levelItem.addEventListener('mouseup', handleLevelInteractionEnd); levelItem.addEventListener('mouseleave', handleLevelInteractionEnd); levelItem.addEventListener('touchend', handleLevelInteractionEnd); levelItem.addEventListener('touchcancel', handleLevelInteractionEnd); levelsDropdownMenu.appendChild(levelItem); }); levelsToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); levelsDropdownMenu.classList.toggle('visible'); }); document.addEventListener('click', (event) => { if (!levelsToggleBtn.contains(event.target) && !levelsDropdownMenu.contains(event.target)) { levelsDropdownMenu.classList.remove('visible'); } }); modalSaveBtn.addEventListener('click', saveCustomWordSelection); modalCloseBtn.addEventListener('click', closeWordSelectionModal); modalSelectAllBtn.addEventListener('click', () => toggleAllModalWords(true)); modalDeselectAllBtn.addEventListener('click', () => toggleAllModalWords(false)); updateActiveQuizWords(); }
     function handleLevelInteractionStart(event, levelKey) { /* ... same ... */ if(isMiniGameActive) return; event.preventDefault(); isLongPress = false; clearTimeout(longPressTimer); longPressTimer = setTimeout(() => { isLongPress = true; openWordSelectionModal(levelKey); levelsDropdownMenu.classList.remove('visible'); }, 500); }
     function handleLevelInteractionEnd(event) { /* ... same, added event param to get target ... */ clearTimeout(longPressTimer); if (!isLongPress) { const target = event.currentTarget; if (target && target.dataset.level && !isLongPress) { toggleLevelSelection(target.dataset.level, target); } } }
     function toggleLevelSelection(levelKey, levelItemElement) { /* ... same ... */ const index = selectedLevels.indexOf(levelKey); if (index > -1) { selectedLevels.splice(index, 1); levelItemElement.classList.remove('selected'); } else { selectedLevels.push(levelKey); levelItemElement.classList.add('selected'); } localStorage.setItem('sightWordsSelectedLevels', JSON.stringify(selectedLevels)); updateActiveQuizWords(); }
