@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-  <title>Sight Words Quiz Deluxe - Enhanced Read Mode & TTS Fix</title>
+  <title>Sight Words Quiz Deluxe - Mini-Games Edition</title>
   <!-- Google Font + Animate.css -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
@@ -81,12 +81,12 @@
     #timer-select{ position:absolute;bottom: calc(70px + 0.5rem); right:1rem;font-size:1rem;padding:.3rem .5rem;display:none; border-radius: 8px; border: 1px solid var(--btn-border); box-shadow: 0 2px 5px var(--shadow-color); }
     #mascot-container { position: fixed; bottom: 1rem; left: 1rem; width: 100px; height: 100px; z-index: 5; pointer-events: none; }
     #mascot-container lottie-player { width: 100%; height: 100%; }
-    .floating-effect { position: fixed; padding: 0.5rem 1rem; color: white; border-radius: 20px; font-weight: bold; font-size: 1.2em; z-index: 200; pointer-events: none; text-align: center; }
+    .floating-effect { position: fixed; padding: 0.5rem 1rem; color: white; border-radius: 20px; font-weight: bold; font-size: 1.2em; z-index: 1200; pointer-events: none; text-align: center; } /* Increased z-index for mini-games */
     .floating-score { background: rgba(76, 175, 80, 0.9); }
     .floating-message { background: var(--brand); }
 
     /* Level Selection Styles */
-    #level-controls-container { position: relative; margin-left: auto; /* Pushes to the right if others are present */ }
+    #level-controls-container { position: relative; margin-left: auto; display: flex; align-items: center;}
     #levels-toggle-btn { padding: 0.6rem 1rem; font-size: 0.9rem; font-weight: 600; background-color: var(--btn-bg); border: 2px solid var(--btn-border); border-radius: var(--btn-radius); cursor: pointer; box-shadow: 0 2px 4px var(--shadow-color); }
     #levels-dropdown-menu { display: none; position: absolute; top: calc(100% + 5px); right: 0; background-color: white; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 100; padding: 0.5rem 0; min-width: 150px; }
     #levels-dropdown-menu.visible { display: block; }
@@ -113,6 +113,122 @@
     .modal-actions button#modal-close-btn { background-color: #aaa; }
     .modal-actions button#modal-close-btn:hover { background-color: #888; }
     .hidden { display: none !important; }
+
+    /* Mini-Game Styles */
+    #toggle-minigames-btn {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.9rem;
+        background-color: var(--btn-bg);
+        border: 2px solid var(--btn-border);
+        border-radius: var(--btn-radius);
+        box-shadow: 0 2px 4px var(--shadow-color);
+        cursor: pointer;
+        margin-left: 10px; /* Space from level selector */
+        font-weight: 600;
+        color: var(--fg);
+    }
+    #toggle-minigames-btn.active-minigame-toggle { /* Unique class to avoid conflict */
+        background-color: var(--brand-light);
+        color: var(--brand-dark);
+        border-color: var(--brand-dark);
+    }
+
+    #minigame-area {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(100, 150, 220, 0.9); /* A pleasant overlay color */
+        z-index: 900; 
+        display: none;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column; /* For score, timer, game content stacking */
+        overflow: hidden;
+        color: white;
+        font-size: 1.5rem;
+    }
+    #minigame-area.active {
+        display: flex;
+    }
+    .minigame-info-bar {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        right: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        background-color: rgba(0,0,0,0.2);
+        border-radius: 8px;
+        font-size: 1.2rem;
+    }
+    .minigame-score { font-weight: bold; }
+    .minigame-timer-bar-container {
+        height: 20px;
+        flex-grow: 1;
+        margin: 0 20px;
+        background-color: rgba(255,255,255,0.3);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .minigame-timer-bar {
+        height: 100%;
+        width: 100%;
+        background-color: var(--brand-light);
+        transition: width 0.2s linear; /* Smooth shrinking */
+    }
+    .minigame-timer-text { font-weight: bold; }
+
+    /* Balloon Pop Specific */
+    .balloon {
+        width: 60px;
+        height: 80px;
+        border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; /* Balloon shape */
+        position: absolute;
+        cursor: pointer;
+        user-select: none;
+        /* bottom: -100px; will be set by JS for animation start */
+        /* left: will be random */
+        /* background-color: will be random */
+        display: flex;
+        justify-content: center;
+        align-items: flex-end; /* for the string */
+        padding-bottom: 5px; /* space for string */
+    }
+    .balloon::after { /* Balloon string */
+        content: '';
+        position: absolute;
+        bottom: -15px; /* Start below the balloon */
+        left: 50%;
+        transform: translateX(-50%);
+        width: 2px;
+        height: 20px; /* String length */
+        background-color: rgba(255,255,255,0.7);
+    }
+    .balloon-rising {
+        animation: riseAnimation 5s linear forwards;
+    }
+    @keyframes riseAnimation {
+        from { transform: translateY(0); }
+        to { transform: translateY(-110vh); } /* Adjust to ensure it goes well off screen */
+    }
+
+    /* Bounce Party Specific */
+    .bounce-ball {
+        width: 50px;
+        height: 50px;
+        background-color: var(--brand);
+        border-radius: 50%;
+        position: absolute; /* Positioned by JS */
+        cursor: pointer;
+        box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+    .animate__fadeOutCustom { animation-duration: 0.3s; }
+    .animate__fadeInCustom { animation-duration: 0.3s; }
+
   </style>
 </head>
 <body>
@@ -126,15 +242,14 @@
         <div id="levels-dropdown-menu">
             <!-- Level items will be populated by JS -->
         </div>
+        <button id="toggle-minigames-btn">Mini-Games: Off</button>
     </div>
   </div>
 
   <div id="word-selection-modal">
     <div class="modal-content">
         <h2 id="modal-level-title">Customize Words</h2>
-        <div id="modal-word-list">
-            <!-- Word checkboxes will be populated by JS -->
-        </div>
+        <div id="modal-word-list"></div>
         <div class="modal-actions">
             <button id="modal-save-btn">Save & Use</button>
             <button id="modal-select-all-btn">Select All</button>
@@ -158,11 +273,17 @@
       <button id="submit-answer-btn" disabled>Submit Answer</button>
     </div>
   </div>
+
+  <div id="minigame-area">
+      <!-- Mini-game content will be injected here -->
+  </div>
+
   <div id="controls"> <div id="timer-display">10s ⏱️</div> <button id="mode-toggle-btn">Mode: Listen</button> <button id="listen-btn">🔊</button> </div>
   <select id="timer-select"></select>
   <div id="mascot-container"> <lottie-player src="https://lottie.host/449f9829-8f92-4a63-85a2-def249781a91/p021aHdt2x.json" background="transparent" speed="1" loop autoplay></lottie-player> </div>
+  
   <script>
-    // --- WEB AUDIO API (condensed) ---
+    // --- WEB AUDIO API (condensed - same as before) ---
     const audioCtx = new (window.AudioContext||window.webkitAudioContext)(); if (audioCtx) { window.addEventListener('pointerdown', () => { if (audioCtx.state === 'suspended') audioCtx.resume(); }, { once: true }); } function playOsc({ type='sine', freq=440, dur=0.3, modFreq, modIndex, vol=1 }) { if (!audioCtx) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); if (modFreq && modIndex) { const mod = audioCtx.createOscillator(); const mGain = audioCtx.createGain(); mod.frequency.setValueAtTime(modFreq, audioCtx.currentTime); mGain.gain.setValueAtTime(modIndex, audioCtx.currentTime); mod.connect(mGain).connect(osc.frequency); mod.start(audioCtx.currentTime); mod.stop(audioCtx.currentTime + dur); } osc.connect(gain); gain.connect(audioCtx.destination); gain.gain.setValueAtTime(vol, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur); osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + dur); } function playBell() { if (!audioCtx) return; playOsc({ type:'sine', freq:660, dur:0.3, vol: 0.6 }); setTimeout(() => playOsc({ type:'sine', freq:880, dur:0.3, vol: 0.6 }), 120); } function playBuzz() { if (!audioCtx) return; playOsc({ type:'square', freq:150, dur:0.4, vol: 0.4 }); }
     
     const pronunciationMap = { "I": "I." };
@@ -170,34 +291,26 @@
     // --- VANTA.JS DYNAMIC BACKGROUNDS (condensed - same as before) ---
     let vantaEffect = null; const vantaElement = document.body; let vantaBackgroundKeys = []; let currentBackgroundKey = null; const baseGlobalParams = { mouseControls: true, touchControls: true, gyroControls: false, minHeight: 200.00, minWidth: 200.00, scale: 1.00, scaleMobile: 1.00, }; const effectConfigurations = { "FOG_Soft_Blue": { effect: "FOG", params: { highlightColor: 0x80deea, midtoneColor: 0x26c6da, lowlightColor: 0x00acc1, baseColor: 0xf4f6f8, blurFactor: 0.6, zoom: 1.2, speed: 1.0 }}, "WAVES_Ocean": { effect: "WAVES", params: { color: 0x005577, shininess: 30, waveHeight: 15, waveSpeed: 0.8, zoom: 1.0 }}, "BIRDS_Day_Sky": { effect: "BIRDS", params: { backgroundColor: 0x87ceeb, color1: 0x444444, color2: 0x666666, birdSize: 1.0, wingSpan: 20.00, speedLimit: 3.00, separation: 20.00, alignment: 20.00, cohesion: 20.00, quantity: 4 }}, "NET_Cyber_Grid": { effect: "NET", params: { color: 0x00ffff, backgroundColor: 0x000022, points: 10.00, maxDistance: 20.00, spacing: 15.00, showDots: true }}, "CELLS_Bio_Blue": { effect: "CELLS", params: { color1: 0x2196f3, color2: 0x90caf9, size: 3.0, speed: 1.0 }}, "CLOUDS_Sunny_Day": { effect: "CLOUDS", params: { skyColor: 0x68b8d7, cloudColor: 0xadc1de, cloudShadowColor: 0x183550, sunColor: 0xff9919, sunGlareColor: 0xff6633, sunlightColor: 0xff9933, speed: 1.0 }}, "DOTS_Starfield": { effect: "DOTS", params: { color: 0xffffff, color2: 0xdddddd, backgroundColor: 0x000011, size: 3.00, spacing: 30.00, showLines: false }}, "RINGS_Golden_Aura": { effect: "RINGS", params: { backgroundColor: 0x110022, color: 0xffd700, strength: 2.00 }}, "HALO_Gentle_Sun": { effect: "HALO", params: { baseColor: 0xffe082, backgroundColor: 0xfff8e1, amplitudeFactor: 0.5, size: 1.0 }}, "FOG_Mystic_Purple": { effect: "FOG", params: { highlightColor: 0xff00ff, midtoneColor: 0xaa00aa, lowlightColor: 0x550055, baseColor: 0x300030, blurFactor: 0.7, zoom: 1.0, speed: 0.8 }}, "WAVES_Lava": { effect: "WAVES", params: { color: 0xff3300, shininess: 10, waveHeight: 25, waveSpeed: 0.4, zoom: 0.75 }}, "BIRDS_Sunset": { effect: "BIRDS", params: { backgroundColor: 0xffa07a, color1: 0x5d4037, color2: 0x000000, birdSize: 1.2, wingSpan: 25.00, quantity: 3, speedLimit: 2.00 }}, "NET_Golden_Web": { effect: "NET", params: { color: 0xffd700, backgroundColor: 0x301934, points: 8.00, maxDistance: 25.00, spacing: 20.00, showDots: true }}, "CELLS_Pulsing_Red": { effect: "CELLS", params: { color1: 0xf44336, color2: 0xffcdd2, size: 4.5, speed: 0.5 }}, "CLOUDS_Evening_Sky": { effect: "CLOUDS", params: { skyColor: 0x334d5c, cloudColor: 0x8e8e8e, cloudShadowColor: 0x2e2e2e, sunColor: 0xf57c00, sunGlareColor: 0xffb74d, sunlightColor: 0xffa726, speed: 0.6 }}, "DOTS_Colorful_Grid": { effect: "DOTS", params: { color: 0xff00ff, color2: 0x00ff00, backgroundColor: 0x222222, size: 5.00, spacing: 25.00, showLines: true }}, "RINGS_Blue_Energy": { effect: "RINGS", params: { backgroundColor: 0x001020, color: 0x00aaff, strength: 3.50 }}, "HALO_Deep_Space": { effect: "HALO", params: { baseColor: 0x7e57c2, backgroundColor: 0x1a001a, amplitudeFactor: 1.5, size: 1.2, xOffset: 0.2, yOffset: 0.1 }} }; function applyVantaEffect(configKey) { if (vantaEffect) { try { vantaEffect.destroy(); } catch (e) { console.error("Err destroy vanta:", e); } vantaEffect = null; } const config = effectConfigurations[configKey]; if (!config || typeof VANTA === 'undefined' || typeof VANTA[config.effect] !== 'function') { console.error(`Vanta effect ${configKey} error.`); return; } const finalParams = { el: vantaElement, ...baseGlobalParams, ...config.params }; try { vantaEffect = VANTA[config.effect](finalParams); currentBackgroundKey = configKey; } catch (error) { console.error(`Err init Vanta '${config.effect}':`, error); vantaEffect = null; } }
     
-    // --- WORD DATA ---
-    const allLevelWords = {
-        A: ["a","all","am","and","away","be","big","blue","but","can","come", "did","down","find","for","funny","go","good","he","help","here","I", "in","is","it","like","little","look","make","me","my","no","not", "on","one","play","ran","red","run","said","see","so","that","the", "three","to","two","up","was","we","what","where","yellow","yes","you"],
-        B: ["after","again","any","are","as","at","ate","black","brown","by","came","could","do","eat","every","four","from","get","give","going","had","have","her","him","how","into","let","must","new","now","of","our","out","please","pretty","ride","round","saw","say","she","some","soon","thank","there","they","this","too","under","want","well","went","white","who","will","with"],
-        C: ["an","ask","been","best","buy","cold","does","don't","first","five","fly","found","gave","goes","green","has","his","its","jump","just","know","live","made","many","may","off","old","once","open","or","over","own","pull","put","read","right","sit","sleep","stop","take","tell","them","then","these","think","those","use","very","walk","warm","wash","were","when","why","your"],
-        D: ["about","always","around","because","before","better","both","bring","call","carry","clean","cut","done","draw","drink","eight","fall","far","fast","full","got","grow","hold","hot","hurt","if","keep","kind","laugh","light","long","much","myself","never","only","pick","seven","shall","show","sing","six","small","start","ten","their","today","together","try","upon","us","which","wish","work","would","write"]
-    };
-    let words = []; // This will be dynamically populated based on level selections.
+    // --- WORD DATA (same as before) ---
+    const allLevelWords = { A: ["a","all","am","and","away","be","big","blue","but","can","come", "did","down","find","for","funny","go","good","he","help","here","I", "in","is","it","like","little","look","make","me","my","no","not", "on","one","play","ran","red","run","said","see","so","that","the", "three","to","two","up","was","we","what","where","yellow","yes","you"], B: ["after","again","any","are","as","at","ate","black","brown","by","came","could","do","eat","every","four","from","get","give","going","had","have","her","him","how","into","let","must","new","now","of","our","out","please","pretty","ride","round","saw","say","she","some","soon","thank","there","they","this","too","under","want","well","went","white","who","will","with"], C: ["an","ask","been","best","buy","cold","does","don't","first","five","fly","found","gave","goes","green","has","his","its","jump","just","know","live","made","many","may","off","old","once","open","or","over","own","pull","put","read","right","sit","sleep","stop","take","tell","them","then","these","think","those","use","very","walk","warm","wash","were","when","why","your"], D: ["about","always","around","because","before","better","both","bring","call","carry","clean","cut","done","draw","drink","eight","fall","far","fast","full","got","grow","hold","hot","hurt","if","keep","kind","laugh","light","long","much","myself","never","only","pick","seven","shall","show","sing","six","small","start","ten","their","today","together","try","upon","us","which","wish","work","would","write"] };
+    let words = []; 
 
-    // --- UI REFERENCES ---
+    // --- UI REFERENCES (same as before + new ones) ---
     const wordChoiceBtns = [document.getElementById('choice0'), document.getElementById('choice1')];
     const scoreVal   = document.getElementById('score-val');
     const timerDisp  = document.getElementById('timer-display');
     const timerSel   = document.getElementById('timer-select');
     const listenBtn  = document.getElementById('listen-btn');
     const quizCont   = document.getElementById('quiz-container');
+    const controlsBar = document.getElementById('controls'); // Reference for hiding/showing
     const modeToggleBtn = document.getElementById('mode-toggle-btn');
-    
     const listenPickWordArea = document.getElementById('listen-pick-word-area');
     const readPickSoundArea = document.getElementById('read-pick-sound-area');
     const wordToReadDisplay = document.getElementById('word-to-read');
     const soundChoiceBtns = [document.getElementById('soundChoice0'), document.getElementById('soundChoice1')];
     const submitAnswerBtn = document.getElementById('submit-answer-btn');
-
     const confettiCanvas = document.getElementById('confetti-canvas');
     const myConfetti = confetti.create(confettiCanvas, { resize: true, useWorker: true });
-
-    // Level Selection UI
     const levelsToggleBtn = document.getElementById('levels-toggle-btn');
     const levelsDropdownMenu = document.getElementById('levels-dropdown-menu');
     const wordSelectionModal = document.getElementById('word-selection-modal');
@@ -207,12 +320,13 @@
     const modalSelectAllBtn = document.getElementById('modal-select-all-btn');
     const modalDeselectAllBtn = document.getElementById('modal-deselect-all-btn');
     const modalCloseBtn = document.getElementById('modal-close-btn');
-    let currentEditingLevelKey = null; // For the word selection modal
-    let longPressTimer = null;
-    let isLongPress = false;
+    
+    // Mini-Game UI
+    const miniGameArea = document.getElementById('minigame-area');
+    const toggleMiniGamesBtn = document.getElementById('toggle-minigames-btn');
 
 
-    // --- GAME STATE ---
+    // --- GAME STATE (same as before + new ones) ---
     let circleTimerInstance;
     let questionTimeoutId; 
     let questionAnsweredThisTurn = false;
@@ -224,6 +338,15 @@
     let currentGameMode = localStorage.getItem('sightWordsGameMode') || 'listenAndPickWord';
     let selectedSoundButton = null;
     let selectedLevels = [];
+    let currentEditingLevelKey = null; 
+    let longPressTimer = null;
+    let isLongPress = false;
+
+    // Mini-Game State
+    let miniGamesEnabled = localStorage.getItem('miniGamesEnabled') === 'true';
+    let isMiniGameActive = false;
+    let availableMiniGames = [];
+    let currentMiniGameIdx = 0;
 
 
     // ---- INITIALIZATION ----
@@ -233,356 +356,468 @@
         applyVantaEffect(vantaBackgroundKeys[0]);
       }
       
-      initLevelManagement(); // Setup level selection first
+      initLevelManagement(); 
+      initMiniGameSystem(); // Initialize mini-game toggle and register games
       updateModeUI();
       initCircularTimer();
       
       for(let i=0;i<=30;i++){ let o = document.createElement('option'); o.value = i; o.textContent = i+'s' + (i === 0 ? ' (Untimed)' : ''); timerSel.append(o); }
       timerSel.value = timeLimit; 
       timerDisp.textContent = timeLimit > 0 ? timeLimit+'s ⏱️' : 'Untimed ⏱️';
-      
-      // nextQ() will be called by updateActiveQuizWords after levels are set up
     });
 
-    function updateModeUI() {
-        if (currentGameMode === 'listenAndPickWord') {
-            listenPickWordArea.style.display = 'flex';
-            readPickSoundArea.style.display = 'none';
-            modeToggleBtn.textContent = 'Mode: Listen';
-            listenBtn.innerHTML = '🔊';
-        } else { // readAndPickSound
-            listenPickWordArea.style.display = 'none';
-            readPickSoundArea.style.display = 'flex';
-            modeToggleBtn.textContent = 'Mode: Read';
-            listenBtn.innerHTML = '📖';
-            if(submitAnswerBtn) submitAnswerBtn.disabled = true;
+    // --- Speak helper (MODIFIED with pronunciationMap) ---
+    function speak(txt, rate = 0.9, pitch = 1.1){ // Added optional rate/pitch
+      if('speechSynthesis' in window){
+        speechSynthesis.cancel(); // Cancel any ongoing speech
+        let textToSpeak = pronunciationMap[txt] || String(txt); // Ensure txt is string for numbers
+        let u = new SpeechSynthesisUtterance(textToSpeak);
+        u.rate = rate; 
+        u.pitch = pitch;
+        speechSynthesis.speak(u);
+      }
+    }
+
+    // --- Utility for random colors (for Balloon Pop) ---
+    function getRandomColor() {
+        const r = Math.floor(Math.random() * 200); // Avoid too dark/light
+        const g = Math.floor(Math.random() * 200);
+        const b = Math.floor(Math.random() * 200);
+        return `rgb(${r},${g},${b})`;
+    }
+
+    // --- MINI-GAME DEFINITIONS ---
+
+    const BalloonPopGame = {
+        name: "Balloon Pop",
+        score: 0,
+        gameTimerId: null,
+        timerIntervalId: null, // For updating visual timer bar
+        balloonIntervalId: null,
+        container: null,
+        onCompleteCallback: null,
+        duration: 20000, // 20 seconds
+        balloonsOnScreen: [],
+        elements: {}, // To store references to DOM elements like score, timer bar
+
+        start: function(containerElement, onComplete) {
+            this.container = containerElement;
+            this.onCompleteCallback = onComplete;
+            this.score = 0;
+            this.balloonsOnScreen = [];
+            this.container.innerHTML = ''; // Clear previous content
+
+            speak("Tap as many balloons as you can before time runs out!");
+
+            // Create UI: Info bar for score and timer
+            const infoBar = document.createElement('div');
+            infoBar.className = 'minigame-info-bar';
+            
+            this.elements.scoreDisplay = document.createElement('div');
+            this.elements.scoreDisplay.className = 'minigame-score';
+            infoBar.appendChild(this.elements.scoreDisplay);
+            this.updateScoreDisplay();
+
+            const timerContainer = document.createElement('div');
+            timerContainer.className = 'minigame-timer-bar-container';
+            this.elements.timerBar = document.createElement('div');
+            this.elements.timerBar.className = 'minigame-timer-bar';
+            timerContainer.appendChild(this.elements.timerBar);
+            infoBar.appendChild(timerContainer);
+            
+            this.container.appendChild(infoBar);
+            
+            let timeLeft = this.duration;
+            this.elements.timerBar.style.width = '100%';
+
+            this.timerIntervalId = setInterval(() => {
+                timeLeft -= 100;
+                const progress = Math.max(0, (timeLeft / this.duration) * 100);
+                this.elements.timerBar.style.width = `${progress}%`;
+                if (timeLeft <= 0) {
+                    clearInterval(this.timerIntervalId); // Should be cleared by destroy too
+                }
+            }, 100);
+
+            this.balloonIntervalId = setInterval(() => this.spawnBalloon(), 700); // Spawn rate
+            this.gameTimerId = setTimeout(() => this.endGame(), this.duration);
+        },
+
+        spawnBalloon: function() {
+            if (!this.container || this.balloonsOnScreen.length > 15) return; // Limit onscreen balloons
+
+            const balloon = document.createElement('div');
+            balloon.className = 'balloon';
+            balloon.style.backgroundColor = getRandomColor();
+            balloon.style.left = `${Math.random() * (this.container.clientWidth - 60)}px`; // 60 is balloon width
+            balloon.style.bottom = '-100px'; // Start off-screen
+
+            balloon.addEventListener('click', () => this.popBalloon(balloon), { once: true });
+            
+            this.container.appendChild(balloon);
+            this.balloonsOnScreen.push(balloon);
+            
+            // CSS animation for rising
+            balloon.classList.add('balloon-rising');
+            // Remove balloon from DOM and array after animation if not popped
+            balloon.addEventListener('animationend', () => {
+                const index = this.balloonsOnScreen.indexOf(balloon);
+                if (index > -1) this.balloonsOnScreen.splice(index, 1);
+                balloon.remove();
+            }, { once: true });
+        },
+
+        popBalloon: function(balloonElement) {
+            if (!this.balloonsOnScreen.includes(balloonElement)) return; // Already popped or gone
+
+            playBell();
+            // Confetti at balloon position
+            const rect = balloonElement.getBoundingClientRect();
+            const x = (rect.left + rect.right) / 2 / window.innerWidth;
+            const y = (rect.top + rect.bottom) / 2 / window.innerHeight;
+            myConfetti({ particleCount: 30, spread: 50, origin: { x: x, y: y }, scalar: 0.7 });
+            
+            this.score++;
+            speak(this.score, 1.2, 1.3); // Faster, higher pitch for pops
+            this.updateScoreDisplay();
+
+            balloonElement.remove(); // Remove from DOM
+            const index = this.balloonsOnScreen.indexOf(balloonElement);
+            if (index > -1) this.balloonsOnScreen.splice(index, 1);
+        },
+
+        updateScoreDisplay: function() {
+            if(this.elements.scoreDisplay) this.elements.scoreDisplay.textContent = `Popped: ${this.score}`;
+        },
+
+        endGame: function() {
+            // Clear intervals immediately to stop new balloons/timer updates
+            clearInterval(this.balloonIntervalId);
+            this.balloonIntervalId = null;
+            clearInterval(this.timerIntervalId);
+            this.timerIntervalId = null;
+            clearTimeout(this.gameTimerId); // Though it just fired
+            this.gameTimerId = null;
+            
+            // Remove any remaining balloons quickly
+            this.balloonsOnScreen.forEach(b => b.remove());
+            this.balloonsOnScreen = [];
+
+            speak(`You popped ${this.score} balloons!`);
+            if(this.onCompleteCallback) this.onCompleteCallback(this.score);
+        },
+
+        destroy: function() {
+            clearInterval(this.balloonIntervalId);
+            clearInterval(this.timerIntervalId);
+            clearTimeout(this.gameTimerId);
+            this.balloonsOnScreen.forEach(b => b.remove());
+            this.balloonsOnScreen = [];
+            if (this.container) this.container.innerHTML = '';
+            this.elements = {};
+            console.log(`${this.name} destroyed`);
         }
-    }
+    };
 
-    modeToggleBtn.addEventListener('click', () => {
-        currentGameMode = (currentGameMode === 'listenAndPickWord') ? 'readAndPickSound' : 'listenAndPickWord';
-        localStorage.setItem('sightWordsGameMode', currentGameMode);
-        updateModeUI();
-        clearTimeout(questionTimeoutId); 
-        resetQuestionState();
-        setTimeout(nextQ, 100); 
-    });
+    const BouncePartyGame = {
+        name: "Bounce Party",
+        score: 0,
+        gameTimerId: null, // For overall game duration
+        timerDisplayIntervalId: null, // For updating visual text timer
+        container: null,
+        onCompleteCallback: null,
+        duration: 20000, // 20 seconds
+        
+        ballElement: null,
+        ballPosY: 0, ballVelY: 0,
+        gravity: 0.4,
+        bounceFactor: 0.85,
+        tapStrength: 12,
+        animationFrameId: null,
+        elements: {},
 
-    function resetQuestionState() {
-        questionAnsweredThisTurn = false;
-        selectedSoundButton = null;
-        soundChoiceBtns.forEach(btn => btn.classList.remove('sound-btn-selected', 'correct', 'incorrect'));
-        wordChoiceBtns.forEach(btn => btn.classList.remove('correct', 'incorrect'));
-        if (submitAnswerBtn) submitAnswerBtn.disabled = true;
-    }
+        start: function(containerElement, onComplete) {
+            this.container = containerElement;
+            this.onCompleteCallback = onComplete;
+            this.score = 0;
+            this.container.innerHTML = '';
 
-    function initCircularTimer() { const timerContainer = document.getElementById('circular-timer'); if (!timerContainer) return; circleTimerInstance = new ProgressBar.Circle(timerContainer, { strokeWidth: 10, easing: 'linear', color: 'var(--brand)', trailColor: 'rgba(224, 224, 224, 0.5)', trailWidth: 10, svgStyle: { width: '100%', height: '100%' }, text: { style: { color: 'var(--fg)', position: 'absolute', left: '50%', top: '50%', padding: 0, margin: 0, transform: { prefix: true, value: 'translate(-50%, -50%)' }, fontSize: '1.4em', fontWeight: '600', }, autoStyleContainer: false }, step: function(state, circle) { if (timeLimit > 0) { const timeLeft = Math.ceil(timeLimit * (1 - circle.value())); circle.setText(timeLeft > 0 ? timeLeft : '0'); if (timeLeft <= timeLimit * 0.3) circle.path.setAttribute('stroke', '#f44336'); else if (timeLeft <= timeLimit * 0.6) circle.path.setAttribute('stroke', '#ff9800'); else circle.path.setAttribute('stroke', 'var(--brand)'); } else { circle.setText('∞'); circle.path.setAttribute('stroke', 'var(--brand)'); } } }); }
-    
-    function speak(txt){ if('speechSynthesis' in window){ speechSynthesis.cancel(); let textToSpeak = pronunciationMap[txt] || txt; let u = new SpeechSynthesisUtterance(textToSpeak); u.rate = 0.9; u.pitch = 1.1; speechSynthesis.speak(u); } }
-    
-    function startCountdown(onDoneCallback){ clearTimeout(questionTimeoutId); if(circleTimerInstance){ circleTimerInstance.set(0); circleTimerInstance.setText(timeLimit > 0 ? String(timeLimit) : '∞'); circleTimerInstance.path.setAttribute('stroke', 'var(--brand)'); if(timeLimit <= 0) return; circleTimerInstance.animate(1.0, { duration: timeLimit * 1000 }); questionTimeoutId = setTimeout(() => { if (!questionAnsweredThisTurn) onDoneCallback(); }, timeLimit * 1000); } }
+            speak("Keep the ball bouncing!");
 
-    function nextQ(){
-      resetQuestionState();
-      quizCont.classList.remove('animate__fadeIn', 'animate__zoomIn'); 
-      void quizCont.offsetWidth; 
-      quizCont.classList.add('animate__zoomIn'); 
+            const infoBar = document.createElement('div');
+            infoBar.className = 'minigame-info-bar';
+            
+            this.elements.scoreDisplay = document.createElement('div');
+            this.elements.scoreDisplay.className = 'minigame-score';
+            infoBar.appendChild(this.elements.scoreDisplay);
+            this.updateScoreDisplay();
 
-      // Ensure all choice buttons are visible (they might be hidden if words array was empty)
-      [...wordChoiceBtns, ...soundChoiceBtns].forEach(btn => btn.style.display = '');
-      if(submitAnswerBtn) submitAnswerBtn.style.display = '';
-      wordToReadDisplay.style.display = '';
+            this.elements.timerText = document.createElement('div');
+            this.elements.timerText.className = 'minigame-timer-text';
+            infoBar.appendChild(this.elements.timerText);
+            this.container.appendChild(infoBar);
 
+            this.ballElement = document.createElement('div');
+            this.ballElement.className = 'bounce-ball';
+            this.container.appendChild(this.ballElement);
 
-      if (words.length === 0) {
-          console.error("No words available for the quiz! Check level/word selections.");
-          wordToReadDisplay.textContent = "No Words!";
-          showFloatingMessage("Please select levels/words!", "var(--brand-dark)");
-          listenPickWordArea.style.display = 'none';
-          readPickSoundArea.style.display = 'flex';
-          soundChoiceBtns.forEach(btn => btn.style.display = 'none');
-          if (submitAnswerBtn) submitAnswerBtn.style.display = 'none';
-          wordChoiceBtns.forEach(btn => btn.style.display = 'none'); // Hide word choice buttons too
-          clearTimeout(questionTimeoutId); // Stop timer
-          if(circleTimerInstance) circleTimerInstance.set(0); // Reset circular timer display
-          return;
-      }
+            this.ballPosY = 50;
+            this.ballVelY = 0;
+            const ballInitialX = this.container.clientWidth / 2 - this.ballElement.clientWidth / 2;
+            this.ballElement.style.left = `${ballInitialX}px`;
+            this.ballElement.style.top = `${this.ballPosY}px`; // Use top for Y positioning
 
-      currentCorrectWord = words[Math.floor(Math.random()*words.length)];
-      let distractorWord;
-      if (words.length > 1) {
-        do { distractorWord = words[Math.floor(Math.random()*words.length)]; } while(distractorWord === currentCorrectWord);
-      } else {
-        distractorWord = currentCorrectWord; // Only one word available, so distractor is the same
-      }
+            this.ballElement.addEventListener('click', () => this.handleTap());
+            
+            this.gameLoop = this.gameLoop.bind(this); // Bind context for rAF
+            this.animationFrameId = requestAnimationFrame(this.gameLoop);
 
-      if (currentGameMode === 'listenAndPickWord') {
-        const pair = Math.random() < 0.5 ? [currentCorrectWord, distractorWord] : [distractorWord, currentCorrectWord];
-        wordChoiceBtns.forEach((b,i)=>{ b.textContent = pair[i]; b.disabled = false; b.className = 'choice-btn'; });
-        speak(currentCorrectWord);
-      } else { // readAndPickSound mode
-        wordToReadDisplay.textContent = currentCorrectWord;
-        const soundWords = Math.random() < 0.5 ? [currentCorrectWord, distractorWord] : [distractorWord, currentCorrectWord];
-        soundChoiceBtns.forEach((btn, i) => {
-            btn.dataset.wordToSpeak = soundWords[i];
-            btn.disabled = false;
-            btn.className = 'choice-btn sound-btn';
+            let timeLeftSeconds = this.duration / 1000;
+            this.elements.timerText.textContent = `Time: ${timeLeftSeconds}s`;
+            this.timerDisplayIntervalId = setInterval(() => {
+                timeLeftSeconds--;
+                this.elements.timerText.textContent = `Time: ${Math.max(0, timeLeftSeconds)}s`;
+                if (timeLeftSeconds <= 0) clearInterval(this.timerDisplayIntervalId);
+            }, 1000);
+
+            this.gameTimerId = setTimeout(() => this.endGame(), this.duration);
+        },
+
+        gameLoop: function() {
+            if (!this.ballElement || !this.container) return;
+
+            this.ballVelY += this.gravity;
+            this.ballPosY += this.ballVelY;
+
+            const bottomBoundary = this.container.clientHeight - this.ballElement.clientHeight;
+            const topBoundary = 0;
+
+            if (this.ballPosY >= bottomBoundary) {
+                this.ballPosY = bottomBoundary;
+                this.ballVelY *= -this.bounceFactor;
+            }
+            if (this.ballPosY <= topBoundary) {
+                this.ballPosY = topBoundary;
+                this.ballVelY *= -this.bounceFactor;
+            }
+            
+            this.ballElement.style.top = `${this.ballPosY}px`;
+            this.animationFrameId = requestAnimationFrame(this.gameLoop);
+        },
+
+        handleTap: function() {
+            if (!this.ballElement) return;
+            this.ballVelY = -this.tapStrength;
+            playBell();
+            
+            const rect = this.ballElement.getBoundingClientRect();
+            const x = (rect.left + rect.right) / 2 / window.innerWidth;
+            const y = (rect.top + rect.bottom) / 2 / window.innerHeight;
+            myConfetti({ particleCount: 20, spread: 40, origin: { x: x, y: y }, scalar: 0.6 });
+
+            this.score++;
+            speak(this.score, 1.2, 1.3);
+            this.updateScoreDisplay();
+        },
+
+        updateScoreDisplay: function() {
+             if(this.elements.scoreDisplay) this.elements.scoreDisplay.textContent = `Bounces: ${this.score}`;
+        },
+
+        endGame: function() {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+            clearInterval(this.timerDisplayIntervalId);
+            this.timerDisplayIntervalId = null;
+            clearTimeout(this.gameTimerId);
+            this.gameTimerId = null;
+            
+            speak(`You bounced the ball ${this.score} times!`);
+            if(this.onCompleteCallback) this.onCompleteCallback(this.score);
+        },
+
+        destroy: function() {
+            cancelAnimationFrame(this.animationFrameId);
+            clearInterval(this.timerDisplayIntervalId);
+            clearTimeout(this.gameTimerId);
+            if (this.container) this.container.innerHTML = '';
+            this.ballElement = null;
+            this.elements = {};
+            console.log(`${this.name} destroyed`);
+        }
+    };
+
+    // --- MINI-GAME SYSTEM ---
+    function initMiniGameSystem() {
+        availableMiniGames.push(BalloonPopGame, BouncePartyGame); // Register games
+        
+        toggleMiniGamesBtn.textContent = `Mini-Games: ${miniGamesEnabled ? 'On' : 'Off'}`;
+        if (miniGamesEnabled) {
+            toggleMiniGamesBtn.classList.add('active-minigame-toggle');
+        }
+
+        toggleMiniGamesBtn.addEventListener('click', () => {
+            miniGamesEnabled = !miniGamesEnabled;
+            localStorage.setItem('miniGamesEnabled', miniGamesEnabled);
+            toggleMiniGamesBtn.textContent = `Mini-Games: ${miniGamesEnabled ? 'On' : 'Off'}`;
+            toggleMiniGamesBtn.classList.toggle('active-minigame-toggle', miniGamesEnabled);
         });
-        if(submitAnswerBtn) submitAnswerBtn.disabled = true;
-      }
-
-      startCountdown(()=>{ 
-        if (questionAnsweredThisTurn) return;
-        questionAnsweredThisTurn = true;
-        disableAllChoiceButtons();
-        playBuzz(); 
-        showFloatingMessage("Time's Up!", '#ffcdd2', '#333');
-        currentStreak = 0; 
-        setTimeout(nextQ,1200); 
-      });
     }
 
-    function disableAllChoiceButtons() {
-        wordChoiceBtns.forEach(b => b.disabled = true);
-        soundChoiceBtns.forEach(b => b.disabled = true);
-        if (submitAnswerBtn) submitAnswerBtn.disabled = true;
+    function triggerMiniGame() {
+        if (availableMiniGames.length === 0) {
+            console.warn("No mini-games available!");
+            resumeQuizAfterMiniGame(undefined); 
+            return;
+        }
+
+        miniGameArea.classList.add('active');
+        // Make mini-game area focusable for potential keyboard controls later
+        miniGameArea.setAttribute('tabindex', '-1');
+        miniGameArea.focus();
+
+
+        const gameToPlay = availableMiniGames[currentMiniGameIdx];
+        currentMiniGameIdx = (currentMiniGameIdx + 1) % availableMiniGames.length;
+        
+        // Ensure the game object's state is clean, especially if it's not a class instance
+        // The start method of each game is responsible for resetting its internal state.
+        
+        gameToPlay.start(miniGameArea, (miniGameScore) => {
+            // This is the onComplete callback from the mini-game
+            gameToPlay.destroy(); // Important: ensure game cleans itself up
+            miniGameArea.classList.remove('active');
+            resumeQuizAfterMiniGame(miniGameScore);
+        });
     }
+
+    function resumeQuizAfterMiniGame(miniGameScore) {
+        isMiniGameActive = false;
+        
+        quizCont.style.display = 'flex'; // Or original display type
+        controlsBar.style.display = 'flex';
+        quizCont.classList.add('animate__animated', 'animate__fadeInCustom');
+        controlsBar.classList.add('animate__animated', 'animate__fadeInCustom');
+
+        const animationEndHandler = () => {
+            quizCont.classList.remove('animate__animated', 'animate__fadeInCustom');
+            controlsBar.classList.remove('animate__animated', 'animate__fadeInCustom');
+            quizCont.removeEventListener('animationend', animationEndHandler); // Clean up listener
+            
+            if (miniGameScore !== undefined) {
+                showFloatingMessage(`Mini-Game: ${miniGameScore} points!`, 'var(--brand-light)', 'var(--fg)');
+            }
+            setTimeout(nextQ, 300); // Resume quiz with a slight delay for message
+        };
+        quizCont.addEventListener('animationend', animationEndHandler, { once: true });
+
+        // Fallback if animationend doesn't fire (e.g., display:none)
+        setTimeout(() => { // Ensure it proceeds even if animationend doesn't fire
+            if (quizCont.classList.contains('animate__fadeInCustom')) {
+                // If animation is still "pending", force cleanup and proceed
+                animationEndHandler();
+            }
+        }, 500); // Max wait for fade in animation
+    }
+
+
+    // --- UI & GAME LOGIC (mostly same as before, with modifications for mini-games) ---
+    function updateModeUI() { /* ... same ... */ if (currentGameMode === 'listenAndPickWord') { listenPickWordArea.style.display = 'flex'; readPickSoundArea.style.display = 'none'; modeToggleBtn.textContent = 'Mode: Listen'; listenBtn.innerHTML = '🔊'; } else { listenPickWordArea.style.display = 'none'; readPickSoundArea.style.display = 'flex'; modeToggleBtn.textContent = 'Mode: Read'; listenBtn.innerHTML = '📖'; if(submitAnswerBtn) submitAnswerBtn.disabled = true; } }
+    modeToggleBtn.addEventListener('click', () => { /* ... same ... */ currentGameMode = (currentGameMode === 'listenAndPickWord') ? 'readAndPickSound' : 'listenAndPickWord'; localStorage.setItem('sightWordsGameMode', currentGameMode); updateModeUI(); clearTimeout(questionTimeoutId); resetQuestionState(); setTimeout(nextQ, 100); });
+    function resetQuestionState() { /* ... same ... */ questionAnsweredThisTurn = false; selectedSoundButton = null; soundChoiceBtns.forEach(btn => btn.classList.remove('sound-btn-selected', 'correct', 'incorrect')); wordChoiceBtns.forEach(btn => btn.classList.remove('correct', 'incorrect')); if (submitAnswerBtn) submitAnswerBtn.disabled = true; }
+    function initCircularTimer() { /* ... same ... */ const timerContainer = document.getElementById('circular-timer'); if (!timerContainer) return; circleTimerInstance = new ProgressBar.Circle(timerContainer, { strokeWidth: 10, easing: 'linear', color: 'var(--brand)', trailColor: 'rgba(224, 224, 224, 0.5)', trailWidth: 10, svgStyle: { width: '100%', height: '100%' }, text: { style: { color: 'var(--fg)', position: 'absolute', left: '50%', top: '50%', padding: 0, margin: 0, transform: { prefix: true, value: 'translate(-50%, -50%)' }, fontSize: '1.4em', fontWeight: '600', }, autoStyleContainer: false }, step: function(state, circle) { if (timeLimit > 0) { const timeLeft = Math.ceil(timeLimit * (1 - circle.value())); circle.setText(timeLeft > 0 ? timeLeft : '0'); if (timeLeft <= timeLimit * 0.3) circle.path.setAttribute('stroke', '#f44336'); else if (timeLeft <= timeLimit * 0.6) circle.path.setAttribute('stroke', '#ff9800'); else circle.path.setAttribute('stroke', 'var(--brand)'); } else { circle.setText('∞'); circle.path.setAttribute('stroke', 'var(--brand)'); } } }); }
+    function startCountdown(onDoneCallback){ /* ... same ... */ clearTimeout(questionTimeoutId); if(circleTimerInstance){ circleTimerInstance.set(0); circleTimerInstance.setText(timeLimit > 0 ? String(timeLimit) : '∞'); circleTimerInstance.path.setAttribute('stroke', 'var(--brand)'); if(timeLimit <= 0) return; circleTimerInstance.animate(1.0, { duration: timeLimit * 1000 }); questionTimeoutId = setTimeout(() => { if (!questionAnsweredThisTurn && !isMiniGameActive) onDoneCallback(); }, timeLimit * 1000); } }
+    function nextQ(){ /* ... same, with check for words.length ... */ resetQuestionState(); quizCont.classList.remove('animate__fadeInCustom', 'animate__zoomIn'); void quizCont.offsetWidth; quizCont.classList.add('animate__zoomIn'); [...wordChoiceBtns, ...soundChoiceBtns].forEach(btn => btn.style.display = ''); if(submitAnswerBtn) submitAnswerBtn.style.display = ''; wordToReadDisplay.style.display = ''; if (words.length === 0) { console.error("No words available for the quiz! Check level/word selections."); wordToReadDisplay.textContent = "No Words!"; showFloatingMessage("Please select levels/words!", "var(--brand-dark)"); listenPickWordArea.style.display = 'none'; readPickSoundArea.style.display = 'flex'; soundChoiceBtns.forEach(btn => btn.style.display = 'none'); if (submitAnswerBtn) submitAnswerBtn.style.display = 'none'; wordChoiceBtns.forEach(btn => btn.style.display = 'none'); clearTimeout(questionTimeoutId); if(circleTimerInstance) circleTimerInstance.set(0); return; } currentCorrectWord = words[Math.floor(Math.random()*words.length)]; let distractorWord; if (words.length > 1) { do { distractorWord = words[Math.floor(Math.random()*words.length)]; } while(distractorWord === currentCorrectWord); } else { distractorWord = currentCorrectWord; } if (currentGameMode === 'listenAndPickWord') { const pair = Math.random() < 0.5 ? [currentCorrectWord, distractorWord] : [distractorWord, currentCorrectWord]; wordChoiceBtns.forEach((b,i)=>{ b.textContent = pair[i]; b.disabled = false; b.className = 'choice-btn'; }); speak(currentCorrectWord); } else { wordToReadDisplay.textContent = currentCorrectWord; const soundWords = Math.random() < 0.5 ? [currentCorrectWord, distractorWord] : [distractorWord, currentCorrectWord]; soundChoiceBtns.forEach((btn, i) => { btn.dataset.wordToSpeak = soundWords[i]; btn.disabled = false; btn.className = 'choice-btn sound-btn'; }); if(submitAnswerBtn) submitAnswerBtn.disabled = true; } startCountdown(()=>{ if (questionAnsweredThisTurn || isMiniGameActive) return; questionAnsweredThisTurn = true; disableAllChoiceButtons(); playBuzz(); showFloatingMessage("Time's Up!", '#ffcdd2', '#333'); currentStreak = 0; setTimeout(nextQ,1200); }); }
+    function disableAllChoiceButtons() { /* ... same ... */ wordChoiceBtns.forEach(b => b.disabled = true); soundChoiceBtns.forEach(b => b.disabled = true); if (submitAnswerBtn) submitAnswerBtn.disabled = true; }
 
     function handleAnswer(isCorrect, targetButtonElement) {
         if (questionAnsweredThisTurn) return;
         questionAnsweredThisTurn = true;
-        clearTimeout(questionTimeoutId);
+
+        clearTimeout(questionTimeoutId); // Stop countdown for this question
         disableAllChoiceButtons();
 
         if(isCorrect){
           playBell();
           scoreVal.textContent = ++score;
           if (score > 0 && score % 10 === 0 && vantaBackgroundKeys.length > 0) { const bgIndex = (score / 10) % vantaBackgroundKeys.length; if (vantaBackgroundKeys[bgIndex] !== currentBackgroundKey) applyVantaEffect(vantaBackgroundKeys[bgIndex]); }
-          targetButtonElement.classList.add('correct', 'animate__animated', 'animate__pulse');
+          targetButtonElement.classList.add('correct');
           myConfetti({ particleCount:80, spread:100, origin: { y: 0.6 } });
           showFloatingScore("+1 Awesome!", targetButtonElement);
           currentStreak++;
           if (streakThresholds[currentStreak]) { setTimeout(() => { playBell(); showFloatingMessage(streakThresholds[currentStreak], 'gold', '#333'); myConfetti({ particleCount: 150, spread: 180, startVelocity: 45, origin: { y: 0.5 }}); }, 300); }
         } else {
           playBuzz(); 
-          targetButtonElement.classList.add('incorrect', 'animate__animated', 'animate__shakeX');
+          targetButtonElement.classList.add('incorrect');
           if (currentGameMode === 'listenAndPickWord') { wordChoiceBtns.find(b => b.textContent === currentCorrectWord)?.classList.add('correct'); } 
           else { soundChoiceBtns.find(b => b.dataset.wordToSpeak === currentCorrectWord)?.classList.add('correct'); }
           showFloatingScore("Oops!", targetButtonElement, true);
           currentStreak = 0; 
         }
         
-        targetButtonElement.addEventListener('animationend',()=>{ targetButtonElement.classList.remove('animate__animated', 'animate__pulse', 'animate__shakeX', 'sound-btn-selected'); }, { once:true });
-        soundChoiceBtns.forEach(btn => btn.classList.remove('sound-btn-selected'));
-        
-        setTimeout(nextQ, isCorrect ? 1000 : 1800); 
+        targetButtonElement.classList.add('animate__animated', isCorrect ? 'animate__pulse' : 'animate__shakeX');
+
+        const isMiniGameDue = isCorrect && miniGamesEnabled && score > 0 && score % 10 === 0;
+
+        targetButtonElement.addEventListener('animationend', () => {
+            targetButtonElement.classList.remove('animate__animated', 'animate__pulse', 'animate__shakeX');
+            // Also remove 'sound-btn-selected' if it was a sound button
+            if (targetButtonElement.classList.contains('sound-btn')) {
+                 targetButtonElement.classList.remove('sound-btn-selected');
+            }
+            // General cleanup for all sound buttons if one was selected previously
+            soundChoiceBtns.forEach(btn => btn.classList.remove('sound-btn-selected'));
+
+
+            if (isMiniGameDue && !isMiniGameActive) {
+                isMiniGameActive = true;
+                
+                quizCont.classList.add('animate__animated', 'animate__fadeOutCustom');
+                controlsBar.classList.add('animate__animated', 'animate__fadeOutCustom');
+
+                const fadeOutHandler = () => {
+                    quizCont.style.display = 'none';
+                    controlsBar.style.display = 'none';
+                    quizCont.classList.remove('animate__animated', 'animate__fadeOutCustom');
+                    controlsBar.classList.remove('animate__animated', 'animate__fadeOutCustom');
+                    quizCont.removeEventListener('animationend', fadeOutHandler);
+                    
+                    triggerMiniGame();
+                };
+                quizCont.addEventListener('animationend', fadeOutHandler, { once: true });
+                // Fallback for fadeOutHandler
+                setTimeout(() => {
+                    if (quizCont.classList.contains('animate__fadeOutCustom')) {
+                        fadeOutHandler();
+                    }
+                }, 400);
+
+
+            } else {
+                setTimeout(nextQ, 100); // Short delay after animation for next question
+            }
+        }, { once: true });
     }
 
-    wordChoiceBtns.forEach(btn=>{ btn.addEventListener('click',()=>{ if (questionAnsweredThisTurn || currentGameMode !== 'listenAndPickWord') return; const isCorrect = btn.textContent === currentCorrectWord; handleAnswer(isCorrect, btn); }); });
-    soundChoiceBtns.forEach(btn => { btn.addEventListener('click', () => { if (questionAnsweredThisTurn || currentGameMode !== 'readAndPickSound') return; const wordToSpeak = btn.dataset.wordToSpeak; speak(wordToSpeak); if (selectedSoundButton && selectedSoundButton !== btn) { selectedSoundButton.classList.remove('sound-btn-selected'); } btn.classList.add('sound-btn-selected'); selectedSoundButton = btn; if(submitAnswerBtn) submitAnswerBtn.disabled = false; }); });
-    submitAnswerBtn.addEventListener('click', () => { if (questionAnsweredThisTurn || currentGameMode !== 'readAndPickSound' || !selectedSoundButton) return; const wordSpokenBySelectedButton = selectedSoundButton.dataset.wordToSpeak; const isCorrect = wordSpokenBySelectedButton === currentCorrectWord; handleAnswer(isCorrect, selectedSoundButton); });
-    listenBtn.onclick = ()=>{ if (currentCorrectWord) { if (currentGameMode === 'listenAndPickWord') { speak(currentCorrectWord); } else { speak(currentCorrectWord); } } };
-    timerDisp.addEventListener('click',()=>{ timerSel.style.display = timerSel.style.display==='block'?'none':'block'; timerSel.value = timeLimit; });
+    wordChoiceBtns.forEach(btn=>{ btn.addEventListener('click',()=>{ if (questionAnsweredThisTurn || currentGameMode !== 'listenAndPickWord' || isMiniGameActive) return; const isCorrect = btn.textContent === currentCorrectWord; handleAnswer(isCorrect, btn); }); });
+    soundChoiceBtns.forEach(btn => { btn.addEventListener('click', () => { if (questionAnsweredThisTurn || currentGameMode !== 'readAndPickSound' || isMiniGameActive) return; const wordToSpeak = btn.dataset.wordToSpeak; speak(wordToSpeak); if (selectedSoundButton && selectedSoundButton !== btn) { selectedSoundButton.classList.remove('sound-btn-selected'); } btn.classList.add('sound-btn-selected'); selectedSoundButton = btn; if(submitAnswerBtn) submitAnswerBtn.disabled = false; }); });
+    submitAnswerBtn.addEventListener('click', () => { if (questionAnsweredThisTurn || currentGameMode !== 'readAndPickSound' || !selectedSoundButton || isMiniGameActive) return; const wordSpokenBySelectedButton = selectedSoundButton.dataset.wordToSpeak; const isCorrect = wordSpokenBySelectedButton === currentCorrectWord; handleAnswer(isCorrect, selectedSoundButton); });
+    listenBtn.onclick = ()=>{ if (currentCorrectWord && !isMiniGameActive) { if (currentGameMode === 'listenAndPickWord') { speak(currentCorrectWord); } else { speak(currentCorrectWord); } } };
+    timerDisp.addEventListener('click',()=>{ if (!isMiniGameActive) { timerSel.style.display = timerSel.style.display==='block'?'none':'block'; timerSel.value = timeLimit; } });
     timerSel.addEventListener('change',()=>{ timeLimit = +timerSel.value; timerDisp.textContent = timeLimit > 0 ? timeLimit+'s ⏱️' : 'Untimed ⏱️'; timerSel.style.display='none';});
-    function showFloatingScore(message, targetButton, isError = false) { const floatEl = document.createElement('div'); floatEl.textContent = message; floatEl.classList.add('floating-effect'); floatEl.classList.add(isError ? 'floating-message' : 'floating-score'); if(isError) {floatEl.style.backgroundColor = 'var(--incorrect-bg)'; floatEl.style.color = '#333';} document.body.appendChild(floatEl); const btnRect = targetButton.getBoundingClientRect(); floatEl.style.left = `${btnRect.left + btnRect.width / 2 - floatEl.offsetWidth / 2}px`; floatEl.style.top = `${btnRect.top - floatEl.offsetHeight - 10}px`; gsap.to(floatEl, { y: -60, opacity: 0, duration: 1.8, ease: 'power1.out', onComplete: () => floatEl.remove() }); }
-    function showFloatingMessage(text, bgColor = 'var(--brand)', textColor = 'white') { const msgEl = document.createElement('div'); msgEl.textContent = text; msgEl.classList.add('floating-effect', 'floating-message'); msgEl.style.backgroundColor = bgColor; msgEl.style.color = textColor; msgEl.style.left = '50%'; msgEl.style.top = '15%'; msgEl.style.transform = 'translateX(-50%)'; msgEl.style.padding = '0.8rem 1.5rem'; msgEl.style.fontSize = '1.5em'; document.body.appendChild(msgEl); gsap.fromTo(msgEl, { opacity: 0, y: -20, scale: 0.8 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'back.out(1.7)' } ); setTimeout(() => { gsap.to(msgEl, { opacity: 0, y: 20, scale: 0.8, duration: 0.5, ease: 'back.in(1.7)', onComplete: () => msgEl.remove() }); }, 2300); }
+    function showFloatingScore(message, targetButton, isError = false) { /* ... same ... */ const floatEl = document.createElement('div'); floatEl.textContent = message; floatEl.classList.add('floating-effect'); floatEl.classList.add(isError ? 'floating-message' : 'floating-score'); if(isError) {floatEl.style.backgroundColor = 'var(--incorrect-bg)'; floatEl.style.color = '#333';} document.body.appendChild(floatEl); const btnRect = targetButton.getBoundingClientRect(); floatEl.style.left = `${btnRect.left + btnRect.width / 2 - floatEl.offsetWidth / 2}px`; floatEl.style.top = `${btnRect.top - floatEl.offsetHeight - 10}px`; gsap.to(floatEl, { y: -60, opacity: 0, duration: 1.8, ease: 'power1.out', onComplete: () => floatEl.remove() }); }
+    function showFloatingMessage(text, bgColor = 'var(--brand)', textColor = 'white') { /* ... same ... */ const msgEl = document.createElement('div'); msgEl.textContent = text; msgEl.classList.add('floating-effect', 'floating-message'); msgEl.style.backgroundColor = bgColor; msgEl.style.color = textColor; msgEl.style.left = '50%'; msgEl.style.top = '15%'; msgEl.style.transform = 'translateX(-50%)'; msgEl.style.padding = '0.8rem 1.5rem'; msgEl.style.fontSize = '1.5em'; document.body.appendChild(msgEl); gsap.fromTo(msgEl, { opacity: 0, y: -20, scale: 0.8 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'back.out(1.7)' } ); setTimeout(() => { gsap.to(msgEl, { opacity: 0, y: 20, scale: 0.8, duration: 0.5, ease: 'back.in(1.7)', onComplete: () => msgEl.remove() }); }, 2300); }
 
-    // --- LEVEL MANAGEMENT ---
-    function initLevelManagement() {
-        const storedLevels = localStorage.getItem('sightWordsSelectedLevels');
-        selectedLevels = storedLevels ? JSON.parse(storedLevels) : ['A']; // Default to Level A
-
-        Object.keys(allLevelWords).forEach(levelKey => {
-            const levelItem = document.createElement('div');
-            levelItem.classList.add('level-item');
-            levelItem.dataset.level = levelKey;
-            levelItem.textContent = `Level ${levelKey}`;
-            
-            const longPressHint = document.createElement('span');
-            longPressHint.classList.add('long-press-indicator');
-            longPressHint.textContent = '(hold to customize)';
-            levelItem.appendChild(longPressHint);
-
-            if (selectedLevels.includes(levelKey)) {
-                levelItem.classList.add('selected');
-            }
-
-            levelItem.addEventListener('mousedown', (e) => handleLevelInteractionStart(e, levelKey));
-            levelItem.addEventListener('touchstart', (e) => handleLevelInteractionStart(e, levelKey), { passive: false }); // passive:false to prevent scroll on touch hold
-            
-            levelItem.addEventListener('mouseup', handleLevelInteractionEnd);
-            levelItem.addEventListener('mouseleave', handleLevelInteractionEnd); // Clear timer if mouse leaves
-            levelItem.addEventListener('touchend', handleLevelInteractionEnd);
-            levelItem.addEventListener('touchcancel', handleLevelInteractionEnd);
-
-            levelsDropdownMenu.appendChild(levelItem);
-        });
-
-        levelsToggleBtn.addEventListener('click', () => {
-            levelsDropdownMenu.classList.toggle('visible');
-        });
-
-        // Close dropdown if clicked outside
-        document.addEventListener('click', (event) => {
-            if (!levelsToggleBtn.contains(event.target) && !levelsDropdownMenu.contains(event.target)) {
-                levelsDropdownMenu.classList.remove('visible');
-            }
-        });
-        
-        modalSaveBtn.addEventListener('click', saveCustomWordSelection);
-        modalCloseBtn.addEventListener('click', closeWordSelectionModal);
-        modalSelectAllBtn.addEventListener('click', () => toggleAllModalWords(true));
-        modalDeselectAllBtn.addEventListener('click', () => toggleAllModalWords(false));
-
-
-        updateActiveQuizWords(); // This will also call nextQ if words are available
-    }
-
-    function handleLevelInteractionStart(event, levelKey) {
-        event.preventDefault(); // Prevent text selection or other default behaviors
-        isLongPress = false;
-        clearTimeout(longPressTimer); // Clear any existing timer
-        longPressTimer = setTimeout(() => {
-            isLongPress = true;
-            openWordSelectionModal(levelKey);
-            levelsDropdownMenu.classList.remove('visible'); // Close dropdown after opening modal
-        }, 500); // 0.5 second for long press
-    }
-
-    function handleLevelInteractionEnd() {
-        clearTimeout(longPressTimer);
-        if (!isLongPress) { // If it wasn't a long press, it's a click/tap
-            // The 'click' event might still fire on mouseup if not prevented.
-            // We need the levelKey, which isn't easily available here without more complex event handling.
-            // So, we'll rely on a separate click handler on the items themselves, which is fine.
-            // This function mainly serves to clear the long press timer.
-            // A regular click should be handled by an explicit click listener if needed
-            // For now, let's re-evaluate: if this is mouseup/touchend and not longpress, then it's a toggle.
-            // The event target is the levelItem.
-            const target = event.currentTarget; // The element the listener was attached to
-            if (target && target.dataset.level && !isLongPress) {
-                 toggleLevelSelection(target.dataset.level, target);
-            }
-        }
-    }
-    
-    // Separate function for click/tap action
-    function toggleLevelSelection(levelKey, levelItemElement) {
-        const index = selectedLevels.indexOf(levelKey);
-        if (index > -1) {
-            selectedLevels.splice(index, 1);
-            levelItemElement.classList.remove('selected');
-        } else {
-            selectedLevels.push(levelKey);
-            levelItemElement.classList.add('selected');
-        }
-        localStorage.setItem('sightWordsSelectedLevels', JSON.stringify(selectedLevels));
-        updateActiveQuizWords();
-    }
-
-
-    function updateActiveQuizWords() {
-        words = []; // Clear current words
-        selectedLevels.forEach(levelKey => {
-            const customWordsJson = localStorage.getItem(`${levelKey}_customWords`);
-            if (customWordsJson) {
-                const customWords = JSON.parse(customWordsJson);
-                if (customWords.length > 0) {
-                    words.push(...customWords);
-                } else { // Empty custom list means use all default words for this level
-                    words.push(...allLevelWords[levelKey]);
-                }
-            } else { // No custom list, use all default words for this level
-                words.push(...allLevelWords[levelKey]);
-            }
-        });
-
-        // Deduplicate words
-        words = [...new Set(words)];
-
-        if (words.length === 0 && allLevelWords.A) { // Default to Level A if no words selected
-            words.push(...allLevelWords.A);
-            if(!selectedLevels.includes('A')) { // If level A was not selected, reflect this
-                selectedLevels.push('A');
-                const levelAItem = levelsDropdownMenu.querySelector(`.level-item[data-level="A"]`);
-                if(levelAItem) levelAItem.classList.add('selected');
-                localStorage.setItem('sightWordsSelectedLevels', JSON.stringify(selectedLevels));
-            }
-            showFloatingMessage("Using Level A words as no others were selected.", "var(--brand-dark)");
-        }
-        
-        clearTimeout(questionTimeoutId);
-        resetQuestionState();
-        setTimeout(nextQ, 100); // Refresh quiz with new words
-    }
-
-    function openWordSelectionModal(levelKey) {
-        currentEditingLevelKey = levelKey;
-        modalLevelTitle.textContent = `Customize Level ${levelKey} Words`;
-        modalWordList.innerHTML = ''; // Clear previous words
-
-        const levelWords = allLevelWords[levelKey];
-        const customWordsJson = localStorage.getItem(`${levelKey}_customWords`);
-        let customWords = [];
-        if (customWordsJson) {
-            customWords = JSON.parse(customWordsJson);
-        }
-        // If no custom words are stored (null), or if an empty array was stored,
-        // customWords will be empty, so nothing will be checked by default, as per "none of them should be selected initially".
-
-        levelWords.forEach(word => {
-            const itemDiv = document.createElement('div');
-            itemDiv.classList.add('modal-word-item');
-            
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.id = `modal-word-${word.replace(/\s+/g, '-')}`; // Sanitize ID
-            checkbox.value = word;
-            checkbox.checked = customWords.includes(word); // Check if in stored custom list
-
-            const label = document.createElement('label');
-            label.htmlFor = checkbox.id;
-            label.textContent = word;
-
-            itemDiv.appendChild(checkbox);
-            itemDiv.appendChild(label);
-            // Allow clicking the whole item to toggle checkbox
-            itemDiv.addEventListener('click', (e) => {
-                if (e.target !== checkbox) checkbox.checked = !checkbox.checked;
-            });
-            modalWordList.appendChild(itemDiv);
-        });
-
-        wordSelectionModal.classList.add('visible');
-    }
-
-    function closeWordSelectionModal() {
-        wordSelectionModal.classList.remove('visible');
-        currentEditingLevelKey = null;
-    }
-
-    function saveCustomWordSelection() {
-        if (!currentEditingLevelKey) return;
-
-        const selectedCustomWords = [];
-        modalWordList.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
-            selectedCustomWords.push(cb.value);
-        });
-
-        // If user selected some words, save them.
-        // If user deselected all words, save an empty array `[]`.
-        // This `[]` will signify that for this level (if active), all its default words should be used.
-        localStorage.setItem(`${currentEditingLevelKey}_customWords`, JSON.stringify(selectedCustomWords));
-        
-        closeWordSelectionModal();
-        updateActiveQuizWords(); // Refresh quiz words based on new custom list
-    }
-    
-    function toggleAllModalWords(select) {
-        modalWordList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-            cb.checked = select;
-        });
-    }
+    // --- LEVEL MANAGEMENT (same as before) ---
+    function initLevelManagement() { /* ... same ... */ const storedLevels = localStorage.getItem('sightWordsSelectedLevels'); selectedLevels = storedLevels ? JSON.parse(storedLevels) : ['A']; Object.keys(allLevelWords).forEach(levelKey => { const levelItem = document.createElement('div'); levelItem.classList.add('level-item'); levelItem.dataset.level = levelKey; levelItem.textContent = `Level ${levelKey}`; const longPressHint = document.createElement('span'); longPressHint.classList.add('long-press-indicator'); longPressHint.textContent = '(hold to customize)'; levelItem.appendChild(longPressHint); if (selectedLevels.includes(levelKey)) { levelItem.classList.add('selected'); } levelItem.addEventListener('mousedown', (e) => handleLevelInteractionStart(e, levelKey)); levelItem.addEventListener('touchstart', (e) => handleLevelInteractionStart(e, levelKey), { passive: false }); levelItem.addEventListener('mouseup', handleLevelInteractionEnd); levelItem.addEventListener('mouseleave', handleLevelInteractionEnd); levelItem.addEventListener('touchend', handleLevelInteractionEnd); levelItem.addEventListener('touchcancel', handleLevelInteractionEnd); levelsDropdownMenu.appendChild(levelItem); }); levelsToggleBtn.addEventListener('click', () => { levelsDropdownMenu.classList.toggle('visible'); }); document.addEventListener('click', (event) => { if (!levelsToggleBtn.contains(event.target) && !levelsDropdownMenu.contains(event.target)) { levelsDropdownMenu.classList.remove('visible'); } }); modalSaveBtn.addEventListener('click', saveCustomWordSelection); modalCloseBtn.addEventListener('click', closeWordSelectionModal); modalSelectAllBtn.addEventListener('click', () => toggleAllModalWords(true)); modalDeselectAllBtn.addEventListener('click', () => toggleAllModalWords(false)); updateActiveQuizWords(); }
+    function handleLevelInteractionStart(event, levelKey) { /* ... same ... */ if(isMiniGameActive) return; event.preventDefault(); isLongPress = false; clearTimeout(longPressTimer); longPressTimer = setTimeout(() => { isLongPress = true; openWordSelectionModal(levelKey); levelsDropdownMenu.classList.remove('visible'); }, 500); }
+    function handleLevelInteractionEnd(event) { /* ... same, added event param to get target ... */ clearTimeout(longPressTimer); if (!isLongPress) { const target = event.currentTarget; if (target && target.dataset.level && !isLongPress) { toggleLevelSelection(target.dataset.level, target); } } }
+    function toggleLevelSelection(levelKey, levelItemElement) { /* ... same ... */ const index = selectedLevels.indexOf(levelKey); if (index > -1) { selectedLevels.splice(index, 1); levelItemElement.classList.remove('selected'); } else { selectedLevels.push(levelKey); levelItemElement.classList.add('selected'); } localStorage.setItem('sightWordsSelectedLevels', JSON.stringify(selectedLevels)); updateActiveQuizWords(); }
+    function updateActiveQuizWords() { /* ... same ... */ words = []; selectedLevels.forEach(levelKey => { const customWordsJson = localStorage.getItem(`${levelKey}_customWords`); if (customWordsJson) { const customWords = JSON.parse(customWordsJson); if (customWords.length > 0) { words.push(...customWords); } else { words.push(...allLevelWords[levelKey]); } } else { words.push(...allLevelWords[levelKey]); } }); words = [...new Set(words)]; if (words.length === 0 && allLevelWords.A) { words.push(...allLevelWords.A); if(!selectedLevels.includes('A')) { selectedLevels.push('A'); const levelAItem = levelsDropdownMenu.querySelector(`.level-item[data-level="A"]`); if(levelAItem) levelAItem.classList.add('selected'); localStorage.setItem('sightWordsSelectedLevels', JSON.stringify(selectedLevels)); } showFloatingMessage("Using Level A words as no others were selected.", "var(--brand-dark)"); } clearTimeout(questionTimeoutId); resetQuestionState(); setTimeout(nextQ, 100); }
+    function openWordSelectionModal(levelKey) { /* ... same ... */ currentEditingLevelKey = levelKey; modalLevelTitle.textContent = `Customize Level ${levelKey} Words`; modalWordList.innerHTML = ''; const levelWords = allLevelWords[levelKey]; const customWordsJson = localStorage.getItem(`${levelKey}_customWords`); let customWords = []; if (customWordsJson) { customWords = JSON.parse(customWordsJson); } levelWords.forEach(word => { const itemDiv = document.createElement('div'); itemDiv.classList.add('modal-word-item'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.id = `modal-word-${word.replace(/\s+/g, '-')}`; checkbox.value = word; checkbox.checked = customWords.includes(word); const label = document.createElement('label'); label.htmlFor = checkbox.id; label.textContent = word; itemDiv.appendChild(checkbox); itemDiv.appendChild(label); itemDiv.addEventListener('click', (e) => { if (e.target !== checkbox) checkbox.checked = !checkbox.checked; }); modalWordList.appendChild(itemDiv); }); wordSelectionModal.classList.add('visible'); }
+    function closeWordSelectionModal() { /* ... same ... */ wordSelectionModal.classList.remove('visible'); currentEditingLevelKey = null; }
+    function saveCustomWordSelection() { /* ... same ... */ if (!currentEditingLevelKey) return; const selectedCustomWords = []; modalWordList.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => { selectedCustomWords.push(cb.value); }); localStorage.setItem(`${currentEditingLevelKey}_customWords`, JSON.stringify(selectedCustomWords)); closeWordSelectionModal(); updateActiveQuizWords(); }
+    function toggleAllModalWords(select) { /* ... same ... */ modalWordList.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = select; }); }
 
   </script>
 </body>
