@@ -4,11 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <title>Sight Words Quiz Deluxe - Enhanced Read Mode & TTS Fix</title>
-
   <!-- Google Font + Animate.css -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-
   <!-- External Libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.min.js"></script>
@@ -25,7 +23,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/progressbar.js/1.1.0/progressbar.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
-
   <style>
     :root {
       --brand: #26c6da;
@@ -87,12 +84,65 @@
     .floating-effect { position: fixed; padding: 0.5rem 1rem; color: white; border-radius: 20px; font-weight: bold; font-size: 1.2em; z-index: 200; pointer-events: none; text-align: center; }
     .floating-score { background: rgba(76, 175, 80, 0.9); }
     .floating-message { background: var(--brand); }
+
+    /* Level Selection Styles */
+    #level-controls-container { position: relative; margin-left: auto; /* Pushes to the right if others are present */ }
+    #levels-toggle-btn { padding: 0.6rem 1rem; font-size: 0.9rem; font-weight: 600; background-color: var(--btn-bg); border: 2px solid var(--btn-border); border-radius: var(--btn-radius); cursor: pointer; box-shadow: 0 2px 4px var(--shadow-color); }
+    #levels-dropdown-menu { display: none; position: absolute; top: calc(100% + 5px); right: 0; background-color: white; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 100; padding: 0.5rem 0; min-width: 150px; }
+    #levels-dropdown-menu.visible { display: block; }
+    .level-item { padding: 0.75rem 1.25rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; }
+    .level-item:hover { background-color: #f0f0f0; }
+    .level-item.selected { background-color: var(--brand-light); color: var(--brand-dark); font-weight: 600; }
+    .level-item .long-press-indicator { font-size: 0.7em; color: #777; margin-left: 8px; }
+    .level-item.selected .long-press-indicator { color: var(--brand-dark); }
+
+
+    /* Word Selection Modal Styles */
+    #word-selection-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; padding: 1rem; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); }
+    #word-selection-modal.visible { display: flex; }
+    .modal-content { background-color: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); width: 90%; max-width: 600px; max-height: 90vh; display: flex; flex-direction: column; }
+    #modal-level-title { margin-top: 0; margin-bottom: 1rem; text-align: center; color: var(--brand-dark); }
+    #modal-word-list { overflow-y: auto; flex-grow: 1; border: 1px solid #eee; border-radius: 8px; padding: 0.5rem; margin-bottom: 1rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.5rem; }
+    .modal-word-item { display: flex; align-items: center; padding: 0.5rem; border-radius: 6px; background-color: #f9f9f9; cursor: pointer; transition: background-color 0.2s; }
+    .modal-word-item:hover { background-color: #e9e9e9; }
+    .modal-word-item input[type="checkbox"] { margin-right: 0.75rem; width: 18px; height: 18px; accent-color: var(--brand); }
+    .modal-word-item label { flex-grow: 1; user-select: none; }
+    .modal-actions { display: flex; flex-wrap: wrap; justify-content: space-around; gap: 0.5rem; padding-top: 1rem; border-top: 1px solid #eee; }
+    .modal-actions button { padding: 0.6rem 1rem; font-size: 0.9rem; border-radius: 8px; border: none; cursor: pointer; background-color: var(--brand); color: white; transition: background-color 0.2s; }
+    .modal-actions button:hover { background-color: var(--brand-dark); }
+    .modal-actions button#modal-close-btn { background-color: #aaa; }
+    .modal-actions button#modal-close-btn:hover { background-color: #888; }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
+<canvas id="confetti-canvas"></canvas>
 
-  <canvas id="confetti-canvas"></canvas>
-  <div class="top-bar"> <div id="score">Score: <span id="score-val">0</span></div> <div id="timer-wrapper"><div id="circular-timer"></div></div> </div>
+  <div class="top-bar">
+    <div id="score">Score: <span id="score-val">0</span></div>
+    <div id="timer-wrapper"><div id="circular-timer"></div></div>
+    <div id="level-controls-container">
+        <button id="levels-toggle-btn">Levels</button>
+        <div id="levels-dropdown-menu">
+            <!-- Level items will be populated by JS -->
+        </div>
+    </div>
+  </div>
+
+  <div id="word-selection-modal">
+    <div class="modal-content">
+        <h2 id="modal-level-title">Customize Words</h2>
+        <div id="modal-word-list">
+            <!-- Word checkboxes will be populated by JS -->
+        </div>
+        <div class="modal-actions">
+            <button id="modal-save-btn">Save & Use</button>
+            <button id="modal-select-all-btn">Select All</button>
+            <button id="modal-deselect-all-btn">Deselect All</button>
+            <button id="modal-close-btn">Close</button>
+        </div>
+    </div>
+  </div>
 
   <div id="quiz-container" class="animate__animated">
     <div id="listen-pick-word-area">
@@ -108,26 +158,26 @@
       <button id="submit-answer-btn" disabled>Submit Answer</button>
     </div>
   </div>
-
   <div id="controls"> <div id="timer-display">10s ⏱️</div> <button id="mode-toggle-btn">Mode: Listen</button> <button id="listen-btn">🔊</button> </div>
   <select id="timer-select"></select>
   <div id="mascot-container"> <lottie-player src="https://lottie.host/449f9829-8f92-4a63-85a2-def249781a91/p021aHdt2x.json" background="transparent" speed="1" loop autoplay></lottie-player> </div>
-
   <script>
     // --- WEB AUDIO API (condensed) ---
     const audioCtx = new (window.AudioContext||window.webkitAudioContext)(); if (audioCtx) { window.addEventListener('pointerdown', () => { if (audioCtx.state === 'suspended') audioCtx.resume(); }, { once: true }); } function playOsc({ type='sine', freq=440, dur=0.3, modFreq, modIndex, vol=1 }) { if (!audioCtx) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); if (modFreq && modIndex) { const mod = audioCtx.createOscillator(); const mGain = audioCtx.createGain(); mod.frequency.setValueAtTime(modFreq, audioCtx.currentTime); mGain.gain.setValueAtTime(modIndex, audioCtx.currentTime); mod.connect(mGain).connect(osc.frequency); mod.start(audioCtx.currentTime); mod.stop(audioCtx.currentTime + dur); } osc.connect(gain); gain.connect(audioCtx.destination); gain.gain.setValueAtTime(vol, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur); osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + dur); } function playBell() { if (!audioCtx) return; playOsc({ type:'sine', freq:660, dur:0.3, vol: 0.6 }); setTimeout(() => playOsc({ type:'sine', freq:880, dur:0.3, vol: 0.6 }), 120); } function playBuzz() { if (!audioCtx) return; playOsc({ type:'square', freq:150, dur:0.4, vol: 0.4 }); }
     
-    // --- PRONUNCIATION MAP for TTS ---
-    const pronunciationMap = {
-      "I": "I." // TTS will read "I." which usually forces the pronoun "I" sound
-      // Add other problematic words here if they arise, e.g.:
-      // "a": "a." 
-    };
+    const pronunciationMap = { "I": "I." };
 
-    // --- VANTA.JS DYNAMIC BACKGROUNDS (condensed) ---
+    // --- VANTA.JS DYNAMIC BACKGROUNDS (condensed - same as before) ---
     let vantaEffect = null; const vantaElement = document.body; let vantaBackgroundKeys = []; let currentBackgroundKey = null; const baseGlobalParams = { mouseControls: true, touchControls: true, gyroControls: false, minHeight: 200.00, minWidth: 200.00, scale: 1.00, scaleMobile: 1.00, }; const effectConfigurations = { "FOG_Soft_Blue": { effect: "FOG", params: { highlightColor: 0x80deea, midtoneColor: 0x26c6da, lowlightColor: 0x00acc1, baseColor: 0xf4f6f8, blurFactor: 0.6, zoom: 1.2, speed: 1.0 }}, "WAVES_Ocean": { effect: "WAVES", params: { color: 0x005577, shininess: 30, waveHeight: 15, waveSpeed: 0.8, zoom: 1.0 }}, "BIRDS_Day_Sky": { effect: "BIRDS", params: { backgroundColor: 0x87ceeb, color1: 0x444444, color2: 0x666666, birdSize: 1.0, wingSpan: 20.00, speedLimit: 3.00, separation: 20.00, alignment: 20.00, cohesion: 20.00, quantity: 4 }}, "NET_Cyber_Grid": { effect: "NET", params: { color: 0x00ffff, backgroundColor: 0x000022, points: 10.00, maxDistance: 20.00, spacing: 15.00, showDots: true }}, "CELLS_Bio_Blue": { effect: "CELLS", params: { color1: 0x2196f3, color2: 0x90caf9, size: 3.0, speed: 1.0 }}, "CLOUDS_Sunny_Day": { effect: "CLOUDS", params: { skyColor: 0x68b8d7, cloudColor: 0xadc1de, cloudShadowColor: 0x183550, sunColor: 0xff9919, sunGlareColor: 0xff6633, sunlightColor: 0xff9933, speed: 1.0 }}, "DOTS_Starfield": { effect: "DOTS", params: { color: 0xffffff, color2: 0xdddddd, backgroundColor: 0x000011, size: 3.00, spacing: 30.00, showLines: false }}, "RINGS_Golden_Aura": { effect: "RINGS", params: { backgroundColor: 0x110022, color: 0xffd700, strength: 2.00 }}, "HALO_Gentle_Sun": { effect: "HALO", params: { baseColor: 0xffe082, backgroundColor: 0xfff8e1, amplitudeFactor: 0.5, size: 1.0 }}, "FOG_Mystic_Purple": { effect: "FOG", params: { highlightColor: 0xff00ff, midtoneColor: 0xaa00aa, lowlightColor: 0x550055, baseColor: 0x300030, blurFactor: 0.7, zoom: 1.0, speed: 0.8 }}, "WAVES_Lava": { effect: "WAVES", params: { color: 0xff3300, shininess: 10, waveHeight: 25, waveSpeed: 0.4, zoom: 0.75 }}, "BIRDS_Sunset": { effect: "BIRDS", params: { backgroundColor: 0xffa07a, color1: 0x5d4037, color2: 0x000000, birdSize: 1.2, wingSpan: 25.00, quantity: 3, speedLimit: 2.00 }}, "NET_Golden_Web": { effect: "NET", params: { color: 0xffd700, backgroundColor: 0x301934, points: 8.00, maxDistance: 25.00, spacing: 20.00, showDots: true }}, "CELLS_Pulsing_Red": { effect: "CELLS", params: { color1: 0xf44336, color2: 0xffcdd2, size: 4.5, speed: 0.5 }}, "CLOUDS_Evening_Sky": { effect: "CLOUDS", params: { skyColor: 0x334d5c, cloudColor: 0x8e8e8e, cloudShadowColor: 0x2e2e2e, sunColor: 0xf57c00, sunGlareColor: 0xffb74d, sunlightColor: 0xffa726, speed: 0.6 }}, "DOTS_Colorful_Grid": { effect: "DOTS", params: { color: 0xff00ff, color2: 0x00ff00, backgroundColor: 0x222222, size: 5.00, spacing: 25.00, showLines: true }}, "RINGS_Blue_Energy": { effect: "RINGS", params: { backgroundColor: 0x001020, color: 0x00aaff, strength: 3.50 }}, "HALO_Deep_Space": { effect: "HALO", params: { baseColor: 0x7e57c2, backgroundColor: 0x1a001a, amplitudeFactor: 1.5, size: 1.2, xOffset: 0.2, yOffset: 0.1 }} }; function applyVantaEffect(configKey) { if (vantaEffect) { try { vantaEffect.destroy(); } catch (e) { console.error("Err destroy vanta:", e); } vantaEffect = null; } const config = effectConfigurations[configKey]; if (!config || typeof VANTA === 'undefined' || typeof VANTA[config.effect] !== 'function') { console.error(`Vanta effect ${configKey} error.`); return; } const finalParams = { el: vantaElement, ...baseGlobalParams, ...config.params }; try { vantaEffect = VANTA[config.effect](finalParams); currentBackgroundKey = configKey; } catch (error) { console.error(`Err init Vanta '${config.effect}':`, error); vantaEffect = null; } }
-
-    const words = [ "a","all","am","and","away","be","big","blue","but","can","come", "did","down","find","for","funny","go","good","he","help","here","I", "in","is","it","like","little","look","make","me","my","no","not", "on","one","play","ran","red","run","said","see","so","that","the", "three","to","two","up","was","we","what","where","yellow","yes","you" ];
+    
+    // --- WORD DATA ---
+    const allLevelWords = {
+        A: ["a","all","am","and","away","be","big","blue","but","can","come", "did","down","find","for","funny","go","good","he","help","here","I", "in","is","it","like","little","look","make","me","my","no","not", "on","one","play","ran","red","run","said","see","so","that","the", "three","to","two","up","was","we","what","where","yellow","yes","you"],
+        B: ["after","again","any","are","as","at","ate","black","brown","by","came","could","do","eat","every","four","from","get","give","going","had","have","her","him","how","into","let","must","new","now","of","our","out","please","pretty","ride","round","saw","say","she","some","soon","thank","there","they","this","too","under","want","well","went","white","who","will","with"],
+        C: ["an","ask","been","best","buy","cold","does","don't","first","five","fly","found","gave","goes","green","has","his","its","jump","just","know","live","made","many","may","off","old","once","open","or","over","own","pull","put","read","right","sit","sleep","stop","take","tell","them","then","these","think","those","use","very","walk","warm","wash","were","when","why","your"],
+        D: ["about","always","around","because","before","better","both","bring","call","carry","clean","cut","done","draw","drink","eight","fall","far","fast","full","got","grow","hold","hot","hurt","if","keep","kind","laugh","light","long","much","myself","never","only","pick","seven","shall","show","sing","six","small","start","ten","their","today","together","try","upon","us","which","wish","work","would","write"]
+    };
+    let words = []; // This will be dynamically populated based on level selections.
 
     // --- UI REFERENCES ---
     const wordChoiceBtns = [document.getElementById('choice0'), document.getElementById('choice1')];
@@ -147,6 +197,21 @@
     const confettiCanvas = document.getElementById('confetti-canvas');
     const myConfetti = confetti.create(confettiCanvas, { resize: true, useWorker: true });
 
+    // Level Selection UI
+    const levelsToggleBtn = document.getElementById('levels-toggle-btn');
+    const levelsDropdownMenu = document.getElementById('levels-dropdown-menu');
+    const wordSelectionModal = document.getElementById('word-selection-modal');
+    const modalLevelTitle = document.getElementById('modal-level-title');
+    const modalWordList = document.getElementById('modal-word-list');
+    const modalSaveBtn = document.getElementById('modal-save-btn');
+    const modalSelectAllBtn = document.getElementById('modal-select-all-btn');
+    const modalDeselectAllBtn = document.getElementById('modal-deselect-all-btn');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+    let currentEditingLevelKey = null; // For the word selection modal
+    let longPressTimer = null;
+    let isLongPress = false;
+
+
     // --- GAME STATE ---
     let circleTimerInstance;
     let questionTimeoutId; 
@@ -158,6 +223,8 @@
     const streakThresholds = {3: "Streak x3!", 5: "Super Streak x5!", 10: "AMAZING x10!"};
     let currentGameMode = localStorage.getItem('sightWordsGameMode') || 'listenAndPickWord';
     let selectedSoundButton = null;
+    let selectedLevels = [];
+
 
     // ---- INITIALIZATION ----
     document.addEventListener('DOMContentLoaded', () => {
@@ -165,13 +232,16 @@
       if (vantaBackgroundKeys.length > 0 && typeof THREE !== 'undefined' && typeof VANTA !== 'undefined') {
         applyVantaEffect(vantaBackgroundKeys[0]);
       }
+      
+      initLevelManagement(); // Setup level selection first
       updateModeUI();
       initCircularTimer();
       
       for(let i=0;i<=30;i++){ let o = document.createElement('option'); o.value = i; o.textContent = i+'s' + (i === 0 ? ' (Untimed)' : ''); timerSel.append(o); }
       timerSel.value = timeLimit; 
       timerDisp.textContent = timeLimit > 0 ? timeLimit+'s ⏱️' : 'Untimed ⏱️';
-      nextQ();
+      
+      // nextQ() will be called by updateActiveQuizWords after levels are set up
     });
 
     function updateModeUI() {
@@ -208,19 +278,8 @@
 
     function initCircularTimer() { const timerContainer = document.getElementById('circular-timer'); if (!timerContainer) return; circleTimerInstance = new ProgressBar.Circle(timerContainer, { strokeWidth: 10, easing: 'linear', color: 'var(--brand)', trailColor: 'rgba(224, 224, 224, 0.5)', trailWidth: 10, svgStyle: { width: '100%', height: '100%' }, text: { style: { color: 'var(--fg)', position: 'absolute', left: '50%', top: '50%', padding: 0, margin: 0, transform: { prefix: true, value: 'translate(-50%, -50%)' }, fontSize: '1.4em', fontWeight: '600', }, autoStyleContainer: false }, step: function(state, circle) { if (timeLimit > 0) { const timeLeft = Math.ceil(timeLimit * (1 - circle.value())); circle.setText(timeLeft > 0 ? timeLeft : '0'); if (timeLeft <= timeLimit * 0.3) circle.path.setAttribute('stroke', '#f44336'); else if (timeLeft <= timeLimit * 0.6) circle.path.setAttribute('stroke', '#ff9800'); else circle.path.setAttribute('stroke', 'var(--brand)'); } else { circle.setText('∞'); circle.path.setAttribute('stroke', 'var(--brand)'); } } }); }
     
-    // --- Speak helper (MODIFIED with pronunciationMap) ---
-    function speak(txt){
-      if('speechSynthesis' in window){
-        speechSynthesis.cancel();
-        let textToSpeak = pronunciationMap[txt] || txt;
-        let u = new SpeechSynthesisUtterance(textToSpeak);
-        u.rate = 0.9; 
-        u.pitch = 1.1;
-        speechSynthesis.speak(u);
-      }
-    }
-    // --- END Speak helper ---
-
+    function speak(txt){ if('speechSynthesis' in window){ speechSynthesis.cancel(); let textToSpeak = pronunciationMap[txt] || txt; let u = new SpeechSynthesisUtterance(textToSpeak); u.rate = 0.9; u.pitch = 1.1; speechSynthesis.speak(u); } }
+    
     function startCountdown(onDoneCallback){ clearTimeout(questionTimeoutId); if(circleTimerInstance){ circleTimerInstance.set(0); circleTimerInstance.setText(timeLimit > 0 ? String(timeLimit) : '∞'); circleTimerInstance.path.setAttribute('stroke', 'var(--brand)'); if(timeLimit <= 0) return; circleTimerInstance.animate(1.0, { duration: timeLimit * 1000 }); questionTimeoutId = setTimeout(() => { if (!questionAnsweredThisTurn) onDoneCallback(); }, timeLimit * 1000); } }
 
     function nextQ(){
@@ -229,9 +288,33 @@
       void quizCont.offsetWidth; 
       quizCont.classList.add('animate__zoomIn'); 
 
+      // Ensure all choice buttons are visible (they might be hidden if words array was empty)
+      [...wordChoiceBtns, ...soundChoiceBtns].forEach(btn => btn.style.display = '');
+      if(submitAnswerBtn) submitAnswerBtn.style.display = '';
+      wordToReadDisplay.style.display = '';
+
+
+      if (words.length === 0) {
+          console.error("No words available for the quiz! Check level/word selections.");
+          wordToReadDisplay.textContent = "No Words!";
+          showFloatingMessage("Please select levels/words!", "var(--brand-dark)");
+          listenPickWordArea.style.display = 'none';
+          readPickSoundArea.style.display = 'flex';
+          soundChoiceBtns.forEach(btn => btn.style.display = 'none');
+          if (submitAnswerBtn) submitAnswerBtn.style.display = 'none';
+          wordChoiceBtns.forEach(btn => btn.style.display = 'none'); // Hide word choice buttons too
+          clearTimeout(questionTimeoutId); // Stop timer
+          if(circleTimerInstance) circleTimerInstance.set(0); // Reset circular timer display
+          return;
+      }
+
       currentCorrectWord = words[Math.floor(Math.random()*words.length)];
       let distractorWord;
-      do { distractorWord = words[Math.floor(Math.random()*words.length)]; } while(distractorWord === currentCorrectWord);
+      if (words.length > 1) {
+        do { distractorWord = words[Math.floor(Math.random()*words.length)]; } while(distractorWord === currentCorrectWord);
+      } else {
+        distractorWord = currentCorrectWord; // Only one word available, so distractor is the same
+      }
 
       if (currentGameMode === 'listenAndPickWord') {
         const pair = Math.random() < 0.5 ? [currentCorrectWord, distractorWord] : [distractorWord, currentCorrectWord];
@@ -268,7 +351,6 @@
     function handleAnswer(isCorrect, targetButtonElement) {
         if (questionAnsweredThisTurn) return;
         questionAnsweredThisTurn = true;
-
         clearTimeout(questionTimeoutId);
         disableAllChoiceButtons();
 
@@ -296,39 +378,212 @@
         setTimeout(nextQ, isCorrect ? 1000 : 1800); 
     }
 
-    wordChoiceBtns.forEach(btn=>{ // Listen & Pick Word Mode
-      btn.addEventListener('click',()=>{
-        if (questionAnsweredThisTurn || currentGameMode !== 'listenAndPickWord') return;
-        const isCorrect = btn.textContent === currentCorrectWord;
-        handleAnswer(isCorrect, btn);
-      });
-    });
-
-    soundChoiceBtns.forEach(btn => { // Read & Pick Sound Mode - Selection Step
-        btn.addEventListener('click', () => {
-            if (questionAnsweredThisTurn || currentGameMode !== 'readAndPickSound') return;
-            const wordToSpeak = btn.dataset.wordToSpeak;
-            speak(wordToSpeak);
-            if (selectedSoundButton && selectedSoundButton !== btn) { selectedSoundButton.classList.remove('sound-btn-selected'); }
-            btn.classList.add('sound-btn-selected');
-            selectedSoundButton = btn;
-            if(submitAnswerBtn) submitAnswerBtn.disabled = false;
-        });
-    });
-
-    submitAnswerBtn.addEventListener('click', () => { // Read & Pick Sound Mode - Submission Step
-        if (questionAnsweredThisTurn || currentGameMode !== 'readAndPickSound' || !selectedSoundButton) return;
-        const wordSpokenBySelectedButton = selectedSoundButton.dataset.wordToSpeak;
-        const isCorrect = wordSpokenBySelectedButton === currentCorrectWord;
-        handleAnswer(isCorrect, selectedSoundButton);
-    });
-
+    wordChoiceBtns.forEach(btn=>{ btn.addEventListener('click',()=>{ if (questionAnsweredThisTurn || currentGameMode !== 'listenAndPickWord') return; const isCorrect = btn.textContent === currentCorrectWord; handleAnswer(isCorrect, btn); }); });
+    soundChoiceBtns.forEach(btn => { btn.addEventListener('click', () => { if (questionAnsweredThisTurn || currentGameMode !== 'readAndPickSound') return; const wordToSpeak = btn.dataset.wordToSpeak; speak(wordToSpeak); if (selectedSoundButton && selectedSoundButton !== btn) { selectedSoundButton.classList.remove('sound-btn-selected'); } btn.classList.add('sound-btn-selected'); selectedSoundButton = btn; if(submitAnswerBtn) submitAnswerBtn.disabled = false; }); });
+    submitAnswerBtn.addEventListener('click', () => { if (questionAnsweredThisTurn || currentGameMode !== 'readAndPickSound' || !selectedSoundButton) return; const wordSpokenBySelectedButton = selectedSoundButton.dataset.wordToSpeak; const isCorrect = wordSpokenBySelectedButton === currentCorrectWord; handleAnswer(isCorrect, selectedSoundButton); });
     listenBtn.onclick = ()=>{ if (currentCorrectWord) { if (currentGameMode === 'listenAndPickWord') { speak(currentCorrectWord); } else { speak(currentCorrectWord); } } };
     timerDisp.addEventListener('click',()=>{ timerSel.style.display = timerSel.style.display==='block'?'none':'block'; timerSel.value = timeLimit; });
     timerSel.addEventListener('change',()=>{ timeLimit = +timerSel.value; timerDisp.textContent = timeLimit > 0 ? timeLimit+'s ⏱️' : 'Untimed ⏱️'; timerSel.style.display='none';});
-
     function showFloatingScore(message, targetButton, isError = false) { const floatEl = document.createElement('div'); floatEl.textContent = message; floatEl.classList.add('floating-effect'); floatEl.classList.add(isError ? 'floating-message' : 'floating-score'); if(isError) {floatEl.style.backgroundColor = 'var(--incorrect-bg)'; floatEl.style.color = '#333';} document.body.appendChild(floatEl); const btnRect = targetButton.getBoundingClientRect(); floatEl.style.left = `${btnRect.left + btnRect.width / 2 - floatEl.offsetWidth / 2}px`; floatEl.style.top = `${btnRect.top - floatEl.offsetHeight - 10}px`; gsap.to(floatEl, { y: -60, opacity: 0, duration: 1.8, ease: 'power1.out', onComplete: () => floatEl.remove() }); }
     function showFloatingMessage(text, bgColor = 'var(--brand)', textColor = 'white') { const msgEl = document.createElement('div'); msgEl.textContent = text; msgEl.classList.add('floating-effect', 'floating-message'); msgEl.style.backgroundColor = bgColor; msgEl.style.color = textColor; msgEl.style.left = '50%'; msgEl.style.top = '15%'; msgEl.style.transform = 'translateX(-50%)'; msgEl.style.padding = '0.8rem 1.5rem'; msgEl.style.fontSize = '1.5em'; document.body.appendChild(msgEl); gsap.fromTo(msgEl, { opacity: 0, y: -20, scale: 0.8 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'back.out(1.7)' } ); setTimeout(() => { gsap.to(msgEl, { opacity: 0, y: 20, scale: 0.8, duration: 0.5, ease: 'back.in(1.7)', onComplete: () => msgEl.remove() }); }, 2300); }
+
+    // --- LEVEL MANAGEMENT ---
+    function initLevelManagement() {
+        const storedLevels = localStorage.getItem('sightWordsSelectedLevels');
+        selectedLevels = storedLevels ? JSON.parse(storedLevels) : ['A']; // Default to Level A
+
+        Object.keys(allLevelWords).forEach(levelKey => {
+            const levelItem = document.createElement('div');
+            levelItem.classList.add('level-item');
+            levelItem.dataset.level = levelKey;
+            levelItem.textContent = `Level ${levelKey}`;
+            
+            const longPressHint = document.createElement('span');
+            longPressHint.classList.add('long-press-indicator');
+            longPressHint.textContent = '(hold to customize)';
+            levelItem.appendChild(longPressHint);
+
+            if (selectedLevels.includes(levelKey)) {
+                levelItem.classList.add('selected');
+            }
+
+            levelItem.addEventListener('mousedown', (e) => handleLevelInteractionStart(e, levelKey));
+            levelItem.addEventListener('touchstart', (e) => handleLevelInteractionStart(e, levelKey), { passive: false }); // passive:false to prevent scroll on touch hold
+            
+            levelItem.addEventListener('mouseup', handleLevelInteractionEnd);
+            levelItem.addEventListener('mouseleave', handleLevelInteractionEnd); // Clear timer if mouse leaves
+            levelItem.addEventListener('touchend', handleLevelInteractionEnd);
+            levelItem.addEventListener('touchcancel', handleLevelInteractionEnd);
+
+            levelsDropdownMenu.appendChild(levelItem);
+        });
+
+        levelsToggleBtn.addEventListener('click', () => {
+            levelsDropdownMenu.classList.toggle('visible');
+        });
+
+        // Close dropdown if clicked outside
+        document.addEventListener('click', (event) => {
+            if (!levelsToggleBtn.contains(event.target) && !levelsDropdownMenu.contains(event.target)) {
+                levelsDropdownMenu.classList.remove('visible');
+            }
+        });
+        
+        modalSaveBtn.addEventListener('click', saveCustomWordSelection);
+        modalCloseBtn.addEventListener('click', closeWordSelectionModal);
+        modalSelectAllBtn.addEventListener('click', () => toggleAllModalWords(true));
+        modalDeselectAllBtn.addEventListener('click', () => toggleAllModalWords(false));
+
+
+        updateActiveQuizWords(); // This will also call nextQ if words are available
+    }
+
+    function handleLevelInteractionStart(event, levelKey) {
+        event.preventDefault(); // Prevent text selection or other default behaviors
+        isLongPress = false;
+        clearTimeout(longPressTimer); // Clear any existing timer
+        longPressTimer = setTimeout(() => {
+            isLongPress = true;
+            openWordSelectionModal(levelKey);
+            levelsDropdownMenu.classList.remove('visible'); // Close dropdown after opening modal
+        }, 500); // 0.5 second for long press
+    }
+
+    function handleLevelInteractionEnd() {
+        clearTimeout(longPressTimer);
+        if (!isLongPress) { // If it wasn't a long press, it's a click/tap
+            // The 'click' event might still fire on mouseup if not prevented.
+            // We need the levelKey, which isn't easily available here without more complex event handling.
+            // So, we'll rely on a separate click handler on the items themselves, which is fine.
+            // This function mainly serves to clear the long press timer.
+            // A regular click should be handled by an explicit click listener if needed
+            // For now, let's re-evaluate: if this is mouseup/touchend and not longpress, then it's a toggle.
+            // The event target is the levelItem.
+            const target = event.currentTarget; // The element the listener was attached to
+            if (target && target.dataset.level && !isLongPress) {
+                 toggleLevelSelection(target.dataset.level, target);
+            }
+        }
+    }
+    
+    // Separate function for click/tap action
+    function toggleLevelSelection(levelKey, levelItemElement) {
+        const index = selectedLevels.indexOf(levelKey);
+        if (index > -1) {
+            selectedLevels.splice(index, 1);
+            levelItemElement.classList.remove('selected');
+        } else {
+            selectedLevels.push(levelKey);
+            levelItemElement.classList.add('selected');
+        }
+        localStorage.setItem('sightWordsSelectedLevels', JSON.stringify(selectedLevels));
+        updateActiveQuizWords();
+    }
+
+
+    function updateActiveQuizWords() {
+        words = []; // Clear current words
+        selectedLevels.forEach(levelKey => {
+            const customWordsJson = localStorage.getItem(`${levelKey}_customWords`);
+            if (customWordsJson) {
+                const customWords = JSON.parse(customWordsJson);
+                if (customWords.length > 0) {
+                    words.push(...customWords);
+                } else { // Empty custom list means use all default words for this level
+                    words.push(...allLevelWords[levelKey]);
+                }
+            } else { // No custom list, use all default words for this level
+                words.push(...allLevelWords[levelKey]);
+            }
+        });
+
+        // Deduplicate words
+        words = [...new Set(words)];
+
+        if (words.length === 0 && allLevelWords.A) { // Default to Level A if no words selected
+            words.push(...allLevelWords.A);
+            if(!selectedLevels.includes('A')) { // If level A was not selected, reflect this
+                selectedLevels.push('A');
+                const levelAItem = levelsDropdownMenu.querySelector(`.level-item[data-level="A"]`);
+                if(levelAItem) levelAItem.classList.add('selected');
+                localStorage.setItem('sightWordsSelectedLevels', JSON.stringify(selectedLevels));
+            }
+            showFloatingMessage("Using Level A words as no others were selected.", "var(--brand-dark)");
+        }
+        
+        clearTimeout(questionTimeoutId);
+        resetQuestionState();
+        setTimeout(nextQ, 100); // Refresh quiz with new words
+    }
+
+    function openWordSelectionModal(levelKey) {
+        currentEditingLevelKey = levelKey;
+        modalLevelTitle.textContent = `Customize Level ${levelKey} Words`;
+        modalWordList.innerHTML = ''; // Clear previous words
+
+        const levelWords = allLevelWords[levelKey];
+        const customWordsJson = localStorage.getItem(`${levelKey}_customWords`);
+        let customWords = [];
+        if (customWordsJson) {
+            customWords = JSON.parse(customWordsJson);
+        }
+        // If no custom words are stored (null), or if an empty array was stored,
+        // customWords will be empty, so nothing will be checked by default, as per "none of them should be selected initially".
+
+        levelWords.forEach(word => {
+            const itemDiv = document.createElement('div');
+            itemDiv.classList.add('modal-word-item');
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = `modal-word-${word.replace(/\s+/g, '-')}`; // Sanitize ID
+            checkbox.value = word;
+            checkbox.checked = customWords.includes(word); // Check if in stored custom list
+
+            const label = document.createElement('label');
+            label.htmlFor = checkbox.id;
+            label.textContent = word;
+
+            itemDiv.appendChild(checkbox);
+            itemDiv.appendChild(label);
+            // Allow clicking the whole item to toggle checkbox
+            itemDiv.addEventListener('click', (e) => {
+                if (e.target !== checkbox) checkbox.checked = !checkbox.checked;
+            });
+            modalWordList.appendChild(itemDiv);
+        });
+
+        wordSelectionModal.classList.add('visible');
+    }
+
+    function closeWordSelectionModal() {
+        wordSelectionModal.classList.remove('visible');
+        currentEditingLevelKey = null;
+    }
+
+    function saveCustomWordSelection() {
+        if (!currentEditingLevelKey) return;
+
+        const selectedCustomWords = [];
+        modalWordList.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+            selectedCustomWords.push(cb.value);
+        });
+
+        // If user selected some words, save them.
+        // If user deselected all words, save an empty array `[]`.
+        // This `[]` will signify that for this level (if active), all its default words should be used.
+        localStorage.setItem(`${currentEditingLevelKey}_customWords`, JSON.stringify(selectedCustomWords));
+        
+        closeWordSelectionModal();
+        updateActiveQuizWords(); // Refresh quiz words based on new custom list
+    }
+    
+    function toggleAllModalWords(select) {
+        modalWordList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.checked = select;
+        });
+    }
+
   </script>
 </body>
 </html>
