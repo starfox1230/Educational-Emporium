@@ -1,53 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <title>Vanta.js Capabilities Tester</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <style>
-    body, html { margin:0; padding:0; height:100%; overflow:hidden; font-family: sans-serif; }
-    #vanta-canvas { width: 100%; height: 100%; }
-    #controls {
-      position: absolute; top: 1rem; left:1rem; z-index:100;
-      background: rgba(255,255,255,0.85); border-radius:8px; padding:12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      max-height: calc(100vh - 4rem); /* Limit height to viewport minus margins */
-      overflow-y: auto; /* Add scrollbar if needed */
-    }
-    #controls button {
-      display: block; width: 200px; /* Wider for longer names */
-      margin: 6px 0;
-      padding: 8px 12px;
-      font-size: 0.9rem; cursor: pointer;
-      border: 1px solid #ccc; border-radius:4px; background: #e0e0e0; color:#333;
-      text-align: left;
-      transition: background-color 0.2s, color 0.2s;
-    }
-    #controls button:hover {
-      background: #007bff; color:white; border-color: #007bff;
-    }
-    #controls button.active {
-      background: #0056b3; color:white; border-color: #0056b3;
-      font-weight: bold;
-    }
-    #current-effect-display {
-      font-weight: bold;
-      margin-bottom: 10px;
-      padding: 6px 8px;
-      background: rgba(0,0,0,0.05);
-      border-radius: 4px;
-      font-size: 0.95rem;
-      border: 1px solid rgba(0,0,0,0.1);
-      min-height: 1.2em; /* Prevent layout shift when text changes */
-    }
-  </style>
-  <!-- THREE.js is a dependency for many Vanta effects -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Sight Words Quiz Deluxe - Enhanced Read Mode & TTS Fix</title>
+
+  <!-- Google Font + Animate.css -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+  <!-- External Libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-  
-  <!-- Vanta core -->
   <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.min.js"></script>
-  
-  <!-- Vanta effect modules (Order: Core, then specific effects) -->
   <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.fog.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.waves.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.birds.min.js"></script>
@@ -57,182 +21,314 @@
   <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.dots.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.rings.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.halo.min.js"></script>
-  <!-- Add other effects here if needed -->
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/progressbar.js/1.1.0/progressbar.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
 
+  <style>
+    :root {
+      --brand: #26c6da;
+      --brand-light: #80deea;
+      --brand-dark: #00acc1;
+      --bg: #f4f6f8; 
+      --fg: #333;
+      --btn-bg: #fff;
+      --btn-border: #ddd;
+      --btn-radius: 16px;
+      --transition: 0.2s ease-in-out;
+      --correct-bg: #a5d6a7;
+      --incorrect-bg: #ef9a9a;
+      --selected-border-color: #007bff; /* Blue for selection */
+      --shadow-color: rgba(0,0,0,0.1);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;overflow:hidden;font-family:'Poppins',sans-serif;color:var(--fg);
+      -webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+    body { background-color: var(--bg); }
+    #confetti-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1000}
+    
+    .top-bar { position: fixed; top: 0; left: 0; width: 100%; height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 50; }
+    #score{ font-size: 1.1rem;font-weight:600; background-color: rgba(255,255,255,0.7); padding: 8px 12px; border-radius: 8px; box-shadow: 0 2px 4px var(--shadow-color); }
+    #timer-wrapper { position: absolute; left: 50%; transform: translateX(-50%); width: 60px; height: 60px; }
+    #circular-timer { width: 100%; height: 100%; }
+
+    #quiz-container{ display:flex;justify-content:center;align-items:center; min-height: 30vh; padding:1rem; margin-top: 70px; height: calc(100vh - 70px - 70px); }
+    #listen-pick-word-area { display: flex; justify-content: center; align-items: center; width: 100%; }
+    #read-pick-sound-area { display: none; flex-direction: column; justify-content: center; align-items: center; width: 100%; gap: 1.5rem; }
+    .word-display-box { background: var(--btn-bg); border: 3px solid var(--brand-dark); border-radius: var(--btn-radius); padding: 1.5rem 2rem; font-size: 2.5rem; font-weight: 600; color: var(--fg); min-width: 200px; text-align: center; box-shadow: 0 4px 8px var(--shadow-color); }
+    #sound-choices-container { display: flex; justify-content: center; gap: 1rem; }
+    
+    .choice-btn{ flex:1; min-width: 120px; max-width: 200px; margin:0 .75rem;padding:1.2rem; font-size:1.8rem; font-weight: 600; background:var(--btn-bg);border:2px solid var(--btn-border);border-radius:var(--btn-radius); transition:background var(--transition),transform var(--transition), box-shadow var(--transition), border-color var(--transition); touch-action:manipulation; cursor:pointer; box-shadow: 0 4px 6px var(--shadow-color); }
+    .choice-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 10px var(--shadow-color); }
+    .choice-btn:active{transform:scale(0.96); box-shadow: 0 2px 4px var(--shadow-color);}
+    .choice-btn.correct { background-color: var(--correct-bg) !important; border-color: green !important; }
+    .choice-btn.incorrect { background-color: var(--incorrect-bg) !important; border-color: darkred !important; }
+    
+    .sound-btn { font-size: 2rem !important; padding: 1rem 1.5rem !important; }
+    .sound-btn-selected {
+        border-color: var(--selected-border-color) !important;
+        box-shadow: 0 0 0 3px var(--selected-border-color), 0 4px 6px var(--shadow-color) !important;
+    }
+
+    #submit-answer-btn { padding: 0.8rem 2rem; font-size: 1.2rem; font-weight: 600; color: white; background-color: var(--brand); border: none; border-radius: var(--btn-radius); cursor: pointer; transition: background-color var(--transition), transform var(--transition); box-shadow: 0 4px 6px var(--shadow-color); }
+    #submit-answer-btn:hover { background-color: var(--brand-dark); transform: translateY(-2px); }
+    #submit-answer-btn:active { transform: scale(0.98); }
+    #submit-answer-btn:disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; }
+
+    #controls{ position: fixed; bottom: 0; left: 0; width: 100%; display:flex;justify-content:space-around; align-items:center; padding:0.5rem 1rem; height: 70px; background-color: rgba(255,255,255,0.3); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 50; }
+    #timer-display{ padding:.6rem 1rem;background:var(--btn-bg);border:2px solid var(--btn-border);border-radius:var(--btn-radius); font-weight:600;cursor:pointer; box-shadow: 0 2px 4px var(--shadow-color); font-size: 0.9rem; }
+    #listen-btn, #mode-toggle-btn { font-size:1.5rem; background:none;border:none;cursor:pointer;outline:none; padding: 0.5rem; transition: transform 0.2s; color: var(--brand-dark); font-weight: 600; }
+    #mode-toggle-btn { font-size: 0.9rem; padding: 0.6rem 0.8rem; background-color: var(--btn-bg); border: 2px solid var(--btn-border); border-radius: var(--btn-radius); box-shadow: 0 2px 4px var(--shadow-color); }
+    #listen-btn:active, #mode-toggle-btn:active {transform: scale(0.9);}
+    #timer-select{ position:absolute;bottom: calc(70px + 0.5rem); right:1rem;font-size:1rem;padding:.3rem .5rem;display:none; border-radius: 8px; border: 1px solid var(--btn-border); box-shadow: 0 2px 5px var(--shadow-color); }
+    #mascot-container { position: fixed; bottom: 1rem; left: 1rem; width: 100px; height: 100px; z-index: 5; pointer-events: none; }
+    #mascot-container lottie-player { width: 100%; height: 100%; }
+    .floating-effect { position: fixed; padding: 0.5rem 1rem; color: white; border-radius: 20px; font-weight: bold; font-size: 1.2em; z-index: 200; pointer-events: none; text-align: center; }
+    .floating-score { background: rgba(76, 175, 80, 0.9); }
+    .floating-message { background: var(--brand); }
+  </style>
 </head>
 <body>
-  <div id="vanta-canvas"></div> <!-- Vanta will attach here -->
 
-  <div id="controls">
-    <div id="current-effect-display">Loading...</div>
-    <!-- Buttons will be generated by JavaScript -->
+  <canvas id="confetti-canvas"></canvas>
+  <div class="top-bar"> <div id="score">Score: <span id="score-val">0</span></div> <div id="timer-wrapper"><div id="circular-timer"></div></div> </div>
+
+  <div id="quiz-container" class="animate__animated">
+    <div id="listen-pick-word-area">
+      <button id="choice0" class="choice-btn"></button>
+      <button id="choice1" class="choice-btn"></button>
+    </div>
+    <div id="read-pick-sound-area">
+      <div id="word-to-read" class="word-display-box"></div>
+      <div id="sound-choices-container">
+        <button id="soundChoice0" class="choice-btn sound-btn">🔊</button>
+        <button id="soundChoice1" class="choice-btn sound-btn">🔊</button>
+      </div>
+      <button id="submit-answer-btn" disabled>Submit Answer</button>
+    </div>
   </div>
 
+  <div id="controls"> <div id="timer-display">10s ⏱️</div> <button id="mode-toggle-btn">Mode: Listen</button> <button id="listen-btn">🔊</button> </div>
+  <select id="timer-select"></select>
+  <div id="mascot-container"> <lottie-player src="https://lottie.host/449f9829-8f92-4a63-85a2-def249781a91/p021aHdt2x.json" background="transparent" speed="1" loop autoplay></lottie-player> </div>
+
   <script>
-    let vantaEffect = null;
-    const vantaElement = document.getElementById('vanta-canvas');
-    const controlsContainer = document.getElementById('controls'); // Parent of buttons
-    const currentEffectDisplay = document.getElementById('current-effect-display');
-    let currentActiveButton = null;
-
-    const baseGlobalParams = {
-      mouseControls: true,
-      touchControls: true,
-      gyroControls: false,
-      minHeight: 200.00,
-      minWidth: 200.00,
-      scale: 1.00,
-      scaleMobile: 1.00,
+    // --- WEB AUDIO API (condensed) ---
+    const audioCtx = new (window.AudioContext||window.webkitAudioContext)(); if (audioCtx) { window.addEventListener('pointerdown', () => { if (audioCtx.state === 'suspended') audioCtx.resume(); }, { once: true }); } function playOsc({ type='sine', freq=440, dur=0.3, modFreq, modIndex, vol=1 }) { if (!audioCtx) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); if (modFreq && modIndex) { const mod = audioCtx.createOscillator(); const mGain = audioCtx.createGain(); mod.frequency.setValueAtTime(modFreq, audioCtx.currentTime); mGain.gain.setValueAtTime(modIndex, audioCtx.currentTime); mod.connect(mGain).connect(osc.frequency); mod.start(audioCtx.currentTime); mod.stop(audioCtx.currentTime + dur); } osc.connect(gain); gain.connect(audioCtx.destination); gain.gain.setValueAtTime(vol, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur); osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + dur); } function playBell() { if (!audioCtx) return; playOsc({ type:'sine', freq:660, dur:0.3, vol: 0.6 }); setTimeout(() => playOsc({ type:'sine', freq:880, dur:0.3, vol: 0.6 }), 120); } function playBuzz() { if (!audioCtx) return; playOsc({ type:'square', freq:150, dur:0.4, vol: 0.4 }); }
+    
+    // --- PRONUNCIATION MAP for TTS ---
+    const pronunciationMap = {
+      "I": "I." // TTS will read "I." which usually forces the pronoun "I" sound
+      // Add other problematic words here if they arise, e.g.:
+      // "a": "a." 
     };
 
-    const effectConfigurations = {
-      "FOG_Soft_Blue": { effect: "FOG", params: { highlightColor: 0x80deea, midtoneColor: 0x26c6da, lowlightColor: 0x00acc1, baseColor: 0xf4f6f8, blurFactor: 0.6, zoom: 1.2, speed: 1.0 }},
-      "FOG_Mystic_Purple": { effect: "FOG", params: { highlightColor: 0xff00ff, midtoneColor: 0xaa00aa, lowlightColor: 0x550055, baseColor: 0x300030, blurFactor: 0.7, zoom: 1.0, speed: 0.8 }},
-      "FOG_Sunrise": { effect: "FOG", params: { highlightColor: 0xffe082, midtoneColor: 0xffa726, lowlightColor: 0xfb8c00, baseColor: 0xffcc80, speed: 1.5, zoom: 0.8 }},
-      "WAVES_Ocean": { effect: "WAVES", params: { color: 0x005577, shininess: 30, waveHeight: 15, waveSpeed: 0.8, zoom: 1.0 }},
-      "WAVES_Lava": { effect: "WAVES", params: { color: 0xff3300, shininess: 10, waveHeight: 25, waveSpeed: 0.4, zoom: 0.75 }},
-      "WAVES_Emerald": { effect: "WAVES", params: { color: 0x00897b, shininess: 50, waveHeight: 10, waveSpeed: 1.2, zoom: 0.9 }},
-      "BIRDS_Day_Sky": { effect: "BIRDS", params: { backgroundColor: 0x87ceeb, color1: 0x444444, color2: 0x666666, birdSize: 1.0, wingSpan: 20.00, speedLimit: 3.00, separation: 20.00, alignment: 20.00, cohesion: 20.00, quantity: 4 }},
-      "BIRDS_Sunset": { effect: "BIRDS", params: { backgroundColor: 0xffa07a, color1: 0x5d4037, color2: 0x000000, birdSize: 1.2, wingSpan: 25.00, quantity: 3, speedLimit: 2.00 }},
-      "BIRDS_Monochrome": { effect: "BIRDS", params: { backgroundColor: 0xdcdcdc, color1: 0x000000, color2: 0x333333, birdSize: 0.8, wingSpan: 15.00, quantity: 5, separation: 30.00, alignment: 30.00, cohesion: 30.00 }},
-      "NET_Cyber_Grid": { effect: "NET", params: { color: 0x00ffff, backgroundColor: 0x000022, points: 10.00, maxDistance: 20.00, spacing: 15.00, showDots: true }},
-      "NET_Golden_Web": { effect: "NET", params: { color: 0xffd700, backgroundColor: 0x301934, points: 8.00, maxDistance: 25.00, spacing: 20.00, showDots: true }},
-      "NET_Minimal_Lines": { effect: "NET", params: { color: 0xaaaaaa, backgroundColor: 0xffffff, points: 12.00, maxDistance: 18.00, spacing: 18.00, showDots: false }},
-      "CELLS_Bio_Blue": { effect: "CELLS", params: { color1: 0x2196f3, color2: 0x90caf9, size: 3.0, speed: 1.0 }},
-      "CELLS_Pulsing_Red": { effect: "CELLS", params: { color1: 0xf44336, color2: 0xffcdd2, size: 4.5, speed: 0.5 }},
-      "CELLS_Amoeba_Green": { effect: "CELLS", params: { color1: 0x4CAF50, color2: 0x00796B, size: 2.0, speed: 2.0 }},
-      "CLOUDS_Sunny_Day": { effect: "CLOUDS", params: { skyColor: 0x68b8d7, cloudColor: 0xadc1de, cloudShadowColor: 0x183550, sunColor: 0xff9919, sunGlareColor: 0xff6633, sunlightColor: 0xff9933, speed: 1.0 }},
-      "CLOUDS_Evening_Sky": { effect: "CLOUDS", params: { skyColor: 0x334d5c, cloudColor: 0x8e8e8e, cloudShadowColor: 0x2e2e2e, sunColor: 0xf57c00, sunGlareColor: 0xffb74d, sunlightColor: 0xffa726, speed: 0.6 }},
-      "CLOUDS_Pastel_Dream": { effect: "CLOUDS", params: { skyColor: 0xc9d6ff, cloudColor: 0xe2e2e2, cloudShadowColor: 0xb8b8b8, sunColor: 0xfbc2eb, sunGlareColor: 0xfa98cf, sunlightColor: 0xf7abc9, speed: 1.2 }},
-      "DOTS_Starfield": { effect: "DOTS", params: { color: 0xffffff, color2: 0xdddddd, backgroundColor: 0x000011, size: 3.00, spacing: 30.00, showLines: false }},
-      "DOTS_Colorful_Grid": { effect: "DOTS", params: { color: 0xff00ff, color2: 0x00ff00, backgroundColor: 0x222222, size: 5.00, spacing: 25.00, showLines: true }},
-      "DOTS_Subtle_Connect": { effect: "DOTS", params: { color: 0x757575, color2: 0xBDBDBD, backgroundColor: 0xF5F5F5, size: 2.5, spacing: 40.00, showLines: true }},
-      "RINGS_Golden_Aura": { effect: "RINGS", params: { backgroundColor: 0x110022, color: 0xffd700, strength: 2.00 }},
-      "RINGS_Blue_Energy": { effect: "RINGS", params: { backgroundColor: 0x001020, color: 0x00aaff, strength: 3.50 }},
-      "RINGS_Soft_White": { effect: "RINGS", params: { backgroundColor: 0xeeeeee, color: 0x888888, strength: 1.50 }},
-      "HALO_Gentle_Sun": { effect: "HALO", params: { baseColor: 0xffe082, backgroundColor: 0xfff8e1, amplitudeFactor: 0.5, size: 1.0 }},
-      "HALO_Deep_Space": { effect: "HALO", params: { baseColor: 0x7e57c2, backgroundColor: 0x1a001a, amplitudeFactor: 1.5, size: 1.2, xOffset: 0.2, yOffset: 0.1 }},
-      "HALO_Green_Nebula": { effect: "HALO", params: { baseColor: 0x4db6ac, backgroundColor: 0x004d40, amplitudeFactor: 1.0, size: 0.8 }}
-    };
+    // --- VANTA.JS DYNAMIC BACKGROUNDS (condensed) ---
+    let vantaEffect = null; const vantaElement = document.body; let vantaBackgroundKeys = []; let currentBackgroundKey = null; const baseGlobalParams = { mouseControls: true, touchControls: true, gyroControls: false, minHeight: 200.00, minWidth: 200.00, scale: 1.00, scaleMobile: 1.00, }; const effectConfigurations = { "FOG_Soft_Blue": { effect: "FOG", params: { highlightColor: 0x80deea, midtoneColor: 0x26c6da, lowlightColor: 0x00acc1, baseColor: 0xf4f6f8, blurFactor: 0.6, zoom: 1.2, speed: 1.0 }}, "WAVES_Ocean": { effect: "WAVES", params: { color: 0x005577, shininess: 30, waveHeight: 15, waveSpeed: 0.8, zoom: 1.0 }}, "BIRDS_Day_Sky": { effect: "BIRDS", params: { backgroundColor: 0x87ceeb, color1: 0x444444, color2: 0x666666, birdSize: 1.0, wingSpan: 20.00, speedLimit: 3.00, separation: 20.00, alignment: 20.00, cohesion: 20.00, quantity: 4 }}, "NET_Cyber_Grid": { effect: "NET", params: { color: 0x00ffff, backgroundColor: 0x000022, points: 10.00, maxDistance: 20.00, spacing: 15.00, showDots: true }}, "CELLS_Bio_Blue": { effect: "CELLS", params: { color1: 0x2196f3, color2: 0x90caf9, size: 3.0, speed: 1.0 }}, "CLOUDS_Sunny_Day": { effect: "CLOUDS", params: { skyColor: 0x68b8d7, cloudColor: 0xadc1de, cloudShadowColor: 0x183550, sunColor: 0xff9919, sunGlareColor: 0xff6633, sunlightColor: 0xff9933, speed: 1.0 }}, "DOTS_Starfield": { effect: "DOTS", params: { color: 0xffffff, color2: 0xdddddd, backgroundColor: 0x000011, size: 3.00, spacing: 30.00, showLines: false }}, "RINGS_Golden_Aura": { effect: "RINGS", params: { backgroundColor: 0x110022, color: 0xffd700, strength: 2.00 }}, "HALO_Gentle_Sun": { effect: "HALO", params: { baseColor: 0xffe082, backgroundColor: 0xfff8e1, amplitudeFactor: 0.5, size: 1.0 }}, "FOG_Mystic_Purple": { effect: "FOG", params: { highlightColor: 0xff00ff, midtoneColor: 0xaa00aa, lowlightColor: 0x550055, baseColor: 0x300030, blurFactor: 0.7, zoom: 1.0, speed: 0.8 }}, "WAVES_Lava": { effect: "WAVES", params: { color: 0xff3300, shininess: 10, waveHeight: 25, waveSpeed: 0.4, zoom: 0.75 }}, "BIRDS_Sunset": { effect: "BIRDS", params: { backgroundColor: 0xffa07a, color1: 0x5d4037, color2: 0x000000, birdSize: 1.2, wingSpan: 25.00, quantity: 3, speedLimit: 2.00 }}, "NET_Golden_Web": { effect: "NET", params: { color: 0xffd700, backgroundColor: 0x301934, points: 8.00, maxDistance: 25.00, spacing: 20.00, showDots: true }}, "CELLS_Pulsing_Red": { effect: "CELLS", params: { color1: 0xf44336, color2: 0xffcdd2, size: 4.5, speed: 0.5 }}, "CLOUDS_Evening_Sky": { effect: "CLOUDS", params: { skyColor: 0x334d5c, cloudColor: 0x8e8e8e, cloudShadowColor: 0x2e2e2e, sunColor: 0xf57c00, sunGlareColor: 0xffb74d, sunlightColor: 0xffa726, speed: 0.6 }}, "DOTS_Colorful_Grid": { effect: "DOTS", params: { color: 0xff00ff, color2: 0x00ff00, backgroundColor: 0x222222, size: 5.00, spacing: 25.00, showLines: true }}, "RINGS_Blue_Energy": { effect: "RINGS", params: { backgroundColor: 0x001020, color: 0x00aaff, strength: 3.50 }}, "HALO_Deep_Space": { effect: "HALO", params: { baseColor: 0x7e57c2, backgroundColor: 0x1a001a, amplitudeFactor: 1.5, size: 1.2, xOffset: 0.2, yOffset: 0.1 }} }; function applyVantaEffect(configKey) { if (vantaEffect) { try { vantaEffect.destroy(); } catch (e) { console.error("Err destroy vanta:", e); } vantaEffect = null; } const config = effectConfigurations[configKey]; if (!config || typeof VANTA === 'undefined' || typeof VANTA[config.effect] !== 'function') { console.error(`Vanta effect ${configKey} error.`); return; } const finalParams = { el: vantaElement, ...baseGlobalParams, ...config.params }; try { vantaEffect = VANTA[config.effect](finalParams); currentBackgroundKey = configKey; } catch (error) { console.error(`Err init Vanta '${config.effect}':`, error); vantaEffect = null; } }
 
-    function applyEffect(configKey) {
-      console.log(`[VANTA APPLY] Attempting to apply effect for key: ${configKey}`);
+    const words = [ "a","all","am","and","away","be","big","blue","but","can","come", "did","down","find","for","funny","go","good","he","help","here","I", "in","is","it","like","little","look","make","me","my","no","not", "on","one","play","ran","red","run","said","see","so","that","the", "three","to","two","up","was","we","what","where","yellow","yes","you" ];
 
-      if (vantaEffect) {
-        console.log("[VANTA APPLY] Destroying previous effect instance:", vantaEffect);
-        try {
-          vantaEffect.destroy();
-          console.log("[VANTA APPLY] Previous effect destroyed successfully.");
-        } catch (e) {
-          console.error("[VANTA APPLY] Error destroying previous effect:", e);
-        }
-        vantaEffect = null;
-      } else {
-        console.log("[VANTA APPLY] No previous effect instance to destroy.");
-      }
+    // --- UI REFERENCES ---
+    const wordChoiceBtns = [document.getElementById('choice0'), document.getElementById('choice1')];
+    const scoreVal   = document.getElementById('score-val');
+    const timerDisp  = document.getElementById('timer-display');
+    const timerSel   = document.getElementById('timer-select');
+    const listenBtn  = document.getElementById('listen-btn');
+    const quizCont   = document.getElementById('quiz-container');
+    const modeToggleBtn = document.getElementById('mode-toggle-btn');
+    
+    const listenPickWordArea = document.getElementById('listen-pick-word-area');
+    const readPickSoundArea = document.getElementById('read-pick-sound-area');
+    const wordToReadDisplay = document.getElementById('word-to-read');
+    const soundChoiceBtns = [document.getElementById('soundChoice0'), document.getElementById('soundChoice1')];
+    const submitAnswerBtn = document.getElementById('submit-answer-btn');
 
-      const config = effectConfigurations[configKey];
-      if (!config) {
-        console.error(`[VANTA APPLY] Configuration not found for key: ${configKey}`);
-        currentEffectDisplay.textContent = `Error: Config ${configKey} not found`;
-        return;
-      }
-      console.log(`[VANTA APPLY] Found configuration:`, config);
+    const confettiCanvas = document.getElementById('confetti-canvas');
+    const myConfetti = confetti.create(confettiCanvas, { resize: true, useWorker: true });
 
-      if (typeof VANTA === 'undefined') {
-        console.error("[VANTA APPLY] CRITICAL: Global VANTA object not found!");
-        currentEffectDisplay.textContent = "Error: VANTA core not loaded.";
-        return;
-      }
+    // --- GAME STATE ---
+    let circleTimerInstance;
+    let questionTimeoutId; 
+    let questionAnsweredThisTurn = false;
+    let score = 0;
+    let timeLimit = 10; 
+    let currentCorrectWord = "";
+    let currentStreak = 0;
+    const streakThresholds = {3: "Streak x3!", 5: "Super Streak x5!", 10: "AMAZING x10!"};
+    let currentGameMode = localStorage.getItem('sightWordsGameMode') || 'listenAndPickWord';
+    let selectedSoundButton = null;
 
-      const VantaEffectConstructor = VANTA[config.effect];
-      console.log(`[VANTA APPLY] Attempting to use Vanta constructor for '${config.effect}'. Found:`, VantaEffectConstructor);
-
-      if (typeof VantaEffectConstructor !== 'function') {
-        console.error(`[VANTA APPLY] Vanta effect constructor for '${config.effect}' is NOT a function or not found. Type: ${typeof VantaEffectConstructor}. Value:`, VantaEffectConstructor);
-        currentEffectDisplay.textContent = `Error: Effect type '${config.effect}' is invalid or not loaded.`;
-        console.log("[VANTA APPLY] Available properties on VANTA object:", Object.keys(VANTA));
-        return;
-      }
-
-      const finalParams = {
-        el: vantaElement,
-        ...baseGlobalParams,
-        ...config.params
-      };
-      console.log("[VANTA APPLY] Initializing Vanta effect with final params:", finalParams);
-      
-      try {
-        vantaEffect = VantaEffectConstructor(finalParams);
-        console.log("[VANTA APPLY] Vanta effect initialized successfully for '" + config.effect + "':", vantaEffect);
-        if (!vantaEffect || typeof vantaEffect.destroy !== 'function') {
-             console.warn("[VANTA APPLY] Initialized effect does not look like a valid Vanta instance (missing destroy method).");
-        }
-        currentEffectDisplay.textContent = `Current: ${configKey.replace(/_/g, ' ')}`;
-
-        if (currentActiveButton) {
-          currentActiveButton.classList.remove('active');
-        }
-        const newActiveButton = controlsContainer.querySelector(`button[data-config-key="${configKey}"]`);
-        if (newActiveButton) {
-          newActiveButton.classList.add('active');
-          currentActiveButton = newActiveButton;
-        } else {
-          console.warn(`[VANTA APPLY] Could not find button element for configKey: ${configKey}`);
-        }
-      } catch (error) {
-        console.error(`[VANTA APPLY] Error initializing Vanta effect '${config.effect}':`, error);
-        currentEffectDisplay.textContent = `Error initializing ${config.effect}`;
-        vantaEffect = null; 
-      }
-    }
-
-    function populateControls() {
-      const buttonFragment = document.createDocumentFragment();
-      Object.keys(effectConfigurations).forEach((key, index) => {
-        const button = document.createElement('button');
-        button.textContent = `${index + 1}. ${key.replace(/_/g, ' ')}`;
-        button.setAttribute('data-config-key', key);
-        button.addEventListener('click', () => {
-          // 'key' is correctly scoped here due to forEach's behavior with closures
-          applyEffect(key); 
-        });
-        buttonFragment.appendChild(button);
-      });
-      // Append after currentEffectDisplay to keep it at the top
-      controlsContainer.appendChild(buttonFragment);
-    }
-
+    // ---- INITIALIZATION ----
     document.addEventListener('DOMContentLoaded', () => {
-      console.log("[VANTA INIT] DOMContentLoaded fired.");
+      vantaBackgroundKeys = Object.keys(effectConfigurations);
+      if (vantaBackgroundKeys.length > 0 && typeof THREE !== 'undefined' && typeof VANTA !== 'undefined') {
+        applyVantaEffect(vantaBackgroundKeys[0]);
+      }
+      updateModeUI();
+      initCircularTimer();
       
-      if (typeof THREE === 'undefined') {
-          console.error("[VANTA INIT] THREE object is not defined. Check three.min.js loading and script order.");
-          currentEffectDisplay.textContent = "Error: THREE.js failed to load!";
-          return; // Stop if THREE is missing
-      } else {
-          console.log("[VANTA INIT] THREE object is defined.", THREE.REVISION);
-      }
-
-      if (typeof VANTA === 'undefined') {
-          console.error("[VANTA INIT] VANTA object is not defined. Check vanta.min.js loading and script order.");
-          currentEffectDisplay.textContent = "Error: VANTA core failed to load!";
-          return; // Stop if VANTA is missing
-      } else {
-          console.log("[VANTA INIT] VANTA object is defined.");
-          console.log("[VANTA INIT] Available VANTA effects/properties:", Object.keys(VANTA));
-      }
-
-      populateControls();
-      const firstConfigKey = Object.keys(effectConfigurations)[0];
-      if (firstConfigKey) {
-        console.log(`[VANTA INIT] Applying initial effect: ${firstConfigKey}`);
-        applyEffect(firstConfigKey);
-      } else {
-        console.warn("[VANTA INIT] No effects configured.");
-        currentEffectDisplay.textContent = "No effects configured.";
-      }
+      for(let i=0;i<=30;i++){ let o = document.createElement('option'); o.value = i; o.textContent = i+'s' + (i === 0 ? ' (Untimed)' : ''); timerSel.append(o); }
+      timerSel.value = timeLimit; 
+      timerDisp.textContent = timeLimit > 0 ? timeLimit+'s ⏱️' : 'Untimed ⏱️';
+      nextQ();
     });
+
+    function updateModeUI() {
+        if (currentGameMode === 'listenAndPickWord') {
+            listenPickWordArea.style.display = 'flex';
+            readPickSoundArea.style.display = 'none';
+            modeToggleBtn.textContent = 'Mode: Listen';
+            listenBtn.innerHTML = '🔊';
+        } else { // readAndPickSound
+            listenPickWordArea.style.display = 'none';
+            readPickSoundArea.style.display = 'flex';
+            modeToggleBtn.textContent = 'Mode: Read';
+            listenBtn.innerHTML = '📖';
+            if(submitAnswerBtn) submitAnswerBtn.disabled = true;
+        }
+    }
+
+    modeToggleBtn.addEventListener('click', () => {
+        currentGameMode = (currentGameMode === 'listenAndPickWord') ? 'readAndPickSound' : 'listenAndPickWord';
+        localStorage.setItem('sightWordsGameMode', currentGameMode);
+        updateModeUI();
+        clearTimeout(questionTimeoutId); 
+        resetQuestionState();
+        setTimeout(nextQ, 100); 
+    });
+
+    function resetQuestionState() {
+        questionAnsweredThisTurn = false;
+        selectedSoundButton = null;
+        soundChoiceBtns.forEach(btn => btn.classList.remove('sound-btn-selected', 'correct', 'incorrect'));
+        wordChoiceBtns.forEach(btn => btn.classList.remove('correct', 'incorrect'));
+        if (submitAnswerBtn) submitAnswerBtn.disabled = true;
+    }
+
+    function initCircularTimer() { const timerContainer = document.getElementById('circular-timer'); if (!timerContainer) return; circleTimerInstance = new ProgressBar.Circle(timerContainer, { strokeWidth: 10, easing: 'linear', color: 'var(--brand)', trailColor: 'rgba(224, 224, 224, 0.5)', trailWidth: 10, svgStyle: { width: '100%', height: '100%' }, text: { style: { color: 'var(--fg)', position: 'absolute', left: '50%', top: '50%', padding: 0, margin: 0, transform: { prefix: true, value: 'translate(-50%, -50%)' }, fontSize: '1.4em', fontWeight: '600', }, autoStyleContainer: false }, step: function(state, circle) { if (timeLimit > 0) { const timeLeft = Math.ceil(timeLimit * (1 - circle.value())); circle.setText(timeLeft > 0 ? timeLeft : '0'); if (timeLeft <= timeLimit * 0.3) circle.path.setAttribute('stroke', '#f44336'); else if (timeLeft <= timeLimit * 0.6) circle.path.setAttribute('stroke', '#ff9800'); else circle.path.setAttribute('stroke', 'var(--brand)'); } else { circle.setText('∞'); circle.path.setAttribute('stroke', 'var(--brand)'); } } }); }
+    
+    // --- Speak helper (MODIFIED with pronunciationMap) ---
+    function speak(txt){
+      if('speechSynthesis' in window){
+        speechSynthesis.cancel();
+        let textToSpeak = pronunciationMap[txt] || txt;
+        let u = new SpeechSynthesisUtterance(textToSpeak);
+        u.rate = 0.9; 
+        u.pitch = 1.1;
+        speechSynthesis.speak(u);
+      }
+    }
+    // --- END Speak helper ---
+
+    function startCountdown(onDoneCallback){ clearTimeout(questionTimeoutId); if(circleTimerInstance){ circleTimerInstance.set(0); circleTimerInstance.setText(timeLimit > 0 ? String(timeLimit) : '∞'); circleTimerInstance.path.setAttribute('stroke', 'var(--brand)'); if(timeLimit <= 0) return; circleTimerInstance.animate(1.0, { duration: timeLimit * 1000 }); questionTimeoutId = setTimeout(() => { if (!questionAnsweredThisTurn) onDoneCallback(); }, timeLimit * 1000); } }
+
+    function nextQ(){
+      resetQuestionState();
+      quizCont.classList.remove('animate__fadeIn', 'animate__zoomIn'); 
+      void quizCont.offsetWidth; 
+      quizCont.classList.add('animate__zoomIn'); 
+
+      currentCorrectWord = words[Math.floor(Math.random()*words.length)];
+      let distractorWord;
+      do { distractorWord = words[Math.floor(Math.random()*words.length)]; } while(distractorWord === currentCorrectWord);
+
+      if (currentGameMode === 'listenAndPickWord') {
+        const pair = Math.random() < 0.5 ? [currentCorrectWord, distractorWord] : [distractorWord, currentCorrectWord];
+        wordChoiceBtns.forEach((b,i)=>{ b.textContent = pair[i]; b.disabled = false; b.className = 'choice-btn'; });
+        speak(currentCorrectWord);
+      } else { // readAndPickSound mode
+        wordToReadDisplay.textContent = currentCorrectWord;
+        const soundWords = Math.random() < 0.5 ? [currentCorrectWord, distractorWord] : [distractorWord, currentCorrectWord];
+        soundChoiceBtns.forEach((btn, i) => {
+            btn.dataset.wordToSpeak = soundWords[i];
+            btn.disabled = false;
+            btn.className = 'choice-btn sound-btn';
+        });
+        if(submitAnswerBtn) submitAnswerBtn.disabled = true;
+      }
+
+      startCountdown(()=>{ 
+        if (questionAnsweredThisTurn) return;
+        questionAnsweredThisTurn = true;
+        disableAllChoiceButtons();
+        playBuzz(); 
+        showFloatingMessage("Time's Up!", '#ffcdd2', '#333');
+        currentStreak = 0; 
+        setTimeout(nextQ,1200); 
+      });
+    }
+
+    function disableAllChoiceButtons() {
+        wordChoiceBtns.forEach(b => b.disabled = true);
+        soundChoiceBtns.forEach(b => b.disabled = true);
+        if (submitAnswerBtn) submitAnswerBtn.disabled = true;
+    }
+
+    function handleAnswer(isCorrect, targetButtonElement) {
+        if (questionAnsweredThisTurn) return;
+        questionAnsweredThisTurn = true;
+
+        clearTimeout(questionTimeoutId);
+        disableAllChoiceButtons();
+
+        if(isCorrect){
+          playBell();
+          scoreVal.textContent = ++score;
+          if (score > 0 && score % 10 === 0 && vantaBackgroundKeys.length > 0) { const bgIndex = (score / 10) % vantaBackgroundKeys.length; if (vantaBackgroundKeys[bgIndex] !== currentBackgroundKey) applyVantaEffect(vantaBackgroundKeys[bgIndex]); }
+          targetButtonElement.classList.add('correct', 'animate__animated', 'animate__pulse');
+          myConfetti({ particleCount:80, spread:100, origin: { y: 0.6 } });
+          showFloatingScore("+1 Awesome!", targetButtonElement);
+          currentStreak++;
+          if (streakThresholds[currentStreak]) { setTimeout(() => { playBell(); showFloatingMessage(streakThresholds[currentStreak], 'gold', '#333'); myConfetti({ particleCount: 150, spread: 180, startVelocity: 45, origin: { y: 0.5 }}); }, 300); }
+        } else {
+          playBuzz(); 
+          targetButtonElement.classList.add('incorrect', 'animate__animated', 'animate__shakeX');
+          if (currentGameMode === 'listenAndPickWord') { wordChoiceBtns.find(b => b.textContent === currentCorrectWord)?.classList.add('correct'); } 
+          else { soundChoiceBtns.find(b => b.dataset.wordToSpeak === currentCorrectWord)?.classList.add('correct'); }
+          showFloatingScore("Oops!", targetButtonElement, true);
+          currentStreak = 0; 
+        }
+        
+        targetButtonElement.addEventListener('animationend',()=>{ targetButtonElement.classList.remove('animate__animated', 'animate__pulse', 'animate__shakeX', 'sound-btn-selected'); }, { once:true });
+        soundChoiceBtns.forEach(btn => btn.classList.remove('sound-btn-selected'));
+        
+        setTimeout(nextQ, isCorrect ? 1000 : 1800); 
+    }
+
+    wordChoiceBtns.forEach(btn=>{ // Listen & Pick Word Mode
+      btn.addEventListener('click',()=>{
+        if (questionAnsweredThisTurn || currentGameMode !== 'listenAndPickWord') return;
+        const isCorrect = btn.textContent === currentCorrectWord;
+        handleAnswer(isCorrect, btn);
+      });
+    });
+
+    soundChoiceBtns.forEach(btn => { // Read & Pick Sound Mode - Selection Step
+        btn.addEventListener('click', () => {
+            if (questionAnsweredThisTurn || currentGameMode !== 'readAndPickSound') return;
+            const wordToSpeak = btn.dataset.wordToSpeak;
+            speak(wordToSpeak);
+            if (selectedSoundButton && selectedSoundButton !== btn) { selectedSoundButton.classList.remove('sound-btn-selected'); }
+            btn.classList.add('sound-btn-selected');
+            selectedSoundButton = btn;
+            if(submitAnswerBtn) submitAnswerBtn.disabled = false;
+        });
+    });
+
+    submitAnswerBtn.addEventListener('click', () => { // Read & Pick Sound Mode - Submission Step
+        if (questionAnsweredThisTurn || currentGameMode !== 'readAndPickSound' || !selectedSoundButton) return;
+        const wordSpokenBySelectedButton = selectedSoundButton.dataset.wordToSpeak;
+        const isCorrect = wordSpokenBySelectedButton === currentCorrectWord;
+        handleAnswer(isCorrect, selectedSoundButton);
+    });
+
+    listenBtn.onclick = ()=>{ if (currentCorrectWord) { if (currentGameMode === 'listenAndPickWord') { speak(currentCorrectWord); } else { speak(currentCorrectWord); } } };
+    timerDisp.addEventListener('click',()=>{ timerSel.style.display = timerSel.style.display==='block'?'none':'block'; timerSel.value = timeLimit; });
+    timerSel.addEventListener('change',()=>{ timeLimit = +timerSel.value; timerDisp.textContent = timeLimit > 0 ? timeLimit+'s ⏱️' : 'Untimed ⏱️'; timerSel.style.display='none';});
+
+    function showFloatingScore(message, targetButton, isError = false) { const floatEl = document.createElement('div'); floatEl.textContent = message; floatEl.classList.add('floating-effect'); floatEl.classList.add(isError ? 'floating-message' : 'floating-score'); if(isError) {floatEl.style.backgroundColor = 'var(--incorrect-bg)'; floatEl.style.color = '#333';} document.body.appendChild(floatEl); const btnRect = targetButton.getBoundingClientRect(); floatEl.style.left = `${btnRect.left + btnRect.width / 2 - floatEl.offsetWidth / 2}px`; floatEl.style.top = `${btnRect.top - floatEl.offsetHeight - 10}px`; gsap.to(floatEl, { y: -60, opacity: 0, duration: 1.8, ease: 'power1.out', onComplete: () => floatEl.remove() }); }
+    function showFloatingMessage(text, bgColor = 'var(--brand)', textColor = 'white') { const msgEl = document.createElement('div'); msgEl.textContent = text; msgEl.classList.add('floating-effect', 'floating-message'); msgEl.style.backgroundColor = bgColor; msgEl.style.color = textColor; msgEl.style.left = '50%'; msgEl.style.top = '15%'; msgEl.style.transform = 'translateX(-50%)'; msgEl.style.padding = '0.8rem 1.5rem'; msgEl.style.fontSize = '1.5em'; document.body.appendChild(msgEl); gsap.fromTo(msgEl, { opacity: 0, y: -20, scale: 0.8 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'back.out(1.7)' } ); setTimeout(() => { gsap.to(msgEl, { opacity: 0, y: 20, scale: 0.8, duration: 0.5, ease: 'back.in(1.7)', onComplete: () => msgEl.remove() }); }, 2300); }
   </script>
 </body>
 </html>
