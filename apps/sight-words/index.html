@@ -1001,31 +1001,55 @@ const CatchTheStarGame = {
             resumeQuizAfterMiniGame(miniGameScore); 
         });
     }
+
+    
     function resumeQuizAfterMiniGame(miniGameScore) {
-        isMiniGameActive = false; 
-        quizCont.style.display = 'flex'; 
-        controlsBar.style.display = 'flex';
-        quizCont.classList.add('animate__animated', 'animate__fadeInCustom');
-        controlsBar.classList.add('animate__animated', 'animate__fadeInCustom');
-        const animationEndHandler = () => {
-            quizCont.classList.remove('animate__animated', 'animate__fadeInCustom');
-            controlsBar.classList.remove('animate__animated', 'animate__fadeInCustom');
+        isMiniGameActive = false; // Reset flag: Mini-game is no longer active
+    
+        const postMiniGameDelay = 4000; // 4 seconds. Adjust as needed.
+    
+        // This timeout creates the pause AFTER the mini-game has fully ended
+        // and its "Game Over" message has likely started/finished.
+        setTimeout(() => {
+            // Now, make the quiz container and controls visible again
+            quizCont.style.display = 'flex';
+            controlsBar.style.display = 'flex';
+    
+            // Show the score from the mini-game
             if (miniGameScore !== undefined) {
                 showFloatingMessage(`Mini-Game: ${miniGameScore} points!`, 'var(--brand-light)', 'var(--fg)');
             }
-            setTimeout(nextQ, 300); 
-        };
-        if (typeof gsap !== 'undefined') {
-            gsap.fromTo([quizCont, controlsBar], {opacity: 0}, {opacity: 1, duration: 0.3, onComplete: animationEndHandler});
-        } else {
-             quizCont.addEventListener('animationend', animationEndHandler, { once: true });
-             setTimeout(() => { 
-                if (quizCont.classList.contains('animate__fadeInCustom')) {
+    
+            // Define what happens after the quiz UI fades back in
+            const animationEndHandler = () => {
+                quizCont.classList.remove('animate__animated', 'animate__fadeInCustom');
+                controlsBar.classList.remove('animate__animated', 'animate__fadeInCustom');
+                
+                // Proceed to the next quiz question immediately after fade-in
+                nextQ();
+            };
+    
+            // Start the fade-in animation for the quiz UI
+            if (typeof gsap !== 'undefined') {
+                gsap.fromTo([quizCont, controlsBar], {opacity: 0}, {opacity: 1, duration: 0.5, onComplete: animationEndHandler});
+            } else {
+                quizCont.classList.add('animate__animated', 'animate__fadeInCustom');
+                controlsBar.classList.add('animate__animated', 'animate__fadeInCustom');
+                
+                let animationFallbackTimer = setTimeout(() => {
+                    if (quizCont.classList.contains('animate__fadeInCustom')) {
+                        console.warn("FadeIn animationend fallback triggered for quiz resume.");
+                        animationEndHandler(); // Ensure it proceeds even if animationend doesn't fire
+                    }
+                }, 700); // Duration slightly longer than CSS animation
+    
+                quizCont.addEventListener('animationend', () => {
+                    clearTimeout(animationFallbackTimer); // Clear fallback if animationend fires
                     animationEndHandler();
-                }
-            }, 500);
-        }
-    }
+                }, { once: true });
+            }
+        }, postMiniGameDelay);
+    }    
 
     // --- UI & GAME LOGIC (mostly same as before, with modifications for mini-games) ---
     function updateModeUI() { if (currentGameMode === 'listenAndPickWord') { listenPickWordArea.style.display = 'flex'; readPickSoundArea.style.display = 'none'; modeToggleBtn.textContent = 'Mode: Listen'; listenBtn.innerHTML = '🔊'; } else { listenPickWordArea.style.display = 'none'; readPickSoundArea.style.display = 'flex'; modeToggleBtn.textContent = 'Mode: Read'; listenBtn.innerHTML = '📖'; if(submitAnswerBtn) submitAnswerBtn.disabled = true; } }
