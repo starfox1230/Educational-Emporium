@@ -395,186 +395,314 @@
     function getRandomColor() { const r = Math.floor(Math.random() * 200); const g = Math.floor(Math.random() * 200); const b = Math.floor(Math.random() * 200); return `rgb(${r},${g},${b})`; }
            
     // --- MINI-GAME DEFINITIONS ---
-    const CatchTheStarGame = {
-        name: "Catch the Star",
-        score: 0,
-        gameTimerId: null,
-        starIntervalId: null,
-        timerIntervalId: null,
-        container: null,
-        onCompleteCallback: null,
-        duration: 20000, 
-        starsOnScreen: [], 
-        elements: {},
-        forgivingTapRadius: 50, 
-        boundForgivingTapHandler: null, 
+    // --- (Keep your existing helper functions like speak, playBell, myConfetti) ---
 
-        start: function(containerElement, onComplete) {
-            this.container = containerElement;
-            this.onCompleteCallback = onComplete;
-            this.score = 0;
-            this.starsOnScreen = [];
-            this.container.innerHTML = '';
-    
-            speak("Catch the falling stars!");
-    
-            const infoBar = document.createElement('div');
-            infoBar.className = 'minigame-info-bar';
-            this.elements.scoreDisplay = document.createElement('div');
-            this.elements.scoreDisplay.className = 'minigame-score';
-            infoBar.appendChild(this.elements.scoreDisplay);
-            this.updateScoreDisplay();
-    
-            const timerContainer = document.createElement('div');
-            timerContainer.className = 'minigame-timer-bar-container';
-            this.elements.timerBar = document.createElement('div');
-            this.elements.timerBar.className = 'minigame-timer-bar';
-            timerContainer.appendChild(this.elements.timerBar);
-            infoBar.appendChild(timerContainer);
-            this.container.appendChild(infoBar);
-    
-            let timeLeft = this.duration;
-            this.elements.timerBar.style.width = '100%';
-            this.timerIntervalId = setInterval(() => {
-                timeLeft -= 100;
-                const progress = Math.max(0, (timeLeft / this.duration) * 100);
-                this.elements.timerBar.style.width = `${progress}%`;
-                if (timeLeft <= 0) clearInterval(this.timerIntervalId);
-            }, 100);
-    
-            this.starIntervalId = setInterval(() => this.spawnStar(), 700);
-            this.gameTimerId = setTimeout(() => this.endGame(), this.duration);
+const CatchTheStarGame = {
+    name: "Catch the Star",
+    score: 0,
+    gameTimerId: null,        // For overall game duration
+    starIntervalId: null,     // For spawning stars
+    timerIntervalId: null,    // For updating the visual timer bar
+    animationFrameId: null,   // For the game's main loop (collision detection)
+    container: null,
+    onCompleteCallback: null,
+    duration: 20000,          // 20 seconds
+    starsOnScreen: [],        // Array of starData objects { element, removeTimeoutId }
+    elements: {},             // To store UI elements like scoreDisplay, timerBar
 
-            this.boundForgivingTapHandler = this._handleForgivingTap.bind(this);
-            this.container.addEventListener('click', this.boundForgivingTapHandler);
-        },
+    // --- New properties for Hoop mechanic ---
+    hoopElement: null,
+    isHoopingActive: false,    // True when pointer is down
+    hoopRadius: 50,            // Radius of the hoop in pixels
+    starVisualRadius: 20,      // Approximate visual radius of a star for collision
+    hoopPosition: { x: 0, y: 0 }, // Center of the hoop, relative to the container
 
-        _handleForgivingTap: function(event) {
-            if (!this.container) return;
-            const containerRect = this.container.getBoundingClientRect();
-            const clickX = event.clientX - containerRect.left; 
-            const clickY = event.clientY - containerRect.top;  
+    // Bound event handlers for easy add/remove
+    boundOnPointerDown: null,
+    boundOnPointerMove: null,
+    boundOnPointerUp: null,
+    boundGameLoop: null,
 
-            this.starsOnScreen.slice().forEach(starData => {
-                const starElement = starData.element;
-                if (!this.container.contains(starElement)) return; 
+    start: function(containerElement, onComplete) {
+        this.container = containerElement;
+        this.onCompleteCallback = onComplete;
+        this.score = 0;
+        this.starsOnScreen = [];
+        this.container.innerHTML = ''; // Clear previous game content
 
-                const starCenterX = starElement.offsetLeft + starElement.offsetWidth / 2;
-                const starCenterY = starElement.offsetTop + starElement.offsetHeight / 2;
+        speak("Catch the stars in your hoop!");
 
-                const distance = Math.sqrt(
-                    Math.pow(clickX - starCenterX, 2) +
-                    Math.pow(clickY - starCenterY, 2)
-                );
+        // Setup UI (score, timer bar - same as before)
+        const infoBar = document.createElement('div');
+        infoBar.className = 'minigame-info-bar';
+        this.elements.scoreDisplay = document.createElement('div');
+        this.elements.scoreDisplay.className = 'minigame-score';
+        infoBar.appendChild(this.elements.scoreDisplay);
+        this.updateScoreDisplay();
 
-                if (distance <= this.forgivingTapRadius) {
-                    if (event.target !== starElement) {
-                        this._processStarCatch(starData);
-                    }
+        const timerContainer = document.createElement('div');
+        timerContainer.className = 'minigame-timer-bar-container';
+        this.elements.timerBar = document.createElement('div');
+        this.elements.timerBar.className = 'minigame-timer-bar';
+        timerContainer.appendChild(this.elements.timerBar);
+        infoBar.appendChild(timerContainer);
+        this.container.appendChild(infoBar);
+
+        let timeLeft = this.duration;
+        this.elements.timerBar.style.width = '100%';
+        this.timerIntervalId = setInterval(() => {
+            timeLeft -= 100;
+            const progress = Math.max(0, (timeLeft / this.duration) * 100);
+            this.elements.timerBar.style.width = `${progress}%`;
+            if (timeLeft <= 0) clearInterval(this.timerIntervalId);
+        }, 100);
+
+        // --- Hoop Setup ---
+        this.hoopElement = document.createElement('div');
+        this.hoopElement.style.position = 'absolute';
+        this.hoopElement.style.width = `${this.hoopRadius * 2}px`;
+        this.hoopElement.style.height = `${this.hoopRadius * 2}px`;
+        this.hoopElement.style.border = '3px dashed white';
+        this.hoopElement.style.borderRadius = '50%';
+        this.hoopElement.style.boxSizing = 'border-box';
+        this.hoopElement.style.display = 'none'; // Initially hidden
+        this.hoopElement.style.pointerEvents = 'none'; // Hoop itself should not catch pointer events
+        this.container.appendChild(this.hoopElement);
+
+        // Bind event handlers
+        this.boundOnPointerDown = this.onPointerDown.bind(this);
+        this.boundOnPointerMove = this.onPointerMove.bind(this);
+        this.boundOnPointerUp = this.onPointerUp.bind(this);
+        this.boundGameLoop = this.gameLoop.bind(this);
+
+        // Add event listeners to the game container
+        this.container.addEventListener('pointerdown', this.boundOnPointerDown);
+        // We add move/up to window to catch events even if pointer leaves container
+        window.addEventListener('pointermove', this.boundOnPointerMove);
+        window.addEventListener('pointerup', this.boundOnPointerUp);
+        window.addEventListener('pointercancel', this.boundOnPointerUp); // Handle cancellations
+
+        this.starIntervalId = setInterval(() => this.spawnStar(), 800); // Spawn stars
+        this.gameTimerId = setTimeout(() => this.endGame(), this.duration); // End game after duration
+
+        this.animationFrameId = requestAnimationFrame(this.boundGameLoop); // Start the game loop
+    },
+
+    onPointerDown: function(event) {
+        // Only activate if the event is within the game container
+        if (event.target !== this.container && !this.container.contains(event.target)) {
+             // If pointerdown is on a star or other element *inside* the container,
+             // we still want to activate the hoop if the container itself is the event handler target.
+             // However, if the event.target is something entirely outside the container, ignore.
+             let el = event.target;
+             let isInsideContainer = false;
+             while(el) {
+                if (el === this.container) {
+                    isInsideContainer = true;
+                    break;
                 }
-            });
-        },
-    
-        spawnStar: function() {
-            if (!this.container || this.starsOnScreen.length > 10) return;
-            const star = document.createElement('div');
-            star.style.position = 'absolute';
-            star.style.width = '40px';
-            star.style.height = '40px';
-            star.style.left = `${Math.random() * (this.container.clientWidth - 40)}px`;
-            star.style.top = `-40px`; 
-            star.style.fontSize = '2.2rem';
-            star.style.userSelect = 'none'; // Already good, but global CSS handles it too
-            star.style.cursor = 'pointer';
-            star.style.transition = 'top 1.7s linear'; 
-            star.textContent = '⭐';
-            
-            this.container.appendChild(star);
+                el = el.parentElement;
+             }
+             if(!isInsideContainer) return;
+        }
+        event.preventDefault(); // Prevent default browser actions like text selection or scrolling
+        this.isHoopingActive = true;
+        this.updateHoopDisplay(event);
+        this.hoopElement.style.display = 'block';
+    },
 
-            const starData = {
-                element: star,
-                removeTimeoutId: null 
-            };
-            this.starsOnScreen.push(starData);
-    
-            setTimeout(() => {
-                star.style.top = `${this.container.clientHeight}px`; 
-            }, 30); 
-    
-            starData.removeTimeoutId = setTimeout(() => {
-                const index = this.starsOnScreen.indexOf(starData);
-                if (index !== -1) {
-                    if (star.parentNode) { 
-                        star.remove();
-                    }
-                    this.starsOnScreen.splice(index, 1);
-                }
-            }, 1700); 
-    
-            star.addEventListener('click', () => {
-                this._processStarCatch(starData);
-            }, { once: true }); 
-        },
+    onPointerMove: function(event) {
+        if (this.isHoopingActive) {
+            event.preventDefault();
+            this.updateHoopDisplay(event);
+        }
+    },
 
-        _processStarCatch: function(starData) {
+    onPointerUp: function(event) {
+        if (this.isHoopingActive) {
+            // event.preventDefault(); // Not always needed for up, but can be good
+            this.isHoopingActive = false;
+            this.hoopElement.style.display = 'none';
+        }
+    },
+
+    updateHoopDisplay: function(event) {
+        if (!this.container) return;
+        const rect = this.container.getBoundingClientRect();
+        // Calculate pointer position relative to the container
+        this.hoopPosition.x = event.clientX - rect.left;
+        this.hoopPosition.y = event.clientY - rect.top;
+
+        // Position the hoop so its center is at the pointer
+        this.hoopElement.style.left = `${this.hoopPosition.x - this.hoopRadius}px`;
+        this.hoopElement.style.top = `${this.hoopPosition.y - this.hoopRadius}px`;
+    },
+
+    gameLoop: function() {
+        if (this.isHoopingActive) {
+            this.checkHoopCollisions();
+        }
+        this.animationFrameId = requestAnimationFrame(this.boundGameLoop);
+    },
+
+    checkHoopCollisions: function() {
+        if (!this.isHoopingActive || this.starsOnScreen.length === 0) return;
+
+        // Iterate backwards because we might be removing items from the array
+        for (let i = this.starsOnScreen.length - 1; i >= 0; i--) {
+            const starData = this.starsOnScreen[i];
             const starElement = starData.element;
-            const starIndex = this.starsOnScreen.indexOf(starData);
-            if (starIndex === -1) {
-                return; 
+
+            if (!starElement.parentNode) { // Star already removed (e.g., by timeout)
+                this.starsOnScreen.splice(i, 1);
+                continue;
             }
-            clearTimeout(starData.removeTimeoutId); 
-            playBell();
-            const rect = starElement.getBoundingClientRect();
-            const x = (rect.left + rect.right) / 2 / window.innerWidth;
-            const y = (rect.top + rect.bottom) / 2 / window.innerHeight;
-            myConfetti({ particleCount: 15, spread: 35, origin: { x: x, y: y }, scalar: 0.5 });
-            this.score++;
-            speak(this.score, 1.2, 1.3);
-            this.updateScoreDisplay();
+
+            const starCenterX = starElement.offsetLeft + starElement.offsetWidth / 2;
+            const starCenterY = starElement.offsetTop + starElement.offsetHeight / 2;
+
+            const dx = this.hoopPosition.x - starCenterX;
+            const dy = this.hoopPosition.y - starCenterY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            // Collision if distance is less than sum of hoop radius and star's visual radius
+            if (distance < this.hoopRadius + this.starVisualRadius) {
+                this._processStarCatch(starData, i); // Pass index for efficient removal
+            }
+        }
+    },
+
+    spawnStar: function() {
+        if (!this.container || this.starsOnScreen.length > 12) return; // Max 12 stars
+        const star = document.createElement('div');
+        star.style.position = 'absolute';
+        star.style.width = '40px'; // Star visual size
+        star.style.height = '40px';
+        star.style.left = `${Math.random() * (this.container.clientWidth - 40)}px`;
+        star.style.top = `-40px`; // Start above screen
+        star.style.fontSize = '2.2rem';
+        star.style.userSelect = 'none'; // Global CSS should handle this too
+        // star.style.cursor = 'pointer'; // Not clickable directly anymore
+        star.style.transition = 'top 1.9s linear, transform 0.3s ease-out'; // Added transform for pop
+        star.textContent = '⭐';
+        
+        this.container.appendChild(star);
+
+        const starData = {
+            element: star,
+            removeTimeoutId: null 
+        };
+        this.starsOnScreen.push(starData);
+
+        // Trigger CSS animation to move down
+        setTimeout(() => {
+            if (star.parentNode) { // Check if still in DOM
+                 star.style.top = `${this.container.clientHeight}px`; // Fall to bottom
+            }
+        }, 30); 
+
+        // Set timeout to remove star if not caught and falls off screen
+        starData.removeTimeoutId = setTimeout(() => {
+            const index = this.starsOnScreen.indexOf(starData);
+            if (index !== -1) { // If still in the array (i.e., not caught)
+                if (star.parentNode) {
+                    star.remove();
+                }
+                this.starsOnScreen.splice(index, 1);
+            }
+        }, 1900); // Matches transition duration
+    },
+
+    _processStarCatch: function(starData, starArrayIndex) {
+        const starElement = starData.element;
+
+        // Clear the timeout that would remove it if it fell off screen
+        clearTimeout(starData.removeTimeoutId);
+
+        playBell(); // Assume playBell is defined globally
+        const rect = starElement.getBoundingClientRect(); // For confetti origin
+        const x = (rect.left + rect.right) / 2 / window.innerWidth;
+        const y = (rect.top + rect.bottom) / 2 / window.innerHeight;
+        myConfetti({ particleCount: 25, spread: 45, origin: { x: x, y: y }, scalar: 0.6 }); // Assume myConfetti is global
+
+        this.score++;
+        speak(this.score, 1.2, 1.3); // Assume speak is defined globally
+        this.updateScoreDisplay();
+
+        // Visual feedback for caught star (e.g., shrink and fade)
+        starElement.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
+        starElement.style.transform = 'scale(0.1)';
+        starElement.style.opacity = '0';
+
+        // Remove from DOM after animation & from array
+        setTimeout(() => {
             if (starElement.parentNode) {
                 starElement.remove();
             }
-            this.starsOnScreen.splice(starIndex, 1);
-        },
-    
-        updateScoreDisplay: function() {
-            if(this.elements.scoreDisplay) this.elements.scoreDisplay.textContent = `Stars: ${this.score}`;
-        },
-    
-        endGame: function() {
-            clearInterval(this.starIntervalId);
-            clearInterval(this.timerIntervalId);
-            clearTimeout(this.gameTimerId);
-            this.starsOnScreen.forEach(starData => {
-                clearTimeout(starData.removeTimeoutId);
-                if (starData.element.parentNode) {
-                    starData.element.remove();
-                }
-            });
-            this.starsOnScreen = [];
-            speak(`You caught ${this.score} stars!`);
-            if(this.onCompleteCallback) this.onCompleteCallback(this.score);
-        },
-    
-        destroy: function() {
-            clearInterval(this.starIntervalId);
-            clearInterval(this.timerIntervalId);
-            clearTimeout(this.gameTimerId);
-            if (this.boundForgivingTapHandler && this.container) {
-                this.container.removeEventListener('click', this.boundForgivingTapHandler);
-            }
-            this.boundForgivingTapHandler = null;
-            this.starsOnScreen.forEach(starData => {
-                clearTimeout(starData.removeTimeoutId);
-                if (starData.element.parentNode) {
-                    starData.element.remove();
-                }
-            });
-            this.starsOnScreen = [];
-            if (this.container) this.container.innerHTML = '';
-            this.elements = {};
+        }, 300); // Matches animation duration
+
+        // Remove from starsOnScreen array
+        if (starArrayIndex !== undefined && starArrayIndex < this.starsOnScreen.length && this.starsOnScreen[starArrayIndex] === starData) {
+            this.starsOnScreen.splice(starArrayIndex, 1);
+        } else {
+            // Fallback if index is not reliable (shouldn't happen with reverse loop)
+            const index = this.starsOnScreen.indexOf(starData);
+            if (index !== -1) this.starsOnScreen.splice(index, 1);
         }
-    };
+    },
+
+    updateScoreDisplay: function() {
+        if(this.elements.scoreDisplay) this.elements.scoreDisplay.textContent = `Stars: ${this.score}`;
+    },
+
+    endGame: function() {
+        // Clear intervals and timeouts
+        clearInterval(this.starIntervalId);
+        this.starIntervalId = null;
+        clearInterval(this.timerIntervalId);
+        this.timerIntervalId = null;
+        clearTimeout(this.gameTimerId);
+        this.gameTimerId = null;
+        cancelAnimationFrame(this.animationFrameId);
+        this.animationFrameId = null;
+
+        // Remove event listeners
+        if (this.container) {
+            this.container.removeEventListener('pointerdown', this.boundOnPointerDown);
+        }
+        window.removeEventListener('pointermove', this.boundOnPointerMove);
+        window.removeEventListener('pointerup', this.boundOnPointerUp);
+        window.removeEventListener('pointercancel', this.boundOnPointerUp);
+
+
+        // Clean up remaining stars
+        this.starsOnScreen.forEach(starData => {
+            clearTimeout(starData.removeTimeoutId);
+            if (starData.element.parentNode) {
+                starData.element.remove();
+            }
+        });
+        this.starsOnScreen = [];
+
+        // Hide and remove hoop
+        if (this.hoopElement && this.hoopElement.parentNode) {
+            this.hoopElement.remove();
+        }
+        this.hoopElement = null;
+        this.isHoopingActive = false;
+
+        speak(`Game over! You caught ${this.score} stars!`);
+        if(this.onCompleteCallback) this.onCompleteCallback(this.score);
+    },
+
+    destroy: function() {
+        this.endGame(); // endGame already handles most cleanup
+        if (this.container) this.container.innerHTML = ''; // Final clear of container
+        this.container = null;
+        this.elements = {};
+        // console.log(`${this.name} destroyed`);
+    }
+};
     const BalloonPopGame = {
         name: "Balloon Pop",
         score: 0,
