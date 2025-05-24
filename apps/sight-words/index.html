@@ -722,7 +722,7 @@
         // --- End of cleanup ---
 
         if (canCallPrimaryCallback) {
-            speak(`Game over! You caught ${this.score} stars!`);
+            speak(`Congratulations! You caught ${this.score} stars!`);
 
             const callbackToExecute = this.onCompleteCallback;
             this.onCompleteCallback = null; // CRUCIAL: Clear before calling to prevent recursion
@@ -955,7 +955,7 @@
             this.score = 0;
             this.container.innerHTML = '';
     
-            speak("Always up! Control the sides!"); // New instruction
+            speak("Keepy Uppy!"); // New instruction
     
             const infoBar = document.createElement('div');
             infoBar.className = 'minigame-info-bar';
@@ -1196,7 +1196,7 @@
             this.isHoopActive = false;
     
             if (canCallPrimaryCallback) {
-                speak(`Game over! You bounced the ball ${this.score} times!`);
+                speak(`Congratulations! You bounced the ball ${this.score} times!`);
                 const callbackToExecute = this.onCompleteCallback;
                 this.onCompleteCallback = null; 
                 if (callbackToExecute) callbackToExecute(this.score);
