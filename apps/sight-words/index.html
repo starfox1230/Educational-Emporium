@@ -41,14 +41,7 @@
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html,body{height:100%;overflow:hidden;font-family:'Poppins',sans-serif;color:var(--fg);
-      -webkit-tap-highlight-color:transparent;touch-action:manipulation;
-      /* Added styles to prevent text selection and callouts */
-      -webkit-user-select: none; /* Safari */
-      -moz-user-select: none;    /* Firefox */
-      -ms-user-select: none;     /* IE10+/Edge */
-      user-select: none;         /* Standard */
-      -webkit-touch-callout: none; /* Disable callout menu on iOS */
-    }
+      -webkit-tap-highlight-color:transparent;touch-action:manipulation;}
     body { background-color: var(--bg); }
     #confetti-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1000}
     
@@ -115,7 +108,10 @@
     #levels-dropdown-menu { 
         display: none; 
         position: absolute; 
-        top: calc( (0.4rem * 2 + 0.8rem + 2px * 2) + 0.2rem + (0.4rem * 2 + 0.8rem + 2px * 2) ); 
+        /* Positioned relative to the #level-controls-container, below the "Levels" button */
+        /* The "Levels" button is the second child. Its top edge is after the first button and the gap. */
+        /* Height of one button (approx 30-35px after padding reduction) + gap */
+        top: calc( (0.4rem * 2 + 0.8rem + 2px * 2) + 0.2rem + (0.4rem * 2 + 0.8rem + 2px * 2) ); /* Height of minigame + gap + height of level button */
         right: 0; 
         background-color: white; 
         border: 1px solid #ccc; 
@@ -123,10 +119,10 @@
         box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
         z-index: 100; 
         padding: 0.5rem 0; 
-        min-width: 120px; 
+        min-width: 120px; /* Match button width */
     }
     #levels-dropdown-menu.visible { display: block; }
-    .level-item { padding: 0.6rem 1rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between; /* user-select: none; REMOVED, handled globally */ font-size:0.8rem; }
+    .level-item { padding: 0.6rem 1rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; font-size:0.8rem; }
     .level-item:hover { background-color: #f0f0f0; }
     .level-item.selected { background-color: var(--brand-light); color: var(--brand-dark); font-weight: 600; }
     .level-item .long-press-indicator { font-size: 0.7em; color: #777; margin-left: 8px; }
@@ -142,7 +138,7 @@
     .modal-word-item { display: flex; align-items: center; padding: 0.5rem; border-radius: 6px; background-color: #f9f9f9; cursor: pointer; transition: background-color 0.2s; }
     .modal-word-item:hover { background-color: #e9e9e9; }
     .modal-word-item input[type="checkbox"] { margin-right: 0.75rem; width: 18px; height: 18px; accent-color: var(--brand); }
-    .modal-word-item label { flex-grow: 1; /* user-select: none; REMOVED, handled globally */ }
+    .modal-word-item label { flex-grow: 1; user-select: none; }
     .modal-actions { display: flex; flex-wrap: wrap; justify-content: space-around; gap: 0.5rem; padding-top: 1rem; border-top: 1px solid #eee; }
     .modal-actions button { padding: 0.6rem 1rem; font-size: 0.9rem; border-radius: 8px; border: none; cursor: pointer; background-color: var(--brand); color: white; transition: background-color 0.2s; }
     .modal-actions button:hover { background-color: var(--brand-dark); }
@@ -151,7 +147,7 @@
     .hidden { display: none !important; }
 
     /* Mini-Game Styles */
-    #toggle-minigames-btn.active-minigame-toggle { 
+    #toggle-minigames-btn.active-minigame-toggle { /* Unique class to avoid conflict */
         background-color: var(--brand-light);
         color: var(--brand-dark);
         border-color: var(--brand-dark);
@@ -163,12 +159,12 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(100, 150, 220, 0.9); 
+        background-color: rgba(100, 150, 220, 0.9); /* A pleasant overlay color */
         z-index: 900; 
         display: none;
         justify-content: center;
         align-items: center;
-        flex-direction: column; 
+        flex-direction: column; /* For score, timer, game content stacking */
         overflow: hidden;
         color: white;
         font-size: 1.5rem;
@@ -202,7 +198,7 @@
         height: 100%;
         width: 100%;
         background-color: var(--brand-light);
-        transition: width 0.2s linear; 
+        transition: width 0.2s linear; /* Smooth shrinking */
     }
     .minigame-timer-text { font-weight: bold; }
 
@@ -210,23 +206,23 @@
     .balloon {
         width: 60px;
         height: 80px;
-        border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; 
+        border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; /* Balloon shape */
         position: absolute;
         cursor: pointer;
-        /* user-select: none; REMOVED, handled globally */
+        user-select: none;
         display: flex;
         justify-content: center;
-        align-items: flex-end; 
-        padding-bottom: 5px; 
+        align-items: flex-end; /* for the string */
+        padding-bottom: 5px; /* space for string */
     }
-    .balloon::after { 
+    .balloon::after { /* Balloon string */
         content: '';
         position: absolute;
-        bottom: -15px; 
+        bottom: -15px; /* Start below the balloon */
         left: 50%;
         transform: translateX(-50%);
         width: 2px;
-        height: 20px; 
+        height: 20px; /* String length */
         background-color: rgba(255,255,255,0.7);
     }
     .balloon-rising {
@@ -234,7 +230,7 @@
     }
     @keyframes riseAnimation {
         from { transform: translateY(0); }
-        to { transform: translateY(-110vh); } 
+        to { transform: translateY(-110vh); } /* Adjust to ensure it goes well off screen */
     }
 
     /* Bounce Party Specific */
@@ -243,7 +239,7 @@
         height: 50px;
         background-color: var(--brand);
         border-radius: 50%;
-        position: absolute; 
+        position: absolute; /* Positioned by JS */
         cursor: pointer;
         box-shadow: 0 0 10px rgba(0,0,0,0.3);
     }
@@ -323,7 +319,7 @@
     const timerSel   = document.getElementById('timer-select');
     const listenBtn  = document.getElementById('listen-btn');
     const quizCont   = document.getElementById('quiz-container');
-    const controlsBar = document.getElementById('controls'); 
+    const controlsBar = document.getElementById('controls'); // Reference for hiding/showing
     const modeToggleBtn = document.getElementById('mode-toggle-btn');
     const listenPickWordArea = document.getElementById('listen-pick-word-area');
     const readPickSoundArea = document.getElementById('read-pick-sound-area');
@@ -342,6 +338,7 @@
     const modalDeselectAllBtn = document.getElementById('modal-deselect-all-btn');
     const modalCloseBtn = document.getElementById('modal-close-btn');
     
+    // Mini-Game UI
     const miniGameArea = document.getElementById('minigame-area');
     const toggleMiniGamesBtn = document.getElementById('toggle-minigames-btn');
 
@@ -362,6 +359,7 @@
     let longPressTimer = null;
     let isLongPress = false;
 
+    // Mini-Game State
     let miniGamesEnabled = localStorage.getItem('miniGamesEnabled') === 'true';
     let isMiniGameActive = false;
     let availableMiniGames = [];
@@ -376,333 +374,244 @@
       }
       
       initLevelManagement(); 
-      initMiniGameSystem(); 
+      initMiniGameSystem(); // Initialize mini-game toggle and register games
       updateModeUI();
       initCircularTimer();
       
       for(let i=0;i<=30;i++){ let o = document.createElement('option'); o.value = i; o.textContent = i+'s' + (i === 0 ? ' (Untimed)' : ''); timerSel.append(o); }
       timerSel.value = timeLimit; 
       timerDisp.textContent = timeLimit > 0 ? timeLimit+'s ⏱️' : 'Untimed ⏱️';
-
-      // Prevent context menu (often triggered by long-press on touch or right-click)
-      document.addEventListener('contextmenu', function(event) {
-        event.preventDefault();
-      });
     });
 
     // --- Speak helper (MODIFIED with pronunciationMap) ---
-    function speak(txt, rate = 0.9, pitch = 1.1){ if('speechSynthesis' in window){ speechSynthesis.cancel(); let textToSpeak = pronunciationMap[txt] || String(txt); let u = new SpeechSynthesisUtterance(textToSpeak); u.rate = rate; u.pitch = pitch; speechSynthesis.speak(u); } }
-    function getRandomColor() { const r = Math.floor(Math.random() * 200); const g = Math.floor(Math.random() * 200); const b = Math.floor(Math.random() * 200); return `rgb(${r},${g},${b})`; }
-           
+    function speak(txt, rate = 0.9, pitch = 1.1){ // Added optional rate/pitch
+      if('speechSynthesis' in window){
+        speechSynthesis.cancel(); // Cancel any ongoing speech
+        let textToSpeak = pronunciationMap[txt] || String(txt); // Ensure txt is string for numbers
+        let u = new SpeechSynthesisUtterance(textToSpeak);
+        u.rate = rate; 
+        u.pitch = pitch;
+        speechSynthesis.speak(u);
+      }
+    }
+
+    // --- Utility for random colors (for Balloon Pop) ---
+    function getRandomColor() {
+        const r = Math.floor(Math.random() * 200); // Avoid too dark/light
+        const g = Math.floor(Math.random() * 200);
+        const b = Math.floor(Math.random() * 200);
+        return `rgb(${r},${g},${b})`;
+    }
+
+
+
+            
+            
+            
+            
+                
     // --- MINI-GAME DEFINITIONS ---
-    // --- (Keep your existing helper functions like speak, playBell, myConfetti) ---
+    const CatchTheStarGame = {
+        name: "Catch the Star",
+        score: 0,
+        gameTimerId: null,
+        starIntervalId: null,
+        timerIntervalId: null,
+        container: null,
+        onCompleteCallback: null,
+        duration: 20000, // 20 seconds
+        starsOnScreen: [], // Will now store objects: { element: starDiv, removeTimeoutId: id }
+        elements: {},
+        forgivingTapRadius: 50, // Adjustable: generous radius around the star
+        boundForgivingTapHandler: null, // To store the bound event handler
 
-const CatchTheStarGame = {
-    name: "Catch the Star",
-    score: 0,
-    gameTimerId: null,        // For overall game duration
-    starIntervalId: null,     // For spawning stars
-    timerIntervalId: null,    // For updating the visual timer bar
-    animationFrameId: null,   // For the game's main loop (collision detection)
-    container: null,
-    onCompleteCallback: null,
-    duration: 20000,          // 20 seconds
-    starsOnScreen: [],        // Array of starData objects { element, removeTimeoutId }
-    elements: {},             // To store UI elements like scoreDisplay, timerBar
+        start: function(containerElement, onComplete) {
+            this.container = containerElement;
+            this.onCompleteCallback = onComplete;
+            this.score = 0;
+            this.starsOnScreen = [];
+            this.container.innerHTML = '';
+    
+            speak("Catch the falling stars!");
+    
+            const infoBar = document.createElement('div');
+            infoBar.className = 'minigame-info-bar';
+            this.elements.scoreDisplay = document.createElement('div');
+            this.elements.scoreDisplay.className = 'minigame-score';
+            infoBar.appendChild(this.elements.scoreDisplay);
+            this.updateScoreDisplay();
+    
+            const timerContainer = document.createElement('div');
+            timerContainer.className = 'minigame-timer-bar-container';
+            this.elements.timerBar = document.createElement('div');
+            this.elements.timerBar.className = 'minigame-timer-bar';
+            timerContainer.appendChild(this.elements.timerBar);
+            infoBar.appendChild(timerContainer);
+            this.container.appendChild(infoBar);
+    
+            let timeLeft = this.duration;
+            this.elements.timerBar.style.width = '100%';
+            this.timerIntervalId = setInterval(() => {
+                timeLeft -= 100;
+                const progress = Math.max(0, (timeLeft / this.duration) * 100);
+                this.elements.timerBar.style.width = `${progress}%`;
+                if (timeLeft <= 0) clearInterval(this.timerIntervalId);
+            }, 100);
+    
+            this.starIntervalId = setInterval(() => this.spawnStar(), 700);
+            this.gameTimerId = setTimeout(() => this.endGame(), this.duration);
 
-    // --- New properties for Hoop mechanic ---
-    hoopElement: null,
-    isHoopingActive: false,    // True when pointer is down
-    hoopRadius: 50,            // Radius of the hoop in pixels
-    starVisualRadius: 20,      // Approximate visual radius of a star for collision
-    hoopPosition: { x: 0, y: 0 }, // Center of the hoop, relative to the container
+            // Add forgiving tap listener
+            this.boundForgivingTapHandler = this._handleForgivingTap.bind(this);
+            this.container.addEventListener('click', this.boundForgivingTapHandler);
+        },
 
-    // Bound event handlers for easy add/remove
-    boundOnPointerDown: null,
-    boundOnPointerMove: null,
-    boundOnPointerUp: null,
-    boundGameLoop: null,
+        _handleForgivingTap: function(event) {
+            if (!this.container) return;
+            const containerRect = this.container.getBoundingClientRect();
+            const clickX = event.clientX - containerRect.left; // Click X relative to container
+            const clickY = event.clientY - containerRect.top;  // Click Y relative to container
 
-    start: function(containerElement, onComplete) {
-        this.container = containerElement;
-        this.onCompleteCallback = onComplete;
-        this.score = 0;
-        this.starsOnScreen = [];
-        this.container.innerHTML = ''; // Clear previous game content
+            // Iterate over a copy of the array in case _processStarCatch modifies it
+            this.starsOnScreen.slice().forEach(starData => {
+                const starElement = starData.element;
+                if (!this.container.contains(starElement)) return; // Star already removed
 
-        speak("Catch the stars in your hoop!");
+                // Calculate star center relative to the container
+                const starCenterX = starElement.offsetLeft + starElement.offsetWidth / 2;
+                const starCenterY = starElement.offsetTop + starElement.offsetHeight / 2;
 
-        // Setup UI (score, timer bar - same as before)
-        const infoBar = document.createElement('div');
-        infoBar.className = 'minigame-info-bar';
-        this.elements.scoreDisplay = document.createElement('div');
-        this.elements.scoreDisplay.className = 'minigame-score';
-        infoBar.appendChild(this.elements.scoreDisplay);
-        this.updateScoreDisplay();
+                const distance = Math.sqrt(
+                    Math.pow(clickX - starCenterX, 2) +
+                    Math.pow(clickY - starCenterY, 2)
+                );
 
-        const timerContainer = document.createElement('div');
-        timerContainer.className = 'minigame-timer-bar-container';
-        this.elements.timerBar = document.createElement('div');
-        this.elements.timerBar.className = 'minigame-timer-bar';
-        timerContainer.appendChild(this.elements.timerBar);
-        infoBar.appendChild(timerContainer);
-        this.container.appendChild(infoBar);
-
-        let timeLeft = this.duration;
-        this.elements.timerBar.style.width = '100%';
-        this.timerIntervalId = setInterval(() => {
-            timeLeft -= 100;
-            const progress = Math.max(0, (timeLeft / this.duration) * 100);
-            this.elements.timerBar.style.width = `${progress}%`;
-            if (timeLeft <= 0) clearInterval(this.timerIntervalId);
-        }, 100);
-
-        // --- Hoop Setup ---
-        this.hoopElement = document.createElement('div');
-        this.hoopElement.style.position = 'absolute';
-        this.hoopElement.style.width = `${this.hoopRadius * 2}px`;
-        this.hoopElement.style.height = `${this.hoopRadius * 2}px`;
-        this.hoopElement.style.border = '3px dashed white';
-        this.hoopElement.style.borderRadius = '50%';
-        this.hoopElement.style.boxSizing = 'border-box';
-        this.hoopElement.style.display = 'none'; // Initially hidden
-        this.hoopElement.style.pointerEvents = 'none'; // Hoop itself should not catch pointer events
-        this.container.appendChild(this.hoopElement);
-
-        // Bind event handlers
-        this.boundOnPointerDown = this.onPointerDown.bind(this);
-        this.boundOnPointerMove = this.onPointerMove.bind(this);
-        this.boundOnPointerUp = this.onPointerUp.bind(this);
-        this.boundGameLoop = this.gameLoop.bind(this);
-
-        // Add event listeners to the game container
-        this.container.addEventListener('pointerdown', this.boundOnPointerDown);
-        // We add move/up to window to catch events even if pointer leaves container
-        window.addEventListener('pointermove', this.boundOnPointerMove);
-        window.addEventListener('pointerup', this.boundOnPointerUp);
-        window.addEventListener('pointercancel', this.boundOnPointerUp); // Handle cancellations
-
-        this.starIntervalId = setInterval(() => this.spawnStar(), 800); // Spawn stars
-        this.gameTimerId = setTimeout(() => this.endGame(), this.duration); // End game after duration
-
-        this.animationFrameId = requestAnimationFrame(this.boundGameLoop); // Start the game loop
-    },
-
-    onPointerDown: function(event) {
-        // Only activate if the event is within the game container
-        if (event.target !== this.container && !this.container.contains(event.target)) {
-             // If pointerdown is on a star or other element *inside* the container,
-             // we still want to activate the hoop if the container itself is the event handler target.
-             // However, if the event.target is something entirely outside the container, ignore.
-             let el = event.target;
-             let isInsideContainer = false;
-             while(el) {
-                if (el === this.container) {
-                    isInsideContainer = true;
-                    break;
+                if (distance <= this.forgivingTapRadius) {
+                    // If the tap was directly on the star, its own click listener handles it.
+                    // This forgiving handler should skip if event.target is the star itself.
+                    if (event.target !== starElement) {
+                        this._processStarCatch(starData);
+                    }
                 }
-                el = el.parentElement;
-             }
-             if(!isInsideContainer) return;
-        }
-        event.preventDefault(); // Prevent default browser actions like text selection or scrolling
-        this.isHoopingActive = true;
-        this.updateHoopDisplay(event);
-        this.hoopElement.style.display = 'block';
-    },
+            });
+        },
+    
+        spawnStar: function() {
+            if (!this.container || this.starsOnScreen.length > 10) return;
+            const star = document.createElement('div');
+            star.style.position = 'absolute';
+            star.style.width = '40px';
+            star.style.height = '40px';
+            star.style.left = `${Math.random() * (this.container.clientWidth - 40)}px`;
+            star.style.top = `-40px`; // Start above screen
+            star.style.fontSize = '2.2rem';
+            star.style.userSelect = 'none';
+            star.style.cursor = 'pointer';
+            star.style.transition = 'top 1.7s linear'; // CSS handles falling animation
+            star.textContent = '⭐';
+            
+            this.container.appendChild(star);
 
-    onPointerMove: function(event) {
-        if (this.isHoopingActive) {
-            event.preventDefault();
-            this.updateHoopDisplay(event);
-        }
-    },
+            const starData = {
+                element: star,
+                removeTimeoutId: null 
+            };
+            this.starsOnScreen.push(starData);
+    
+            // Trigger CSS animation to move down
+            setTimeout(() => {
+                star.style.top = `${this.container.clientHeight}px`; // Fall to bottom of container
+            }, 30); // Small delay to ensure transition applies
+    
+            // Set timeout to remove star if not caught
+            starData.removeTimeoutId = setTimeout(() => {
+                const index = this.starsOnScreen.indexOf(starData);
+                if (index !== -1) {
+                    if (star.parentNode) { // Check if still in DOM
+                        star.remove();
+                    }
+                    this.starsOnScreen.splice(index, 1);
+                }
+            }, 1700); // Matches transition duration
+    
+            // Direct click listener on the star
+            star.addEventListener('click', () => {
+                this._processStarCatch(starData);
+            }, { once: true }); // Direct click only happens once
+        },
 
-    onPointerUp: function(event) {
-        if (this.isHoopingActive) {
-            // event.preventDefault(); // Not always needed for up, but can be good
-            this.isHoopingActive = false;
-            this.hoopElement.style.display = 'none';
-        }
-    },
-
-    updateHoopDisplay: function(event) {
-        if (!this.container) return;
-        const rect = this.container.getBoundingClientRect();
-        // Calculate pointer position relative to the container
-        this.hoopPosition.x = event.clientX - rect.left;
-        this.hoopPosition.y = event.clientY - rect.top;
-
-        // Position the hoop so its center is at the pointer
-        this.hoopElement.style.left = `${this.hoopPosition.x - this.hoopRadius}px`;
-        this.hoopElement.style.top = `${this.hoopPosition.y - this.hoopRadius}px`;
-    },
-
-    gameLoop: function() {
-        if (this.isHoopingActive) {
-            this.checkHoopCollisions();
-        }
-        this.animationFrameId = requestAnimationFrame(this.boundGameLoop);
-    },
-
-    checkHoopCollisions: function() {
-        if (!this.isHoopingActive || this.starsOnScreen.length === 0) return;
-
-        // Iterate backwards because we might be removing items from the array
-        for (let i = this.starsOnScreen.length - 1; i >= 0; i--) {
-            const starData = this.starsOnScreen[i];
+        _processStarCatch: function(starData) {
             const starElement = starData.element;
 
-            if (!starElement.parentNode) { // Star already removed (e.g., by timeout)
-                this.starsOnScreen.splice(i, 1);
-                continue;
+            // Check if this starData is still in our active list
+            const starIndex = this.starsOnScreen.indexOf(starData);
+            if (starIndex === -1) {
+                return; // Already caught or removed by timeout
             }
 
-            const starCenterX = starElement.offsetLeft + starElement.offsetWidth / 2;
-            const starCenterY = starElement.offsetTop + starElement.offsetHeight / 2;
+            clearTimeout(starData.removeTimeoutId); // Prevent removal by timeout
 
-            const dx = this.hoopPosition.x - starCenterX;
-            const dy = this.hoopPosition.y - starCenterY;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+            playBell();
+            const rect = starElement.getBoundingClientRect();
+            const x = (rect.left + rect.right) / 2 / window.innerWidth;
+            const y = (rect.top + rect.bottom) / 2 / window.innerHeight;
+            myConfetti({ particleCount: 15, spread: 35, origin: { x: x, y: y }, scalar: 0.5 });
+            
+            this.score++;
+            speak(this.score, 1.2, 1.3);
+            this.updateScoreDisplay();
 
-            // Collision if distance is less than sum of hoop radius and star's visual radius
-            if (distance < this.hoopRadius + this.starVisualRadius) {
-                this._processStarCatch(starData, i); // Pass index for efficient removal
-            }
-        }
-    },
-
-    spawnStar: function() {
-        if (!this.container || this.starsOnScreen.length > 12) return; // Max 12 stars
-        const star = document.createElement('div');
-        star.style.position = 'absolute';
-        star.style.width = '40px'; // Star visual size
-        star.style.height = '40px';
-        star.style.left = `${Math.random() * (this.container.clientWidth - 40)}px`;
-        star.style.top = `-40px`; // Start above screen
-        star.style.fontSize = '2.2rem';
-        star.style.userSelect = 'none'; // Global CSS should handle this too
-        // star.style.cursor = 'pointer'; // Not clickable directly anymore
-        star.style.transition = 'top 1.9s linear, transform 0.3s ease-out'; // Added transform for pop
-        star.textContent = '⭐';
-        
-        this.container.appendChild(star);
-
-        const starData = {
-            element: star,
-            removeTimeoutId: null 
-        };
-        this.starsOnScreen.push(starData);
-
-        // Trigger CSS animation to move down
-        setTimeout(() => {
-            if (star.parentNode) { // Check if still in DOM
-                 star.style.top = `${this.container.clientHeight}px`; // Fall to bottom
-            }
-        }, 30); 
-
-        // Set timeout to remove star if not caught and falls off screen
-        starData.removeTimeoutId = setTimeout(() => {
-            const index = this.starsOnScreen.indexOf(starData);
-            if (index !== -1) { // If still in the array (i.e., not caught)
-                if (star.parentNode) {
-                    star.remove();
-                }
-                this.starsOnScreen.splice(index, 1);
-            }
-        }, 1900); // Matches transition duration
-    },
-
-    _processStarCatch: function(starData, starArrayIndex) {
-        const starElement = starData.element;
-
-        // Clear the timeout that would remove it if it fell off screen
-        clearTimeout(starData.removeTimeoutId);
-
-        playBell(); // Assume playBell is defined globally
-        const rect = starElement.getBoundingClientRect(); // For confetti origin
-        const x = (rect.left + rect.right) / 2 / window.innerWidth;
-        const y = (rect.top + rect.bottom) / 2 / window.innerHeight;
-        myConfetti({ particleCount: 25, spread: 45, origin: { x: x, y: y }, scalar: 0.6 }); // Assume myConfetti is global
-
-        this.score++;
-        speak(this.score, 1.2, 1.3); // Assume speak is defined globally
-        this.updateScoreDisplay();
-
-        // Visual feedback for caught star (e.g., shrink and fade)
-        starElement.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
-        starElement.style.transform = 'scale(0.1)';
-        starElement.style.opacity = '0';
-
-        // Remove from DOM after animation & from array
-        setTimeout(() => {
+            // Remove from DOM and array
             if (starElement.parentNode) {
                 starElement.remove();
             }
-        }, 300); // Matches animation duration
+            this.starsOnScreen.splice(starIndex, 1);
+        },
+    
+        updateScoreDisplay: function() {
+            if(this.elements.scoreDisplay) this.elements.scoreDisplay.textContent = `Stars: ${this.score}`;
+        },
+    
+        endGame: function() {
+            clearInterval(this.starIntervalId);
+            clearInterval(this.timerIntervalId);
+            clearTimeout(this.gameTimerId);
 
-        // Remove from starsOnScreen array
-        if (starArrayIndex !== undefined && starArrayIndex < this.starsOnScreen.length && this.starsOnScreen[starArrayIndex] === starData) {
-            this.starsOnScreen.splice(starArrayIndex, 1);
-        } else {
-            // Fallback if index is not reliable (shouldn't happen with reverse loop)
-            const index = this.starsOnScreen.indexOf(starData);
-            if (index !== -1) this.starsOnScreen.splice(index, 1);
-        }
-    },
+            this.starsOnScreen.forEach(starData => {
+                clearTimeout(starData.removeTimeoutId);
+                if (starData.element.parentNode) {
+                    starData.element.remove();
+                }
+            });
+            this.starsOnScreen = [];
+            speak(`You caught ${this.score} stars!`);
+            if(this.onCompleteCallback) this.onCompleteCallback(this.score);
+        },
+    
+        destroy: function() {
+            clearInterval(this.starIntervalId);
+            clearInterval(this.timerIntervalId);
+            clearTimeout(this.gameTimerId);
 
-    updateScoreDisplay: function() {
-        if(this.elements.scoreDisplay) this.elements.scoreDisplay.textContent = `Stars: ${this.score}`;
-    },
-
-    endGame: function() {
-        // Clear intervals and timeouts
-        clearInterval(this.starIntervalId);
-        this.starIntervalId = null;
-        clearInterval(this.timerIntervalId);
-        this.timerIntervalId = null;
-        clearTimeout(this.gameTimerId);
-        this.gameTimerId = null;
-        cancelAnimationFrame(this.animationFrameId);
-        this.animationFrameId = null;
-
-        // Remove event listeners
-        if (this.container) {
-            this.container.removeEventListener('pointerdown', this.boundOnPointerDown);
-        }
-        window.removeEventListener('pointermove', this.boundOnPointerMove);
-        window.removeEventListener('pointerup', this.boundOnPointerUp);
-        window.removeEventListener('pointercancel', this.boundOnPointerUp);
-
-
-        // Clean up remaining stars
-        this.starsOnScreen.forEach(starData => {
-            clearTimeout(starData.removeTimeoutId);
-            if (starData.element.parentNode) {
-                starData.element.remove();
+            // Remove forgiving tap listener
+            if (this.boundForgivingTapHandler && this.container) {
+                this.container.removeEventListener('click', this.boundForgivingTapHandler);
             }
-        });
-        this.starsOnScreen = [];
+            this.boundForgivingTapHandler = null;
 
-        // Hide and remove hoop
-        if (this.hoopElement && this.hoopElement.parentNode) {
-            this.hoopElement.remove();
+            this.starsOnScreen.forEach(starData => {
+                clearTimeout(starData.removeTimeoutId);
+                if (starData.element.parentNode) {
+                    starData.element.remove();
+                }
+            });
+            this.starsOnScreen = [];
+
+            if (this.container) this.container.innerHTML = '';
+            this.elements = {};
+            // console.log(`${this.name} destroyed`);
         }
-        this.hoopElement = null;
-        this.isHoopingActive = false;
-
-        speak(`Game over! You caught ${this.score} stars!`);
-        if(this.onCompleteCallback) this.onCompleteCallback(this.score);
-    },
-
-    destroy: function() {
-        this.endGame(); // endGame already handles most cleanup
-        if (this.container) this.container.innerHTML = ''; // Final clear of container
-        this.container = null;
-        this.elements = {};
-        // console.log(`${this.name} destroyed`);
-    }
-};
+    };
     const BalloonPopGame = {
         name: "Balloon Pop",
         score: 0,
@@ -714,7 +623,7 @@ const CatchTheStarGame = {
         duration: 20000, 
         balloonsOnScreen: [],
         elements: {},
-        forgivingTapRadius: 60, 
+        forgivingTapRadius: 60, // Adjustable
         boundForgivingTapHandler: null,
 
         start: function(containerElement, onComplete) {
@@ -723,13 +632,16 @@ const CatchTheStarGame = {
             this.score = 0;
             this.balloonsOnScreen = [];
             this.container.innerHTML = ''; 
+
             speak("Tap as many balloons as you can before time runs out!");
+
             const infoBar = document.createElement('div');
             infoBar.className = 'minigame-info-bar';
             this.elements.scoreDisplay = document.createElement('div');
             this.elements.scoreDisplay.className = 'minigame-score';
             infoBar.appendChild(this.elements.scoreDisplay);
             this.updateScoreDisplay();
+
             const timerContainer = document.createElement('div');
             timerContainer.className = 'minigame-timer-bar-container';
             this.elements.timerBar = document.createElement('div');
@@ -737,8 +649,10 @@ const CatchTheStarGame = {
             timerContainer.appendChild(this.elements.timerBar);
             infoBar.appendChild(timerContainer);
             this.container.appendChild(infoBar);
+            
             let timeLeft = this.duration;
             this.elements.timerBar.style.width = '100%';
+
             this.timerIntervalId = setInterval(() => {
                 timeLeft -= 100;
                 const progress = Math.max(0, (timeLeft / this.duration) * 100);
@@ -747,40 +661,56 @@ const CatchTheStarGame = {
                     clearInterval(this.timerIntervalId);
                 }
             }, 100);
+
             this.balloonIntervalId = setInterval(() => this.spawnBalloon(), 700); 
             this.gameTimerId = setTimeout(() => this.endGame(), this.duration);
+
+            // Forgiving tap listener
             this.boundForgivingTapHandler = this._handleForgivingTap.bind(this);
             this.container.addEventListener('click', this.boundForgivingTapHandler);
         },
+
         _handleForgivingTap: function(event) {
             const containerRect = this.container.getBoundingClientRect();
             const clickX = event.clientX - containerRect.left;
             const clickY = event.clientY - containerRect.top;
+
+            // Iterate over a copy of the array in case popBalloon modifies it
             this.balloonsOnScreen.slice().forEach(balloonElement => {
-                if (!balloonElement || !balloonElement.parentNode) return; 
+                if (!balloonElement || !balloonElement.parentNode) return; // Balloon already gone or not in DOM
+
                 const balloonCenterX = balloonElement.offsetLeft + balloonElement.offsetWidth / 2;
                 const balloonCenterY = balloonElement.offsetTop + balloonElement.offsetHeight / 2;
+                
                 const distance = Math.sqrt(
                     Math.pow(clickX - balloonCenterX, 2) + 
                     Math.pow(clickY - balloonCenterY, 2)
                 );
+
                 if (distance <= this.forgivingTapRadius) {
+                    // If the event.target *is* this balloonElement, its direct click handler
+                    // (added in spawnBalloon) will handle it. So, this forgiving handler should skip.
                     if (event.target !== balloonElement) {
                         this.popBalloon(balloonElement);
                     }
                 }
             });
         },
+
         spawnBalloon: function() {
             if (!this.container || this.balloonsOnScreen.length > 15) return;
+
             const balloon = document.createElement('div');
             balloon.className = 'balloon';
             balloon.style.backgroundColor = getRandomColor();
             balloon.style.left = `${Math.random() * (this.container.clientWidth - 60)}px`;
             balloon.style.bottom = '-100px'; 
+
             balloon.addEventListener('click', () => this.popBalloon(balloon), { once: true });
+            
             this.container.appendChild(balloon);
             this.balloonsOnScreen.push(balloon);
+            
             balloon.classList.add('balloon-rising');
             balloon.addEventListener('animationend', () => {
                 const index = this.balloonsOnScreen.indexOf(balloon);
@@ -788,23 +718,29 @@ const CatchTheStarGame = {
                 if (balloon.parentNode) balloon.remove();
             }, { once: true });
         },
+
         popBalloon: function(balloonElement) {
             if (!this.balloonsOnScreen.includes(balloonElement)) return; 
+
             playBell();
             const rect = balloonElement.getBoundingClientRect();
             const x = (rect.left + rect.right) / 2 / window.innerWidth;
             const y = (rect.top + rect.bottom) / 2 / window.innerHeight;
             myConfetti({ particleCount: 30, spread: 50, origin: { x: x, y: y }, scalar: 0.7 });
+            
             this.score++;
             speak(this.score, 1.2, 1.3); 
             this.updateScoreDisplay();
+
             if (balloonElement.parentNode) balloonElement.remove(); 
             const index = this.balloonsOnScreen.indexOf(balloonElement);
             if (index > -1) this.balloonsOnScreen.splice(index, 1);
         },
+
         updateScoreDisplay: function() {
             if(this.elements.scoreDisplay) this.elements.scoreDisplay.textContent = `Popped: ${this.score}`;
         },
+
         endGame: function() {
             clearInterval(this.balloonIntervalId);
             this.balloonIntervalId = null;
@@ -812,25 +748,32 @@ const CatchTheStarGame = {
             this.timerIntervalId = null;
             clearTimeout(this.gameTimerId); 
             this.gameTimerId = null;
+            
             this.balloonsOnScreen.forEach(b => { if (b.parentNode) b.remove() });
             this.balloonsOnScreen = [];
+
             speak(`You popped ${this.score} balloons!`);
             if(this.onCompleteCallback) this.onCompleteCallback(this.score);
         },
+
         destroy: function() {
             clearInterval(this.balloonIntervalId);
             clearInterval(this.timerIntervalId);
             clearTimeout(this.gameTimerId);
             this.balloonsOnScreen.forEach(b => { if (b.parentNode) b.remove() });
             this.balloonsOnScreen = [];
+            
             if (this.boundForgivingTapHandler && this.container) {
                 this.container.removeEventListener('click', this.boundForgivingTapHandler);
             }
             this.boundForgivingTapHandler = null;
+
             if (this.container) this.container.innerHTML = '';
             this.elements = {};
+            // console.log(`${this.name} destroyed`);
         }
     };
+
     const BouncePartyGame = {
         name: "Bounce Party",
         score: 0,
@@ -839,6 +782,7 @@ const CatchTheStarGame = {
         container: null,
         onCompleteCallback: null,
         duration: 20000, 
+        
         ballElement: null,
         ballPosY: 0, ballVelY: 0,
         gravity: 0.4,
@@ -846,40 +790,51 @@ const CatchTheStarGame = {
         tapStrength: 12,
         animationFrameId: null,
         elements: {},
-        forgivingTapRadius: 70, 
+        forgivingTapRadius: 70, // Adjustable
         boundForgivingContainerTapHandler: null,
-        boundHandleTap: null, 
+        boundHandleTap: null, // To store the bound direct tap handler for removal
 
         start: function(containerElement, onComplete) {
             this.container = containerElement;
             this.onCompleteCallback = onComplete;
             this.score = 0;
             this.container.innerHTML = '';
+
             speak("Keep the ball bouncing!");
+
             const infoBar = document.createElement('div');
             infoBar.className = 'minigame-info-bar';
+            
             this.elements.scoreDisplay = document.createElement('div');
             this.elements.scoreDisplay.className = 'minigame-score';
             infoBar.appendChild(this.elements.scoreDisplay);
             this.updateScoreDisplay();
+
             this.elements.timerText = document.createElement('div');
             this.elements.timerText.className = 'minigame-timer-text';
             infoBar.appendChild(this.elements.timerText);
             this.container.appendChild(infoBar);
+
             this.ballElement = document.createElement('div');
             this.ballElement.className = 'bounce-ball';
             this.container.appendChild(this.ballElement);
+
             this.ballPosY = 50;
             this.ballVelY = 0;
             const ballInitialX = this.container.clientWidth / 2 - this.ballElement.clientWidth / 2;
             this.ballElement.style.left = `${ballInitialX}px`;
             this.ballElement.style.top = `${this.ballPosY}px`;
+
             this.boundHandleTap = this.handleTap.bind(this); 
             this.ballElement.addEventListener('click', this.boundHandleTap);
+            
+            // Forgiving tap listener
             this.boundForgivingContainerTapHandler = this._handleForgivingContainerTap.bind(this);
             this.container.addEventListener('click', this.boundForgivingContainerTapHandler);
+
             this.gameLoop = this.gameLoop.bind(this); 
             this.animationFrameId = requestAnimationFrame(this.gameLoop);
+
             let timeLeftSeconds = this.duration / 1000;
             this.elements.timerText.textContent = `Time: ${timeLeftSeconds}s`;
             this.timerDisplayIntervalId = setInterval(() => {
@@ -887,32 +842,45 @@ const CatchTheStarGame = {
                 this.elements.timerText.textContent = `Time: ${Math.max(0, timeLeftSeconds)}s`;
                 if (timeLeftSeconds <= 0) clearInterval(this.timerDisplayIntervalId);
             }, 1000);
+
             this.gameTimerId = setTimeout(() => this.endGame(), this.duration);
         },
+
         _handleForgivingContainerTap: function(event) {
             if (!this.ballElement || !this.ballElement.parentNode) return; 
+
+            // If the tap was directly on the ball, its own click listener handles it.
+            // This forgiving handler should ignore such direct taps.
             if (event.target === this.ballElement) {
                 return; 
             }
+
             const containerRect = this.container.getBoundingClientRect();
             const clickX = event.clientX - containerRect.left;
             const clickY = event.clientY - containerRect.top;
+
             const ballCenterX = this.ballElement.offsetLeft + this.ballElement.offsetWidth / 2;
             const ballCenterY = this.ballElement.offsetTop + this.ballElement.offsetHeight / 2;
+
             const distance = Math.sqrt(
                 Math.pow(clickX - ballCenterX, 2) +
                 Math.pow(clickY - ballCenterY, 2)
             );
+
             if (distance <= this.forgivingTapRadius) {
-                this.handleTap(); 
+                this.handleTap(); // Call the existing tap handler for the bounce effect
             }
         },
+
         gameLoop: function() {
             if (!this.ballElement || !this.container) return;
+
             this.ballVelY += this.gravity;
             this.ballPosY += this.ballVelY;
+
             const bottomBoundary = this.container.clientHeight - this.ballElement.clientHeight;
             const topBoundary = 0;
+
             if (this.ballPosY >= bottomBoundary) {
                 this.ballPosY = bottomBoundary;
                 this.ballVelY *= -this.bounceFactor;
@@ -921,24 +889,30 @@ const CatchTheStarGame = {
                 this.ballPosY = topBoundary;
                 this.ballVelY *= -this.bounceFactor;
             }
+            
             this.ballElement.style.top = `${this.ballPosY}px`;
             this.animationFrameId = requestAnimationFrame(this.gameLoop);
         },
+
         handleTap: function() {
             if (!this.ballElement) return;
             this.ballVelY = -this.tapStrength;
             playBell();
+            
             const rect = this.ballElement.getBoundingClientRect();
             const x = (rect.left + rect.right) / 2 / window.innerWidth;
             const y = (rect.top + rect.bottom) / 2 / window.innerHeight;
             myConfetti({ particleCount: 20, spread: 40, origin: { x: x, y: y }, scalar: 0.6 });
+
             this.score++;
             speak(this.score, 1.2, 1.3);
             this.updateScoreDisplay();
         },
+
         updateScoreDisplay: function() {
              if(this.elements.scoreDisplay) this.elements.scoreDisplay.textContent = `Bounces: ${this.score}`;
         },
+
         endGame: function() {
             cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = null;
@@ -946,37 +920,48 @@ const CatchTheStarGame = {
             this.timerDisplayIntervalId = null;
             clearTimeout(this.gameTimerId);
             this.gameTimerId = null;
+            
             if (this.ballElement && this.boundHandleTap) {
                 this.ballElement.removeEventListener('click', this.boundHandleTap);
             }
+
             speak(`You bounced the ball ${this.score} times!`);
             if(this.onCompleteCallback) this.onCompleteCallback(this.score);
         },
+
         destroy: function() {
             cancelAnimationFrame(this.animationFrameId);
             clearInterval(this.timerDisplayIntervalId);
             clearTimeout(this.gameTimerId);
+
             if (this.ballElement && this.boundHandleTap) {
                 this.ballElement.removeEventListener('click', this.boundHandleTap);
             }
             this.boundHandleTap = null;
+            
             if (this.boundForgivingContainerTapHandler && this.container) {
                 this.container.removeEventListener('click', this.boundForgivingContainerTapHandler);
             }
             this.boundForgivingContainerTapHandler = null;
+
             if (this.container) this.container.innerHTML = '';
             this.ballElement = null;
             this.elements = {};
+            // console.log(`${this.name} destroyed`);
         }
     };
     
+            
+
     // --- MINI-GAME SYSTEM ---
     function initMiniGameSystem() {
-        availableMiniGames.push(CatchTheStarGame, BalloonPopGame, BouncePartyGame); 
+        availableMiniGames.push(CatchTheStarGame, BalloonPopGame, BouncePartyGame); // Register games
+        
         toggleMiniGamesBtn.textContent = `Mini-Games: ${miniGamesEnabled ? 'On' : 'Off'}`;
         if (miniGamesEnabled) {
             toggleMiniGamesBtn.classList.add('active-minigame-toggle');
         }
+
         toggleMiniGamesBtn.addEventListener('click', () => {
             miniGamesEnabled = !miniGamesEnabled;
             localStorage.setItem('miniGamesEnabled', miniGamesEnabled);
@@ -984,86 +969,78 @@ const CatchTheStarGame = {
             toggleMiniGamesBtn.classList.toggle('active-minigame-toggle', miniGamesEnabled);
         });
     }
+
     function triggerMiniGame() {
         if (availableMiniGames.length === 0) {
+            console.warn("No mini-games available!");
             resumeQuizAfterMiniGame(undefined); 
             return;
         }
-        isMiniGameActive = true; 
+        isMiniGameActive = true; // Set flag before starting
+
         miniGameArea.classList.add('active');
         miniGameArea.setAttribute('tabindex', '-1');
         miniGameArea.focus();
+
+
         const gameToPlay = availableMiniGames[currentMiniGameIdx];
         currentMiniGameIdx = (currentMiniGameIdx + 1) % availableMiniGames.length;
+        
         gameToPlay.start(miniGameArea, (miniGameScore) => {
             gameToPlay.destroy(); 
             miniGameArea.classList.remove('active');
-            resumeQuizAfterMiniGame(miniGameScore); 
+            resumeQuizAfterMiniGame(miniGameScore); // isMiniGameActive will be reset here
         });
     }
 
-    
     function resumeQuizAfterMiniGame(miniGameScore) {
-        isMiniGameActive = false; // Reset flag: Mini-game is no longer active
-    
-        const postMiniGameDelay = 4000; // 4 seconds. Adjust as needed.
-    
-        // This timeout creates the pause AFTER the mini-game has fully ended
-        // and its "Game Over" message has likely started/finished.
-        setTimeout(() => {
-            // Now, make the quiz container and controls visible again
-            quizCont.style.display = 'flex';
-            controlsBar.style.display = 'flex';
-    
-            // Show the score from the mini-game
+        isMiniGameActive = false; // Reset flag
+        
+        quizCont.style.display = 'flex'; 
+        controlsBar.style.display = 'flex';
+        quizCont.classList.add('animate__animated', 'animate__fadeInCustom');
+        controlsBar.classList.add('animate__animated', 'animate__fadeInCustom');
+
+        const animationEndHandler = () => {
+            quizCont.classList.remove('animate__animated', 'animate__fadeInCustom');
+            controlsBar.classList.remove('animate__animated', 'animate__fadeInCustom');
+            // quizCont.removeEventListener('animationend', animationEndHandler); // GSAP might not fire animationend
+            
             if (miniGameScore !== undefined) {
                 showFloatingMessage(`Mini-Game: ${miniGameScore} points!`, 'var(--brand-light)', 'var(--fg)');
             }
-    
-            // Define what happens after the quiz UI fades back in
-            const animationEndHandler = () => {
-                quizCont.classList.remove('animate__animated', 'animate__fadeInCustom');
-                controlsBar.classList.remove('animate__animated', 'animate__fadeInCustom');
-                
-                // Proceed to the next quiz question immediately after fade-in
-                nextQ();
-            };
-    
-            // Start the fade-in animation for the quiz UI
-            if (typeof gsap !== 'undefined') {
-                gsap.fromTo([quizCont, controlsBar], {opacity: 0}, {opacity: 1, duration: 0.5, onComplete: animationEndHandler});
-            } else {
-                quizCont.classList.add('animate__animated', 'animate__fadeInCustom');
-                controlsBar.classList.add('animate__animated', 'animate__fadeInCustom');
-                
-                let animationFallbackTimer = setTimeout(() => {
-                    if (quizCont.classList.contains('animate__fadeInCustom')) {
-                        console.warn("FadeIn animationend fallback triggered for quiz resume.");
-                        animationEndHandler(); // Ensure it proceeds even if animationend doesn't fire
-                    }
-                }, 700); // Duration slightly longer than CSS animation
-    
-                quizCont.addEventListener('animationend', () => {
-                    clearTimeout(animationFallbackTimer); // Clear fallback if animationend fires
+            setTimeout(nextQ, 300); 
+        };
+        // Use GSAP for fade in if available, otherwise rely on CSS animation timeout
+        if (typeof gsap !== 'undefined') {
+            gsap.fromTo([quizCont, controlsBar], {opacity: 0}, {opacity: 1, duration: 0.3, onComplete: animationEndHandler});
+        } else {
+             quizCont.addEventListener('animationend', animationEndHandler, { once: true });
+             setTimeout(() => { 
+                if (quizCont.classList.contains('animate__fadeInCustom')) {
                     animationEndHandler();
-                }, { once: true });
-            }
-        }, postMiniGameDelay);
-    }    
+                }
+            }, 500);
+        }
+    }
+
 
     // --- UI & GAME LOGIC (mostly same as before, with modifications for mini-games) ---
-    function updateModeUI() { if (currentGameMode === 'listenAndPickWord') { listenPickWordArea.style.display = 'flex'; readPickSoundArea.style.display = 'none'; modeToggleBtn.textContent = 'Mode: Listen'; listenBtn.innerHTML = '🔊'; } else { listenPickWordArea.style.display = 'none'; readPickSoundArea.style.display = 'flex'; modeToggleBtn.textContent = 'Mode: Read'; listenBtn.innerHTML = '📖'; if(submitAnswerBtn) submitAnswerBtn.disabled = true; } }
-    modeToggleBtn.addEventListener('click', () => { currentGameMode = (currentGameMode === 'listenAndPickWord') ? 'readAndPickSound' : 'listenAndPickWord'; localStorage.setItem('sightWordsGameMode', currentGameMode); updateModeUI(); clearTimeout(questionTimeoutId); resetQuestionState(); setTimeout(nextQ, 100); });
-    function resetQuestionState() { questionAnsweredThisTurn = false; selectedSoundButton = null; soundChoiceBtns.forEach(btn => btn.classList.remove('sound-btn-selected', 'correct', 'incorrect')); wordChoiceBtns.forEach(btn => btn.classList.remove('correct', 'incorrect')); if (submitAnswerBtn) submitAnswerBtn.disabled = true; }
-    function initCircularTimer() { const timerContainer = document.getElementById('circular-timer'); if (!timerContainer) return; circleTimerInstance = new ProgressBar.Circle(timerContainer, { strokeWidth: 10, easing: 'linear', color: 'var(--brand)', trailColor: 'rgba(224, 224, 224, 0.5)', trailWidth: 10, svgStyle: { width: '100%', height: '100%' }, text: { style: { color: 'var(--fg)', position: 'absolute', left: '50%', top: '50%', padding: 0, margin: 0, transform: { prefix: true, value: 'translate(-50%, -50%)' }, fontSize: '1.4em', fontWeight: '600', }, autoStyleContainer: false }, step: function(state, circle) { if (timeLimit > 0) { const timeLeft = Math.ceil(timeLimit * (1 - circle.value())); circle.setText(timeLeft > 0 ? timeLeft : '0'); if (timeLeft <= timeLimit * 0.3) circle.path.setAttribute('stroke', '#f44336'); else if (timeLeft <= timeLimit * 0.6) circle.path.setAttribute('stroke', '#ff9800'); else circle.path.setAttribute('stroke', 'var(--brand)'); } else { circle.setText('∞'); circle.path.setAttribute('stroke', 'var(--brand)'); } } }); }
-    function startCountdown(onDoneCallback){ clearTimeout(questionTimeoutId); if(circleTimerInstance){ circleTimerInstance.set(0); circleTimerInstance.setText(timeLimit > 0 ? String(timeLimit) : '∞'); circleTimerInstance.path.setAttribute('stroke', 'var(--brand)'); if(timeLimit <= 0) return; circleTimerInstance.animate(1.0, { duration: timeLimit * 1000 }); questionTimeoutId = setTimeout(() => { if (!questionAnsweredThisTurn && !isMiniGameActive) onDoneCallback(); }, timeLimit * 1000); } }
-    function nextQ(){ resetQuestionState(); quizCont.classList.remove('animate__fadeInCustom', 'animate__zoomIn'); void quizCont.offsetWidth; quizCont.classList.add('animate__zoomIn'); [...wordChoiceBtns, ...soundChoiceBtns].forEach(btn => btn.style.display = ''); if(submitAnswerBtn) submitAnswerBtn.style.display = ''; wordToReadDisplay.style.display = ''; if (words.length === 0) { wordToReadDisplay.textContent = "No Words!"; showFloatingMessage("Please select levels/words!", "var(--brand-dark)"); listenPickWordArea.style.display = 'none'; readPickSoundArea.style.display = 'flex'; soundChoiceBtns.forEach(btn => btn.style.display = 'none'); if (submitAnswerBtn) submitAnswerBtn.style.display = 'none'; wordChoiceBtns.forEach(btn => btn.style.display = 'none'); clearTimeout(questionTimeoutId); if(circleTimerInstance) circleTimerInstance.set(0); return; } currentCorrectWord = words[Math.floor(Math.random()*words.length)]; let distractorWord; if (words.length > 1) { do { distractorWord = words[Math.floor(Math.random()*words.length)]; } while(distractorWord === currentCorrectWord); } else { distractorWord = currentCorrectWord; } if (currentGameMode === 'listenAndPickWord') { const pair = Math.random() < 0.5 ? [currentCorrectWord, distractorWord] : [distractorWord, currentCorrectWord]; wordChoiceBtns.forEach((b,i)=>{ b.textContent = pair[i]; b.disabled = false; b.className = 'choice-btn'; }); speak(currentCorrectWord); } else { wordToReadDisplay.textContent = currentCorrectWord; const soundWords = Math.random() < 0.5 ? [currentCorrectWord, distractorWord] : [distractorWord, currentCorrectWord]; soundChoiceBtns.forEach((btn, i) => { btn.dataset.wordToSpeak = soundWords[i]; btn.disabled = false; btn.className = 'choice-btn sound-btn'; }); if(submitAnswerBtn) submitAnswerBtn.disabled = true; } startCountdown(()=>{ if (questionAnsweredThisTurn || isMiniGameActive) return; questionAnsweredThisTurn = true; disableAllChoiceButtons(); playBuzz(); showFloatingMessage("Time's Up!", '#ffcdd2', '#333'); currentStreak = 0; setTimeout(nextQ,1200); }); }
-    function disableAllChoiceButtons() { wordChoiceBtns.forEach(b => b.disabled = true); soundChoiceBtns.forEach(b => b.disabled = true); if (submitAnswerBtn) submitAnswerBtn.disabled = true; }
+    function updateModeUI() { /* ... same ... */ if (currentGameMode === 'listenAndPickWord') { listenPickWordArea.style.display = 'flex'; readPickSoundArea.style.display = 'none'; modeToggleBtn.textContent = 'Mode: Listen'; listenBtn.innerHTML = '🔊'; } else { listenPickWordArea.style.display = 'none'; readPickSoundArea.style.display = 'flex'; modeToggleBtn.textContent = 'Mode: Read'; listenBtn.innerHTML = '📖'; if(submitAnswerBtn) submitAnswerBtn.disabled = true; } }
+    modeToggleBtn.addEventListener('click', () => { /* ... same ... */ currentGameMode = (currentGameMode === 'listenAndPickWord') ? 'readAndPickSound' : 'listenAndPickWord'; localStorage.setItem('sightWordsGameMode', currentGameMode); updateModeUI(); clearTimeout(questionTimeoutId); resetQuestionState(); setTimeout(nextQ, 100); });
+    function resetQuestionState() { /* ... same ... */ questionAnsweredThisTurn = false; selectedSoundButton = null; soundChoiceBtns.forEach(btn => btn.classList.remove('sound-btn-selected', 'correct', 'incorrect')); wordChoiceBtns.forEach(btn => btn.classList.remove('correct', 'incorrect')); if (submitAnswerBtn) submitAnswerBtn.disabled = true; }
+    function initCircularTimer() { /* ... same ... */ const timerContainer = document.getElementById('circular-timer'); if (!timerContainer) return; circleTimerInstance = new ProgressBar.Circle(timerContainer, { strokeWidth: 10, easing: 'linear', color: 'var(--brand)', trailColor: 'rgba(224, 224, 224, 0.5)', trailWidth: 10, svgStyle: { width: '100%', height: '100%' }, text: { style: { color: 'var(--fg)', position: 'absolute', left: '50%', top: '50%', padding: 0, margin: 0, transform: { prefix: true, value: 'translate(-50%, -50%)' }, fontSize: '1.4em', fontWeight: '600', }, autoStyleContainer: false }, step: function(state, circle) { if (timeLimit > 0) { const timeLeft = Math.ceil(timeLimit * (1 - circle.value())); circle.setText(timeLeft > 0 ? timeLeft : '0'); if (timeLeft <= timeLimit * 0.3) circle.path.setAttribute('stroke', '#f44336'); else if (timeLeft <= timeLimit * 0.6) circle.path.setAttribute('stroke', '#ff9800'); else circle.path.setAttribute('stroke', 'var(--brand)'); } else { circle.setText('∞'); circle.path.setAttribute('stroke', 'var(--brand)'); } } }); }
+    function startCountdown(onDoneCallback){ /* ... same ... */ clearTimeout(questionTimeoutId); if(circleTimerInstance){ circleTimerInstance.set(0); circleTimerInstance.setText(timeLimit > 0 ? String(timeLimit) : '∞'); circleTimerInstance.path.setAttribute('stroke', 'var(--brand)'); if(timeLimit <= 0) return; circleTimerInstance.animate(1.0, { duration: timeLimit * 1000 }); questionTimeoutId = setTimeout(() => { if (!questionAnsweredThisTurn && !isMiniGameActive) onDoneCallback(); }, timeLimit * 1000); } }
+    function nextQ(){ /* ... same, with check for words.length ... */ resetQuestionState(); quizCont.classList.remove('animate__fadeInCustom', 'animate__zoomIn'); void quizCont.offsetWidth; quizCont.classList.add('animate__zoomIn'); [...wordChoiceBtns, ...soundChoiceBtns].forEach(btn => btn.style.display = ''); if(submitAnswerBtn) submitAnswerBtn.style.display = ''; wordToReadDisplay.style.display = ''; if (words.length === 0) { console.error("No words available for the quiz! Check level/word selections."); wordToReadDisplay.textContent = "No Words!"; showFloatingMessage("Please select levels/words!", "var(--brand-dark)"); listenPickWordArea.style.display = 'none'; readPickSoundArea.style.display = 'flex'; soundChoiceBtns.forEach(btn => btn.style.display = 'none'); if (submitAnswerBtn) submitAnswerBtn.style.display = 'none'; wordChoiceBtns.forEach(btn => btn.style.display = 'none'); clearTimeout(questionTimeoutId); if(circleTimerInstance) circleTimerInstance.set(0); return; } currentCorrectWord = words[Math.floor(Math.random()*words.length)]; let distractorWord; if (words.length > 1) { do { distractorWord = words[Math.floor(Math.random()*words.length)]; } while(distractorWord === currentCorrectWord); } else { distractorWord = currentCorrectWord; } if (currentGameMode === 'listenAndPickWord') { const pair = Math.random() < 0.5 ? [currentCorrectWord, distractorWord] : [distractorWord, currentCorrectWord]; wordChoiceBtns.forEach((b,i)=>{ b.textContent = pair[i]; b.disabled = false; b.className = 'choice-btn'; }); speak(currentCorrectWord); } else { wordToReadDisplay.textContent = currentCorrectWord; const soundWords = Math.random() < 0.5 ? [currentCorrectWord, distractorWord] : [distractorWord, currentCorrectWord]; soundChoiceBtns.forEach((btn, i) => { btn.dataset.wordToSpeak = soundWords[i]; btn.disabled = false; btn.className = 'choice-btn sound-btn'; }); if(submitAnswerBtn) submitAnswerBtn.disabled = true; } startCountdown(()=>{ if (questionAnsweredThisTurn || isMiniGameActive) return; questionAnsweredThisTurn = true; disableAllChoiceButtons(); playBuzz(); showFloatingMessage("Time's Up!", '#ffcdd2', '#333'); currentStreak = 0; setTimeout(nextQ,1200); }); }
+    function disableAllChoiceButtons() { /* ... same ... */ wordChoiceBtns.forEach(b => b.disabled = true); soundChoiceBtns.forEach(b => b.disabled = true); if (submitAnswerBtn) submitAnswerBtn.disabled = true; }
+
     function handleAnswer(isCorrect, targetButtonElement) {
-        if (questionAnsweredThisTurn || isMiniGameActive) return; 
+        if (questionAnsweredThisTurn || isMiniGameActive) return; // Prevent handling if mini-game is starting/active
         questionAnsweredThisTurn = true;
+
         clearTimeout(questionTimeoutId); 
         disableAllChoiceButtons();
+
         if(isCorrect){
           playBell();
           scoreVal.textContent = ++score;
@@ -1081,22 +1058,29 @@ const CatchTheStarGame = {
           showFloatingScore("Oops!", targetButtonElement, true);
           currentStreak = 0; 
         }
+        
         targetButtonElement.classList.add('animate__animated', isCorrect ? 'animate__pulse' : 'animate__shakeX');
+
         const isMiniGameDue = isCorrect && miniGamesEnabled && score > 0 && score % 10 === 0;
+
         targetButtonElement.addEventListener('animationend', () => {
             targetButtonElement.classList.remove('animate__animated', 'animate__pulse', 'animate__shakeX');
             if (targetButtonElement.classList.contains('sound-btn')) {
                  targetButtonElement.classList.remove('sound-btn-selected');
             }
             soundChoiceBtns.forEach(btn => btn.classList.remove('sound-btn-selected'));
-            if (isMiniGameDue) { 
-                quizCont.style.opacity = 1; 
+
+            if (isMiniGameDue) { // Check here, as isMiniGameActive is now set inside triggerMiniGame
+                
+                quizCont.style.opacity = 1; // Ensure it's visible before fading out
                 controlsBar.style.opacity = 1;
+
                 const fadeOutHandler = () => {
                     quizCont.style.display = 'none';
                     controlsBar.style.display = 'none';
-                    triggerMiniGame(); 
+                    triggerMiniGame(); // isMiniGameActive will be true inside this call
                 };
+
                 if (typeof gsap !== 'undefined') {
                     gsap.to([quizCont, controlsBar], {opacity: 0, duration: 0.3, onComplete: fadeOutHandler});
                 } else {
@@ -1119,25 +1103,26 @@ const CatchTheStarGame = {
             }
         }, { once: true });
     }
+
     wordChoiceBtns.forEach(btn=>{ btn.addEventListener('click',()=>{ if (questionAnsweredThisTurn || currentGameMode !== 'listenAndPickWord' || isMiniGameActive) return; const isCorrect = btn.textContent === currentCorrectWord; handleAnswer(isCorrect, btn); }); });
     soundChoiceBtns.forEach(btn => { btn.addEventListener('click', () => { if (questionAnsweredThisTurn || currentGameMode !== 'readAndPickSound' || isMiniGameActive) return; const wordToSpeak = btn.dataset.wordToSpeak; speak(wordToSpeak); if (selectedSoundButton && selectedSoundButton !== btn) { selectedSoundButton.classList.remove('sound-btn-selected'); } btn.classList.add('sound-btn-selected'); selectedSoundButton = btn; if(submitAnswerBtn) submitAnswerBtn.disabled = false; }); });
     submitAnswerBtn.addEventListener('click', () => { if (questionAnsweredThisTurn || currentGameMode !== 'readAndPickSound' || !selectedSoundButton || isMiniGameActive) return; const wordSpokenBySelectedButton = selectedSoundButton.dataset.wordToSpeak; const isCorrect = wordSpokenBySelectedButton === currentCorrectWord; handleAnswer(isCorrect, selectedSoundButton); });
     listenBtn.onclick = ()=>{ if (currentCorrectWord && !isMiniGameActive) { if (currentGameMode === 'listenAndPickWord') { speak(currentCorrectWord); } else { speak(currentCorrectWord); } } };
     timerDisp.addEventListener('click',()=>{ if (!isMiniGameActive) { timerSel.style.display = timerSel.style.display==='block'?'none':'block'; timerSel.value = timeLimit; } });
     timerSel.addEventListener('change',()=>{ timeLimit = +timerSel.value; timerDisp.textContent = timeLimit > 0 ? timeLimit+'s ⏱️' : 'Untimed ⏱️'; timerSel.style.display='none';});
-    function showFloatingScore(message, targetButton, isError = false) { const floatEl = document.createElement('div'); floatEl.textContent = message; floatEl.classList.add('floating-effect'); floatEl.classList.add(isError ? 'floating-message' : 'floating-score'); if(isError) {floatEl.style.backgroundColor = 'var(--incorrect-bg)'; floatEl.style.color = '#333';} document.body.appendChild(floatEl); const btnRect = targetButton.getBoundingClientRect(); floatEl.style.left = `${btnRect.left + btnRect.width / 2 - floatEl.offsetWidth / 2}px`; floatEl.style.top = `${btnRect.top - floatEl.offsetHeight - 10}px`; gsap.to(floatEl, { y: -60, opacity: 0, duration: 1.8, ease: 'power1.out', onComplete: () => floatEl.remove() }); }
-    function showFloatingMessage(text, bgColor = 'var(--brand)', textColor = 'white') { const msgEl = document.createElement('div'); msgEl.textContent = text; msgEl.classList.add('floating-effect', 'floating-message'); msgEl.style.backgroundColor = bgColor; msgEl.style.color = textColor; msgEl.style.left = '50%'; msgEl.style.top = '15%'; msgEl.style.transform = 'translateX(-50%)'; msgEl.style.padding = '0.8rem 1.5rem'; msgEl.style.fontSize = '1.5em'; document.body.appendChild(msgEl); gsap.fromTo(msgEl, { opacity: 0, y: -20, scale: 0.8 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'back.out(1.7)' } ); setTimeout(() => { gsap.to(msgEl, { opacity: 0, y: 20, scale: 0.8, duration: 0.5, ease: 'back.in(1.7)', onComplete: () => msgEl.remove() }); }, 2300); }
+    function showFloatingScore(message, targetButton, isError = false) { /* ... same ... */ const floatEl = document.createElement('div'); floatEl.textContent = message; floatEl.classList.add('floating-effect'); floatEl.classList.add(isError ? 'floating-message' : 'floating-score'); if(isError) {floatEl.style.backgroundColor = 'var(--incorrect-bg)'; floatEl.style.color = '#333';} document.body.appendChild(floatEl); const btnRect = targetButton.getBoundingClientRect(); floatEl.style.left = `${btnRect.left + btnRect.width / 2 - floatEl.offsetWidth / 2}px`; floatEl.style.top = `${btnRect.top - floatEl.offsetHeight - 10}px`; gsap.to(floatEl, { y: -60, opacity: 0, duration: 1.8, ease: 'power1.out', onComplete: () => floatEl.remove() }); }
+    function showFloatingMessage(text, bgColor = 'var(--brand)', textColor = 'white') { /* ... same ... */ const msgEl = document.createElement('div'); msgEl.textContent = text; msgEl.classList.add('floating-effect', 'floating-message'); msgEl.style.backgroundColor = bgColor; msgEl.style.color = textColor; msgEl.style.left = '50%'; msgEl.style.top = '15%'; msgEl.style.transform = 'translateX(-50%)'; msgEl.style.padding = '0.8rem 1.5rem'; msgEl.style.fontSize = '1.5em'; document.body.appendChild(msgEl); gsap.fromTo(msgEl, { opacity: 0, y: -20, scale: 0.8 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'back.out(1.7)' } ); setTimeout(() => { gsap.to(msgEl, { opacity: 0, y: 20, scale: 0.8, duration: 0.5, ease: 'back.in(1.7)', onComplete: () => msgEl.remove() }); }, 2300); }
 
     // --- LEVEL MANAGEMENT (same as before) ---
-    function initLevelManagement() { const storedLevels = localStorage.getItem('sightWordsSelectedLevels'); selectedLevels = storedLevels ? JSON.parse(storedLevels) : ['A']; Object.keys(allLevelWords).forEach(levelKey => { const levelItem = document.createElement('div'); levelItem.classList.add('level-item'); levelItem.dataset.level = levelKey; levelItem.textContent = `Level ${levelKey}`; const longPressHint = document.createElement('span'); longPressHint.classList.add('long-press-indicator'); longPressHint.textContent = '(hold to customize)'; levelItem.appendChild(longPressHint); if (selectedLevels.includes(levelKey)) { levelItem.classList.add('selected'); } levelItem.addEventListener('mousedown', (e) => handleLevelInteractionStart(e, levelKey)); levelItem.addEventListener('touchstart', (e) => handleLevelInteractionStart(e, levelKey), { passive: false }); levelItem.addEventListener('mouseup', handleLevelInteractionEnd); levelItem.addEventListener('mouseleave', handleLevelInteractionEnd); levelItem.addEventListener('touchend', handleLevelInteractionEnd); levelItem.addEventListener('touchcancel', handleLevelInteractionEnd); levelsDropdownMenu.appendChild(levelItem); }); levelsToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); levelsDropdownMenu.classList.toggle('visible'); }); document.addEventListener('click', (event) => { if (!levelsToggleBtn.contains(event.target) && !levelsDropdownMenu.contains(event.target)) { levelsDropdownMenu.classList.remove('visible'); } }); modalSaveBtn.addEventListener('click', saveCustomWordSelection); modalCloseBtn.addEventListener('click', closeWordSelectionModal); modalSelectAllBtn.addEventListener('click', () => toggleAllModalWords(true)); modalDeselectAllBtn.addEventListener('click', () => toggleAllModalWords(false)); updateActiveQuizWords(); }
-    function handleLevelInteractionStart(event, levelKey) { if(isMiniGameActive) return; event.preventDefault(); isLongPress = false; clearTimeout(longPressTimer); longPressTimer = setTimeout(() => { isLongPress = true; openWordSelectionModal(levelKey); levelsDropdownMenu.classList.remove('visible'); }, 500); }
-    function handleLevelInteractionEnd(event) { clearTimeout(longPressTimer); if (!isLongPress) { const target = event.currentTarget; if (target && target.dataset.level && !isLongPress) { toggleLevelSelection(target.dataset.level, target); } } }
-    function toggleLevelSelection(levelKey, levelItemElement) { const index = selectedLevels.indexOf(levelKey); if (index > -1) { selectedLevels.splice(index, 1); levelItemElement.classList.remove('selected'); } else { selectedLevels.push(levelKey); levelItemElement.classList.add('selected'); } localStorage.setItem('sightWordsSelectedLevels', JSON.stringify(selectedLevels)); updateActiveQuizWords(); }
-    function updateActiveQuizWords() { words = []; selectedLevels.forEach(levelKey => { const customWordsJson = localStorage.getItem(`${levelKey}_customWords`); if (customWordsJson) { const customWords = JSON.parse(customWordsJson); if (customWords.length > 0) { words.push(...customWords); } else { words.push(...allLevelWords[levelKey]); } } else { words.push(...allLevelWords[levelKey]); } }); words = [...new Set(words)]; if (words.length === 0 && allLevelWords.A) { words.push(...allLevelWords.A); if(!selectedLevels.includes('A')) { selectedLevels.push('A'); const levelAItem = levelsDropdownMenu.querySelector(`.level-item[data-level="A"]`); if(levelAItem) levelAItem.classList.add('selected'); localStorage.setItem('sightWordsSelectedLevels', JSON.stringify(selectedLevels)); } showFloatingMessage("Using Level A words as no others were selected.", "var(--brand-dark)"); } clearTimeout(questionTimeoutId); resetQuestionState(); setTimeout(nextQ, 100); }
-    function openWordSelectionModal(levelKey) { currentEditingLevelKey = levelKey; modalLevelTitle.textContent = `Customize Level ${levelKey} Words`; modalWordList.innerHTML = ''; const levelWords = allLevelWords[levelKey]; const customWordsJson = localStorage.getItem(`${levelKey}_customWords`); let customWords = []; if (customWordsJson) { customWords = JSON.parse(customWordsJson); } levelWords.forEach(word => { const itemDiv = document.createElement('div'); itemDiv.classList.add('modal-word-item'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.id = `modal-word-${word.replace(/\s+/g, '-')}`; checkbox.value = word; checkbox.checked = customWords.includes(word); const label = document.createElement('label'); label.htmlFor = checkbox.id; label.textContent = word; itemDiv.appendChild(checkbox); itemDiv.appendChild(label); itemDiv.addEventListener('click', (e) => { if (e.target !== checkbox) checkbox.checked = !checkbox.checked; }); modalWordList.appendChild(itemDiv); }); wordSelectionModal.classList.add('visible'); }
-    function closeWordSelectionModal() { wordSelectionModal.classList.remove('visible'); currentEditingLevelKey = null; }
-    function saveCustomWordSelection() { if (!currentEditingLevelKey) return; const selectedCustomWords = []; modalWordList.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => { selectedCustomWords.push(cb.value); }); localStorage.setItem(`${currentEditingLevelKey}_customWords`, JSON.stringify(selectedCustomWords)); closeWordSelectionModal(); updateActiveQuizWords(); }
-    function toggleAllModalWords(select) { modalWordList.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = select; }); }
+    function initLevelManagement() { /* ... same ... */ const storedLevels = localStorage.getItem('sightWordsSelectedLevels'); selectedLevels = storedLevels ? JSON.parse(storedLevels) : ['A']; Object.keys(allLevelWords).forEach(levelKey => { const levelItem = document.createElement('div'); levelItem.classList.add('level-item'); levelItem.dataset.level = levelKey; levelItem.textContent = `Level ${levelKey}`; const longPressHint = document.createElement('span'); longPressHint.classList.add('long-press-indicator'); longPressHint.textContent = '(hold to customize)'; levelItem.appendChild(longPressHint); if (selectedLevels.includes(levelKey)) { levelItem.classList.add('selected'); } levelItem.addEventListener('mousedown', (e) => handleLevelInteractionStart(e, levelKey)); levelItem.addEventListener('touchstart', (e) => handleLevelInteractionStart(e, levelKey), { passive: false }); levelItem.addEventListener('mouseup', handleLevelInteractionEnd); levelItem.addEventListener('mouseleave', handleLevelInteractionEnd); levelItem.addEventListener('touchend', handleLevelInteractionEnd); levelItem.addEventListener('touchcancel', handleLevelInteractionEnd); levelsDropdownMenu.appendChild(levelItem); }); levelsToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); levelsDropdownMenu.classList.toggle('visible'); }); document.addEventListener('click', (event) => { if (!levelsToggleBtn.contains(event.target) && !levelsDropdownMenu.contains(event.target)) { levelsDropdownMenu.classList.remove('visible'); } }); modalSaveBtn.addEventListener('click', saveCustomWordSelection); modalCloseBtn.addEventListener('click', closeWordSelectionModal); modalSelectAllBtn.addEventListener('click', () => toggleAllModalWords(true)); modalDeselectAllBtn.addEventListener('click', () => toggleAllModalWords(false)); updateActiveQuizWords(); }
+    function handleLevelInteractionStart(event, levelKey) { /* ... same ... */ if(isMiniGameActive) return; event.preventDefault(); isLongPress = false; clearTimeout(longPressTimer); longPressTimer = setTimeout(() => { isLongPress = true; openWordSelectionModal(levelKey); levelsDropdownMenu.classList.remove('visible'); }, 500); }
+    function handleLevelInteractionEnd(event) { /* ... same, added event param to get target ... */ clearTimeout(longPressTimer); if (!isLongPress) { const target = event.currentTarget; if (target && target.dataset.level && !isLongPress) { toggleLevelSelection(target.dataset.level, target); } } }
+    function toggleLevelSelection(levelKey, levelItemElement) { /* ... same ... */ const index = selectedLevels.indexOf(levelKey); if (index > -1) { selectedLevels.splice(index, 1); levelItemElement.classList.remove('selected'); } else { selectedLevels.push(levelKey); levelItemElement.classList.add('selected'); } localStorage.setItem('sightWordsSelectedLevels', JSON.stringify(selectedLevels)); updateActiveQuizWords(); }
+    function updateActiveQuizWords() { /* ... same ... */ words = []; selectedLevels.forEach(levelKey => { const customWordsJson = localStorage.getItem(`${levelKey}_customWords`); if (customWordsJson) { const customWords = JSON.parse(customWordsJson); if (customWords.length > 0) { words.push(...customWords); } else { words.push(...allLevelWords[levelKey]); } } else { words.push(...allLevelWords[levelKey]); } }); words = [...new Set(words)]; if (words.length === 0 && allLevelWords.A) { words.push(...allLevelWords.A); if(!selectedLevels.includes('A')) { selectedLevels.push('A'); const levelAItem = levelsDropdownMenu.querySelector(`.level-item[data-level="A"]`); if(levelAItem) levelAItem.classList.add('selected'); localStorage.setItem('sightWordsSelectedLevels', JSON.stringify(selectedLevels)); } showFloatingMessage("Using Level A words as no others were selected.", "var(--brand-dark)"); } clearTimeout(questionTimeoutId); resetQuestionState(); setTimeout(nextQ, 100); }
+    function openWordSelectionModal(levelKey) { /* ... same ... */ currentEditingLevelKey = levelKey; modalLevelTitle.textContent = `Customize Level ${levelKey} Words`; modalWordList.innerHTML = ''; const levelWords = allLevelWords[levelKey]; const customWordsJson = localStorage.getItem(`${levelKey}_customWords`); let customWords = []; if (customWordsJson) { customWords = JSON.parse(customWordsJson); } levelWords.forEach(word => { const itemDiv = document.createElement('div'); itemDiv.classList.add('modal-word-item'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.id = `modal-word-${word.replace(/\s+/g, '-')}`; checkbox.value = word; checkbox.checked = customWords.includes(word); const label = document.createElement('label'); label.htmlFor = checkbox.id; label.textContent = word; itemDiv.appendChild(checkbox); itemDiv.appendChild(label); itemDiv.addEventListener('click', (e) => { if (e.target !== checkbox) checkbox.checked = !checkbox.checked; }); modalWordList.appendChild(itemDiv); }); wordSelectionModal.classList.add('visible'); }
+    function closeWordSelectionModal() { /* ... same ... */ wordSelectionModal.classList.remove('visible'); currentEditingLevelKey = null; }
+    function saveCustomWordSelection() { /* ... same ... */ if (!currentEditingLevelKey) return; const selectedCustomWords = []; modalWordList.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => { selectedCustomWords.push(cb.value); }); localStorage.setItem(`${currentEditingLevelKey}_customWords`, JSON.stringify(selectedCustomWords)); closeWordSelectionModal(); updateActiveQuizWords(); }
+    function toggleAllModalWords(select) { /* ... same ... */ modalWordList.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = select; }); }
 
   </script>
 </body>
