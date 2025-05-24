@@ -676,16 +676,25 @@
         if(this.elements.scoreDisplay) this.elements.scoreDisplay.textContent = `Stars: ${this.score}`;
     },
 
+        // Inside CatchTheStarGame
     endGame: function() {
-        // Clear intervals and timeouts
+        // Check if the primary completion callback can and should be called.
+        // If this.onCompleteCallback is already null, it means endGame is being called
+        // re-entrantly (e.g., from destroy() after the callback was already invoked),
+        // or the game ended through a path that already handled the callback.
+        const canCallPrimaryCallback = !!this.onCompleteCallback;
+
+        // --- Perform all necessary cleanup for the game ---
         clearInterval(this.starIntervalId);
         this.starIntervalId = null;
         clearInterval(this.timerIntervalId);
         this.timerIntervalId = null;
         clearTimeout(this.gameTimerId);
         this.gameTimerId = null;
-        cancelAnimationFrame(this.animationFrameId);
-        this.animationFrameId = null;
+        if (this.animationFrameId) { // Ensure it's not null before cancelling
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
 
         // Remove event listeners
         if (this.container) {
@@ -694,7 +703,6 @@
         window.removeEventListener('pointermove', this.boundOnPointerMove);
         window.removeEventListener('pointerup', this.boundOnPointerUp);
         window.removeEventListener('pointercancel', this.boundOnPointerUp);
-
 
         // Clean up remaining stars
         this.starsOnScreen.forEach(starData => {
@@ -709,18 +717,35 @@
         if (this.hoopElement && this.hoopElement.parentNode) {
             this.hoopElement.remove();
         }
-        this.hoopElement = null;
+        this.hoopElement = null; // Ensure it's nulled out
         this.isHoopingActive = false;
+        // --- End of cleanup ---
 
-        speak(`Game over! You caught ${this.score} stars!`);
-        if(this.onCompleteCallback) this.onCompleteCallback(this.score);
+        if (canCallPrimaryCallback) {
+            speak(`Game over! You caught ${this.score} stars!`);
+
+            const callbackToExecute = this.onCompleteCallback;
+            this.onCompleteCallback = null; // CRUCIAL: Clear before calling to prevent recursion
+
+            if (callbackToExecute) { // Final check
+                callbackToExecute(this.score);
+            }
+        }
+        // If !canCallPrimaryCallback, this is a subsequent call (e.g., from destroy()),
+        // so cleanup has been performed, but we don't re-invoke the main completion callback.
     },
 
     destroy: function() {
-        this.endGame(); // endGame already handles most cleanup
-        if (this.container) this.container.innerHTML = ''; // Final clear of container
+        this.endGame(); // Call endGame primarily for its cleanup logic.
+                        // If onCompleteCallback was already called, endGame won't call it again.
+
+        // Any cleanup that *only* destroy should do and endGame doesn't already cover
+        if (this.container) {
+            this.container.innerHTML = ''; // Final clear of container content
+        }
         this.container = null;
         this.elements = {};
+        this.onCompleteCallback = null; // Ensure it's definitely null here too
         // console.log(`${this.name} destroyed`);
     }
 };
