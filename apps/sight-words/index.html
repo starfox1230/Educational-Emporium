@@ -1131,34 +1131,76 @@
     }
 
     function resumeQuizAfterMiniGame(miniGameScore) {
-        isMiniGameActive = false; // Reset flag
-        
-        quizCont.style.display = 'flex'; 
-        controlsBar.style.display = 'flex';
-        quizCont.classList.add('animate__animated', 'animate__fadeInCustom');
-        controlsBar.classList.add('animate__animated', 'animate__fadeInCustom');
+        // isMiniGameActive is currently true.
+        // The miniGameArea has just been hidden by the calling logic.
+        // The speech "Game Over..." has just been initiated by the mini-game's endGame method.
 
-        const animationEndHandler = () => {
-            quizCont.classList.remove('animate__animated', 'animate__fadeInCustom');
-            controlsBar.classList.remove('animate__animated', 'animate__fadeInCustom');
-            // quizCont.removeEventListener('animationend', animationEndHandler); // GSAP might not fire animationend
+        // Wait for 4 seconds to allow speech to complete.
+        setTimeout(() => {
+            isMiniGameActive = false; // Now, officially end the mini-game phase.
+
+            quizCont.style.display = 'flex'; 
+            controlsBar.style.display = 'flex';
             
-            if (miniGameScore !== undefined) {
-                showFloatingMessage(`Mini-Game: ${miniGameScore} points!`, 'var(--brand-light)', 'var(--fg)');
+            // Ensure opacity is 0 before fading in, especially if GSAP isn't used.
+            if (typeof gsap === 'undefined') {
+                quizCont.style.opacity = '0';
+                controlsBar.style.opacity = '0';
             }
-            setTimeout(nextQ, 300); 
-        };
-        // Use GSAP for fade in if available, otherwise rely on CSS animation timeout
-        if (typeof gsap !== 'undefined') {
-            gsap.fromTo([quizCont, controlsBar], {opacity: 0}, {opacity: 1, duration: 0.3, onComplete: animationEndHandler});
-        } else {
-             quizCont.addEventListener('animationend', animationEndHandler, { once: true });
-             setTimeout(() => { 
-                if (quizCont.classList.contains('animate__fadeInCustom')) {
-                    animationEndHandler();
+            
+            quizCont.classList.add('animate__animated', 'animate__fadeInCustom');
+            controlsBar.classList.add('animate__animated', 'animate__fadeInCustom');
+
+            let animationHandled = false;
+            const animationEndHandler = () => {
+                if (animationHandled) return;
+                animationHandled = true;
+
+                quizCont.classList.remove('animate__animated', 'animate__fadeInCustom');
+                controlsBar.classList.remove('animate__animated', 'animate__fadeInCustom');
+                
+                // Ensure opacity is fully 1 after animation for non-GSAP cases
+                if (typeof gsap === 'undefined') {
+                    quizCont.style.opacity = '1';
+                    controlsBar.style.opacity = '1';
                 }
-            }, 500);
-        }
+
+                if (miniGameScore !== undefined) {
+                    showFloatingMessage(`Mini-Game: ${miniGameScore} points!`, 'var(--brand-light)', 'var(--fg)');
+                }
+                setTimeout(nextQ, 300); 
+            };
+
+            if (typeof gsap !== 'undefined') {
+                gsap.fromTo([quizCont, controlsBar], {opacity: 0}, {opacity: 1, duration: 0.3, onComplete: animationEndHandler});
+            } else {
+                 // Apply opacity transition for CSS fade-in
+                quizCont.style.transition = 'opacity 0.3s ease-in-out';
+                controlsBar.style.transition = 'opacity 0.3s ease-in-out';
+                
+                // Trigger reflow to apply opacity 0 before changing to 1 for transition
+                void quizCont.offsetWidth; 
+                
+                quizCont.style.opacity = '1';
+                controlsBar.style.opacity = '1';
+
+                quizCont.addEventListener('transitionend', function onTransitionEnd(event) {
+                    if (event.propertyName === 'opacity') {
+                        animationEndHandler();
+                        quizCont.removeEventListener('transitionend', onTransitionEnd); // Clean up
+                        quizCont.style.transition = ''; // Reset transition
+                        controlsBar.style.transition = '';
+                    }
+                }, { once: false }); // 'once: false' because we explicitly check propertyName
+
+                 // Fallback timeout for CSS transition/animation
+                 setTimeout(() => { 
+                    if (!animationHandled) { // If transitionend hasn't fired
+                        animationEndHandler();
+                    }
+                }, 350); // CSS animation/transition is 0.3s, so 350ms timeout.
+            }
+        }, 4000); // 4-second pause
     }
 
 
