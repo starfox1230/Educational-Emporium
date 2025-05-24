@@ -41,7 +41,14 @@
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html,body{height:100%;overflow:hidden;font-family:'Poppins',sans-serif;color:var(--fg);
-      -webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+    -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  /* ---- START: Lines to add ---- */
+    -webkit-user-select: none; /* For Safari and older Chrome */
+    -moz-user-select: none;    /* For Firefox */
+    -ms-user-select: none;     /* For Internet Explorer and Edge */
+    user-select: none;         /* Standard syntax */
+  /* ---- END: Lines to add ---- */
+}
     body { background-color: var(--bg); }
     #confetti-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1000}
     
