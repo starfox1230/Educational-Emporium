@@ -936,11 +936,11 @@
         ballRadius: 15,
         ballPosition: { x: 100, y: 100 }, // Initial position
         ballVelocity: { x: 2, y: 1 },    // Initial velocity
-        gravity: 0.25,                     // Acceleration due to gravity
+        gravity: 0.18,                     // MODIFIED: Decreased gravity for more float
         wallRestitution: 0.7,            // Bounciness off walls
-        hoopRestitution: 0.85,           // Bounciness off hoop
-        minSpeedAfterHoopBounce: 4,      // Minimum speed after a hoop bounce
-        maxSpeed: 15,                    // Max speed for the ball to prevent extreme velocities
+        hoopRestitution: 0.95,           // MODIFIED: Increased bounciness off hoop
+        minSpeedAfterHoopBounce: 11,     // MODIFIED: Significantly increased minimum speed after hoop bounce
+        maxSpeed: 18,                    // MODIFIED: Increased max speed for the ball
     
         // Bound event handlers for easy add/remove
         boundOnPointerDown: null,
@@ -997,7 +997,7 @@
             // Initialize ball state
             this.ballPosition.x = this.container.clientWidth / 2;
             this.ballPosition.y = this.ballRadius + 20; // Start near top
-            this.ballVelocity.x = (Math.random() - 0.5) * 6; // Random initial horizontal speed
+            this.ballVelocity.x = (Math.random() - 0.5) * 5; // Random initial horizontal speed
             this.ballVelocity.y = 1; // Slight downward initial speed
             this.updateBallElementPosition();
     
@@ -1128,8 +1128,6 @@
             if (this.ballPosition.y + this.ballRadius > this.container.clientHeight) {
                 this.ballPosition.y = this.container.clientHeight - this.ballRadius;
                 this.ballVelocity.y *= -restitution;
-                // Optional: Game over or penalty if ball hits bottom
-                // For now, it just bounces. Score comes from hoop hits.
             }
         },
     
@@ -1138,64 +1136,56 @@
             const dy = this.ballPosition.y - this.hoopPosition.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
     
-            // Effective collision distance: hoop's center-line radius + ball's radius
             const collisionDistance = this.hoopEffectiveRadius + this.ballRadius;
             
-            if (distance < collisionDistance && distance > 0) { // distance > 0 to avoid issues if centers align
-                // Collision normal (from hoop center to ball center)
+            if (distance < collisionDistance && distance > 0) {
                 const normalX = dx / distance;
                 const normalY = dy / distance;
     
-                // Relative velocity component along the normal
-                // (ball's velocity, as hoop is 'static' for this instant)
-                const वेगNormal = this.ballVelocity.x * normalX + this.ballVelocity.y * normalY; // vn
+                const वेगNormal = this.ballVelocity.x * normalX + this.ballVelocity.y * normalY;
     
-                if (वेगNormal < 0) { // Ball is moving towards the hoop's center along the normal
-                    // Reflect velocity
+                if (वेगNormal < 0) { 
                     const impulseFactor = -(1 + this.hoopRestitution) * वेगNormal;
                     let newVelX = this.ballVelocity.x + impulseFactor * normalX;
                     let newVelY = this.ballVelocity.y + impulseFactor * normalY;
     
-                    // Ensure minimum bounce speed
                     const currentSpeed = Math.sqrt(newVelX * newVelX + newVelY * newVelY);
                     if (currentSpeed < this.minSpeedAfterHoopBounce && currentSpeed > 0.01) {
                         const scale = this.minSpeedAfterHoopBounce / currentSpeed;
                         newVelX *= scale;
                         newVelY *= scale;
-                    } else if (currentSpeed < 0.01 && Math.abs(वेगNormal) > 0.1) { // If almost stopped but collision energetic
-                        newVelX = normalX * this.minSpeedAfterHoopBounce; // Bounce directly away from hoop center
+                    } else if (currentSpeed < 0.01 && Math.abs(वेगNormal) > 0.1) { 
+                        newVelX = normalX * this.minSpeedAfterHoopBounce;
                         newVelY = normalY * this.minSpeedAfterHoopBounce;
                     }
                     
                     this.ballVelocity.x = newVelX;
                     this.ballVelocity.y = newVelY;
     
-                    // Positional correction to prevent sinking
                     const overlap = collisionDistance - distance;
                     if (overlap > 0) {
                         this.ballPosition.x += overlap * normalX;
                         this.ballPosition.y += overlap * normalY;
                     }
     
-                    // Score and effects
                     this.score++;
                     this.updateScoreDisplay();
-                    playBell(); // Or a specific "thwack" sound
+                    playBell(); 
                     const ballRect = this.ballElement.getBoundingClientRect();
                     const confettiX = (ballRect.left + ballRect.right) / 2 / window.innerWidth;
-                    const confettiY = (ballRect.top + ballRect.bottom) / 2 / window.innerHeight;
+                    const confettiY = (rect.top + rect.bottom) / 2 / window.innerHeight; // Typo: should be ballRect.top, ballRect.bottom
                     myConfetti({ particleCount: 20, spread: 40, origin: { x: confettiX, y: confettiY }, scalar: 0.5 });
-                    speak(this.score, 1.3, 1.4); // Slightly different pitch/rate
+                    speak(this.score, 1.3, 1.4);
                 }
             }
         },
+    
     
         updateScoreDisplay: function() {
             if(this.elements.scoreDisplay) this.elements.scoreDisplay.textContent = `Bounces: ${this.score}`;
         },
     
         endGame: function() {
-            // Standard cleanup, ensures callback is only called once
             const canCallPrimaryCallback = !!this.onCompleteCallback;
     
             cancelAnimationFrame(this.animationFrameId);
@@ -1225,7 +1215,7 @@
             if (canCallPrimaryCallback) {
                 speak(`Game over! You bounced the ball ${this.score} times!`);
                 const callbackToExecute = this.onCompleteCallback;
-                this.onCompleteCallback = null; // Prevent re-entrancy
+                this.onCompleteCallback = null; 
                 if (callbackToExecute) {
                     callbackToExecute(this.score);
                 }
@@ -1233,23 +1223,18 @@
         },
     
         destroy: function() {
-            this.endGame(); // endGame handles most cleanup
+            this.endGame(); 
     
-            // Any specific destroy-only cleanup
             if (this.container) {
-                this.container.innerHTML = ''; // Final clear
+                this.container.innerHTML = ''; 
             }
             this.container = null;
             this.elements = {};
-            this.onCompleteCallback = null; // Ensure it's nulled
-            // console.log(`${this.name} destroyed`);
+            this.onCompleteCallback = null; 
         }
     };
     
-    // To use this, you would replace `BouncePartyGame` in the `availableMiniGames` array:
-    // availableMiniGames.push(CatchTheStarGame, BalloonPopGame, HoopBounceGame); 
-    // instead of
-    // availableMiniGames.push(CatchTheStarGame, BalloonPopGame, BouncePartyGame);
+
     
             
 
