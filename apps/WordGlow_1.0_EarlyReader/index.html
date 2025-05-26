@@ -210,19 +210,66 @@
             /* pointer-events: none; This would prevent clicks, but we want the body listener to catch them */
         }
 
-        /* Highlight */
         .highlight {
-            background-color: var(--highlight-bg); color: var(--highlight-text);
-            padding: 0.1em 0.2em; margin: -0.1em -0.2em; border-radius: 4px;
-            transition: background-color 0.3s ease, color 0.3s ease;
-            box-decoration-break: clone; -webkit-box-decoration-break: clone;
+          /* remove all box‐model tweaks */
+          padding: 0;
+          margin:  0;
+        
+          /* paint a solid block behind the text */
+          background-image: linear-gradient(var(--highlight-bg), var(--highlight-bg));
+          background-repeat: no-repeat;
+          background-size: 100% 100%;     /* cover the entire inline box */
+          background-position: 0 0;       /* start from the top‐left */
+        
+          /* swap to your “highlight text” color */
+          color: var(--highlight-text);
+        
+          /* optional rounding */
+          border-radius: 4px;
+        
+          /* you can drop this if you like */
+          box-decoration-break: clone;
         }
 
+
+
+
         /* Answer Effects */
-        .wrong-answer { animation: pulseWrong 0.8s ease-out forwards; }
-        @keyframes pulseWrong { 0% { background-color: var(--highlight-bg); } 40% { background-color: var(--wrong-flash); } 100% { background-color: var(--highlight-bg); } }
-        .correct-answer { animation: pulseCorrect 0.5s ease-out forwards; }
-        @keyframes pulseCorrect { 0% { background-color: var(--highlight-bg); } 50% { background-color: var(--correct-flash); } 100% { background-color: var(--highlight-bg); } }
+        /* flash red behind the word */
+        .wrong-answer {
+          animation: flashWrong 0.8s ease-out forwards;
+        }
+        @keyframes flashWrong {
+          0% {
+            /* start with your normal highlight */
+            background-image: linear-gradient(var(--highlight-bg), var(--highlight-bg));
+          }
+          40% {
+            /* flash red */
+            background-image: linear-gradient(var(--wrong-flash), var(--wrong-flash));
+          }
+          100% {
+            /* back to normal */
+            background-image: linear-gradient(var(--highlight-bg), var(--highlight-bg));
+          }
+        }
+        
+        /* flash green and then advance */
+        .correct-answer {
+          animation: flashCorrect 0.5s ease-out forwards;
+        }
+        @keyframes flashCorrect {
+          0% {
+            background-image: linear-gradient(var(--highlight-bg), var(--highlight-bg));
+          }
+          50% {
+            background-image: linear-gradient(var(--correct-flash), var(--correct-flash));
+          }
+          100% {
+            background-image: linear-gradient(var(--highlight-bg), var(--highlight-bg));
+          }
+        }
+
 
         /* Responsive adjustments */
         @media (max-width: 600px) {
