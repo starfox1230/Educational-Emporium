@@ -38,18 +38,14 @@
       --incorrect-bg: #ef9a9a;
       --selected-border-color: #007bff; /* Blue for selection */
       --shadow-color: rgba(0,0,0,0.1);
+      --pastel-green-bg: #c9e4c5; /* Default static background, though cycle will override */
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html,body{height:100%;overflow:hidden;font-family:'Poppins',sans-serif;color:var(--fg);
     -webkit-tap-highlight-color:transparent;touch-action:manipulation;
-  /* ---- START: Lines to add ---- */
-    -webkit-user-select: none; /* For Safari and older Chrome */
-    -moz-user-select: none;    /* For Firefox */
-    -ms-user-select: none;     /* For Internet Explorer and Edge */
-    user-select: none;         /* Standard syntax */
-  /* ---- END: Lines to add ---- */
+    -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
 }
-    body { background-color: var(--bg); }
+    body { background-color: var(--bg); } /* Default fallback, will be overridden by JS */
     #confetti-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1000}
     
     .top-bar { position: fixed; top: 0; left: 0; width: 100%; height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 50; }
@@ -96,29 +92,40 @@
     #level-controls-container {
       position: relative;
       display: flex;
-      flex-direction: column;     /* Stack buttons vertically */
-      align-items: flex-end;      /* Right-align both buttons */
-      gap: 0.2rem;                /* Reduced vertical space between buttons for compactness in top bar */
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.2rem;
+      padding-top: 0.5rem; /* Added padding to push buttons down */
     }
-    #levels-toggle-btn, #toggle-minigames-btn { /* Shared styles for consistency */
-        padding: 0.4rem 0.8rem; /* Adjusted padding for smaller buttons */
-        font-size: 0.8rem; /* Adjusted font size */
+    /* Shared styles for top bar control buttons */
+    #levels-toggle-btn, #toggle-minigames-btn, #toggle-background-btn { 
+        padding: 0.4rem 0.8rem; 
+        font-size: 0.8rem; 
         font-weight: 600; 
         background-color: var(--btn-bg); 
         border: 2px solid var(--btn-border); 
         border-radius: var(--btn-radius); 
         cursor: pointer; 
         box-shadow: 0 2px 4px var(--shadow-color);
-        width: 120px; /* Fixed width for buttons */
         text-align: center; 
+        line-height: 1.2; 
     }
+    #toggle-minigames-btn { width: 120px; }
+    #toggle-background-btn { width: 155px; } 
+    #levels-toggle-btn { width: 120px; }
+
+    /* Active state for toggles */
+    #toggle-minigames-btn.active-minigame-toggle,
+    #toggle-background-btn.active-animated-bg { 
+        background-color: var(--brand-light);
+        color: var(--brand-dark);
+        border-color: var(--brand-dark);
+    }
+    
     #levels-dropdown-menu { 
         display: none; 
         position: absolute; 
-        /* Positioned relative to the #level-controls-container, below the "Levels" button */
-        /* The "Levels" button is the second child. Its top edge is after the first button and the gap. */
-        /* Height of one button (approx 30-35px after padding reduction) + gap */
-        top: calc( (0.4rem * 2 + 0.8rem + 2px * 2) + 0.2rem + (0.4rem * 2 + 0.8rem + 2px * 2) ); /* Height of minigame + gap + height of level button */
+        top: calc( 3 * (0.4rem * 2 + 0.8rem * 1.2 + 4px) + 2 * 0.2rem ); /* 3 * (padding + font-height + borders) + 2 * gaps */
         right: 0; 
         background-color: white; 
         border: 1px solid #ccc; 
@@ -126,7 +133,7 @@
         box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
         z-index: 100; 
         padding: 0.5rem 0; 
-        min-width: 120px; /* Match button width */
+        min-width: 120px; 
     }
     #levels-dropdown-menu.visible { display: block; }
     .level-item { padding: 0.6rem 1rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; font-size:0.8rem; }
@@ -154,24 +161,18 @@
     .hidden { display: none !important; }
 
     /* Mini-Game Styles */
-    #toggle-minigames-btn.active-minigame-toggle { /* Unique class to avoid conflict */
-        background-color: var(--brand-light);
-        color: var(--brand-dark);
-        border-color: var(--brand-dark);
-    }
-
     #minigame-area {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(100, 150, 220, 0.9); /* A pleasant overlay color */
+        background-color: rgba(100, 150, 220, 0.9); 
         z-index: 900; 
         display: none;
         justify-content: center;
         align-items: center;
-        flex-direction: column; /* For score, timer, game content stacking */
+        flex-direction: column; 
         overflow: hidden;
         color: white;
         font-size: 1.5rem;
@@ -205,7 +206,7 @@
         height: 100%;
         width: 100%;
         background-color: var(--brand-light);
-        transition: width 0.2s linear; /* Smooth shrinking */
+        transition: width 0.2s linear; 
     }
     .minigame-timer-text { font-weight: bold; }
 
@@ -213,23 +214,23 @@
     .balloon {
         width: 60px;
         height: 80px;
-        border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; /* Balloon shape */
+        border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; 
         position: absolute;
         cursor: pointer;
         user-select: none;
         display: flex;
         justify-content: center;
-        align-items: flex-end; /* for the string */
-        padding-bottom: 5px; /* space for string */
+        align-items: flex-end; 
+        padding-bottom: 5px; 
     }
-    .balloon::after { /* Balloon string */
+    .balloon::after { 
         content: '';
         position: absolute;
-        bottom: -15px; /* Start below the balloon */
+        bottom: -15px; 
         left: 50%;
         transform: translateX(-50%);
         width: 2px;
-        height: 20px; /* String length */
+        height: 20px; 
         background-color: rgba(255,255,255,0.7);
     }
     .balloon-rising {
@@ -237,7 +238,7 @@
     }
     @keyframes riseAnimation {
         from { transform: translateY(0); }
-        to { transform: translateY(-110vh); } /* Adjust to ensure it goes well off screen */
+        to { transform: translateY(-110vh); } 
     }
 
     /* Bounce Party Specific */
@@ -246,7 +247,7 @@
         height: 50px;
         background-color: var(--brand);
         border-radius: 50%;
-        position: absolute; /* Positioned by JS */
+        position: absolute; 
         cursor: pointer;
         box-shadow: 0 0 10px rgba(0,0,0,0.3);
     }
@@ -263,6 +264,7 @@
     <div id="timer-wrapper"><div id="circular-timer"></div></div>
     <div id="level-controls-container">
         <button id="toggle-minigames-btn">Mini-Games: Off</button>
+        <button id="toggle-background-btn">Background: Animated</button>
         <button id="levels-toggle-btn">Levels</button>
         <div id="levels-dropdown-menu">
             <!-- Level items will be populated by JS -->
@@ -307,26 +309,67 @@
   <div id="mascot-container"> <lottie-player src="https://lottie.host/449f9829-8f92-4a63-85a2-def249781a91/p021aHdt2x.json" background="transparent" speed="1" loop autoplay></lottie-player> </div>
   
   <script>
-    // --- WEB AUDIO API (condensed - same as before) ---
+    // --- WEB AUDIO API ---
     const audioCtx = new (window.AudioContext||window.webkitAudioContext)(); if (audioCtx) { window.addEventListener('pointerdown', () => { if (audioCtx.state === 'suspended') audioCtx.resume(); }, { once: true }); } function playOsc({ type='sine', freq=440, dur=0.3, modFreq, modIndex, vol=1 }) { if (!audioCtx) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); if (modFreq && modIndex) { const mod = audioCtx.createOscillator(); const mGain = audioCtx.createGain(); mod.frequency.setValueAtTime(modFreq, audioCtx.currentTime); mGain.gain.setValueAtTime(modIndex, audioCtx.currentTime); mod.connect(mGain).connect(osc.frequency); mod.start(audioCtx.currentTime); mod.stop(audioCtx.currentTime + dur); } osc.connect(gain); gain.connect(audioCtx.destination); gain.gain.setValueAtTime(vol, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur); osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + dur); } function playBell() { if (!audioCtx) return; playOsc({ type:'sine', freq:660, dur:0.3, vol: 0.6 }); setTimeout(() => playOsc({ type:'sine', freq:880, dur:0.3, vol: 0.6 }), 120); } function playBuzz() { if (!audioCtx) return; playOsc({ type:'square', freq:150, dur:0.4, vol: 0.4 }); }
     
     const pronunciationMap = { "I": "I." };
 
-    // --- VANTA.JS DYNAMIC BACKGROUNDS (condensed - same as before) ---
-    let vantaEffect = null; const vantaElement = document.body; let vantaBackgroundKeys = []; let currentBackgroundKey = null; const baseGlobalParams = { mouseControls: true, touchControls: true, gyroControls: false, minHeight: 200.00, minWidth: 200.00, scale: 1.00, scaleMobile: 1.00, }; const effectConfigurations = { "FOG_Soft_Blue": { effect: "FOG", params: { highlightColor: 0x80deea, midtoneColor: 0x26c6da, lowlightColor: 0x00acc1, baseColor: 0xf4f6f8, blurFactor: 0.6, zoom: 1.2, speed: 1.0 }}, "WAVES_Ocean": { effect: "WAVES", params: { color: 0x005577, shininess: 30, waveHeight: 15, waveSpeed: 0.8, zoom: 1.0 }}, "BIRDS_Day_Sky": { effect: "BIRDS", params: { backgroundColor: 0x87ceeb, color1: 0x444444, color2: 0x666666, birdSize: 1.0, wingSpan: 20.00, speedLimit: 3.00, separation: 20.00, alignment: 20.00, cohesion: 20.00, quantity: 4 }}, "NET_Cyber_Grid": { effect: "NET", params: { color: 0x00ffff, backgroundColor: 0x000022, points: 10.00, maxDistance: 20.00, spacing: 15.00, showDots: true }}, "CELLS_Bio_Blue": { effect: "CELLS", params: { color1: 0x2196f3, color2: 0x90caf9, size: 3.0, speed: 1.0 }}, "CLOUDS_Sunny_Day": { effect: "CLOUDS", params: { skyColor: 0x68b8d7, cloudColor: 0xadc1de, cloudShadowColor: 0x183550, sunColor: 0xff9919, sunGlareColor: 0xff6633, sunlightColor: 0xff9933, speed: 1.0 }}, "DOTS_Starfield": { effect: "DOTS", params: { color: 0xffffff, color2: 0xdddddd, backgroundColor: 0x000011, size: 3.00, spacing: 30.00, showLines: false }}, "RINGS_Golden_Aura": { effect: "RINGS", params: { backgroundColor: 0x110022, color: 0xffd700, strength: 2.00 }}, "HALO_Gentle_Sun": { effect: "HALO", params: { baseColor: 0xffe082, backgroundColor: 0xfff8e1, amplitudeFactor: 0.5, size: 1.0 }}, "FOG_Mystic_Purple": { effect: "FOG", params: { highlightColor: 0xff00ff, midtoneColor: 0xaa00aa, lowlightColor: 0x550055, baseColor: 0x300030, blurFactor: 0.7, zoom: 1.0, speed: 0.8 }}, "WAVES_Lava": { effect: "WAVES", params: { color: 0xff3300, shininess: 10, waveHeight: 25, waveSpeed: 0.4, zoom: 0.75 }}, "BIRDS_Sunset": { effect: "BIRDS", params: { backgroundColor: 0xffa07a, color1: 0x5d4037, color2: 0x000000, birdSize: 1.2, wingSpan: 25.00, quantity: 3, speedLimit: 2.00 }}, "NET_Golden_Web": { effect: "NET", params: { color: 0xffd700, backgroundColor: 0x301934, points: 8.00, maxDistance: 25.00, spacing: 20.00, showDots: true }}, "CELLS_Pulsing_Red": { effect: "CELLS", params: { color1: 0xf44336, color2: 0xffcdd2, size: 4.5, speed: 0.5 }}, "CLOUDS_Evening_Sky": { effect: "CLOUDS", params: { skyColor: 0x334d5c, cloudColor: 0x8e8e8e, cloudShadowColor: 0x2e2e2e, sunColor: 0xf57c00, sunGlareColor: 0xffb74d, sunlightColor: 0xffa726, speed: 0.6 }}, "DOTS_Colorful_Grid": { effect: "DOTS", params: { color: 0xff00ff, color2: 0x00ff00, backgroundColor: 0x222222, size: 5.00, spacing: 25.00, showLines: true }}, "RINGS_Blue_Energy": { effect: "RINGS", params: { backgroundColor: 0x001020, color: 0x00aaff, strength: 3.50 }}, "HALO_Deep_Space": { effect: "HALO", params: { baseColor: 0x7e57c2, backgroundColor: 0x1a001a, amplitudeFactor: 1.5, size: 1.2, xOffset: 0.2, yOffset: 0.1 }} }; function applyVantaEffect(configKey) { if (vantaEffect) { try { vantaEffect.destroy(); } catch (e) { console.error("Err destroy vanta:", e); } vantaEffect = null; } const config = effectConfigurations[configKey]; if (!config || typeof VANTA === 'undefined' || typeof VANTA[config.effect] !== 'function') { console.error(`Vanta effect ${configKey} error.`); return; } const finalParams = { el: vantaElement, ...baseGlobalParams, ...config.params }; try { vantaEffect = VANTA[config.effect](finalParams); currentBackgroundKey = configKey; } catch (error) { console.error(`Err init Vanta '${config.effect}':`, error); vantaEffect = null; } }
+    // --- VANTA.JS DYNAMIC BACKGROUNDS ---
+    let vantaEffect = null; const vantaElement = document.body; let vantaBackgroundKeys = []; let currentBackgroundKey = null; const baseGlobalParams = { mouseControls: true, touchControls: true, gyroControls: false, minHeight: 200.00, minWidth: 200.00, scale: 1.00, scaleMobile: 1.00, }; const effectConfigurations = { "FOG_Soft_Blue": { effect: "FOG", params: { highlightColor: 0x80deea, midtoneColor: 0x26c6da, lowlightColor: 0x00acc1, baseColor: 0xf4f6f8, blurFactor: 0.6, zoom: 1.2, speed: 1.0 }}, "WAVES_Ocean": { effect: "WAVES", params: { color: 0x005577, shininess: 30, waveHeight: 15, waveSpeed: 0.8, zoom: 1.0 }}, "BIRDS_Day_Sky": { effect: "BIRDS", params: { backgroundColor: 0x87ceeb, color1: 0x444444, color2: 0x666666, birdSize: 1.0, wingSpan: 20.00, speedLimit: 3.00, separation: 20.00, alignment: 20.00, cohesion: 20.00, quantity: 4 }}, "NET_Cyber_Grid": { effect: "NET", params: { color: 0x00ffff, backgroundColor: 0x000022, points: 10.00, maxDistance: 20.00, spacing: 15.00, showDots: true }}, "CELLS_Bio_Blue": { effect: "CELLS", params: { color1: 0x2196f3, color2: 0x90caf9, size: 3.0, speed: 1.0 }}, "CLOUDS_Sunny_Day": { effect: "CLOUDS", params: { skyColor: 0x68b8d7, cloudColor: 0xadc1de, cloudShadowColor: 0x183550, sunColor: 0xff9919, sunGlareColor: 0xff6633, sunlightColor: 0xff9933, speed: 1.0 }}, "DOTS_Starfield": { effect: "DOTS", params: { color: 0xffffff, color2: 0xdddddd, backgroundColor: 0x000011, size: 3.00, spacing: 30.00, showLines: false }}, "RINGS_Golden_Aura": { effect: "RINGS", params: { backgroundColor: 0x110022, color: 0xffd700, strength: 2.00 }}, "HALO_Gentle_Sun": { effect: "HALO", params: { baseColor: 0xffe082, backgroundColor: 0xfff8e1, amplitudeFactor: 0.5, size: 1.0 }}, "FOG_Mystic_Purple": { effect: "FOG", params: { highlightColor: 0xff00ff, midtoneColor: 0xaa00aa, lowlightColor: 0x550055, baseColor: 0x300030, blurFactor: 0.7, zoom: 1.0, speed: 0.8 }}, "WAVES_Lava": { effect: "WAVES", params: { color: 0xff3300, shininess: 10, waveHeight: 25, waveSpeed: 0.4, zoom: 0.75 }}, "BIRDS_Sunset": { effect: "BIRDS", params: { backgroundColor: 0xffa07a, color1: 0x5d4037, color2: 0x000000, birdSize: 1.2, wingSpan: 25.00, quantity: 3, speedLimit: 2.00 }}, "NET_Golden_Web": { effect: "NET", params: { color: 0xffd700, backgroundColor: 0x301934, points: 8.00, maxDistance: 25.00, spacing: 20.00, showDots: true }}, "CELLS_Pulsing_Red": { effect: "CELLS", params: { color1: 0xf44336, color2: 0xffcdd2, size: 4.5, speed: 0.5 }}, "CLOUDS_Evening_Sky": { effect: "CLOUDS", params: { skyColor: 0x334d5c, cloudColor: 0x8e8e8e, cloudShadowColor: 0x2e2e2e, sunColor: 0xf57c00, sunGlareColor: 0xffb74d, sunlightColor: 0xffa726, speed: 0.6 }}, "DOTS_Colorful_Grid": { effect: "DOTS", params: { color: 0xff00ff, color2: 0x00ff00, backgroundColor: 0x222222, size: 5.00, spacing: 25.00, showLines: true }}, "RINGS_Blue_Energy": { effect: "RINGS", params: { backgroundColor: 0x001020, color: 0x00aaff, strength: 3.50 }}, "HALO_Deep_Space": { effect: "HALO", params: { baseColor: 0x7e57c2, backgroundColor: 0x1a001a, amplitudeFactor: 1.5, size: 1.2, xOffset: 0.2, yOffset: 0.1 }} }; 
     
-    // --- WORD DATA (same as before) ---
+    // --- Pastel Background Colors ---
+    const pastelBackgroundColors = [
+        "#c9e4c5", // Light Pastel Green
+        "#f9e6cf", // Pastel Peach
+        "#d4e9f7", // Pastel Blue
+        "#fde8f2", // Pastel Pink
+        "#e6e6fa", // Lavender
+        "#fffacd", // Lemon Chiffon
+    ];
+    let currentPastelBgIndex = 0;
+
+    function applyVantaEffect(configKey) {
+        if (vantaEffect) {
+            try { vantaEffect.destroy(); } catch (e) { console.error("Err destroy vanta:", e); }
+            vantaEffect = null;
+        }
+
+        if (!configKey) { 
+            currentBackgroundKey = null; 
+            return;
+        }
+
+        const config = effectConfigurations[configKey];
+        if (!config || typeof VANTA === 'undefined' || typeof VANTA[config.effect] !== 'function') {
+            console.error(`Vanta effect ${configKey} error.`);
+            currentBackgroundKey = null; 
+            return;
+        }
+
+        const finalParams = { el: vantaElement, ...baseGlobalParams, ...config.params };
+        try {
+            vantaEffect = VANTA[config.effect](finalParams);
+            currentBackgroundKey = configKey; 
+            document.body.style.backgroundColor = ''; 
+        } catch (error) {
+            console.error(`Err init Vanta '${config.effect}':`, error);
+            vantaEffect = null;
+            currentBackgroundKey = null; 
+        }
+    }
+    
+    // --- WORD DATA ---
     const allLevelWords = { A: ["a","all","am","and","away","be","big","blue","but","can","come", "did","down","find","for","funny","go","good","he","help","here","I", "in","is","it","like","little","look","make","me","my","no","not", "on","one","play","ran","red","run","said","see","so","that","the", "three","to","two","up","was","we","what","where","yellow","yes","you"], B: ["after","again","any","are","as","at","ate","black","brown","by","came","could","do","eat","every","four","from","get","give","going","had","have","her","him","how","into","let","must","new","now","of","our","out","please","pretty","ride","round","saw","say","she","some","soon","thank","there","they","this","too","under","want","well","went","white","who","will","with"], C: ["an","ask","been","best","buy","cold","does","don't","first","five","fly","found","gave","goes","green","has","his","its","jump","just","know","live","made","many","may","off","old","once","open","or","over","own","pull","put","read","right","sit","sleep","stop","take","tell","them","then","these","think","those","use","very","walk","warm","wash","were","when","why","your"], D: ["about","always","around","because","before","better","both","bring","call","carry","clean","cut","done","draw","drink","eight","fall","far","fast","full","got","grow","hold","hot","hurt","if","keep","kind","laugh","light","long","much","myself","never","only","pick","seven","shall","show","sing","six","small","start","ten","their","today","together","try","upon","us","which","wish","work","would","write"] };
     let words = []; 
 
-    // --- UI REFERENCES (same as before + new ones) ---
+    // --- UI REFERENCES ---
     const wordChoiceBtns = [document.getElementById('choice0'), document.getElementById('choice1')];
     const scoreVal   = document.getElementById('score-val');
     const timerDisp  = document.getElementById('timer-display');
     const timerSel   = document.getElementById('timer-select');
     const listenBtn  = document.getElementById('listen-btn');
     const quizCont   = document.getElementById('quiz-container');
-    const controlsBar = document.getElementById('controls'); // Reference for hiding/showing
+    const controlsBar = document.getElementById('controls');
     const modeToggleBtn = document.getElementById('mode-toggle-btn');
     const listenPickWordArea = document.getElementById('listen-pick-word-area');
     const readPickSoundArea = document.getElementById('read-pick-sound-area');
@@ -344,13 +387,11 @@
     const modalSelectAllBtn = document.getElementById('modal-select-all-btn');
     const modalDeselectAllBtn = document.getElementById('modal-deselect-all-btn');
     const modalCloseBtn = document.getElementById('modal-close-btn');
-    
-    // Mini-Game UI
     const miniGameArea = document.getElementById('minigame-area');
     const toggleMiniGamesBtn = document.getElementById('toggle-minigames-btn');
+    const toggleBackgroundBtn = document.getElementById('toggle-background-btn');
 
-
-    // --- GAME STATE (same as before + new ones) ---
+    // --- GAME STATE ---
     let circleTimerInstance;
     let questionTimeoutId; 
     let questionAnsweredThisTurn = false;
@@ -365,23 +406,82 @@
     let currentEditingLevelKey = null; 
     let longPressTimer = null;
     let isLongPress = false;
-
-    // Mini-Game State
     let miniGamesEnabled = localStorage.getItem('miniGamesEnabled') === 'true';
     let isMiniGameActive = false;
     let availableMiniGames = [];
     let currentMiniGameIdx = 0;
+    let animatedBackgroundsEnabled = localStorage.getItem('animatedBackgroundsEnabled') !== 'false'; 
+    let PREFERS_REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+
+    // ---- Central function to manage background state ----
+    function updateBackgroundState() {
+        const shouldAnimate = animatedBackgroundsEnabled && !PREFERS_REDUCED_MOTION;
+
+        if (toggleBackgroundBtn) {
+            toggleBackgroundBtn.textContent = `Background: ${animatedBackgroundsEnabled ? 'Animated' : 'Static'}`;
+            toggleBackgroundBtn.classList.toggle('active-animated-bg', animatedBackgroundsEnabled);
+        }
+
+        if (shouldAnimate) {
+            document.body.style.backgroundColor = ''; 
+
+            let keyToApply = currentBackgroundKey; 
+            if (!keyToApply || !effectConfigurations[keyToApply]) { 
+                if (vantaBackgroundKeys && vantaBackgroundKeys.length > 0) {
+                    keyToApply = vantaBackgroundKeys[0]; 
+                } else {
+                    keyToApply = null; 
+                }
+            }
+            
+            if (keyToApply) {
+                applyVantaEffect(keyToApply);
+            } else {
+                if (vantaEffect) applyVantaEffect(null); 
+                document.body.style.backgroundColor = pastelBackgroundColors[currentPastelBgIndex % pastelBackgroundColors.length]; // Fallback to current pastel
+                // console.warn("Vanta effect desired but unavailable. Using current static pastel background.");
+            }
+        } else {
+            if (vantaEffect) {
+                applyVantaEffect(null); 
+            }
+            const staticBgColor = pastelBackgroundColors[currentPastelBgIndex % pastelBackgroundColors.length];
+            document.body.style.backgroundColor = staticBgColor;
+        }
+    }
 
     // ---- INITIALIZATION ----
     document.addEventListener('DOMContentLoaded', () => {
       vantaBackgroundKeys = Object.keys(effectConfigurations);
-      if (vantaBackgroundKeys.length > 0 && typeof THREE !== 'undefined' && typeof VANTA !== 'undefined') {
-        applyVantaEffect(vantaBackgroundKeys[0]);
+      
+      const initialScoreTier = Math.floor(score / 10); // score is 0 here
+      if (vantaBackgroundKeys.length > 0) {
+          currentBackgroundKey = vantaBackgroundKeys[initialScoreTier % vantaBackgroundKeys.length];
+      } else {
+          currentBackgroundKey = null; // No Vanta backgrounds available
+      }
+      currentPastelBgIndex = initialScoreTier % pastelBackgroundColors.length;
+
+      updateBackgroundState(); 
+
+      if (toggleBackgroundBtn) {
+          toggleBackgroundBtn.addEventListener('click', () => {
+              animatedBackgroundsEnabled = !animatedBackgroundsEnabled;
+              localStorage.setItem('animatedBackgroundsEnabled', animatedBackgroundsEnabled);
+              updateBackgroundState();
+          });
       }
       
+      const mediaQueryReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      function handleReducedMotionChange(event) {
+          PREFERS_REDUCED_MOTION = event.matches;
+          updateBackgroundState();
+      }
+      mediaQueryReducedMotion.addEventListener('change', handleReducedMotionChange);
+      
       initLevelManagement(); 
-      initMiniGameSystem(); // Initialize mini-game toggle and register games
+      initMiniGameSystem(); 
       updateModeUI();
       initCircularTimer();
       
@@ -390,11 +490,11 @@
       timerDisp.textContent = timeLimit > 0 ? timeLimit+'s ⏱️' : 'Untimed ⏱️';
     });
 
-    // --- Speak helper (MODIFIED with pronunciationMap) ---
-    function speak(txt, rate = 0.9, pitch = 1.1){ // Added optional rate/pitch
+    // --- Speak helper ---
+    function speak(txt, rate = 0.9, pitch = 1.1){ 
       if('speechSynthesis' in window){
-        speechSynthesis.cancel(); // Cancel any ongoing speech
-        let textToSpeak = pronunciationMap[txt] || String(txt); // Ensure txt is string for numbers
+        speechSynthesis.cancel(); 
+        let textToSpeak = pronunciationMap[txt] || String(txt); 
         let u = new SpeechSynthesisUtterance(textToSpeak);
         u.rate = rate; 
         u.pitch = pitch;
@@ -404,19 +504,12 @@
 
     // --- Utility for random colors (for Balloon Pop) ---
     function getRandomColor() {
-        const r = Math.floor(Math.random() * 200); // Avoid too dark/light
+        const r = Math.floor(Math.random() * 200); 
         const g = Math.floor(Math.random() * 200);
         const b = Math.floor(Math.random() * 200);
         return `rgb(${r},${g},${b})`;
     }
-
-
-
             
-            
-            
-            
-                
     // --- MINI-GAME DEFINITIONS ---
     const CatchTheStarGame = {
     name: "Catch the Star",
@@ -1211,17 +1304,13 @@
     };
     
 
-    
-            
 
     // --- MINI-GAME SYSTEM ---
     function initMiniGameSystem() {
-        availableMiniGames.push(HoopBounceGame, CatchTheStarGame, BalloonPopGame); // Register games
+        availableMiniGames.push(HoopBounceGame, CatchTheStarGame, BalloonPopGame); // Re-enable/modify with your game objects
         
         toggleMiniGamesBtn.textContent = `Mini-Games: ${miniGamesEnabled ? 'On' : 'Off'}`;
-        if (miniGamesEnabled) {
-            toggleMiniGamesBtn.classList.add('active-minigame-toggle');
-        }
+        toggleMiniGamesBtn.classList.toggle('active-minigame-toggle', miniGamesEnabled);
 
         toggleMiniGamesBtn.addEventListener('click', () => {
             miniGamesEnabled = !miniGamesEnabled;
@@ -1237,12 +1326,15 @@
             resumeQuizAfterMiniGame(undefined); 
             return;
         }
-        isMiniGameActive = true; // Set flag before starting
+        isMiniGameActive = true; 
+
+        if (animatedBackgroundsEnabled && !PREFERS_REDUCED_MOTION && vantaEffect) {
+            applyVantaEffect(null); 
+        }
 
         miniGameArea.classList.add('active');
         miniGameArea.setAttribute('tabindex', '-1');
         miniGameArea.focus();
-
 
         const gameToPlay = availableMiniGames[currentMiniGameIdx];
         currentMiniGameIdx = (currentMiniGameIdx + 1) % availableMiniGames.length;
@@ -1250,23 +1342,18 @@
         gameToPlay.start(miniGameArea, (miniGameScore) => {
             gameToPlay.destroy(); 
             miniGameArea.classList.remove('active');
-            resumeQuizAfterMiniGame(miniGameScore); // isMiniGameActive will be reset here
+            resumeQuizAfterMiniGame(miniGameScore); 
         });
     }
 
     function resumeQuizAfterMiniGame(miniGameScore) {
-        // isMiniGameActive is currently true.
-        // The miniGameArea has just been hidden by the calling logic.
-        // The speech "Game Over..." has just been initiated by the mini-game's endGame method.
-
-        // Wait for 4 seconds to allow speech to complete.
         setTimeout(() => {
-            isMiniGameActive = false; // Now, officially end the mini-game phase.
+            isMiniGameActive = false; 
+            updateBackgroundState(); 
 
             quizCont.style.display = 'flex'; 
             controlsBar.style.display = 'flex';
             
-            // Ensure opacity is 0 before fading in, especially if GSAP isn't used.
             if (typeof gsap === 'undefined') {
                 quizCont.style.opacity = '0';
                 controlsBar.style.opacity = '0';
@@ -1279,16 +1366,12 @@
             const animationEndHandler = () => {
                 if (animationHandled) return;
                 animationHandled = true;
-
                 quizCont.classList.remove('animate__animated', 'animate__fadeInCustom');
                 controlsBar.classList.remove('animate__animated', 'animate__fadeInCustom');
-                
-                // Ensure opacity is fully 1 after animation for non-GSAP cases
                 if (typeof gsap === 'undefined') {
                     quizCont.style.opacity = '1';
                     controlsBar.style.opacity = '1';
                 }
-
                 if (miniGameScore !== undefined) {
                     showFloatingMessage(`Mini-Game: ${miniGameScore} points!`, 'var(--brand-light)', 'var(--fg)');
                 }
@@ -1298,47 +1381,39 @@
             if (typeof gsap !== 'undefined') {
                 gsap.fromTo([quizCont, controlsBar], {opacity: 0}, {opacity: 1, duration: 0.3, onComplete: animationEndHandler});
             } else {
-                 // Apply opacity transition for CSS fade-in
                 quizCont.style.transition = 'opacity 0.3s ease-in-out';
                 controlsBar.style.transition = 'opacity 0.3s ease-in-out';
-                
-                // Trigger reflow to apply opacity 0 before changing to 1 for transition
                 void quizCont.offsetWidth; 
-                
                 quizCont.style.opacity = '1';
                 controlsBar.style.opacity = '1';
-
                 quizCont.addEventListener('transitionend', function onTransitionEnd(event) {
                     if (event.propertyName === 'opacity') {
                         animationEndHandler();
-                        quizCont.removeEventListener('transitionend', onTransitionEnd); // Clean up
-                        quizCont.style.transition = ''; // Reset transition
+                        quizCont.removeEventListener('transitionend', onTransitionEnd); 
+                        quizCont.style.transition = ''; 
                         controlsBar.style.transition = '';
                     }
-                }, { once: false }); // 'once: false' because we explicitly check propertyName
-
-                 // Fallback timeout for CSS transition/animation
+                }, { once: false }); 
                  setTimeout(() => { 
-                    if (!animationHandled) { // If transitionend hasn't fired
+                    if (!animationHandled) { 
                         animationEndHandler();
                     }
-                }, 350); // CSS animation/transition is 0.3s, so 350ms timeout.
+                }, 350); 
             }
-        }, 4000); // 4-second pause
+        }, 4000); 
     }
 
-
-    // --- UI & GAME LOGIC (mostly same as before, with modifications for mini-games) ---
-    function updateModeUI() { /* ... same ... */ if (currentGameMode === 'listenAndPickWord') { listenPickWordArea.style.display = 'flex'; readPickSoundArea.style.display = 'none'; modeToggleBtn.textContent = 'Mode: Listen'; listenBtn.innerHTML = '🔊'; } else { listenPickWordArea.style.display = 'none'; readPickSoundArea.style.display = 'flex'; modeToggleBtn.textContent = 'Mode: Read'; listenBtn.innerHTML = '📖'; if(submitAnswerBtn) submitAnswerBtn.disabled = true; } }
-    modeToggleBtn.addEventListener('click', () => { /* ... same ... */ currentGameMode = (currentGameMode === 'listenAndPickWord') ? 'readAndPickSound' : 'listenAndPickWord'; localStorage.setItem('sightWordsGameMode', currentGameMode); updateModeUI(); clearTimeout(questionTimeoutId); resetQuestionState(); setTimeout(nextQ, 100); });
-    function resetQuestionState() { /* ... same ... */ questionAnsweredThisTurn = false; selectedSoundButton = null; soundChoiceBtns.forEach(btn => btn.classList.remove('sound-btn-selected', 'correct', 'incorrect')); wordChoiceBtns.forEach(btn => btn.classList.remove('correct', 'incorrect')); if (submitAnswerBtn) submitAnswerBtn.disabled = true; }
-    function initCircularTimer() { /* ... same ... */ const timerContainer = document.getElementById('circular-timer'); if (!timerContainer) return; circleTimerInstance = new ProgressBar.Circle(timerContainer, { strokeWidth: 10, easing: 'linear', color: 'var(--brand)', trailColor: 'rgba(224, 224, 224, 0.5)', trailWidth: 10, svgStyle: { width: '100%', height: '100%' }, text: { style: { color: 'var(--fg)', position: 'absolute', left: '50%', top: '50%', padding: 0, margin: 0, transform: { prefix: true, value: 'translate(-50%, -50%)' }, fontSize: '1.4em', fontWeight: '600', }, autoStyleContainer: false }, step: function(state, circle) { if (timeLimit > 0) { const timeLeft = Math.ceil(timeLimit * (1 - circle.value())); circle.setText(timeLeft > 0 ? timeLeft : '0'); if (timeLeft <= timeLimit * 0.3) circle.path.setAttribute('stroke', '#f44336'); else if (timeLeft <= timeLimit * 0.6) circle.path.setAttribute('stroke', '#ff9800'); else circle.path.setAttribute('stroke', 'var(--brand)'); } else { circle.setText('∞'); circle.path.setAttribute('stroke', 'var(--brand)'); } } }); }
-    function startCountdown(onDoneCallback){ /* ... same ... */ clearTimeout(questionTimeoutId); if(circleTimerInstance){ circleTimerInstance.set(0); circleTimerInstance.setText(timeLimit > 0 ? String(timeLimit) : '∞'); circleTimerInstance.path.setAttribute('stroke', 'var(--brand)'); if(timeLimit <= 0) return; circleTimerInstance.animate(1.0, { duration: timeLimit * 1000 }); questionTimeoutId = setTimeout(() => { if (!questionAnsweredThisTurn && !isMiniGameActive) onDoneCallback(); }, timeLimit * 1000); } }
-    function nextQ(){ /* ... same, with check for words.length ... */ resetQuestionState(); quizCont.classList.remove('animate__fadeInCustom', 'animate__zoomIn'); void quizCont.offsetWidth; quizCont.classList.add('animate__zoomIn'); [...wordChoiceBtns, ...soundChoiceBtns].forEach(btn => btn.style.display = ''); if(submitAnswerBtn) submitAnswerBtn.style.display = ''; wordToReadDisplay.style.display = ''; if (words.length === 0) { console.error("No words available for the quiz! Check level/word selections."); wordToReadDisplay.textContent = "No Words!"; showFloatingMessage("Please select levels/words!", "var(--brand-dark)"); listenPickWordArea.style.display = 'none'; readPickSoundArea.style.display = 'flex'; soundChoiceBtns.forEach(btn => btn.style.display = 'none'); if (submitAnswerBtn) submitAnswerBtn.style.display = 'none'; wordChoiceBtns.forEach(btn => btn.style.display = 'none'); clearTimeout(questionTimeoutId); if(circleTimerInstance) circleTimerInstance.set(0); return; } currentCorrectWord = words[Math.floor(Math.random()*words.length)]; let distractorWord; if (words.length > 1) { do { distractorWord = words[Math.floor(Math.random()*words.length)]; } while(distractorWord === currentCorrectWord); } else { distractorWord = currentCorrectWord; } if (currentGameMode === 'listenAndPickWord') { const pair = Math.random() < 0.5 ? [currentCorrectWord, distractorWord] : [distractorWord, currentCorrectWord]; wordChoiceBtns.forEach((b,i)=>{ b.textContent = pair[i]; b.disabled = false; b.className = 'choice-btn'; }); speak(currentCorrectWord); } else { wordToReadDisplay.textContent = currentCorrectWord; const soundWords = Math.random() < 0.5 ? [currentCorrectWord, distractorWord] : [distractorWord, currentCorrectWord]; soundChoiceBtns.forEach((btn, i) => { btn.dataset.wordToSpeak = soundWords[i]; btn.disabled = false; btn.className = 'choice-btn sound-btn'; }); if(submitAnswerBtn) submitAnswerBtn.disabled = true; } startCountdown(()=>{ if (questionAnsweredThisTurn || isMiniGameActive) return; questionAnsweredThisTurn = true; disableAllChoiceButtons(); playBuzz(); showFloatingMessage("Time's Up!", '#ffcdd2', '#333'); currentStreak = 0; setTimeout(nextQ,1200); }); }
-    function disableAllChoiceButtons() { /* ... same ... */ wordChoiceBtns.forEach(b => b.disabled = true); soundChoiceBtns.forEach(b => b.disabled = true); if (submitAnswerBtn) submitAnswerBtn.disabled = true; }
+    // --- UI & GAME LOGIC ---
+    function updateModeUI() { if (currentGameMode === 'listenAndPickWord') { listenPickWordArea.style.display = 'flex'; readPickSoundArea.style.display = 'none'; modeToggleBtn.textContent = 'Mode: Listen'; listenBtn.innerHTML = '🔊'; } else { listenPickWordArea.style.display = 'none'; readPickSoundArea.style.display = 'flex'; modeToggleBtn.textContent = 'Mode: Read'; listenBtn.innerHTML = '📖'; if(submitAnswerBtn) submitAnswerBtn.disabled = true; } }
+    modeToggleBtn.addEventListener('click', () => { currentGameMode = (currentGameMode === 'listenAndPickWord') ? 'readAndPickSound' : 'listenAndPickWord'; localStorage.setItem('sightWordsGameMode', currentGameMode); updateModeUI(); clearTimeout(questionTimeoutId); resetQuestionState(); setTimeout(nextQ, 100); });
+    function resetQuestionState() { questionAnsweredThisTurn = false; selectedSoundButton = null; soundChoiceBtns.forEach(btn => btn.classList.remove('sound-btn-selected', 'correct', 'incorrect')); wordChoiceBtns.forEach(btn => btn.classList.remove('correct', 'incorrect')); if (submitAnswerBtn) submitAnswerBtn.disabled = true; }
+    function initCircularTimer() { const timerContainer = document.getElementById('circular-timer'); if (!timerContainer) return; circleTimerInstance = new ProgressBar.Circle(timerContainer, { strokeWidth: 10, easing: 'linear', color: 'var(--brand)', trailColor: 'rgba(224, 224, 224, 0.5)', trailWidth: 10, svgStyle: { width: '100%', height: '100%' }, text: { style: { color: 'var(--fg)', position: 'absolute', left: '50%', top: '50%', padding: 0, margin: 0, transform: { prefix: true, value: 'translate(-50%, -50%)' }, fontSize: '1.4em', fontWeight: '600', }, autoStyleContainer: false }, step: function(state, circle) { if (timeLimit > 0) { const timeLeft = Math.ceil(timeLimit * (1 - circle.value())); circle.setText(timeLeft > 0 ? timeLeft : '0'); if (timeLeft <= timeLimit * 0.3) circle.path.setAttribute('stroke', '#f44336'); else if (timeLeft <= timeLimit * 0.6) circle.path.setAttribute('stroke', '#ff9800'); else circle.path.setAttribute('stroke', 'var(--brand)'); } else { circle.setText('∞'); circle.path.setAttribute('stroke', 'var(--brand)'); } } }); }
+    function startCountdown(onDoneCallback){ clearTimeout(questionTimeoutId); if(circleTimerInstance){ circleTimerInstance.set(0); circleTimerInstance.setText(timeLimit > 0 ? String(timeLimit) : '∞'); circleTimerInstance.path.setAttribute('stroke', 'var(--brand)'); if(timeLimit <= 0) return; circleTimerInstance.animate(1.0, { duration: timeLimit * 1000 }); questionTimeoutId = setTimeout(() => { if (!questionAnsweredThisTurn && !isMiniGameActive) onDoneCallback(); }, timeLimit * 1000); } }
+    function nextQ(){ resetQuestionState(); quizCont.classList.remove('animate__fadeInCustom', 'animate__zoomIn'); void quizCont.offsetWidth; quizCont.classList.add('animate__zoomIn'); [...wordChoiceBtns, ...soundChoiceBtns].forEach(btn => btn.style.display = ''); if(submitAnswerBtn) submitAnswerBtn.style.display = ''; wordToReadDisplay.style.display = ''; if (words.length === 0) { console.error("No words available for the quiz! Check level/word selections."); wordToReadDisplay.textContent = "No Words!"; showFloatingMessage("Please select levels/words!", "var(--brand-dark)"); listenPickWordArea.style.display = 'none'; readPickSoundArea.style.display = 'flex'; soundChoiceBtns.forEach(btn => btn.style.display = 'none'); if (submitAnswerBtn) submitAnswerBtn.style.display = 'none'; wordChoiceBtns.forEach(btn => btn.style.display = 'none'); clearTimeout(questionTimeoutId); if(circleTimerInstance) circleTimerInstance.set(0); return; } currentCorrectWord = words[Math.floor(Math.random()*words.length)]; let distractorWord; if (words.length > 1) { do { distractorWord = words[Math.floor(Math.random()*words.length)]; } while(distractorWord === currentCorrectWord); } else { distractorWord = currentCorrectWord; } if (currentGameMode === 'listenAndPickWord') { const pair = Math.random() < 0.5 ? [currentCorrectWord, distractorWord] : [distractorWord, currentCorrectWord]; wordChoiceBtns.forEach((b,i)=>{ b.textContent = pair[i]; b.disabled = false; b.className = 'choice-btn'; }); speak(currentCorrectWord); } else { wordToReadDisplay.textContent = currentCorrectWord; const soundWords = Math.random() < 0.5 ? [currentCorrectWord, distractorWord] : [distractorWord, currentCorrectWord]; soundChoiceBtns.forEach((btn, i) => { btn.dataset.wordToSpeak = soundWords[i]; btn.disabled = false; btn.className = 'choice-btn sound-btn'; }); if(submitAnswerBtn) submitAnswerBtn.disabled = true; } startCountdown(()=>{ if (questionAnsweredThisTurn || isMiniGameActive) return; questionAnsweredThisTurn = true; disableAllChoiceButtons(); playBuzz(); showFloatingMessage("Time's Up!", '#ffcdd2', '#333'); currentStreak = 0; setTimeout(nextQ,1200); }); }
+    function disableAllChoiceButtons() { wordChoiceBtns.forEach(b => b.disabled = true); soundChoiceBtns.forEach(b => b.disabled = true); if (submitAnswerBtn) submitAnswerBtn.disabled = true; }
 
     function handleAnswer(isCorrect, targetButtonElement) {
-        if (questionAnsweredThisTurn || isMiniGameActive) return; // Prevent handling if mini-game is starting/active
+        if (questionAnsweredThisTurn || isMiniGameActive) return; 
         questionAnsweredThisTurn = true;
 
         clearTimeout(questionTimeoutId); 
@@ -1346,8 +1421,20 @@
 
         if(isCorrect){
           playBell();
+          const oldScoreTier = Math.floor(score / 10);
           scoreVal.textContent = ++score;
-          if (score > 0 && score % 10 === 0 && vantaBackgroundKeys.length > 0) { const bgIndex = (score / 10) % vantaBackgroundKeys.length; if (vantaBackgroundKeys[bgIndex] !== currentBackgroundKey) applyVantaEffect(vantaBackgroundKeys[bgIndex]); }
+          const newScoreTier = Math.floor(score / 10);
+
+          if (newScoreTier !== oldScoreTier || score === 10) { 
+            if (vantaBackgroundKeys.length > 0) {
+                currentBackgroundKey = vantaBackgroundKeys[newScoreTier % vantaBackgroundKeys.length];
+            } else {
+                currentBackgroundKey = null;
+            }
+            currentPastelBgIndex = newScoreTier % pastelBackgroundColors.length;
+            updateBackgroundState(); 
+          }
+          
           targetButtonElement.classList.add('correct');
           myConfetti({ particleCount:80, spread:100, origin: { y: 0.6 } });
           showFloatingScore("+1 Awesome!", targetButtonElement);
@@ -1373,17 +1460,14 @@
             }
             soundChoiceBtns.forEach(btn => btn.classList.remove('sound-btn-selected'));
 
-            if (isMiniGameDue) { // Check here, as isMiniGameActive is now set inside triggerMiniGame
-                
-                quizCont.style.opacity = 1; // Ensure it's visible before fading out
+            if (isMiniGameDue) { 
+                quizCont.style.opacity = 1; 
                 controlsBar.style.opacity = 1;
-
                 const fadeOutHandler = () => {
                     quizCont.style.display = 'none';
                     controlsBar.style.display = 'none';
-                    triggerMiniGame(); // isMiniGameActive will be true inside this call
+                    triggerMiniGame(); 
                 };
-
                 if (typeof gsap !== 'undefined') {
                     gsap.to([quizCont, controlsBar], {opacity: 0, duration: 0.3, onComplete: fadeOutHandler});
                 } else {
@@ -1413,19 +1497,19 @@
     listenBtn.onclick = ()=>{ if (currentCorrectWord && !isMiniGameActive) { if (currentGameMode === 'listenAndPickWord') { speak(currentCorrectWord); } else { speak(currentCorrectWord); } } };
     timerDisp.addEventListener('click',()=>{ if (!isMiniGameActive) { timerSel.style.display = timerSel.style.display==='block'?'none':'block'; timerSel.value = timeLimit; } });
     timerSel.addEventListener('change',()=>{ timeLimit = +timerSel.value; timerDisp.textContent = timeLimit > 0 ? timeLimit+'s ⏱️' : 'Untimed ⏱️'; timerSel.style.display='none';});
-    function showFloatingScore(message, targetButton, isError = false) { /* ... same ... */ const floatEl = document.createElement('div'); floatEl.textContent = message; floatEl.classList.add('floating-effect'); floatEl.classList.add(isError ? 'floating-message' : 'floating-score'); if(isError) {floatEl.style.backgroundColor = 'var(--incorrect-bg)'; floatEl.style.color = '#333';} document.body.appendChild(floatEl); const btnRect = targetButton.getBoundingClientRect(); floatEl.style.left = `${btnRect.left + btnRect.width / 2 - floatEl.offsetWidth / 2}px`; floatEl.style.top = `${btnRect.top - floatEl.offsetHeight - 10}px`; gsap.to(floatEl, { y: -60, opacity: 0, duration: 1.8, ease: 'power1.out', onComplete: () => floatEl.remove() }); }
-    function showFloatingMessage(text, bgColor = 'var(--brand)', textColor = 'white') { /* ... same ... */ const msgEl = document.createElement('div'); msgEl.textContent = text; msgEl.classList.add('floating-effect', 'floating-message'); msgEl.style.backgroundColor = bgColor; msgEl.style.color = textColor; msgEl.style.left = '50%'; msgEl.style.top = '15%'; msgEl.style.transform = 'translateX(-50%)'; msgEl.style.padding = '0.8rem 1.5rem'; msgEl.style.fontSize = '1.5em'; document.body.appendChild(msgEl); gsap.fromTo(msgEl, { opacity: 0, y: -20, scale: 0.8 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'back.out(1.7)' } ); setTimeout(() => { gsap.to(msgEl, { opacity: 0, y: 20, scale: 0.8, duration: 0.5, ease: 'back.in(1.7)', onComplete: () => msgEl.remove() }); }, 2300); }
+    function showFloatingScore(message, targetButton, isError = false) { const floatEl = document.createElement('div'); floatEl.textContent = message; floatEl.classList.add('floating-effect'); floatEl.classList.add(isError ? 'floating-message' : 'floating-score'); if(isError) {floatEl.style.backgroundColor = 'var(--incorrect-bg)'; floatEl.style.color = '#333';} document.body.appendChild(floatEl); const btnRect = targetButton.getBoundingClientRect(); floatEl.style.left = `${btnRect.left + btnRect.width / 2 - floatEl.offsetWidth / 2}px`; floatEl.style.top = `${btnRect.top - floatEl.offsetHeight - 10}px`; gsap.to(floatEl, { y: -60, opacity: 0, duration: 1.8, ease: 'power1.out', onComplete: () => floatEl.remove() }); }
+    function showFloatingMessage(text, bgColor = 'var(--brand)', textColor = 'white') { const msgEl = document.createElement('div'); msgEl.textContent = text; msgEl.classList.add('floating-effect', 'floating-message'); msgEl.style.backgroundColor = bgColor; msgEl.style.color = textColor; msgEl.style.left = '50%'; msgEl.style.top = '15%'; msgEl.style.transform = 'translateX(-50%)'; msgEl.style.padding = '0.8rem 1.5rem'; msgEl.style.fontSize = '1.5em'; document.body.appendChild(msgEl); gsap.fromTo(msgEl, { opacity: 0, y: -20, scale: 0.8 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'back.out(1.7)' } ); setTimeout(() => { gsap.to(msgEl, { opacity: 0, y: 20, scale: 0.8, duration: 0.5, ease: 'back.in(1.7)', onComplete: () => msgEl.remove() }); }, 2300); }
 
-    // --- LEVEL MANAGEMENT (same as before) ---
-    function initLevelManagement() { /* ... same ... */ const storedLevels = localStorage.getItem('sightWordsSelectedLevels'); selectedLevels = storedLevels ? JSON.parse(storedLevels) : ['A']; Object.keys(allLevelWords).forEach(levelKey => { const levelItem = document.createElement('div'); levelItem.classList.add('level-item'); levelItem.dataset.level = levelKey; levelItem.textContent = `Level ${levelKey}`; const longPressHint = document.createElement('span'); longPressHint.classList.add('long-press-indicator'); longPressHint.textContent = '(hold to customize)'; levelItem.appendChild(longPressHint); if (selectedLevels.includes(levelKey)) { levelItem.classList.add('selected'); } levelItem.addEventListener('mousedown', (e) => handleLevelInteractionStart(e, levelKey)); levelItem.addEventListener('touchstart', (e) => handleLevelInteractionStart(e, levelKey), { passive: false }); levelItem.addEventListener('mouseup', handleLevelInteractionEnd); levelItem.addEventListener('mouseleave', handleLevelInteractionEnd); levelItem.addEventListener('touchend', handleLevelInteractionEnd); levelItem.addEventListener('touchcancel', handleLevelInteractionEnd); levelsDropdownMenu.appendChild(levelItem); }); levelsToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); levelsDropdownMenu.classList.toggle('visible'); }); document.addEventListener('click', (event) => { if (!levelsToggleBtn.contains(event.target) && !levelsDropdownMenu.contains(event.target)) { levelsDropdownMenu.classList.remove('visible'); } }); modalSaveBtn.addEventListener('click', saveCustomWordSelection); modalCloseBtn.addEventListener('click', closeWordSelectionModal); modalSelectAllBtn.addEventListener('click', () => toggleAllModalWords(true)); modalDeselectAllBtn.addEventListener('click', () => toggleAllModalWords(false)); updateActiveQuizWords(); }
-    function handleLevelInteractionStart(event, levelKey) { /* ... same ... */ if(isMiniGameActive) return; event.preventDefault(); isLongPress = false; clearTimeout(longPressTimer); longPressTimer = setTimeout(() => { isLongPress = true; openWordSelectionModal(levelKey); levelsDropdownMenu.classList.remove('visible'); }, 500); }
-    function handleLevelInteractionEnd(event) { /* ... same, added event param to get target ... */ clearTimeout(longPressTimer); if (!isLongPress) { const target = event.currentTarget; if (target && target.dataset.level && !isLongPress) { toggleLevelSelection(target.dataset.level, target); } } }
-    function toggleLevelSelection(levelKey, levelItemElement) { /* ... same ... */ const index = selectedLevels.indexOf(levelKey); if (index > -1) { selectedLevels.splice(index, 1); levelItemElement.classList.remove('selected'); } else { selectedLevels.push(levelKey); levelItemElement.classList.add('selected'); } localStorage.setItem('sightWordsSelectedLevels', JSON.stringify(selectedLevels)); updateActiveQuizWords(); }
-    function updateActiveQuizWords() { /* ... same ... */ words = []; selectedLevels.forEach(levelKey => { const customWordsJson = localStorage.getItem(`${levelKey}_customWords`); if (customWordsJson) { const customWords = JSON.parse(customWordsJson); if (customWords.length > 0) { words.push(...customWords); } else { words.push(...allLevelWords[levelKey]); } } else { words.push(...allLevelWords[levelKey]); } }); words = [...new Set(words)]; if (words.length === 0 && allLevelWords.A) { words.push(...allLevelWords.A); if(!selectedLevels.includes('A')) { selectedLevels.push('A'); const levelAItem = levelsDropdownMenu.querySelector(`.level-item[data-level="A"]`); if(levelAItem) levelAItem.classList.add('selected'); localStorage.setItem('sightWordsSelectedLevels', JSON.stringify(selectedLevels)); } showFloatingMessage("Using Level A words as no others were selected.", "var(--brand-dark)"); } clearTimeout(questionTimeoutId); resetQuestionState(); setTimeout(nextQ, 100); }
-    function openWordSelectionModal(levelKey) { /* ... same ... */ currentEditingLevelKey = levelKey; modalLevelTitle.textContent = `Customize Level ${levelKey} Words`; modalWordList.innerHTML = ''; const levelWords = allLevelWords[levelKey]; const customWordsJson = localStorage.getItem(`${levelKey}_customWords`); let customWords = []; if (customWordsJson) { customWords = JSON.parse(customWordsJson); } levelWords.forEach(word => { const itemDiv = document.createElement('div'); itemDiv.classList.add('modal-word-item'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.id = `modal-word-${word.replace(/\s+/g, '-')}`; checkbox.value = word; checkbox.checked = customWords.includes(word); const label = document.createElement('label'); label.htmlFor = checkbox.id; label.textContent = word; itemDiv.appendChild(checkbox); itemDiv.appendChild(label); itemDiv.addEventListener('click', (e) => { if (e.target !== checkbox) checkbox.checked = !checkbox.checked; }); modalWordList.appendChild(itemDiv); }); wordSelectionModal.classList.add('visible'); }
-    function closeWordSelectionModal() { /* ... same ... */ wordSelectionModal.classList.remove('visible'); currentEditingLevelKey = null; }
-    function saveCustomWordSelection() { /* ... same ... */ if (!currentEditingLevelKey) return; const selectedCustomWords = []; modalWordList.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => { selectedCustomWords.push(cb.value); }); localStorage.setItem(`${currentEditingLevelKey}_customWords`, JSON.stringify(selectedCustomWords)); closeWordSelectionModal(); updateActiveQuizWords(); }
-    function toggleAllModalWords(select) { /* ... same ... */ modalWordList.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = select; }); }
+    // --- LEVEL MANAGEMENT ---
+    function initLevelManagement() { const storedLevels = localStorage.getItem('sightWordsSelectedLevels'); selectedLevels = storedLevels ? JSON.parse(storedLevels) : ['A']; Object.keys(allLevelWords).forEach(levelKey => { const levelItem = document.createElement('div'); levelItem.classList.add('level-item'); levelItem.dataset.level = levelKey; levelItem.textContent = `Level ${levelKey}`; const longPressHint = document.createElement('span'); longPressHint.classList.add('long-press-indicator'); longPressHint.textContent = '(hold to customize)'; levelItem.appendChild(longPressHint); if (selectedLevels.includes(levelKey)) { levelItem.classList.add('selected'); } levelItem.addEventListener('mousedown', (e) => handleLevelInteractionStart(e, levelKey)); levelItem.addEventListener('touchstart', (e) => handleLevelInteractionStart(e, levelKey), { passive: false }); levelItem.addEventListener('mouseup', handleLevelInteractionEnd); levelItem.addEventListener('mouseleave', handleLevelInteractionEnd); levelItem.addEventListener('touchend', handleLevelInteractionEnd); levelItem.addEventListener('touchcancel', handleLevelInteractionEnd); levelsDropdownMenu.appendChild(levelItem); }); levelsToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); levelsDropdownMenu.classList.toggle('visible'); }); document.addEventListener('click', (event) => { if (!levelsToggleBtn.contains(event.target) && !levelsDropdownMenu.contains(event.target)) { levelsDropdownMenu.classList.remove('visible'); } }); modalSaveBtn.addEventListener('click', saveCustomWordSelection); modalCloseBtn.addEventListener('click', closeWordSelectionModal); modalSelectAllBtn.addEventListener('click', () => toggleAllModalWords(true)); modalDeselectAllBtn.addEventListener('click', () => toggleAllModalWords(false)); updateActiveQuizWords(); }
+    function handleLevelInteractionStart(event, levelKey) { if(isMiniGameActive) return; event.preventDefault(); isLongPress = false; clearTimeout(longPressTimer); longPressTimer = setTimeout(() => { isLongPress = true; openWordSelectionModal(levelKey); levelsDropdownMenu.classList.remove('visible'); }, 500); }
+    function handleLevelInteractionEnd(event) { clearTimeout(longPressTimer); if (!isLongPress) { const target = event.currentTarget; if (target && target.dataset.level && !isLongPress) { toggleLevelSelection(target.dataset.level, target); } } }
+    function toggleLevelSelection(levelKey, levelItemElement) { const index = selectedLevels.indexOf(levelKey); if (index > -1) { selectedLevels.splice(index, 1); levelItemElement.classList.remove('selected'); } else { selectedLevels.push(levelKey); levelItemElement.classList.add('selected'); } localStorage.setItem('sightWordsSelectedLevels', JSON.stringify(selectedLevels)); updateActiveQuizWords(); }
+    function updateActiveQuizWords() { words = []; selectedLevels.forEach(levelKey => { const customWordsJson = localStorage.getItem(`${levelKey}_customWords`); if (customWordsJson) { const customWords = JSON.parse(customWordsJson); if (customWords.length > 0) { words.push(...customWords); } else { words.push(...allLevelWords[levelKey]); } } else { words.push(...allLevelWords[levelKey]); } }); words = [...new Set(words)]; if (words.length === 0 && allLevelWords.A) { words.push(...allLevelWords.A); if(!selectedLevels.includes('A')) { selectedLevels.push('A'); const levelAItem = levelsDropdownMenu.querySelector(`.level-item[data-level="A"]`); if(levelAItem) levelAItem.classList.add('selected'); localStorage.setItem('sightWordsSelectedLevels', JSON.stringify(selectedLevels)); } showFloatingMessage("Using Level A words as no others were selected.", "var(--brand-dark)"); } clearTimeout(questionTimeoutId); resetQuestionState(); setTimeout(nextQ, 100); }
+    function openWordSelectionModal(levelKey) { currentEditingLevelKey = levelKey; modalLevelTitle.textContent = `Customize Level ${levelKey} Words`; modalWordList.innerHTML = ''; const levelWords = allLevelWords[levelKey]; const customWordsJson = localStorage.getItem(`${levelKey}_customWords`); let customWords = []; if (customWordsJson) { customWords = JSON.parse(customWordsJson); } levelWords.forEach(word => { const itemDiv = document.createElement('div'); itemDiv.classList.add('modal-word-item'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.id = `modal-word-${word.replace(/\s+/g, '-')}`; checkbox.value = word; checkbox.checked = customWords.includes(word); const label = document.createElement('label'); label.htmlFor = checkbox.id; label.textContent = word; itemDiv.appendChild(checkbox); itemDiv.appendChild(label); itemDiv.addEventListener('click', (e) => { if (e.target !== checkbox) checkbox.checked = !checkbox.checked; }); modalWordList.appendChild(itemDiv); }); wordSelectionModal.classList.add('visible'); }
+    function closeWordSelectionModal() { wordSelectionModal.classList.remove('visible'); currentEditingLevelKey = null; }
+    function saveCustomWordSelection() { if (!currentEditingLevelKey) return; const selectedCustomWords = []; modalWordList.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => { selectedCustomWords.push(cb.value); }); localStorage.setItem(`${currentEditingLevelKey}_customWords`, JSON.stringify(selectedCustomWords)); closeWordSelectionModal(); updateActiveQuizWords(); }
+    function toggleAllModalWords(select) { modalWordList.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = select; }); }
 
   </script>
 </body>
