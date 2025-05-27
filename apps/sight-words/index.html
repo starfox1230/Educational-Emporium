@@ -347,6 +347,14 @@
 
     // --- VANTA.JS DYNAMIC BACKGROUNDS ---
     let vantaEffect = null; const vantaElement = document.body; let vantaBackgroundKeys = []; let currentBackgroundKey = null; const baseGlobalParams = { mouseControls: true, touchControls: true, gyroControls: false, minHeight: 200.00, minWidth: 200.00, scale: 1.00, scaleMobile: 1.00, }; const effectConfigurations = { "FOG_Soft_Blue": { effect: "FOG", params: { highlightColor: 0x80deea, midtoneColor: 0x26c6da, lowlightColor: 0x00acc1, baseColor: 0xf4f6f8, blurFactor: 0.6, zoom: 1.2, speed: 1.0 }}, "WAVES_Ocean": { effect: "WAVES", params: { color: 0x005577, shininess: 30, waveHeight: 15, waveSpeed: 0.8, zoom: 1.0 }}, "BIRDS_Day_Sky": { effect: "BIRDS", params: { backgroundColor: 0x87ceeb, color1: 0x444444, color2: 0x666666, birdSize: 1.0, wingSpan: 20.00, speedLimit: 3.00, separation: 20.00, alignment: 20.00, cohesion: 20.00, quantity: 4 }}, "NET_Cyber_Grid": { effect: "NET", params: { color: 0x00ffff, backgroundColor: 0x000022, points: 10.00, maxDistance: 20.00, spacing: 15.00, showDots: true }}, "CELLS_Bio_Blue": { effect: "CELLS", params: { color1: 0x2196f3, color2: 0x90caf9, size: 3.0, speed: 1.0 }}, "CLOUDS_Sunny_Day": { effect: "CLOUDS", params: { skyColor: 0x68b8d7, cloudColor: 0xadc1de, cloudShadowColor: 0x183550, sunColor: 0xff9919, sunGlareColor: 0xff6633, sunlightColor: 0xff9933, speed: 1.0 }}, "DOTS_Starfield": { effect: "DOTS", params: { color: 0xffffff, color2: 0xdddddd, backgroundColor: 0x000011, size: 3.00, spacing: 30.00, showLines: false }}, "RINGS_Golden_Aura": { effect: "RINGS", params: { backgroundColor: 0x110022, color: 0xffd700, strength: 2.00 }}, "HALO_Gentle_Sun": { effect: "HALO", params: { baseColor: 0xffe082, backgroundColor: 0xfff8e1, amplitudeFactor: 0.5, size: 1.0 }}, "FOG_Mystic_Purple": { effect: "FOG", params: { highlightColor: 0xff00ff, midtoneColor: 0xaa00aa, lowlightColor: 0x550055, baseColor: 0x300030, blurFactor: 0.7, zoom: 1.0, speed: 0.8 }}, "WAVES_Lava": { effect: "WAVES", params: { color: 0xff3300, shininess: 10, waveHeight: 25, waveSpeed: 0.4, zoom: 0.75 }}, "BIRDS_Sunset": { effect: "BIRDS", params: { backgroundColor: 0xffa07a, color1: 0x5d4037, color2: 0x000000, birdSize: 1.2, wingSpan: 25.00, quantity: 3, speedLimit: 2.00 }}, "NET_Golden_Web": { effect: "NET", params: { color: 0xffd700, backgroundColor: 0x301934, points: 8.00, maxDistance: 25.00, spacing: 20.00, showDots: true }}, "CELLS_Pulsing_Red": { effect: "CELLS", params: { color1: 0xf44336, color2: 0xffcdd2, size: 4.5, speed: 0.5 }}, "CLOUDS_Evening_Sky": { effect: "CLOUDS", params: { skyColor: 0x334d5c, cloudColor: 0x8e8e8e, cloudShadowColor: 0x2e2e2e, sunColor: 0xf57c00, sunGlareColor: 0xffb74d, sunlightColor: 0xffa726, speed: 0.6 }}, "DOTS_Colorful_Grid": { effect: "DOTS", params: { color: 0xff00ff, color2: 0x00ff00, backgroundColor: 0x222222, size: 5.00, spacing: 25.00, showLines: true }}, "RINGS_Blue_Energy": { effect: "RINGS", params: { backgroundColor: 0x001020, color: 0x00aaff, strength: 3.50 }}, "HALO_Deep_Space": { effect: "HALO", params: { baseColor: 0x7e57c2, backgroundColor: 0x1a001a, amplitudeFactor: 1.5, size: 1.2, xOffset: 0.2, yOffset: 0.1 }} }; 
+
+    // --- Timer Globals ---
+    let isTimerPaused    = false;
+    let remainingMs      = 0;
+    let timerStartTs     = 0;
+    let onDoneCallback;    // store the quiz‐timeout callback
+
+    
     
     // --- Pastel Background Colors ---
     const pastelBackgroundColors = [
@@ -1457,7 +1465,8 @@
     modeToggleBtn.addEventListener('click', () => { currentGameMode = (currentGameMode === 'listenAndPickWord') ? 'readAndPickSound' : 'listenAndPickWord'; localStorage.setItem('sightWordsGameMode', currentGameMode); updateModeUI(); clearTimeout(questionTimeoutId); resetQuestionState(); setTimeout(nextQ, 100); });
     function resetQuestionState() { questionAnsweredThisTurn = false; selectedSoundButton = null; soundChoiceBtns.forEach(btn => btn.classList.remove('sound-btn-selected', 'correct', 'incorrect')); wordChoiceBtns.forEach(btn => btn.classList.remove('correct', 'incorrect')); if (submitAnswerBtn) submitAnswerBtn.disabled = true; }
     function initCircularTimer() { const timerContainer = document.getElementById('circular-timer'); if (!timerContainer) return; circleTimerInstance = new ProgressBar.Circle(timerContainer, { strokeWidth: 10, easing: 'linear', color: 'var(--brand)', trailColor: 'rgba(224, 224, 224, 0.5)', trailWidth: 10, svgStyle: { width: '100%', height: '100%' }, text: { style: { color: 'var(--fg)', position: 'absolute', left: '50%', top: '50%', padding: 0, margin: 0, transform: { prefix: true, value: 'translate(-50%, -50%)' }, fontSize: '1.4em', fontWeight: '600', }, autoStyleContainer: false }, step: function(state, circle) { if (timeLimit > 0) { const timeLeft = Math.ceil(timeLimit * (1 - circle.value())); circle.setText(timeLeft > 0 ? timeLeft : '0'); if (timeLeft <= timeLimit * 0.3) circle.path.setAttribute('stroke', '#f44336'); else if (timeLeft <= timeLimit * 0.6) circle.path.setAttribute('stroke', '#ff9800'); else circle.path.setAttribute('stroke', 'var(--brand)'); } else { circle.setText('∞'); circle.path.setAttribute('stroke', 'var(--brand)'); } } }); }
-    function startCountdown(onDoneCallback){ clearTimeout(questionTimeoutId); if(circleTimerInstance){ circleTimerInstance.set(0); circleTimerInstance.setText(timeLimit > 0 ? String(timeLimit) : '∞'); circleTimerInstance.path.setAttribute('stroke', 'var(--brand)'); if(timeLimit <= 0) return; circleTimerInstance.animate(1.0, { duration: timeLimit * 1000 }); questionTimeoutId = setTimeout(() => { if (!questionAnsweredThisTurn && !isMiniGameActive) onDoneCallback(); }, timeLimit * 1000); } }
+    function startCountdown(cb) { clearTimeout(questionTimeoutId); onDoneCallback = cb; remainingMs   = timeLimit * 1000; timerStartTs  = Date.now(); circleTimerInstance.set(0); circleTimerInstance.animate(1, { duration: remainingMs }); questionTimeoutId = setTimeout(cb, remainingMs); isTimerPaused = false; }
+
     function nextQ(){ resetQuestionState(); quizCont.classList.remove('animate__fadeInCustom', 'animate__zoomIn'); void quizCont.offsetWidth; quizCont.classList.add('animate__zoomIn'); [...wordChoiceBtns, ...soundChoiceBtns].forEach(btn => btn.style.display = ''); if(submitAnswerBtn) submitAnswerBtn.style.display = ''; wordToReadDisplay.style.display = ''; if (words.length === 0) { console.error("No words available for the quiz! Check level/word selections."); wordToReadDisplay.textContent = "No Words!"; showFloatingMessage("Please select levels/words!", "var(--brand-dark)"); listenPickWordArea.style.display = 'none'; readPickSoundArea.style.display = 'flex'; soundChoiceBtns.forEach(btn => btn.style.display = 'none'); if (submitAnswerBtn) submitAnswerBtn.style.display = 'none'; wordChoiceBtns.forEach(btn => btn.style.display = 'none'); clearTimeout(questionTimeoutId); if(circleTimerInstance) circleTimerInstance.set(0); return; } currentCorrectWord = words[Math.floor(Math.random()*words.length)]; let distractorWord; if (words.length > 1) { do { distractorWord = words[Math.floor(Math.random()*words.length)]; } while(distractorWord === currentCorrectWord); } else { distractorWord = currentCorrectWord; } if (currentGameMode === 'listenAndPickWord') { const pair = Math.random() < 0.5 ? [currentCorrectWord, distractorWord] : [distractorWord, currentCorrectWord]; wordChoiceBtns.forEach((b,i)=>{ b.textContent = pair[i]; b.disabled = false; b.className = 'choice-btn'; }); speak(currentCorrectWord); } else { wordToReadDisplay.textContent = currentCorrectWord; const soundWords = Math.random() < 0.5 ? [currentCorrectWord, distractorWord] : [distractorWord, currentCorrectWord]; soundChoiceBtns.forEach((btn, i) => { btn.dataset.wordToSpeak = soundWords[i]; btn.disabled = false; btn.className = 'choice-btn sound-btn'; }); if(submitAnswerBtn) submitAnswerBtn.disabled = true; } startCountdown(()=>{ if (questionAnsweredThisTurn || isMiniGameActive) return; questionAnsweredThisTurn = true; disableAllChoiceButtons(); playBuzz(); showFloatingMessage("Time's Up!", '#ffcdd2', '#333'); currentStreak = 0; setTimeout(nextQ,1200); }); }
     function disableAllChoiceButtons() { wordChoiceBtns.forEach(b => b.disabled = true); soundChoiceBtns.forEach(b => b.disabled = true); if (submitAnswerBtn) submitAnswerBtn.disabled = true; }
 
@@ -1545,7 +1554,11 @@
     submitAnswerBtn.addEventListener('click', () => { if (questionAnsweredThisTurn || currentGameMode !== 'readAndPickSound' || !selectedSoundButton || isMiniGameActive) return; const wordSpokenBySelectedButton = selectedSoundButton.dataset.wordToSpeak; const isCorrect = wordSpokenBySelectedButton === currentCorrectWord; handleAnswer(isCorrect, selectedSoundButton); });
     listenBtn.onclick = ()=>{ if (currentCorrectWord && !isMiniGameActive) { if (currentGameMode === 'listenAndPickWord') { speak(currentCorrectWord); } else { speak(currentCorrectWord); } } };
     timerDisp.addEventListener('click',()=>{ if (!isMiniGameActive) { timerSel.style.display = timerSel.style.display==='block'?'none':'block'; timerSel.value = timeLimit; } });
-    timerSel.addEventListener('change',()=>{ timeLimit = +timerSel.value; timerDisp.textContent = timeLimit > 0 ? timeLimit+'s ⏱️' : 'Untimed ⏱️'; timerSel.style.display='none';});
+    timerSel.addEventListener('change',()=>{ timeLimit = +timerSel.value; timerDisp.textContent = timeLimit > 0 ? timeLimit+'s ⏱️' : 'Untimed ⏱️'; timerSel.style.display='none'; });
+      const timerWrapper = document.getElementById('timer-wrapper');
+      timerWrapper.addEventListener('click', e => {
+        if (!isMiniGameActive) toggleTimer();                                  
+    });
     function showFloatingScore(message, targetButton, isError = false) { const floatEl = document.createElement('div'); floatEl.textContent = message; floatEl.classList.add('floating-effect'); floatEl.classList.add(isError ? 'floating-message' : 'floating-score'); if(isError) {floatEl.style.backgroundColor = 'var(--incorrect-bg)'; floatEl.style.color = '#333';} document.body.appendChild(floatEl); const btnRect = targetButton.getBoundingClientRect(); floatEl.style.left = `${btnRect.left + btnRect.width / 2 - floatEl.offsetWidth / 2}px`; floatEl.style.top = `${btnRect.top - floatEl.offsetHeight - 10}px`; gsap.to(floatEl, { y: -60, opacity: 0, duration: 1.8, ease: 'power1.out', onComplete: () => floatEl.remove() }); }
     function showFloatingMessage(text, bgColor = 'var(--brand)', textColor = 'white') { const msgEl = document.createElement('div'); msgEl.textContent = text; msgEl.classList.add('floating-effect', 'floating-message'); msgEl.style.backgroundColor = bgColor; msgEl.style.color = textColor; msgEl.style.left = '50%'; msgEl.style.top = '15%'; msgEl.style.transform = 'translateX(-50%)'; msgEl.style.padding = '0.8rem 1.5rem'; msgEl.style.fontSize = '1.5em'; document.body.appendChild(msgEl); gsap.fromTo(msgEl, { opacity: 0, y: -20, scale: 0.8 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'back.out(1.7)' } ); setTimeout(() => { gsap.to(msgEl, { opacity: 0, y: 20, scale: 0.8, duration: 0.5, ease: 'back.in(1.7)', onComplete: () => msgEl.remove() }); }, 2300); }
 
@@ -1559,6 +1572,24 @@
     function closeWordSelectionModal() { wordSelectionModal.classList.remove('visible'); currentEditingLevelKey = null; }
     function saveCustomWordSelection() { if (!currentEditingLevelKey) return; const selectedCustomWords = []; modalWordList.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => { selectedCustomWords.push(cb.value); }); localStorage.setItem(`${currentEditingLevelKey}_customWords`, JSON.stringify(selectedCustomWords)); closeWordSelectionModal(); updateActiveQuizWords(); }
     function toggleAllModalWords(select) { modalWordList.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = select; }); }
+
+    // --- Pause Timer ---
+    function toggleTimer() {
+      if (timeLimit <= 0) return;                // “untimed” mode
+      if (!isTimerPaused) {
+        // PAUSE
+        clearTimeout(questionTimeoutId);
+        circleTimerInstance.stop();              // Halt ProgressBar.js animation
+        // Figure out how much time has already elapsed
+        remainingMs -= (Date.now() - timerStartTs);
+      } else {
+        // RESUME
+        timerStartTs = Date.now();
+        circleTimerInstance.animate(1, { duration: remainingMs });
+        questionTimeoutId = setTimeout(onDoneCallback, remainingMs);
+      }
+      isTimerPaused = !isTimerPaused;
+    }
 
   </script>
 </body>
