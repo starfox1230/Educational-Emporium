@@ -48,9 +48,48 @@
     body { background-color: var(--bg); } /* Default fallback, will be overridden by JS */
     #confetti-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1000}
     
-    .top-bar { position: fixed; top: 0; left: 0; width: 100%; height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 50; }
-    #score{ font-size: 1.1rem;font-weight:600; background-color: rgba(255,255,255,0.7); padding: 8px 12px; border-radius: 8px; box-shadow: 0 2px 4px var(--shadow-color); }
-    #timer-wrapper { position: absolute; left: 50%; transform: translateX(-50%); width: 60px; height: 60px; }
+    .top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 70px;
+      display: flex;
+      /* align-items: center; CHANGED to allow individual control or default to top */
+      align-items: flex-start; /* Align items to the top of the flex container */
+      justify-content: space-between;
+      padding: 0 16px;
+      z-index: 50;
+    }
+
+    #score {
+      font-size: 1.1rem;
+      font-weight: 600;
+      background-color: rgba(255,255,255,0.7);
+      padding: 8px 12px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px var(--shadow-color);
+      margin-top: 10px; /* Add margin to push score down if desired */
+    }
+    #timer-wrapper {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 60px;
+      top: 5px; /* Adjust top for timer if it also needs to move down */
+    }
+
+
+    #level-controls-container {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.2rem;
+      /* This padding-top will now work as expected because the container is aligned to the top of .top-bar */
+      padding-top: 10px; /* Or your desired value, e.g., 0.5rem */
+    }
     #circular-timer { width: 100%; height: 100%; }
 
     #quiz-container{ display:flex;justify-content:center;align-items:center; min-height: 30vh; padding:1rem; margin-top: 70px; height: calc(100vh - 70px - 70px); }
@@ -88,15 +127,7 @@
     .floating-score { background: rgba(76, 175, 80, 0.9); }
     .floating-message { background: var(--brand); }
 
-    /* Level Selection Styles */
-    #level-controls-container {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 0.2rem;
-      padding-top: 0.5rem; /* Added padding to push buttons down */
-    }
+
     /* Shared styles for top bar control buttons */
     #levels-toggle-btn, #toggle-minigames-btn, #toggle-background-btn { 
         padding: 0.4rem 0.8rem; 
