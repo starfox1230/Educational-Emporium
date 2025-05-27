@@ -873,7 +873,7 @@
         // console.log(`${this.name} destroyed`);
     }
 };
-    const BalloonPopGame = {
+     const BalloonPopGame = {
         name: "Balloon Pop",
         score: 0,
         gameTimerId: null,
@@ -881,10 +881,10 @@
         balloonIntervalId: null,
         container: null,
         onCompleteCallback: null,
-        duration: 20000, 
-        balloonsOnScreen: [],
+        duration: 20000,
+        balloonsOnScreen: [], // Array of balloon DOM elements
         elements: {},
-        forgivingTapRadius: 60, // Adjustable
+        forgivingTapRadius: 70, // Let's try a default of 70px. Adjust as needed.
         boundForgivingTapHandler: null,
 
         start: function(containerElement, onComplete) {
@@ -892,17 +892,17 @@
             this.onCompleteCallback = onComplete;
             this.score = 0;
             this.balloonsOnScreen = [];
-            this.container.innerHTML = ''; 
+            this.container.innerHTML = '';
 
             speak("Tap as many balloons as you can before time runs out!");
 
+            // UI Setup - same as before
             const infoBar = document.createElement('div');
             infoBar.className = 'minigame-info-bar';
             this.elements.scoreDisplay = document.createElement('div');
             this.elements.scoreDisplay.className = 'minigame-score';
             infoBar.appendChild(this.elements.scoreDisplay);
             this.updateScoreDisplay();
-
             const timerContainer = document.createElement('div');
             timerContainer.className = 'minigame-timer-bar-container';
             this.elements.timerBar = document.createElement('div');
@@ -910,92 +910,109 @@
             timerContainer.appendChild(this.elements.timerBar);
             infoBar.appendChild(timerContainer);
             this.container.appendChild(infoBar);
-            
             let timeLeft = this.duration;
             this.elements.timerBar.style.width = '100%';
-
             this.timerIntervalId = setInterval(() => {
                 timeLeft -= 100;
                 const progress = Math.max(0, (timeLeft / this.duration) * 100);
                 this.elements.timerBar.style.width = `${progress}%`;
-                if (timeLeft <= 0) {
-                    clearInterval(this.timerIntervalId);
-                }
+                if (timeLeft <= 0) clearInterval(this.timerIntervalId);
             }, 100);
 
-            this.balloonIntervalId = setInterval(() => this.spawnBalloon(), 700); 
+            this.balloonIntervalId = setInterval(() => this.spawnBalloon(), 700);
             this.gameTimerId = setTimeout(() => this.endGame(), this.duration);
 
-            // Forgiving tap listener
             this.boundForgivingTapHandler = this._handleForgivingTap.bind(this);
-            this.container.addEventListener('click', this.boundForgivingTapHandler);
+            this.container.addEventListener('pointerdown', this.boundForgivingTapHandler); // Using pointerdown for better responsiveness
         },
 
         _handleForgivingTap: function(event) {
-            const containerRect = this.container.getBoundingClientRect();
-            const clickX = event.clientX - containerRect.left;
-            const clickY = event.clientY - containerRect.top;
+            // event.preventDefault(); // Optional: if you see unwanted default actions
+            if (!this.container) return;
 
-            // Iterate over a copy of the array in case popBalloon modifies it
-            this.balloonsOnScreen.slice().forEach(balloonElement => {
-                if (!balloonElement || !balloonElement.parentNode) return; // Balloon already gone or not in DOM
+            const clickX = event.clientX; // Viewport X of the click
+            const clickY = event.clientY; // Viewport Y of the click
 
-                const balloonCenterX = balloonElement.offsetLeft + balloonElement.offsetWidth / 2;
-                const balloonCenterY = balloonElement.offsetTop + balloonElement.offsetHeight / 2;
-                
+            // Iterate backwards for safe removal
+            for (let i = this.balloonsOnScreen.length - 1; i >= 0; i--) {
+                const balloonElement = this.balloonsOnScreen[i];
+
+                if (!balloonElement || !balloonElement.parentNode) {
+                    // Balloon might have been popped by a previous iteration in this same click (overlapping halos)
+                    // or removed by its own animationend
+                    if (this.balloonsOnScreen[i] === balloonElement) {
+                        this.balloonsOnScreen.splice(i, 1);
+                    }
+                    continue;
+                }
+
+                const balloonRect = balloonElement.getBoundingClientRect(); // Coords relative to viewport
+
+                // Calculate balloon's center coordinates relative to the viewport
+                const balloonViewportCenterX = balloonRect.left + balloonRect.width / 2;
+                const balloonViewportCenterY = balloonRect.top + balloonRect.height / 2;
+
+                // Calculate distance between click point and balloon center
                 const distance = Math.sqrt(
-                    Math.pow(clickX - balloonCenterX, 2) + 
-                    Math.pow(clickY - balloonCenterY, 2)
+                    Math.pow(clickX - balloonViewportCenterX, 2) +
+                    Math.pow(clickY - balloonViewportCenterY, 2)
                 );
 
                 if (distance <= this.forgivingTapRadius) {
-                    // If the event.target *is* this balloonElement, its direct click handler
-                    // (added in spawnBalloon) will handle it. So, this forgiving handler should skip.
-                    if (event.target !== balloonElement) {
-                        this.popBalloon(balloonElement);
-                    }
+                    this.popBalloon(balloonElement);
+                    // If we only want to pop ONE balloon per click, we could add 'return;' here.
+                    // But current logic allows multiple overlapping halos to be popped by one click.
                 }
-            });
+            }
         },
 
         spawnBalloon: function() {
             if (!this.container || this.balloonsOnScreen.length > 15) return;
 
             const balloon = document.createElement('div');
-            balloon.className = 'balloon';
+            balloon.className = 'balloon'; // CSS handles width/height
             balloon.style.backgroundColor = getRandomColor();
-            balloon.style.left = `${Math.random() * (this.container.clientWidth - 60)}px`;
-            balloon.style.bottom = '-100px'; 
+            // Positioned with CSS animation and absolute positioning relative to container
+            balloon.style.left = `${Math.random() * (this.container.clientWidth - parseFloat(getComputedStyle(balloon).width || '60'))}px`;
+            balloon.style.bottom = '-100px'; // Start below screen
 
-            balloon.addEventListener('click', () => this.popBalloon(balloon), { once: true });
-            
+            // No direct click listener on the balloon element itself.
+            // All pop logic is handled by _handleForgivingTap on the container.
+
             this.container.appendChild(balloon);
             this.balloonsOnScreen.push(balloon);
-            
+
             balloon.classList.add('balloon-rising');
             balloon.addEventListener('animationend', () => {
                 const index = this.balloonsOnScreen.indexOf(balloon);
-                if (index > -1) this.balloonsOnScreen.splice(index, 1);
-                if (balloon.parentNode) balloon.remove();
+                if (index > -1) {
+                    this.balloonsOnScreen.splice(index, 1);
+                }
+                if (balloon.parentNode) {
+                    balloon.remove();
+                }
             }, { once: true });
         },
 
         popBalloon: function(balloonElement) {
-            if (!this.balloonsOnScreen.includes(balloonElement)) return; 
+            const index = this.balloonsOnScreen.indexOf(balloonElement);
+            if (index === -1) return; // Already popped or not tracked
 
             playBell();
+            // For confetti, we still need viewport-relative coordinates for the origin
             const rect = balloonElement.getBoundingClientRect();
-            const x = (rect.left + rect.right) / 2 / window.innerWidth;
-            const y = (rect.top + rect.bottom) / 2 / window.innerHeight;
-            myConfetti({ particleCount: 30, spread: 50, origin: { x: x, y: y }, scalar: 0.7 });
-            
+            const confettiX = (rect.left + rect.right) / 2 / window.innerWidth;
+            const confettiY = (rect.top + rect.bottom) / 2 / window.innerHeight;
+            myConfetti({ particleCount: 30, spread: 50, origin: { x: confettiX, y: confettiY }, scalar: 0.7 });
+
             this.score++;
-            speak(this.score, 1.2, 1.3); 
+            speak(this.score, 1.2, 1.3);
             this.updateScoreDisplay();
 
-            if (balloonElement.parentNode) balloonElement.remove(); 
-            const index = this.balloonsOnScreen.indexOf(balloonElement);
-            if (index > -1) this.balloonsOnScreen.splice(index, 1);
+            if (balloonElement.parentNode) {
+                balloonElement.remove();
+            }
+            this.balloonsOnScreen.splice(index, 1);
         },
 
         updateScoreDisplay: function() {
@@ -1003,35 +1020,36 @@
         },
 
         endGame: function() {
-            clearInterval(this.balloonIntervalId);
-            this.balloonIntervalId = null;
-            clearInterval(this.timerIntervalId);
-            this.timerIntervalId = null;
-            clearTimeout(this.gameTimerId); 
-            this.gameTimerId = null;
-            
-            this.balloonsOnScreen.forEach(b => { if (b.parentNode) b.remove() });
+            const canCallPrimaryCallback = !!this.onCompleteCallback;
+
+            clearInterval(this.balloonIntervalId); this.balloonIntervalId = null;
+            clearInterval(this.timerIntervalId); this.timerIntervalId = null;
+            clearTimeout(this.gameTimerId); this.gameTimerId = null;
+
+            if (this.boundForgivingTapHandler && this.container) {
+                this.container.removeEventListener('pointerdown', this.boundForgivingTapHandler);
+            }
+
+            this.balloonsOnScreen.forEach(b => { if (b.parentNode) b.remove(); });
             this.balloonsOnScreen = [];
 
-            speak(`You popped ${this.score} balloons!`);
-            if(this.onCompleteCallback) this.onCompleteCallback(this.score);
+            if (canCallPrimaryCallback) {
+                speak(`You popped ${this.score} balloons!`);
+                const callbackToExecute = this.onCompleteCallback;
+                this.onCompleteCallback = null;
+                if(callbackToExecute) callbackToExecute(this.score);
+            }
         },
 
         destroy: function() {
-            clearInterval(this.balloonIntervalId);
-            clearInterval(this.timerIntervalId);
-            clearTimeout(this.gameTimerId);
-            this.balloonsOnScreen.forEach(b => { if (b.parentNode) b.remove() });
-            this.balloonsOnScreen = [];
-            
-            if (this.boundForgivingTapHandler && this.container) {
-                this.container.removeEventListener('click', this.boundForgivingTapHandler);
-            }
+            this.endGame();
             this.boundForgivingTapHandler = null;
-
-            if (this.container) this.container.innerHTML = '';
+            if (this.container) {
+                this.container.innerHTML = '';
+            }
+            this.container = null;
             this.elements = {};
-            // console.log(`${this.name} destroyed`);
+            this.onCompleteCallback = null;
         }
     };
 
@@ -1338,7 +1356,7 @@
 
     // --- MINI-GAME SYSTEM ---
     function initMiniGameSystem() {
-        availableMiniGames.push(HoopBounceGame, CatchTheStarGame, BalloonPopGame); // Re-enable/modify with your game objects
+        availableMiniGames.push(BalloonPopGame, HoopBounceGame, CatchTheStarGame); // Re-enable/modify with your game objects
         
         toggleMiniGamesBtn.textContent = `Mini-Games: ${miniGamesEnabled ? 'On' : 'Off'}`;
         toggleMiniGamesBtn.classList.toggle('active-minigame-toggle', miniGamesEnabled);
