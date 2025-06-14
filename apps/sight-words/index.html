@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -28,7 +29,7 @@
       --brand: #26c6da;
       --brand-light: #80deea;
       --brand-dark: #00acc1;
-      --bg: #f4f6f8; 
+      --bg: #f4f6f8;
       --fg: #333;
       --btn-bg: #fff;
       --btn-border: #ddd;
@@ -38,27 +39,27 @@
       --incorrect-bg: #ef9a9a;
       --selected-border-color: #007bff; /* Blue for selection */
       --shadow-color: rgba(0,0,0,0.1);
-      --pastel-green-bg: #c9e4c5; /* Default static background, though cycle will override */
+      --pastel-green-bg: #c9e4c5;
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html,body{height:100%;overflow:hidden;font-family:'Poppins',sans-serif;color:var(--fg);
     -webkit-tap-highlight-color:transparent;touch-action:manipulation;
     -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
 }
-    body { background-color: var(--bg); } /* Default fallback, will be overridden by JS */
+    body { background-color: var(--bg); }
     #confetti-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1000}
-    
+
     .top-bar {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
-      height: 70px;
+      height: auto; /* Adjust height based on content */
+      min-height: 70px;
       display: flex;
-      /* align-items: center; CHANGED to allow individual control or default to top */
-      align-items: flex-start; /* Align items to the top of the flex container */
+      align-items: flex-start;
       justify-content: space-between;
-      padding: 0 16px;
+      padding: 0 0 0 16px; /* Remove right padding, RHS container handles it */
       z-index: 50;
     }
 
@@ -69,7 +70,7 @@
       padding: 8px 12px;
       border-radius: 8px;
       box-shadow: 0 2px 4px var(--shadow-color);
-      margin-top: 10px; /* Add margin to push score down if desired */
+      margin-top: 10px;
     }
     #timer-wrapper {
       position: absolute;
@@ -77,33 +78,95 @@
       transform: translateX(-50%);
       width: 60px;
       height: 60px;
-      top: 5px; /* Adjust top for timer if it also needs to move down */
-    }
-
-
-    #level-controls-container {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 0.2rem;
-      /* This padding-top will now work as expected because the container is aligned to the top of .top-bar */
-      padding-top: 10px; /* Or your desired value, e.g., 0.5rem */
+      top: 5px;
     }
     #circular-timer { width: 100%; height: 100%; }
 
-    #quiz-container{ display:flex;justify-content:center;align-items:center; min-height: 30vh; padding:1rem; margin-top: 70px; height: calc(100vh - 70px - 70px); }
+    /* RHS Vertical Controls Container */
+    #controls-RHS-container {
+      position: relative; /* For dropdown positioning */
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.3rem;
+      padding-top: 10px;
+      padding-right: 10px; /* Space from the edge */
+    }
+
+    /* Shared styles for top bar control buttons */
+    #toggle-minigames-btn,
+    #toggle-background-btn,
+    #word-source-toggle-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        background-color: var(--btn-bg);
+        border: 2px solid var(--btn-border);
+        border-radius: var(--btn-radius);
+        cursor: pointer;
+        box-shadow: 0 2px 4px var(--shadow-color);
+        text-align: center;
+        line-height: 1.2;
+        width: 165px; /* Adjusted width */
+    }
+    #word-source-toggle-btn { width: auto; min-width: 165px; } /* Allow to grow for longer text */
+
+
+    /* Active state for toggles */
+    #toggle-minigames-btn.active-minigame-toggle,
+    #toggle-background-btn.active-animated-bg {
+        background-color: var(--brand-light);
+        color: var(--brand-dark);
+        border-color: var(--brand-dark);
+    }
+
+    /* Dropdown Menus Styling */
+    #word-list-dropdown-menu,
+    #levels-dropdown-menu {
+        display: none;
+        position: absolute;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 100;
+        padding: 0.5rem 0;
+        min-width: 170px; /* For Fry levels like "Fry 901-1000" */
+        /* Positioned to the left of the vertical button stack */
+        top: 0; /* Align with the top of #controls-RHS-container */
+        right: calc(165px + 10px + 0.5rem); /* Button width + container padding-right + some gap */
+    }
+
+    #word-list-dropdown-menu.visible,
+    #levels-dropdown-menu.visible { display: block; }
+
+    .dropdown-item {
+        padding: 0.6rem 1rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        user-select: none;
+        font-size:0.8rem;
+    }
+    .dropdown-item:hover { background-color: #f0f0f0; }
+    .dropdown-item.selected { background-color: var(--brand-light); color: var(--brand-dark); font-weight: 600; }
+    .level-item .long-press-indicator { font-size: 0.7em; color: #777; margin-left: 8px; }
+    .level-item.selected .long-press-indicator { color: var(--brand-dark); }
+
+
+    #quiz-container{ display:flex;justify-content:center;align-items:center; min-height: 30vh; padding:1rem; margin-top: 80px; /* Increased to clear taller top-bar */ height: calc(100vh - 80px - 70px); }
     #listen-pick-word-area { display: flex; justify-content: center; align-items: center; width: 100%; }
     #read-pick-sound-area { display: none; flex-direction: column; justify-content: center; align-items: center; width: 100%; gap: 1.5rem; }
     .word-display-box { background: var(--btn-bg); border: 3px solid var(--brand-dark); border-radius: var(--btn-radius); padding: 1.5rem 2rem; font-size: 2.5rem; font-weight: 600; color: var(--fg); min-width: 200px; text-align: center; box-shadow: 0 4px 8px var(--shadow-color); }
     #sound-choices-container { display: flex; justify-content: center; gap: 1rem; }
-    
+
     .choice-btn{ flex:1; min-width: 120px; max-width: 200px; margin:0 .75rem;padding:1.2rem; font-size:1.8rem; font-weight: 600; background:var(--btn-bg);border:2px solid var(--btn-border);border-radius:var(--btn-radius); transition:background var(--transition),transform var(--transition), box-shadow var(--transition), border-color var(--transition); touch-action:manipulation; cursor:pointer; box-shadow: 0 4px 6px var(--shadow-color); }
     .choice-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 10px var(--shadow-color); }
     .choice-btn:active{transform:scale(0.96); box-shadow: 0 2px 4px var(--shadow-color);}
     .choice-btn.correct { background-color: var(--correct-bg) !important; border-color: green !important; }
     .choice-btn.incorrect { background-color: var(--incorrect-bg) !important; border-color: darkred !important; }
-    
+
     .sound-btn { font-size: 2rem !important; padding: 1rem 1.5rem !important; }
     .sound-btn-selected {
         border-color: var(--selected-border-color) !important;
@@ -123,163 +186,95 @@
     #timer-select{ position:absolute;bottom: calc(70px + 0.5rem); right:1rem;font-size:1rem;padding:.3rem .5rem;display:none; border-radius: 8px; border: 1px solid var(--btn-border); box-shadow: 0 2px 5px var(--shadow-color); }
     #mascot-container { position: fixed; bottom: 1rem; left: 1rem; width: 100px; height: 100px; z-index: 5; pointer-events: none; }
     #mascot-container lottie-player { width: 100%; height: 100%; }
-    .floating-effect { position: fixed; padding: 0.5rem 1rem; color: white; border-radius: 20px; font-weight: bold; font-size: 1.2em; z-index: 1200; pointer-events: none; text-align: center; } /* Increased z-index for mini-games */
+    .floating-effect { position: fixed; padding: 0.5rem 1rem; color: white; border-radius: 20px; font-weight: bold; font-size: 1.2em; z-index: 1200; pointer-events: none; text-align: center; }
     .floating-score { background: rgba(76, 175, 80, 0.9); }
     .floating-message { background: var(--brand); }
 
 
-    /* Shared styles for top bar control buttons */
-    #levels-toggle-btn, #toggle-minigames-btn, #toggle-background-btn { 
-        padding: 0.4rem 0.8rem; 
-        font-size: 0.8rem; 
-        font-weight: 600; 
-        background-color: var(--btn-bg); 
-        border: 2px solid var(--btn-border); 
-        border-radius: var(--btn-radius); 
-        cursor: pointer; 
-        box-shadow: 0 2px 4px var(--shadow-color);
-        text-align: center; 
-        line-height: 1.2; 
-    }
-    #toggle-minigames-btn { width: 120px; }
-    #toggle-background-btn { width: 155px; } 
-    #levels-toggle-btn { width: 120px; }
+    /* Word Customization Modal Styles */
+    #word-customization-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; padding: 1rem; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); }
+    #word-customization-modal.visible { display: flex; }
+    .modal-content { background-color: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); width: 90%; max-width: 700px; max-height: 90vh; display: flex; flex-direction: column; }
 
-    /* Active state for toggles */
-    #toggle-minigames-btn.active-minigame-toggle,
-    #toggle-background-btn.active-animated-bg { 
-        background-color: var(--brand-light);
-        color: var(--brand-dark);
-        border-color: var(--brand-dark);
-    }
-    
-    #levels-dropdown-menu { 
-        display: none; 
-        position: absolute; 
-        top: calc( 3 * (0.4rem * 2 + 0.8rem * 1.2 + 4px) + 2 * 0.2rem ); /* 3 * (padding + font-height + borders) + 2 * gaps */
-        right: 0; 
-        background-color: white; 
-        border: 1px solid #ccc; 
-        border-radius: 8px; 
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
-        z-index: 100; 
-        padding: 0.5rem 0; 
-        min-width: 120px; 
-    }
-    #levels-dropdown-menu.visible { display: block; }
-    .level-item { padding: 0.6rem 1rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; font-size:0.8rem; }
-    .level-item:hover { background-color: #f0f0f0; }
-    .level-item.selected { background-color: var(--brand-light); color: var(--brand-dark); font-weight: 600; }
-    .level-item .long-press-indicator { font-size: 0.7em; color: #777; margin-left: 8px; }
-    .level-item.selected .long-press-indicator { color: var(--brand-dark); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    #modal-title { margin-top: 0; margin-bottom: 0; color: var(--brand-dark); font-size: 1.2rem; flex-grow: 1; }
+    #modal-level-selector-label { font-size: 0.9rem; margin-right: 0.5rem;}
+    #modal-level-selector { padding: 0.3rem 0.5rem; border-radius: 6px; border: 1px solid var(--btn-border); font-size: 0.9rem; }
 
+    #modal-search-input { width: 100%; padding: 0.6rem; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; }
 
-    /* Word Selection Modal Styles */
-    #word-selection-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; padding: 1rem; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); }
-    #word-selection-modal.visible { display: flex; }
-    .modal-content { background-color: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); width: 90%; max-width: 600px; max-height: 90vh; display: flex; flex-direction: column; }
-    #modal-level-title { margin-top: 0; margin-bottom: 1rem; text-align: center; color: var(--brand-dark); }
-    #modal-word-list { overflow-y: auto; flex-grow: 1; border: 1px solid #eee; border-radius: 8px; padding: 0.5rem; margin-bottom: 1rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.5rem; }
+    #modal-word-list { overflow-y: auto; flex-grow: 1; border: 1px solid #eee; border-radius: 8px; padding: 0.5rem; margin-bottom: 1rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.5rem; }
     .modal-word-item { display: flex; align-items: center; padding: 0.5rem; border-radius: 6px; background-color: #f9f9f9; cursor: pointer; transition: background-color 0.2s; }
     .modal-word-item:hover { background-color: #e9e9e9; }
     .modal-word-item input[type="checkbox"] { margin-right: 0.75rem; width: 18px; height: 18px; accent-color: var(--brand); }
     .modal-word-item label { flex-grow: 1; user-select: none; }
+    .modal-word-item.custom-word label { font-style: italic; color: var(--brand-dark); }
+
+
+    #modal-add-custom-word-btn { width: calc(100% - 1rem); margin: 0.5rem 0.5rem 1rem 0.5rem; padding: 0.7rem; background-color: var(--brand-light); color: var(--brand-dark); border: 1px dashed var(--brand-dark); border-radius: 8px; cursor: pointer; font-weight: 600; }
+    #modal-add-custom-word-btn:hover { background-color: var(--brand); color: white; }
+
     .modal-actions { display: flex; flex-wrap: wrap; justify-content: space-around; gap: 0.5rem; padding-top: 1rem; border-top: 1px solid #eee; }
-    .modal-actions button { padding: 0.6rem 1rem; font-size: 0.9rem; border-radius: 8px; border: none; cursor: pointer; background-color: var(--brand); color: white; transition: background-color 0.2s; }
+    .modal-actions button { padding: 0.6rem 1rem; font-size: 0.9rem; border-radius: 8px; border: none; cursor: pointer; background-color: var(--brand); color: white; transition: background-color 0.2s; min-width: 100px; }
     .modal-actions button:hover { background-color: var(--brand-dark); }
     .modal-actions button#modal-close-btn { background-color: #aaa; }
     .modal-actions button#modal-close-btn:hover { background-color: #888; }
+    .modal-actions .io-buttons { display: flex; gap: 0.5rem; }
+    .modal-actions .io-buttons button { background-color: #78909c; font-size: 0.8rem; padding: 0.5rem 0.8rem; min-width: auto;}
+    .modal-actions .io-buttons button:hover { background-color: #546e7a; }
+    #upload-file-input { display: none; }
+
+
     .hidden { display: none !important; }
 
-    /* Mini-Game Styles */
+    /* Mini-Game Area Styles (content injected by JS) */
     #minigame-area {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(100, 150, 220, 0.9); 
-        z-index: 900; 
-        display: none;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column; 
-        overflow: hidden;
-        color: white;
-        font-size: 1.5rem;
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background-color: rgba(100, 150, 220, 0.95); /* Slightly more opaque */
+        z-index: 900; display: none; justify-content: center; align-items: center;
+        flex-direction: column; overflow: hidden; color: white; font-size: 1.5rem;
     }
-    #minigame-area.active {
-        display: flex;
-    }
+    #minigame-area.active { display: flex; }
     .minigame-info-bar {
-        position: absolute;
-        top: 20px;
-        left: 20px;
-        right: 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px;
-        background-color: rgba(0,0,0,0.2);
-        border-radius: 8px;
-        font-size: 1.2rem;
+        position: absolute; top: 20px; left: 20px; right: 20px; display: flex;
+        justify-content: space-between; align-items: center; padding: 10px;
+        background-color: rgba(0,0,0,0.2); border-radius: 8px; font-size: 1.2rem;
     }
     .minigame-score { font-weight: bold; }
     .minigame-timer-bar-container {
-        height: 20px;
-        flex-grow: 1;
-        margin: 0 20px;
-        background-color: rgba(255,255,255,0.3);
-        border-radius: 10px;
-        overflow: hidden;
+        height: 20px; flex-grow: 1; margin: 0 20px;
+        background-color: rgba(255,255,255,0.3); border-radius: 10px; overflow: hidden;
     }
     .minigame-timer-bar {
-        height: 100%;
-        width: 100%;
-        background-color: var(--brand-light);
-        transition: width 0.2s linear; 
+        height: 100%; width: 100%; background-color: var(--brand-light);
+        transition: width 0.2s linear;
     }
-    .minigame-timer-text { font-weight: bold; }
+     .minigame-timer-text { font-weight: bold; margin-left:10px; min-width:80px; text-align: right;}
 
-    /* Balloon Pop Specific */
+
+    /* Balloon Pop Specific - from previous code */
     .balloon {
-        width: 60px;
-        height: 80px;
-        border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; 
-        position: absolute;
-        cursor: pointer;
-        user-select: none;
-        display: flex;
-        justify-content: center;
-        align-items: flex-end; 
-        padding-bottom: 5px; 
+        width: 60px; height: 80px;
+        border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+        position: absolute; cursor: pointer; user-select: none;
+        display: flex; justify-content: center; align-items: flex-end;
+        padding-bottom: 5px;
     }
-    .balloon::after { 
-        content: '';
-        position: absolute;
-        bottom: -15px; 
-        left: 50%;
-        transform: translateX(-50%);
-        width: 2px;
-        height: 20px; 
+    .balloon::after {
+        content: ''; position: absolute; bottom: -15px; left: 50%;
+        transform: translateX(-50%); width: 2px; height: 20px;
         background-color: rgba(255,255,255,0.7);
     }
-    .balloon-rising {
-        animation: riseAnimation 5s linear forwards;
-    }
+    .balloon-rising { animation: riseAnimation 5s linear forwards; }
     @keyframes riseAnimation {
         from { transform: translateY(0); }
-        to { transform: translateY(-110vh); } 
+        to { transform: translateY(-110vh); }
     }
 
-    /* Bounce Party Specific */
+    /* Bounce Party Specific - from previous code */
     .bounce-ball {
-        width: 50px;
-        height: 50px;
-        background-color: var(--brand);
-        border-radius: 50%;
-        position: absolute; 
-        cursor: pointer;
+        width: 50px; height: 50px; background-color: var(--brand);
+        border-radius: 50%; position: absolute; cursor: pointer;
         box-shadow: 0 0 10px rgba(0,0,0,0.3);
     }
     .animate__fadeOutCustom { animation-duration: 0.3s; }
@@ -293,28 +288,50 @@
   <div class="top-bar">
     <div id="score">Score: <span id="score-val">0</span></div>
     <div id="timer-wrapper"><div id="circular-timer"></div></div>
-    <div id="level-controls-container">
+    <div id="controls-RHS-container"> <!-- Vertical buttons will go here -->
         <button id="toggle-minigames-btn">Mini-Games: Off</button>
         <button id="toggle-background-btn">Background: Animated</button>
-        <button id="levels-toggle-btn">Levels</button>
-        <div id="levels-dropdown-menu">
-            <!-- Level items will be populated by JS -->
+        <button id="word-source-toggle-btn">Words</button>
+        <!-- Dropdowns will be positioned relative to this container by CSS/JS -->
+        <div id="word-list-dropdown-menu" class="dropdown-menu">
+            <!-- Word list items (Dolch, Fry, Custom) will be populated by JS -->
+        </div>
+        <div id="levels-dropdown-menu" class="dropdown-menu">
+            <!-- Level items (A, B, C, D or Fry buckets) will be populated by JS -->
         </div>
     </div>
   </div>
 
-  <div id="word-selection-modal">
+  <div id="word-customization-modal">
     <div class="modal-content">
-        <h2 id="modal-level-title">Customize Words</h2>
-        <div id="modal-word-list"></div>
+        <div class="modal-header">
+            <h2 id="modal-title">Customize Words</h2>
+            <div>
+                <label for="modal-level-selector" id="modal-level-selector-label">Level:</label>
+                <select id="modal-level-selector">
+                    <!-- Options populated by JS if not 'custom' list -->
+                </select>
+            </div>
+        </div>
+        <input type="search" id="modal-search-input" placeholder="Search or type new word...">
+        <div id="modal-word-list">
+            <!-- Filtered words with checkboxes will appear here -->
+        </div>
+        <button id="modal-add-custom-word-btn" class="hidden">Add "<span id="modal-add-custom-word-term"></span>" to Custom List</button>
         <div class="modal-actions">
             <button id="modal-save-btn">Save & Use</button>
-            <button id="modal-select-all-btn">Select All</button>
-            <button id="modal-deselect-all-btn">Deselect All</button>
+            <button id="modal-select-all-btn">Select All Visible</button>
+            <button id="modal-deselect-all-btn">Deselect All Visible</button>
+            <div class="io-buttons">
+                <button id="modal-download-btn">Download Data</button>
+                <input type="file" id="upload-file-input" accept=".json">
+                <button id="modal-upload-btn">Upload Data</button>
+            </div>
             <button id="modal-close-btn">Close</button>
         </div>
     </div>
   </div>
+
 
   <div id="quiz-container" class="animate__animated">
     <div id="listen-pick-word-area">
@@ -332,74 +349,180 @@
   </div>
 
   <div id="minigame-area">
-      <!-- Mini-game content will be injected here -->
+      <!-- Mini-game content will be injected here by JS -->
   </div>
 
   <div id="controls"> <div id="timer-display">10s ⏱️</div> <button id="mode-toggle-btn">Mode: Listen</button> <button id="listen-btn">🔊</button> </div>
   <select id="timer-select"></select>
   <div id="mascot-container"> <lottie-player src="https://lottie.host/449f9829-8f92-4a63-85a2-def249781a91/p021aHdt2x.json" background="transparent" speed="1" loop autoplay></lottie-player> </div>
-  
+
   <script>
-    // --- WEB AUDIO API ---
+    // --- WEB AUDIO API (UNCHANGED) ---
     const audioCtx = new (window.AudioContext||window.webkitAudioContext)(); if (audioCtx) { window.addEventListener('pointerdown', () => { if (audioCtx.state === 'suspended') audioCtx.resume(); }, { once: true }); } function playOsc({ type='sine', freq=440, dur=0.3, modFreq, modIndex, vol=1 }) { if (!audioCtx) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); if (modFreq && modIndex) { const mod = audioCtx.createOscillator(); const mGain = audioCtx.createGain(); mod.frequency.setValueAtTime(modFreq, audioCtx.currentTime); mGain.gain.setValueAtTime(modIndex, audioCtx.currentTime); mod.connect(mGain).connect(osc.frequency); mod.start(audioCtx.currentTime); mod.stop(audioCtx.currentTime + dur); } osc.connect(gain); gain.connect(audioCtx.destination); gain.gain.setValueAtTime(vol, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur); osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + dur); } function playBell() { if (!audioCtx) return; playOsc({ type:'sine', freq:660, dur:0.3, vol: 0.6 }); setTimeout(() => playOsc({ type:'sine', freq:880, dur:0.3, vol: 0.6 }), 120); } function playBuzz() { if (!audioCtx) return; playOsc({ type:'square', freq:150, dur:0.4, vol: 0.4 }); }
-    
     const pronunciationMap = { "I": "I." };
 
-    // --- VANTA.JS DYNAMIC BACKGROUNDS ---
-    let vantaEffect = null; const vantaElement = document.body; let vantaBackgroundKeys = []; let currentBackgroundKey = null; const baseGlobalParams = { mouseControls: true, touchControls: true, gyroControls: false, minHeight: 200.00, minWidth: 200.00, scale: 1.00, scaleMobile: 1.00, }; const effectConfigurations = { "FOG_Soft_Blue": { effect: "FOG", params: { highlightColor: 0x80deea, midtoneColor: 0x26c6da, lowlightColor: 0x00acc1, baseColor: 0xf4f6f8, blurFactor: 0.6, zoom: 1.2, speed: 1.0 }}, "WAVES_Ocean": { effect: "WAVES", params: { color: 0x005577, shininess: 30, waveHeight: 15, waveSpeed: 0.8, zoom: 1.0 }}, "BIRDS_Day_Sky": { effect: "BIRDS", params: { backgroundColor: 0x87ceeb, color1: 0x444444, color2: 0x666666, birdSize: 1.0, wingSpan: 20.00, speedLimit: 3.00, separation: 20.00, alignment: 20.00, cohesion: 20.00, quantity: 4 }}, "NET_Cyber_Grid": { effect: "NET", params: { color: 0x00ffff, backgroundColor: 0x000022, points: 10.00, maxDistance: 20.00, spacing: 15.00, showDots: true }}, "CELLS_Bio_Blue": { effect: "CELLS", params: { color1: 0x2196f3, color2: 0x90caf9, size: 3.0, speed: 1.0 }}, "CLOUDS_Sunny_Day": { effect: "CLOUDS", params: { skyColor: 0x68b8d7, cloudColor: 0xadc1de, cloudShadowColor: 0x183550, sunColor: 0xff9919, sunGlareColor: 0xff6633, sunlightColor: 0xff9933, speed: 1.0 }}, "DOTS_Starfield": { effect: "DOTS", params: { color: 0xffffff, color2: 0xdddddd, backgroundColor: 0x000011, size: 3.00, spacing: 30.00, showLines: false }}, "RINGS_Golden_Aura": { effect: "RINGS", params: { backgroundColor: 0x110022, color: 0xffd700, strength: 2.00 }}, "HALO_Gentle_Sun": { effect: "HALO", params: { baseColor: 0xffe082, backgroundColor: 0xfff8e1, amplitudeFactor: 0.5, size: 1.0 }}, "FOG_Mystic_Purple": { effect: "FOG", params: { highlightColor: 0xff00ff, midtoneColor: 0xaa00aa, lowlightColor: 0x550055, baseColor: 0x300030, blurFactor: 0.7, zoom: 1.0, speed: 0.8 }}, "WAVES_Lava": { effect: "WAVES", params: { color: 0xff3300, shininess: 10, waveHeight: 25, waveSpeed: 0.4, zoom: 0.75 }}, "BIRDS_Sunset": { effect: "BIRDS", params: { backgroundColor: 0xffa07a, color1: 0x5d4037, color2: 0x000000, birdSize: 1.2, wingSpan: 25.00, quantity: 3, speedLimit: 2.00 }}, "NET_Golden_Web": { effect: "NET", params: { color: 0xffd700, backgroundColor: 0x301934, points: 8.00, maxDistance: 25.00, spacing: 20.00, showDots: true }}, "CELLS_Pulsing_Red": { effect: "CELLS", params: { color1: 0xf44336, color2: 0xffcdd2, size: 4.5, speed: 0.5 }}, "CLOUDS_Evening_Sky": { effect: "CLOUDS", params: { skyColor: 0x334d5c, cloudColor: 0x8e8e8e, cloudShadowColor: 0x2e2e2e, sunColor: 0xf57c00, sunGlareColor: 0xffb74d, sunlightColor: 0xffa726, speed: 0.6 }}, "DOTS_Colorful_Grid": { effect: "DOTS", params: { color: 0xff00ff, color2: 0x00ff00, backgroundColor: 0x222222, size: 5.00, spacing: 25.00, showLines: true }}, "RINGS_Blue_Energy": { effect: "RINGS", params: { backgroundColor: 0x001020, color: 0x00aaff, strength: 3.50 }}, "HALO_Deep_Space": { effect: "HALO", params: { baseColor: 0x7e57c2, backgroundColor: 0x1a001a, amplitudeFactor: 1.5, size: 1.2, xOffset: 0.2, yOffset: 0.1 }} }; 
+    // --- DATA LAYER (RESTRUCTURED) ---
+    const WORD_BANK = {
+        dolch: {
+            A: ["a","all","am","and","away","be","big","blue","but","can","come", "did","down","find","for","funny","go","good","he","help","here","I", "in","is","it","like","little","look","make","me","my","no","not", "on","one","play","ran","red","run","said","see","so","that","the", "three","to","two","up","was","we","what","where","yellow","yes","you"],
+            B: ["after","again","any","are","as","at","ate","black","brown","by","came","could","do","eat","every","four","from","get","give","going","had","have","her","him","how","into","let","must","new","now","of","our","out","please","pretty","ride","round","saw","say","she","some","soon","thank","there","they","this","too","under","want","well","went","white","who","will","with"],
+            C: ["an","ask","been","best","buy","cold","does","don't","first","five","fly","found","gave","goes","green","has","his","its","jump","just","know","live","made","many","may","off","old","once","open","or","over","own","pull","put","read","right","sit","sleep","stop","take","tell","them","then","these","think","those","use","very","walk","warm","wash","were","when","why","your"],
+            D: ["about","always","around","because","before","better","both","bring","call","carry","clean","cut","done","draw","drink","eight","fall","far","fast","full","got","grow","hold","hot","hurt","if","keep","kind","laugh","light","long","much","myself","never","only","pick","seven","shall","show","sing","six","small","start","ten","their","today","together","try","upon","us","which","wish","work","would","write"]
+        },
+        fry: {
+          "1-100": ["a","about","all","am","an","and","are","as","at","be","been","but","by","called","can","come","could","day","did","do","down","each","find","first","for","from","get","go","had","has","have","he","her","him","his","how","I","if","in","into","is","it","its","like","long","look","made","make","many","may","more","my","no","not","now","number","of","on","one","or","other","out","part","people","said","see","she","so","some","than","that","the","their","them","then","there","these","they","this","time","to","two","up","use","was","water","way","we","were","what","when","which","who","will","with","words","would","write","you","your"],
+          "101-200": ["after","again","air","also","America","animal","another","answer","any","around","ask","away","back","because","before","big","boy","came","change","different","does","end","even","follow","form","found","give","good","great","hand","help","here","home","house","just","kind","know","land","large","learn","letter","line","little","live","man","me","means","men","most","mother","move","much","must","name","need","new","off","old","only","our","over","page","picture","place","play","point","put","read","right","same","say","sentence","set","should","show","small","sound","spell","still","study","such","take","tell","things","think","three","through","too","try","turn","us","very","want","well","went","where","why","work","world","years"],
+          "201-300": ["above","add","almost","along","always","began","begin","being","below","between","book","both","car","carry","children","city","close","country","cut","don’t","earth","eat","enough","every","example","eyes","face","family","far","father","feet","few","food","four","girl","got","group","grow","hard","head","hear","high","idea","important","Indian","it’s","keep","last","late","leave","left","let","life","light","list","might","mile","miss","mountains","near","never","next","night","often","once","open","own","paper","plant","real","river","run","saw","school","sea","second","seem","side","something","sometimes","song","soon","start","state","stop","story","talk","those","thought","together","took","tree","under","until","walk","watch","while","white","without","young"],
+          "301-400": ["across","against","area","become","best","better","birds","black","body","certain","cold","color","complete","covered","cried","didn’t","dog","door","draw","during","early","easy","ever","fall","farm","fast","field","figure","fire","fish","five","friends","ground","happened","heard","himself","hold","horse","hours","however","hundred","I’ll","king","knew","listen","low","map","mark","measure","money","morning","music","north","notice","numeral","order","passed","pattern","piece","plan","problem","products","pulled","questions","reached","red","remember","rock","room","seen","several","ship","short","since","sing","slowly","south","space","stand","step","sun","sure","table","today","told","top","toward","town","travel","true","unit","upon","usually","voice","vowel","war","waves","whole","wind","wood"],
+          "401-500": ["able","ago","among","ball","base","became","behind","boat","box","bread","bring","brought","building","built","cannot","carefully","check","circle","class","clear","common","contain","correct","course","dark","decided","deep","done","dry","English","equation","explain","fact","feel","filled","finally","fine","fly","force","front","full","game","gave","government","green","half","heat","heavy","hot","inches","include","inside","island","known","language","less","machine","material","minutes","note","nothing","noun","object","ocean","oh","pair","person","plane","power","produce","quickly","ran","rest","road","round","rule","scientists","shape","shown","six","size","special","stars","stay","stood","street","strong","surface","system","ten","though","thousands","understand","verb","wait","warm","week","wheels","yes","yet"],
+          "501-600": ["anything","arms","beautiful","believe","beside","bill","blue","brother","can’t","cause","cells","center","clothes","dance","describe","developed","difference","direction","discovered","distance","divided","drive","drop","edge","eggs","energy","Europe","exercise","farmers","felt","finished","flowers","forest","general","gone","grass","happy","heart","held","instruments","interest","job","kept","lay","legs","length","love","main","matter","meet","members","million","mind","months","moon","paint","paragraph","past","perhaps","picked","present","probably","race","rain","raised","ready","reason","record","region","represent","return","root","sat","shall","sign","simple","site","sky","soft","square","store","subject","suddenly","sum","summer","syllables","teacher","test","third","train","wall","weather","west","whether","wide","wild","window","winter","wish","written"],
+          "601-700": ["act","Africa","age","already","although","amount","angle","appear","baby","bear","beat","bed","bottom","bright","broken","build","buy","care","case","cat","century","consonant","copy","couldn’t","count","cross","dictionary","died","dress","either","everyone","everything","exactly","factors","fight","fingers","floor","fraction","free","French","gold","hair","hill","hole","hope","ice","instead","iron","jumped","killed","lake","laughed","lead","let’s","lot","melody","metal","method","middle","milk","moment","nation","natural","outside","per","phrase","poor","possible","pounds","pushed","quiet","quite","remain","result","ride","rolled","sail","scale","section","sleep","smiled","snow","soil","solve","someone","son","speak","speed","spring","stone","surprise","tall","temperature","themselves","tiny","trip","type","village","within","wonder"],
+          "701-800": ["alone","art","bad","bank","bit","break","brown","burning","business","captain","catch","caught","cents","child","choose","clean","climbed","cloud","coast","continued","control","cool","cost","decimal","desert","design","direct","drawing","ears","east","else","engine","England","equal","experiment","express","feeling","fell","flow","foot","garden","gas","glass","God","grew","history","human","hunting","increase","information","itself","joined","key","lady","law","least","lost","maybe","mouth","party","pay","period","plains","please","practice","president","received","report","ring","rise","row","save","seeds","sent","separate","serve","shouted","single","skin","statement","stick","straight","strange","students","suppose","symbols","team","touch","trouble","uncle","valley","visit","wear","whose","wire","woman","wrote","yard","you’re","yourself"],
+          "801-900": ["addition","army","bell","belong","block","blood","blow","board","bones","branches","cattle","chief","compare","compound","consider","cook","corner","crops","crowd","current","doctor","dollars","eight","electric","elements","enjoy","entered","except","exciting","expect","famous","fit","flat","fruit","fun","guess","hat","hit","indicate","industry","insects","interesting","Japanese","lie","lifted","loud","major","mall","meat","mine","modern","movement","necessary","observe","park","particular","planets","poem","pole","position","process","property","provide","rather","rhythm","rich","safe","sand","science","sell","send","sense","seven","sharp","shoulder","sight","silent","soldiers","spot","spread","stream","string","suggested","supply","swim","terms","thick","thin","thus","tied","tone","trade","tube","value","wash","wasn’t","weight","wife","wings","won’t"],
+          "901-1000": ["action","actually","adjective","afraid","agreed","ahead","allow","apple","arrived","born","bought","British","capital","chance","chart","church","column","company","conditions","corn","cotton","cows","create","dead","deal","death","details","determine","difficult","division","doesn’t","effect","entire","especially","evening","experience","factories","fair","fear","fig","forward","France","fresh","Greek","gun","hoe","huge","isn’t","led","level","located","march","match","molecules","northern","nose","office","opposite","oxygen","plural","prepared","pretty","printed","radio","repeated","rope","rose","score","seat","settled","shoes","shop","similar","sir","sister","smell","solution","southern","steel","stretched","substances","suffix","sugar","tools","total","track","triangle","truck","underline","various","view","Washington","we’ll","western","win","women","workers","wouldn’t","wrong","yellow"]
+        },
+        custom: [] // Single flat array for all custom words
+    };
 
-    // --- Timer Globals ---
-    let isTimerPaused    = false;
-    let remainingMs      = 0;
-    let timerStartTs     = 0;
-    let onDoneCallback;    // store the quiz‐timeout callback
+    let activeWordList = 'dolch';
+    let selectedLevels = ['A']; // For Dolch/Fry. For Custom, this will be ['__ALL__'] if active
+    let words = []; // Current words for the quiz
 
-    
-    
-    // --- Pastel Background Colors ---
-    const pastelBackgroundColors = [
-        "#c9e4c5", // Light Pastel Green
-        "#f9e6cf", // Pastel Peach
-        "#d4e9f7", // Pastel Blue
-        "#fde8f2", // Pastel Pink
-        "#e6e6fa", // Lavender
-        "#fffacd", // Lemon Chiffon
-    ];
-    let currentPastelBgIndex = 0;
+    // --- IMPORT/EXPORT & DATA HELPERS (UPDATED) ---
+    function downloadWordData() {
+        const dataToExport = {
+            activeWordList: activeWordList,
+            selectedLevels: selectedLevels,
+            customBank: WORD_BANK.custom, // customBank is now a flat array
+            userSelections: {}
+        };
 
-    function applyVantaEffect(configKey) {
-        if (vantaEffect) {
-            try { vantaEffect.destroy(); } catch (e) { console.error("Err destroy vanta:", e); }
-            vantaEffect = null;
-        }
+        Object.keys(WORD_BANK).forEach(listKey => {
+            if (listKey !== 'custom' && WORD_BANK[listKey] && typeof WORD_BANK[listKey] === 'object') {
+                dataToExport.userSelections[listKey] = {};
+                Object.keys(WORD_BANK[listKey]).forEach(levelKey => { // Iterate actual levels "A", "1-100", etc.
+                    const selection = JSON.parse(localStorage.getItem(`${listKey}_${levelKey}_userSelections`) || 'null');
+                    if (selection) {
+                        dataToExport.userSelections[listKey][levelKey] = selection;
+                    }
+                });
+            }
+        });
 
-        if (!configKey) { 
-            currentBackgroundKey = null; 
+        const jsonString = JSON.stringify(dataToExport, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `sight-words-quiz-data-${new Date().toISOString().slice(0,10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showFloatingMessage("Word data downloaded!", "var(--brand-light)", "var(--fg)");
+    }
+
+    function triggerFileUpload() {
+        document.getElementById('upload-file-input').click();
+    }
+
+    async function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        if (!file.name.endsWith('.json')) {
+            showFloatingMessage("Invalid file type. Please select a .json file.", "var(--incorrect-bg)");
             return;
         }
 
-        const config = effectConfigurations[configKey];
-        if (!config || typeof VANTA === 'undefined' || typeof VANTA[config.effect] !== 'function') {
-            console.error(`Vanta effect ${configKey} error.`);
-            currentBackgroundKey = null; 
-            return;
-        }
-
-        const finalParams = { el: vantaElement, ...baseGlobalParams, ...config.params };
         try {
-            vantaEffect = VANTA[config.effect](finalParams);
-            currentBackgroundKey = configKey; 
-            document.body.style.backgroundColor = ''; 
+            const fileContent = await file.text();
+            const importedData = JSON.parse(fileContent);
+
+            if (!importedData || typeof importedData.activeWordList !== 'string' ||
+                !Array.isArray(importedData.selectedLevels) ||
+                !Array.isArray(importedData.customBank) // Expect customBank to be an array
+               ) {
+                showFloatingMessage("Invalid file format or missing core fields.", "var(--incorrect-bg)");
+                return;
+            }
+
+            // --- MODIFIED: Handle custom words with user choice ---
+            const existingCustomWords = WORD_BANK.custom.length > 0;
+            const incomingCustomWords = importedData.customBank.length > 0;
+
+            if (existingCustomWords && incomingCustomWords) {
+                // There's a conflict, so ask the user how to proceed.
+                if (confirm("You have existing custom words. Click 'OK' to MERGE them with the imported list. Click 'Cancel' to REPLACE your list with the imported one.")) {
+                    // User clicked OK (Merge)
+                    const combined = new Set([...WORD_BANK.custom, ...importedData.customBank]);
+                    WORD_BANK.custom = Array.from(combined).sort();
+                } else {
+                    // User clicked Cancel (Replace)
+                    WORD_BANK.custom = [...new Set(importedData.customBank)].sort();
+                }
+            } else if (incomingCustomWords) {
+                // No existing words, so no conflict. Just adopt the new list.
+                WORD_BANK.custom = [...new Set(importedData.customBank)].sort();
+            }
+            // If !incomingCustomWords, WORD_BANK.custom is not changed. This is the desired safe behavior to prevent accidental data loss.
+            localStorage.setItem('customBank', JSON.stringify(WORD_BANK.custom));
+
+
+            if (importedData.userSelections && typeof importedData.userSelections === 'object') {
+                Object.keys(importedData.userSelections).forEach(listKey => {
+                    if (WORD_BANK[listKey] && listKey !== 'custom' && typeof WORD_BANK[listKey] === 'object') {
+                        Object.keys(importedData.userSelections[listKey]).forEach(levelKey => {
+                             if (WORD_BANK[listKey][levelKey] && Array.isArray(importedData.userSelections[listKey][levelKey])) {
+                                localStorage.setItem(`${listKey}_${levelKey}_userSelections`, JSON.stringify(importedData.userSelections[listKey][levelKey]));
+                             }
+                        });
+                    }
+                });
+            }
+
+            if (WORD_BANK[importedData.activeWordList]) {
+                activeWordList = importedData.activeWordList;
+                localStorage.setItem('activeWordList', activeWordList);
+            }
+
+            if (Array.isArray(importedData.selectedLevels) && importedData.selectedLevels.length > 0) {
+                if (activeWordList === 'custom') {
+                    selectedLevels = ["__ALL__"];
+                } else if (WORD_BANK[activeWordList] && typeof WORD_BANK[activeWordList] === 'object') {
+                    const validLevelsForList = Object.keys(WORD_BANK[activeWordList]);
+                    let newSelectedLevels = importedData.selectedLevels.filter(l => validLevelsForList.includes(l));
+                    if (newSelectedLevels.length === 0 && validLevelsForList.length > 0) {
+                        newSelectedLevels = [validLevelsForList[0]];
+                    }
+                    selectedLevels = newSelectedLevels;
+                } else { // Fallback if activeWordList is somehow invalid (e.g. empty object)
+                    selectedLevels = activeWordList === 'custom' ? ["__ALL__"] : (WORD_BANK.dolch ? [Object.keys(WORD_BANK.dolch)[0]] : []);
+                }
+                localStorage.setItem('selectedLevels', JSON.stringify(selectedLevels));
+            }
+
+            showFloatingMessage("Word data imported successfully!", "var(--correct-bg)");
+            populateWordListDropdown();
+            populateLevelsDropdown();
+            updateActiveQuizWords();
+            closeWordCustomizationModal();
+
         } catch (error) {
-            console.error(`Err init Vanta '${config.effect}':`, error);
-            vantaEffect = null;
-            currentBackgroundKey = null; 
+            console.error("Error importing file:", error);
+            showFloatingMessage("Error processing file. Check console.", "var(--incorrect-bg)");
+        } finally {
+            event.target.value = null;
         }
     }
-    
-    // --- WORD DATA ---
-    const allLevelWords = { A: ["a","all","am","and","away","be","big","blue","but","can","come", "did","down","find","for","funny","go","good","he","help","here","I", "in","is","it","like","little","look","make","me","my","no","not", "on","one","play","ran","red","run","said","see","so","that","the", "three","to","two","up","was","we","what","where","yellow","yes","you"], B: ["after","again","any","are","as","at","ate","black","brown","by","came","could","do","eat","every","four","from","get","give","going","had","have","her","him","how","into","let","must","new","now","of","our","out","please","pretty","ride","round","saw","say","she","some","soon","thank","there","they","this","too","under","want","well","went","white","who","will","with"], C: ["an","ask","been","best","buy","cold","does","don't","first","five","fly","found","gave","goes","green","has","his","its","jump","just","know","live","made","many","may","off","old","once","open","or","over","own","pull","put","read","right","sit","sleep","stop","take","tell","them","then","these","think","those","use","very","walk","warm","wash","were","when","why","your"], D: ["about","always","around","because","before","better","both","bring","call","carry","clean","cut","done","draw","drink","eight","fall","far","fast","full","got","grow","hold","hot","hurt","if","keep","kind","laugh","light","long","much","myself","never","only","pick","seven","shall","show","sing","six","small","start","ten","their","today","together","try","upon","us","which","wish","work","would","write"] };
-    let words = []; 
+
+    // --- VANTA.JS DYNAMIC BACKGROUNDS (UNCHANGED) ---
+    let vantaEffect = null; const vantaElement = document.body; let vantaBackgroundKeys = []; let currentBackgroundKey = null; const baseGlobalParams = { mouseControls: true, touchControls: true, gyroControls: false, minHeight: 200.00, minWidth: 200.00, scale: 1.00, scaleMobile: 1.00, }; const effectConfigurations = { "FOG_Soft_Blue": { effect: "FOG", params: { highlightColor: 0x80deea, midtoneColor: 0x26c6da, lowlightColor: 0x00acc1, baseColor: 0xf4f6f8, blurFactor: 0.6, zoom: 1.2, speed: 1.0 }}, "WAVES_Ocean": { effect: "WAVES", params: { color: 0x005577, shininess: 30, waveHeight: 15, waveSpeed: 0.8, zoom: 1.0 }}, "BIRDS_Day_Sky": { effect: "BIRDS", params: { backgroundColor: 0x87ceeb, color1: 0x444444, color2: 0x666666, birdSize: 1.0, wingSpan: 20.00, speedLimit: 3.00, separation: 20.00, alignment: 20.00, cohesion: 20.00, quantity: 4 }}, "NET_Cyber_Grid": { effect: "NET", params: { color: 0x00ffff, backgroundColor: 0x000022, points: 10.00, maxDistance: 20.00, spacing: 15.00, showDots: true }}, "CELLS_Bio_Blue": { effect: "CELLS", params: { color1: 0x2196f3, color2: 0x90caf9, size: 3.0, speed: 1.0 }}, "CLOUDS_Sunny_Day": { effect: "CLOUDS", params: { skyColor: 0x68b8d7, cloudColor: 0xadc1de, cloudShadowColor: 0x183550, sunColor: 0xff9919, sunGlareColor: 0xff6633, sunlightColor: 0xff9933, speed: 1.0 }}, "DOTS_Starfield": { effect: "DOTS", params: { color: 0xffffff, color2: 0xdddddd, backgroundColor: 0x000011, size: 3.00, spacing: 30.00, showLines: false }}, "RINGS_Golden_Aura": { effect: "RINGS", params: { backgroundColor: 0x110022, color: 0xffd700, strength: 2.00 }}, "HALO_Gentle_Sun": { effect: "HALO", params: { baseColor: 0xffe082, backgroundColor: 0xfff8e1, amplitudeFactor: 0.5, size: 1.0 }}, "FOG_Mystic_Purple": { effect: "FOG", params: { highlightColor: 0xff00ff, midtoneColor: 0xaa00aa, lowlightColor: 0x550055, baseColor: 0x300030, blurFactor: 0.7, zoom: 1.0, speed: 0.8 }}, "WAVES_Lava": { effect: "WAVES", params: { color: 0xff3300, shininess: 10, waveHeight: 25, waveSpeed: 0.4, zoom: 0.75 }}, "BIRDS_Sunset": { effect: "BIRDS", params: { backgroundColor: 0xffa07a, color1: 0x5d4037, color2: 0x000000, birdSize: 1.2, wingSpan: 25.00, quantity: 3, speedLimit: 2.00 }}, "NET_Golden_Web": { effect: "NET", params: { color: 0xffd700, backgroundColor: 0x301934, points: 8.00, maxDistance: 25.00, spacing: 20.00, showDots: true }}, "CELLS_Pulsing_Red": { effect: "CELLS", params: { color1: 0xf44336, color2: 0xffcdd2, size: 4.5, speed: 0.5 }}, "CLOUDS_Evening_Sky": { effect: "CLOUDS", params: { skyColor: 0x334d5c, cloudColor: 0x8e8e8e, cloudShadowColor: 0x2e2e2e, sunColor: 0xf57c00, sunGlareColor: 0xffb74d, sunlightColor: 0xffa726, speed: 0.6 }}, "DOTS_Colorful_Grid": { effect: "DOTS", params: { color: 0xff00ff, color2: 0x00ff00, backgroundColor: 0x222222, size: 5.00, spacing: 25.00, showLines: true }}, "RINGS_Blue_Energy": { effect: "RINGS", params: { backgroundColor: 0x001020, color: 0x00aaff, strength: 3.50 }}, "HALO_Deep_Space": { effect: "HALO", params: { baseColor: 0x7e57c2, backgroundColor: 0x1a001a, amplitudeFactor: 1.5, size: 1.2, xOffset: 0.2, yOffset: 0.1 }} };
+    function applyVantaEffect(configKey) { if (vantaEffect) { try { vantaEffect.destroy(); } catch (e) { console.error("Err destroy vanta:", e); } vantaEffect = null; } if (!configKey) { currentBackgroundKey = null; return; } const config = effectConfigurations[configKey]; if (!config || typeof VANTA === 'undefined' || typeof VANTA[config.effect] !== 'function') { console.error(`Vanta effect ${configKey} error.`); currentBackgroundKey = null; return; } const finalParams = { el: vantaElement, ...baseGlobalParams, ...config.params }; try { vantaEffect = VANTA[config.effect](finalParams); currentBackgroundKey = configKey; document.body.style.backgroundColor = ''; } catch (error) { console.error(`Err init Vanta '${config.effect}':`, error); vantaEffect = null; currentBackgroundKey = null; } }
+    const pastelBackgroundColors = [ "#c9e4c5", "#f9e6cf", "#d4e9f7", "#fde8f2", "#e6e6fa", "#fffacd", ]; let currentPastelBgIndex = 0;
+    function updateBackgroundState() { const shouldAnimate = animatedBackgroundsEnabled && !PREFERS_REDUCED_MOTION; if (toggleBackgroundBtn) { toggleBackgroundBtn.textContent = `Background: ${animatedBackgroundsEnabled ? 'Animated' : 'Static'}`; toggleBackgroundBtn.classList.toggle('active-animated-bg', animatedBackgroundsEnabled); } if (shouldAnimate) { document.body.style.backgroundColor = ''; let keyToApply = currentBackgroundKey; if (!keyToApply || !effectConfigurations[keyToApply]) { if (vantaBackgroundKeys && vantaBackgroundKeys.length > 0) { keyToApply = vantaBackgroundKeys[0]; } else { keyToApply = null; } } if (keyToApply) { applyVantaEffect(keyToApply); } else { if (vantaEffect) applyVantaEffect(null); document.body.style.backgroundColor = pastelBackgroundColors[currentPastelBgIndex % pastelBackgroundColors.length]; } } else { if (vantaEffect) { applyVantaEffect(null); } const staticBgColor = pastelBackgroundColors[currentPastelBgIndex % pastelBackgroundColors.length]; document.body.style.backgroundColor = staticBgColor; } }
+
+    // --- Timer Globals (UNCHANGED) ---
+    let isTimerPaused    = false; let remainingMs = 0; let timerStartTs = 0; let onDoneCallback;
 
     // --- UI REFERENCES ---
     const wordChoiceBtns = [document.getElementById('choice0'), document.getElementById('choice1')];
@@ -417,139 +540,174 @@
     const submitAnswerBtn = document.getElementById('submit-answer-btn');
     const confettiCanvas = document.getElementById('confetti-canvas');
     const myConfetti = confetti.create(confettiCanvas, { resize: true, useWorker: true });
-    const levelsToggleBtn = document.getElementById('levels-toggle-btn');
+
+    const wordSourceToggleBtn = document.getElementById('word-source-toggle-btn');
+    const wordListDropdownMenu = document.getElementById('word-list-dropdown-menu');
     const levelsDropdownMenu = document.getElementById('levels-dropdown-menu');
-    const wordSelectionModal = document.getElementById('word-selection-modal');
-    const modalLevelTitle = document.getElementById('modal-level-title');
+
+    const wordCustomizationModal = document.getElementById('word-customization-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalLevelSelector = document.getElementById('modal-level-selector');
+    const modalLevelSelectorLabel = document.getElementById('modal-level-selector-label');
+    const modalSearchInput = document.getElementById('modal-search-input');
     const modalWordList = document.getElementById('modal-word-list');
+    const modalAddCustomWordBtn = document.getElementById('modal-add-custom-word-btn');
+    const modalAddCustomWordTerm = document.getElementById('modal-add-custom-word-term');
     const modalSaveBtn = document.getElementById('modal-save-btn');
     const modalSelectAllBtn = document.getElementById('modal-select-all-btn');
     const modalDeselectAllBtn = document.getElementById('modal-deselect-all-btn');
+    const modalDownloadBtn = document.getElementById('modal-download-btn');
+    const modalUploadBtn = document.getElementById('modal-upload-btn');
+    const uploadFileInput = document.getElementById('upload-file-input');
     const modalCloseBtn = document.getElementById('modal-close-btn');
+
     const miniGameArea = document.getElementById('minigame-area');
     const toggleMiniGamesBtn = document.getElementById('toggle-minigames-btn');
     const toggleBackgroundBtn = document.getElementById('toggle-background-btn');
 
     // --- GAME STATE ---
     let circleTimerInstance;
-    let questionTimeoutId; 
+    let questionTimeoutId;
     let questionAnsweredThisTurn = false;
     let score = 0;
-    let timeLimit = 20; 
+    let timeLimit = 20;
     let currentCorrectWord = "";
     let currentStreak = 0;
     const streakThresholds = {3: "Streak x3!", 5: "Super Streak x5!", 10: "AMAZING x10!"};
     let currentGameMode = localStorage.getItem('sightWordsGameMode') || 'listenAndPickWord';
     let selectedSoundButton = null;
-    let selectedLevels = [];
-    let currentEditingLevelKey = null; 
+
+    let currentModalListContext = 'dolch'; // For the customization modal: 'dolch', 'fry', or 'custom'
+    let currentModalLevelContext = 'A';    // For Dolch/Fry: "A", "1-100", etc. For 'custom': "__ALL__"
     let longPressTimer = null;
     let isLongPress = false;
     let miniGamesEnabled = localStorage.getItem('miniGamesEnabled') === 'true';
     let isMiniGameActive = false;
-    let availableMiniGames = [];
+    let availableMiniGames = []; // Will be populated with game objects
     let currentMiniGameIdx = 0;
-    let animatedBackgroundsEnabled = localStorage.getItem('animatedBackgroundsEnabled') !== 'false'; 
+    let animatedBackgroundsEnabled = localStorage.getItem('animatedBackgroundsEnabled') !== 'false';
     let PREFERS_REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 
-    // ---- Central function to manage background state ----
-    function updateBackgroundState() {
-        const shouldAnimate = animatedBackgroundsEnabled && !PREFERS_REDUCED_MOTION;
+    // ---- INITIALIZATION & STATE HYDRATION (UPDATED) ----
+    function hydrateFromStorage() {
+        try {
+            const storedCustomBank = localStorage.getItem('customBank');
+            if (storedCustomBank) {
+                const parsedCustom = JSON.parse(storedCustomBank);
+                if (Array.isArray(parsedCustom)) {
+                    WORD_BANK.custom = [...new Set(parsedCustom)];
+                } else { WORD_BANK.custom = []; }
+            } else { WORD_BANK.custom = []; }
+        } catch (e) { console.error("Error parsing customBank from localStorage:", e); WORD_BANK.custom = []; }
 
-        if (toggleBackgroundBtn) {
-            toggleBackgroundBtn.textContent = `Background: ${animatedBackgroundsEnabled ? 'Animated' : 'Static'}`;
-            toggleBackgroundBtn.classList.toggle('active-animated-bg', animatedBackgroundsEnabled);
-        }
+        activeWordList = localStorage.getItem('activeWordList') || 'dolch';
+        if (!WORD_BANK[activeWordList]) activeWordList = 'dolch';
 
-        if (shouldAnimate) {
-            document.body.style.backgroundColor = ''; 
-
-            let keyToApply = currentBackgroundKey; 
-            if (!keyToApply || !effectConfigurations[keyToApply]) { 
-                if (vantaBackgroundKeys && vantaBackgroundKeys.length > 0) {
-                    keyToApply = vantaBackgroundKeys[0]; 
-                } else {
-                    keyToApply = null; 
+        try {
+            const storedLevels = localStorage.getItem('selectedLevels');
+            if (storedLevels) {
+                const parsed = JSON.parse(storedLevels);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    if (activeWordList === 'custom') {
+                        selectedLevels = ["__ALL__"];
+                    } else if (WORD_BANK[activeWordList] && typeof WORD_BANK[activeWordList] === 'object') {
+                        const validLevelsForList = Object.keys(WORD_BANK[activeWordList]);
+                        selectedLevels = parsed.filter(l => validLevelsForList.includes(l));
+                        if (selectedLevels.length === 0 && validLevelsForList.length > 0) {
+                            selectedLevels = [validLevelsForList[0]];
+                        } else if (selectedLevels.length === 0 && validLevelsForList.length === 0) { // list has no levels
+                            selectedLevels = []; // e.g. an empty fry list
+                        }
+                    } else { selectedLevels = ['A']; } // Fallback
+                } else { // parsed was empty or not array
+                    selectedLevels = activeWordList === 'custom' ? ["__ALL__"] : (WORD_BANK[activeWordList] && Object.keys(WORD_BANK[activeWordList]).length > 0 ? [Object.keys(WORD_BANK[activeWordList])[0]] : ['A']);
                 }
+            } else { // No stored levels
+                 selectedLevels = activeWordList === 'custom' ? ["__ALL__"] : (WORD_BANK[activeWordList] && Object.keys(WORD_BANK[activeWordList]).length > 0 ? [Object.keys(WORD_BANK[activeWordList])[0]] : ['A']);
             }
-            
-            if (keyToApply) {
-                applyVantaEffect(keyToApply);
-            } else {
-                if (vantaEffect) applyVantaEffect(null); 
-                document.body.style.backgroundColor = pastelBackgroundColors[currentPastelBgIndex % pastelBackgroundColors.length]; // Fallback to current pastel
-                // console.warn("Vanta effect desired but unavailable. Using current static pastel background.");
-            }
-        } else {
-            if (vantaEffect) {
-                applyVantaEffect(null); 
-            }
-            const staticBgColor = pastelBackgroundColors[currentPastelBgIndex % pastelBackgroundColors.length];
-            document.body.style.backgroundColor = staticBgColor;
+        } catch (e) {
+            console.error("Error parsing selectedLevels from localStorage:", e);
+            selectedLevels = activeWordList === 'custom' ? ["__ALL__"] : (WORD_BANK.dolch ? [Object.keys(WORD_BANK.dolch)[0]] : ['A']);
         }
+
+
+        miniGamesEnabled = localStorage.getItem('miniGamesEnabled') === 'true';
+        animatedBackgroundsEnabled = localStorage.getItem('animatedBackgroundsEnabled') !== 'false';
+        currentGameMode = localStorage.getItem('sightWordsGameMode') || 'listenAndPickWord';
+
+        const storedTimeLimit = localStorage.getItem('quizTimeLimit');
+        if (storedTimeLimit !== null && !isNaN(parseInt(storedTimeLimit))) {
+            timeLimit = parseInt(storedTimeLimit);
+        }
+        updateActiveQuizWords();
     }
 
-    // ---- INITIALIZATION ----
     document.addEventListener('DOMContentLoaded', () => {
       vantaBackgroundKeys = Object.keys(effectConfigurations);
-      
-      const initialScoreTier = Math.floor(score / 10); // score is 0 here
+      hydrateFromStorage();
+
+      const initialScoreTier = Math.floor(score / 10);
       if (vantaBackgroundKeys.length > 0) {
           currentBackgroundKey = vantaBackgroundKeys[initialScoreTier % vantaBackgroundKeys.length];
-      } else {
-          currentBackgroundKey = null; // No Vanta backgrounds available
-      }
+      } else { currentBackgroundKey = null; }
       currentPastelBgIndex = initialScoreTier % pastelBackgroundColors.length;
-
-      updateBackgroundState(); 
+      updateBackgroundState();
 
       if (toggleBackgroundBtn) {
           toggleBackgroundBtn.addEventListener('click', () => {
               animatedBackgroundsEnabled = !animatedBackgroundsEnabled;
-              localStorage.setItem('animatedBackgroundsEnabled', animatedBackgroundsEnabled);
+              localStorage.setItem('animatedBackgroundsEnabled', animatedBackgroundsEnabled.toString());
               updateBackgroundState();
           });
       }
-      
+
       const mediaQueryReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
       function handleReducedMotionChange(event) {
           PREFERS_REDUCED_MOTION = event.matches;
           updateBackgroundState();
       }
       mediaQueryReducedMotion.addEventListener('change', handleReducedMotionChange);
-      
-      initLevelManagement(); 
-      initMiniGameSystem(); 
+
+      initWordLevelManagementUI();
+      initMiniGameSystem(); // This now just sets up the toggle and populates availableMiniGames
       updateModeUI();
       initCircularTimer();
-      
+
       for(let i=0;i<=30;i++){ let o = document.createElement('option'); o.value = i; o.textContent = i+'s' + (i === 0 ? ' (Untimed)' : ''); timerSel.append(o); }
-      timerSel.value = timeLimit; 
+      timerSel.value = timeLimit;
       timerDisp.textContent = timeLimit > 0 ? timeLimit+'s ⏱️' : 'Untimed ⏱️';
+
+      modalSaveBtn.addEventListener('click', saveWordCustomizationModal);
+      modalCloseBtn.addEventListener('click', closeWordCustomizationModal);
+      modalSelectAllBtn.addEventListener('click', () => toggleAllModalWords(true));
+      modalDeselectAllBtn.addEventListener('click', () => toggleAllModalWords(false));
+      modalSearchInput.addEventListener('input', populateModalWordList); // Also handles showing add custom btn
+      modalLevelSelector.addEventListener('change', (e) => {
+          if (currentModalListContext !== 'custom') { // Level selector only relevant for Dolch/Fry
+            currentModalLevelContext = e.target.value;
+            modalTitle.textContent = `Customize: ${currentModalListContext.charAt(0).toUpperCase() + currentModalListContext.slice(1)} - ${(currentModalListContext === 'dolch' ? "Level " : "")}${currentModalLevelContext}`;
+            populateModalWordList();
+          }
+      });
+      modalAddCustomWordBtn.addEventListener('click', handleAddCustomWordFromModal);
+      modalDownloadBtn.addEventListener('click', downloadWordData);
+      modalUploadBtn.addEventListener('click', triggerFileUpload);
+      uploadFileInput.addEventListener('change', handleFileUpload);
     });
 
-    // --- Speak helper ---
-    function speak(txt, rate = 0.9, pitch = 1.1){ 
-      if('speechSynthesis' in window){
-        speechSynthesis.cancel(); 
-        let textToSpeak = pronunciationMap[txt] || String(txt); 
-        let u = new SpeechSynthesisUtterance(textToSpeak);
-        u.rate = rate; 
-        u.pitch = pitch;
-        speechSynthesis.speak(u);
-      }
-    }
+    // --- Speak helper (UNCHANGED)---
+    function speak(txt, rate = 0.9, pitch = 1.1){ if('speechSynthesis' in window){ speechSynthesis.cancel(); let textToSpeak = pronunciationMap[txt] || String(txt); let u = new SpeechSynthesisUtterance(textToSpeak); u.rate = rate; u.pitch = pitch; speechSynthesis.speak(u); } }
+    function getRandomColor() { const r = Math.floor(Math.random() * 200); const g = Math.floor(Math.random() * 200); const b = Math.floor(Math.random() * 200); return `rgb(${r},${g},${b})`; }
 
-    // --- Utility for random colors (for Balloon Pop) ---
-    function getRandomColor() {
-        const r = Math.floor(Math.random() * 200); 
-        const g = Math.floor(Math.random() * 200);
-        const b = Math.floor(Math.random() * 200);
-        return `rgb(${r},${g},${b})`;
-    }
-            
-    // --- MINI-GAME DEFINITIONS ---
+
+    // ******************************************************
+    // *                                                    *
+    // *    MINI-GAME OBJECT DEFINITIONS WILL GO HERE       *
+    // *    (CatchTheStarGame, BalloonPopGame, HoopBounceGame) *
+    // *                                                    *
+    // ******************************************************
+        // --- MINI-GAME DEFINITIONS ---
     const CatchTheStarGame = {
     name: "Catch the Star",
     score: 0,
@@ -1359,122 +1517,108 @@
             this.container = null; this.elements = {}; this.onCompleteCallback = null; 
         }
     };
-    
 
 
-    // --- MINI-GAME SYSTEM ---
+    // --- MINI-GAME SYSTEM (UNCHANGED except for availableMiniGames population)---
     function initMiniGameSystem() {
-        availableMiniGames.push(BalloonPopGame, HoopBounceGame, CatchTheStarGame); // Re-enable/modify with your game objects
-        
+        availableMiniGames.push(BalloonPopGame, HoopBounceGame, CatchTheStarGame);
+
         toggleMiniGamesBtn.textContent = `Mini-Games: ${miniGamesEnabled ? 'On' : 'Off'}`;
         toggleMiniGamesBtn.classList.toggle('active-minigame-toggle', miniGamesEnabled);
 
         toggleMiniGamesBtn.addEventListener('click', () => {
             miniGamesEnabled = !miniGamesEnabled;
-            localStorage.setItem('miniGamesEnabled', miniGamesEnabled);
+            localStorage.setItem('miniGamesEnabled', miniGamesEnabled.toString());
             toggleMiniGamesBtn.textContent = `Mini-Games: ${miniGamesEnabled ? 'On' : 'Off'}`;
             toggleMiniGamesBtn.classList.toggle('active-minigame-toggle', miniGamesEnabled);
         });
     }
+    function triggerMiniGame() { if (availableMiniGames.length === 0) { console.warn("No mini-games available!"); resumeQuizAfterMiniGame(undefined); return; } isMiniGameActive = true; if (animatedBackgroundsEnabled && !PREFERS_REDUCED_MOTION && vantaEffect) { applyVantaEffect(null); } miniGameArea.classList.add('active'); miniGameArea.setAttribute('tabindex', '-1'); miniGameArea.focus(); const gameToPlay = availableMiniGames[currentMiniGameIdx]; currentMiniGameIdx = (currentMiniGameIdx + 1) % availableMiniGames.length; gameToPlay.start(miniGameArea, (miniGameScore) => { gameToPlay.destroy(); miniGameArea.classList.remove('active'); resumeQuizAfterMiniGame(miniGameScore); }); }
+    function resumeQuizAfterMiniGame(miniGameScore) { setTimeout(() => { isMiniGameActive = false; updateBackgroundState(); quizCont.style.display = 'flex'; controlsBar.style.display = 'flex'; if (typeof gsap === 'undefined') { quizCont.style.opacity = '0'; controlsBar.style.opacity = '0'; } quizCont.classList.add('animate__animated', 'animate__fadeInCustom'); controlsBar.classList.add('animate__animated', 'animate__fadeInCustom'); let animationHandled = false; const animationEndHandler = () => { if (animationHandled) return; animationHandled = true; quizCont.classList.remove('animate__animated', 'animate__fadeInCustom'); controlsBar.classList.remove('animate__animated', 'animate__fadeInCustom'); if (typeof gsap === 'undefined') { quizCont.style.opacity = '1'; controlsBar.style.opacity = '1'; } if (miniGameScore !== undefined && miniGameScore !== null) { showFloatingMessage(`Mini-Game: ${miniGameScore} points!`, 'var(--brand-light)', 'var(--fg)'); } setTimeout(nextQ, 300); }; if (typeof gsap !== 'undefined') { gsap.fromTo([quizCont, controlsBar], {opacity: 0}, {opacity: 1, duration: 0.3, onComplete: animationEndHandler}); } else { quizCont.style.transition = 'opacity 0.3s ease-in-out'; controlsBar.style.transition = 'opacity 0.3s ease-in-out'; void quizCont.offsetWidth; quizCont.style.opacity = '1'; controlsBar.style.opacity = '1'; quizCont.addEventListener('transitionend', function onTransitionEnd(event) { if (event.propertyName === 'opacity') { animationEndHandler(); quizCont.removeEventListener('transitionend', onTransitionEnd); quizCont.style.transition = ''; controlsBar.style.transition = ''; } }, { once: false }); setTimeout(() => { if (!animationHandled) { animationEndHandler(); } }, 350); } }, 4000); }
 
-    function triggerMiniGame() {
-        if (availableMiniGames.length === 0) {
-            console.warn("No mini-games available!");
-            resumeQuizAfterMiniGame(undefined); 
-            return;
-        }
-        isMiniGameActive = true; 
-
-        if (animatedBackgroundsEnabled && !PREFERS_REDUCED_MOTION && vantaEffect) {
-            applyVantaEffect(null); 
-        }
-
-        miniGameArea.classList.add('active');
-        miniGameArea.setAttribute('tabindex', '-1');
-        miniGameArea.focus();
-
-        const gameToPlay = availableMiniGames[currentMiniGameIdx];
-        currentMiniGameIdx = (currentMiniGameIdx + 1) % availableMiniGames.length;
-        
-        gameToPlay.start(miniGameArea, (miniGameScore) => {
-            gameToPlay.destroy(); 
-            miniGameArea.classList.remove('active');
-            resumeQuizAfterMiniGame(miniGameScore); 
-        });
-    }
-
-    function resumeQuizAfterMiniGame(miniGameScore) {
-        setTimeout(() => {
-            isMiniGameActive = false; 
-            updateBackgroundState(); 
-
-            quizCont.style.display = 'flex'; 
-            controlsBar.style.display = 'flex';
-            
-            if (typeof gsap === 'undefined') {
-                quizCont.style.opacity = '0';
-                controlsBar.style.opacity = '0';
-            }
-            
-            quizCont.classList.add('animate__animated', 'animate__fadeInCustom');
-            controlsBar.classList.add('animate__animated', 'animate__fadeInCustom');
-
-            let animationHandled = false;
-            const animationEndHandler = () => {
-                if (animationHandled) return;
-                animationHandled = true;
-                quizCont.classList.remove('animate__animated', 'animate__fadeInCustom');
-                controlsBar.classList.remove('animate__animated', 'animate__fadeInCustom');
-                if (typeof gsap === 'undefined') {
-                    quizCont.style.opacity = '1';
-                    controlsBar.style.opacity = '1';
-                }
-                if (miniGameScore !== undefined) {
-                    showFloatingMessage(`Mini-Game: ${miniGameScore} points!`, 'var(--brand-light)', 'var(--fg)');
-                }
-                setTimeout(nextQ, 300); 
-            };
-
-            if (typeof gsap !== 'undefined') {
-                gsap.fromTo([quizCont, controlsBar], {opacity: 0}, {opacity: 1, duration: 0.3, onComplete: animationEndHandler});
-            } else {
-                quizCont.style.transition = 'opacity 0.3s ease-in-out';
-                controlsBar.style.transition = 'opacity 0.3s ease-in-out';
-                void quizCont.offsetWidth; 
-                quizCont.style.opacity = '1';
-                controlsBar.style.opacity = '1';
-                quizCont.addEventListener('transitionend', function onTransitionEnd(event) {
-                    if (event.propertyName === 'opacity') {
-                        animationEndHandler();
-                        quizCont.removeEventListener('transitionend', onTransitionEnd); 
-                        quizCont.style.transition = ''; 
-                        controlsBar.style.transition = '';
-                    }
-                }, { once: false }); 
-                 setTimeout(() => { 
-                    if (!animationHandled) { 
-                        animationEndHandler();
-                    }
-                }, 350); 
-            }
-        }, 4000); 
-    }
 
     // --- UI & GAME LOGIC ---
     function updateModeUI() { if (currentGameMode === 'listenAndPickWord') { listenPickWordArea.style.display = 'flex'; readPickSoundArea.style.display = 'none'; modeToggleBtn.textContent = 'Mode: Listen'; listenBtn.innerHTML = '🔊'; } else { listenPickWordArea.style.display = 'none'; readPickSoundArea.style.display = 'flex'; modeToggleBtn.textContent = 'Mode: Read'; listenBtn.innerHTML = '📖'; if(submitAnswerBtn) submitAnswerBtn.disabled = true; } }
     modeToggleBtn.addEventListener('click', () => { currentGameMode = (currentGameMode === 'listenAndPickWord') ? 'readAndPickSound' : 'listenAndPickWord'; localStorage.setItem('sightWordsGameMode', currentGameMode); updateModeUI(); clearTimeout(questionTimeoutId); resetQuestionState(); setTimeout(nextQ, 100); });
     function resetQuestionState() { questionAnsweredThisTurn = false; selectedSoundButton = null; soundChoiceBtns.forEach(btn => btn.classList.remove('sound-btn-selected', 'correct', 'incorrect')); wordChoiceBtns.forEach(btn => btn.classList.remove('correct', 'incorrect')); if (submitAnswerBtn) submitAnswerBtn.disabled = true; }
-    function initCircularTimer() { const timerContainer = document.getElementById('circular-timer'); if (!timerContainer) return; circleTimerInstance = new ProgressBar.Circle(timerContainer, { strokeWidth: 10, easing: 'linear', color: 'var(--brand)', trailColor: 'rgba(224, 224, 224, 0.5)', trailWidth: 10, svgStyle: { width: '100%', height: '100%' }, text: { style: { color: 'var(--fg)', position: 'absolute', left: '50%', top: '50%', padding: 0, margin: 0, transform: { prefix: true, value: 'translate(-50%, -50%)' }, fontSize: '1.4em', fontWeight: '600', }, autoStyleContainer: false }, step: function(state, circle) { if (timeLimit > 0) { const timeLeft = Math.ceil(timeLimit * (1 - circle.value())); circle.setText(timeLeft > 0 ? timeLeft : '0'); if (timeLeft <= timeLimit * 0.3) circle.path.setAttribute('stroke', '#f44336'); else if (timeLeft <= timeLimit * 0.6) circle.path.setAttribute('stroke', '#ff9800'); else circle.path.setAttribute('stroke', 'var(--brand)'); } else { circle.setText('∞'); circle.path.setAttribute('stroke', 'var(--brand)'); } } }); }
-    function startCountdown(cb) { clearTimeout(questionTimeoutId); onDoneCallback = cb; remainingMs   = timeLimit * 1000; timerStartTs  = Date.now(); circleTimerInstance.set(0); circleTimerInstance.animate(1, { duration: remainingMs }); questionTimeoutId = setTimeout(cb, remainingMs); isTimerPaused = false; }
 
-    function nextQ(){ resetQuestionState(); quizCont.classList.remove('animate__fadeInCustom', 'animate__zoomIn'); void quizCont.offsetWidth; quizCont.classList.add('animate__zoomIn'); [...wordChoiceBtns, ...soundChoiceBtns].forEach(btn => btn.style.display = ''); if(submitAnswerBtn) submitAnswerBtn.style.display = ''; wordToReadDisplay.style.display = ''; if (words.length === 0) { console.error("No words available for the quiz! Check level/word selections."); wordToReadDisplay.textContent = "No Words!"; showFloatingMessage("Please select levels/words!", "var(--brand-dark)"); listenPickWordArea.style.display = 'none'; readPickSoundArea.style.display = 'flex'; soundChoiceBtns.forEach(btn => btn.style.display = 'none'); if (submitAnswerBtn) submitAnswerBtn.style.display = 'none'; wordChoiceBtns.forEach(btn => btn.style.display = 'none'); clearTimeout(questionTimeoutId); if(circleTimerInstance) circleTimerInstance.set(0); return; } currentCorrectWord = words[Math.floor(Math.random()*words.length)]; let distractorWord; if (words.length > 1) { do { distractorWord = words[Math.floor(Math.random()*words.length)]; } while(distractorWord === currentCorrectWord); } else { distractorWord = currentCorrectWord; } if (currentGameMode === 'listenAndPickWord') { const pair = Math.random() < 0.5 ? [currentCorrectWord, distractorWord] : [distractorWord, currentCorrectWord]; wordChoiceBtns.forEach((b,i)=>{ b.textContent = pair[i]; b.disabled = false; b.className = 'choice-btn'; }); speak(currentCorrectWord); } else { wordToReadDisplay.textContent = currentCorrectWord; const soundWords = Math.random() < 0.5 ? [currentCorrectWord, distractorWord] : [distractorWord, currentCorrectWord]; soundChoiceBtns.forEach((btn, i) => { btn.dataset.wordToSpeak = soundWords[i]; btn.disabled = false; btn.className = 'choice-btn sound-btn'; }); if(submitAnswerBtn) submitAnswerBtn.disabled = true; } startCountdown(()=>{ if (questionAnsweredThisTurn || isMiniGameActive) return; questionAnsweredThisTurn = true; disableAllChoiceButtons(); playBuzz(); showFloatingMessage("Time's Up!", '#ffcdd2', '#333'); currentStreak = 0; setTimeout(nextQ,1200); }); }
+    function initCircularTimer() { const timerContainer = document.getElementById('circular-timer'); if (!timerContainer) return; circleTimerInstance = new ProgressBar.Circle(timerContainer, { strokeWidth: 10, easing: 'linear', color: 'var(--brand)', trailColor: 'rgba(224, 224, 224, 0.5)', trailWidth: 10, svgStyle: { width: '100%', height: '100%' }, text: { style: { color: 'var(--fg)', position: 'absolute', left: '50%', top: '50%', padding: 0, margin: 0, transform: { prefix: true, value: 'translate(-50%, -50%)' }, fontSize: '1.4em', fontWeight: '600', }, autoStyleContainer: false }, step: function(state, circle) { if (timeLimit > 0) { const timeLeft = Math.ceil(timeLimit * (1 - circle.value())); circle.setText(timeLeft > 0 ? timeLeft : '0'); if (timeLeft <= timeLimit * 0.3) circle.path.setAttribute('stroke', '#f44336'); else if (timeLeft <= timeLimit * 0.6) circle.path.setAttribute('stroke', '#ff9800'); else circle.path.setAttribute('stroke', 'var(--brand)'); } else { circle.setText('∞'); circle.path.setAttribute('stroke', 'var(--brand)'); } } }); }
+    function startCountdown(cb) { clearTimeout(questionTimeoutId); onDoneCallback = cb; remainingMs = timeLimit * 1000; timerStartTs = Date.now(); if (circleTimerInstance) { circleTimerInstance.set(0); if (timeLimit > 0) circleTimerInstance.animate(1, { duration: remainingMs }); } if (timeLimit > 0) questionTimeoutId = setTimeout(cb, remainingMs); isTimerPaused = false; }
+    function toggleTimer() { if (timeLimit <= 0) return; if (!isTimerPaused) { clearTimeout(questionTimeoutId); if (circleTimerInstance) circleTimerInstance.stop(); remainingMs -= (Date.now() - timerStartTs); } else { timerStartTs = Date.now(); if (circleTimerInstance && timeLimit > 0) circleTimerInstance.animate(1, { duration: remainingMs }); if (timeLimit > 0) questionTimeoutId = setTimeout(onDoneCallback, remainingMs); } isTimerPaused = !isTimerPaused; }
+    const timerWrapper = document.getElementById('timer-wrapper');
+    timerWrapper.addEventListener('click', e => { if (!isMiniGameActive) toggleTimer(); });
+    timerDisp.addEventListener('click',()=>{ if (!isMiniGameActive) { timerSel.style.display = timerSel.style.display==='block'?'none':'block'; timerSel.value = timeLimit; } });
+    timerSel.addEventListener('change',()=>{ timeLimit = +timerSel.value; localStorage.setItem('quizTimeLimit', timeLimit.toString()); timerDisp.textContent = timeLimit > 0 ? timeLimit+'s ⏱️' : 'Untimed ⏱️'; timerSel.style.display='none'; if (circleTimerInstance) { circleTimerInstance.set(0); circleTimerInstance.setText(timeLimit > 0 ? timeLimit : '∞'); } if(!questionAnsweredThisTurn) startCountdown(onDoneCallback); });
+
+    function nextQ(){
+        resetQuestionState();
+        quizCont.classList.remove('animate__fadeInCustom', 'animate__zoomIn');
+        void quizCont.offsetWidth;
+        quizCont.classList.add('animate__zoomIn');
+        [...wordChoiceBtns, ...soundChoiceBtns].forEach(btn => btn.style.display = '');
+        if(submitAnswerBtn) submitAnswerBtn.style.display = '';
+        wordToReadDisplay.style.display = '';
+
+        if (words.length === 0) {
+            console.error("No words available for the quiz! Check list/level/word selections.");
+            wordToReadDisplay.textContent = "No Words!";
+            showFloatingMessage("Please select word list/levels or add custom words!", "var(--brand-dark)");
+            listenPickWordArea.style.display = 'none';
+            readPickSoundArea.style.display = 'flex';
+            soundChoiceBtns.forEach(btn => btn.style.display = 'none');
+            if (submitAnswerBtn) submitAnswerBtn.style.display = 'none';
+            wordChoiceBtns.forEach(btn => btn.style.display = 'none');
+            clearTimeout(questionTimeoutId);
+            if(circleTimerInstance) { circleTimerInstance.set(0); circleTimerInstance.stop(); }
+            return;
+        }
+        currentCorrectWord = words[Math.floor(Math.random()*words.length)];
+        let distractorWord;
+        if (words.length > 1) {
+            do { distractorWord = words[Math.floor(Math.random()*words.length)]; } while(distractorWord === currentCorrectWord);
+        } else {
+            const allPossibleWords = [];
+            Object.values(WORD_BANK.dolch).forEach(arr => allPossibleWords.push(...arr));
+            Object.values(WORD_BANK.fry).forEach(arr => allPossibleWords.push(...arr));
+            allPossibleWords.push(...WORD_BANK.custom);
+            const uniqueWords = [...new Set(allPossibleWords)];
+            do { distractorWord = uniqueWords[Math.floor(Math.random()*uniqueWords.length)]; } while(distractorWord === currentCorrectWord && uniqueWords.length > 1);
+            if (distractorWord === currentCorrectWord && uniqueWords.length <=1) distractorWord = "word"; // Absolute fallback
+        }
+
+        if (currentGameMode === 'listenAndPickWord') {
+            const pair = Math.random() < 0.5 ? [currentCorrectWord, distractorWord] : [distractorWord, currentCorrectWord];
+            wordChoiceBtns.forEach((b,i)=>{ b.textContent = pair[i]; b.disabled = false; b.className = 'choice-btn'; });
+            speak(currentCorrectWord);
+        } else {
+            wordToReadDisplay.textContent = currentCorrectWord;
+            const soundWords = Math.random() < 0.5 ? [currentCorrectWord, distractorWord] : [distractorWord, currentCorrectWord];
+            soundChoiceBtns.forEach((btn, i) => { btn.dataset.wordToSpeak = soundWords[i]; btn.disabled = false; btn.className = 'choice-btn sound-btn'; });
+            if(submitAnswerBtn) submitAnswerBtn.disabled = true;
+        }
+
+        if (timeLimit > 0) {
+            startCountdown(()=>{
+                if (questionAnsweredThisTurn || isMiniGameActive) return;
+                questionAnsweredThisTurn = true;
+                disableAllChoiceButtons();
+                playBuzz();
+                showFloatingMessage("Time's Up!", '#ffcdd2', '#333');
+                currentStreak = 0;
+                setTimeout(nextQ,1200);
+            });
+        } else {
+             if (circleTimerInstance) { circleTimerInstance.set(0); circleTimerInstance.setText('∞'); }
+        }
+    }
     function disableAllChoiceButtons() { wordChoiceBtns.forEach(b => b.disabled = true); soundChoiceBtns.forEach(b => b.disabled = true); if (submitAnswerBtn) submitAnswerBtn.disabled = true; }
 
     function handleAnswer(isCorrect, targetButtonElement) {
-        if (questionAnsweredThisTurn || isMiniGameActive) return; 
+        if (questionAnsweredThisTurn || isMiniGameActive) return;
         questionAnsweredThisTurn = true;
 
-        clearTimeout(questionTimeoutId); 
+        clearTimeout(questionTimeoutId);
+        if(circleTimerInstance && timeLimit > 0) circleTimerInstance.stop();
         disableAllChoiceButtons();
 
         if(isCorrect){
@@ -1483,30 +1627,28 @@
           scoreVal.textContent = ++score;
           const newScoreTier = Math.floor(score / 10);
 
-          if (newScoreTier !== oldScoreTier || score === 10) { 
+          if (newScoreTier !== oldScoreTier || score === 10) {
             if (vantaBackgroundKeys.length > 0) {
                 currentBackgroundKey = vantaBackgroundKeys[newScoreTier % vantaBackgroundKeys.length];
-            } else {
-                currentBackgroundKey = null;
-            }
+            } else { currentBackgroundKey = null; }
             currentPastelBgIndex = newScoreTier % pastelBackgroundColors.length;
-            updateBackgroundState(); 
+            updateBackgroundState();
           }
-          
+
           targetButtonElement.classList.add('correct');
           myConfetti({ particleCount:80, spread:100, origin: { y: 0.6 } });
           showFloatingScore("+1 Awesome!", targetButtonElement);
           currentStreak++;
           if (streakThresholds[currentStreak]) { setTimeout(() => { playBell(); showFloatingMessage(streakThresholds[currentStreak], 'gold', '#333'); myConfetti({ particleCount: 150, spread: 180, startVelocity: 45, origin: { y: 0.5 }}); }, 300); }
         } else {
-          playBuzz(); 
+          playBuzz();
           targetButtonElement.classList.add('incorrect');
-          if (currentGameMode === 'listenAndPickWord') { wordChoiceBtns.find(b => b.textContent === currentCorrectWord)?.classList.add('correct'); } 
+          if (currentGameMode === 'listenAndPickWord') { wordChoiceBtns.find(b => b.textContent === currentCorrectWord)?.classList.add('correct'); }
           else { soundChoiceBtns.find(b => b.dataset.wordToSpeak === currentCorrectWord)?.classList.add('correct'); }
           showFloatingScore("Oops!", targetButtonElement, true);
-          currentStreak = 0; 
+          currentStreak = 0;
         }
-        
+
         targetButtonElement.classList.add('animate__animated', isCorrect ? 'animate__pulse' : 'animate__shakeX');
 
         const isMiniGameDue = isCorrect && miniGamesEnabled && score > 0 && score % 10 === 0;
@@ -1518,13 +1660,13 @@
             }
             soundChoiceBtns.forEach(btn => btn.classList.remove('sound-btn-selected'));
 
-            if (isMiniGameDue) { 
-                quizCont.style.opacity = 1; 
+            if (isMiniGameDue) {
+                quizCont.style.opacity = 1;
                 controlsBar.style.opacity = 1;
                 const fadeOutHandler = () => {
                     quizCont.style.display = 'none';
                     controlsBar.style.display = 'none';
-                    triggerMiniGame(); 
+                    triggerMiniGame();
                 };
                 if (typeof gsap !== 'undefined') {
                     gsap.to([quizCont, controlsBar], {opacity: 0, duration: 0.3, onComplete: fadeOutHandler});
@@ -1537,14 +1679,14 @@
                         fadeOutHandler();
                         quizCont.removeEventListener('animationend', tempFadeOutListener);
                     }, { once: true });
-                     setTimeout(() => { 
+                     setTimeout(() => {
                         if (quizCont.classList.contains('animate__fadeOutCustom')) {
-                            fadeOutHandler();
+                            fadeOutHandler(); // Fallback if animationend doesn't fire
                         }
                     }, 400);
                 }
             } else {
-                setTimeout(nextQ, 100); 
+                setTimeout(nextQ, 100);
             }
         }, { once: true });
     }
@@ -1553,42 +1695,462 @@
     soundChoiceBtns.forEach(btn => { btn.addEventListener('click', () => { if (questionAnsweredThisTurn || currentGameMode !== 'readAndPickSound' || isMiniGameActive) return; const wordToSpeak = btn.dataset.wordToSpeak; speak(wordToSpeak); if (selectedSoundButton && selectedSoundButton !== btn) { selectedSoundButton.classList.remove('sound-btn-selected'); } btn.classList.add('sound-btn-selected'); selectedSoundButton = btn; if(submitAnswerBtn) submitAnswerBtn.disabled = false; }); });
     submitAnswerBtn.addEventListener('click', () => { if (questionAnsweredThisTurn || currentGameMode !== 'readAndPickSound' || !selectedSoundButton || isMiniGameActive) return; const wordSpokenBySelectedButton = selectedSoundButton.dataset.wordToSpeak; const isCorrect = wordSpokenBySelectedButton === currentCorrectWord; handleAnswer(isCorrect, selectedSoundButton); });
     listenBtn.onclick = ()=>{ if (currentCorrectWord && !isMiniGameActive) { if (currentGameMode === 'listenAndPickWord') { speak(currentCorrectWord); } else { speak(currentCorrectWord); } } };
-    timerDisp.addEventListener('click',()=>{ if (!isMiniGameActive) { timerSel.style.display = timerSel.style.display==='block'?'none':'block'; timerSel.value = timeLimit; } });
-    timerSel.addEventListener('change',()=>{ timeLimit = +timerSel.value; timerDisp.textContent = timeLimit > 0 ? timeLimit+'s ⏱️' : 'Untimed ⏱️'; timerSel.style.display='none'; });
-      const timerWrapper = document.getElementById('timer-wrapper');
-      timerWrapper.addEventListener('click', e => {
-        if (!isMiniGameActive) toggleTimer();                                  
-    });
+
     function showFloatingScore(message, targetButton, isError = false) { const floatEl = document.createElement('div'); floatEl.textContent = message; floatEl.classList.add('floating-effect'); floatEl.classList.add(isError ? 'floating-message' : 'floating-score'); if(isError) {floatEl.style.backgroundColor = 'var(--incorrect-bg)'; floatEl.style.color = '#333';} document.body.appendChild(floatEl); const btnRect = targetButton.getBoundingClientRect(); floatEl.style.left = `${btnRect.left + btnRect.width / 2 - floatEl.offsetWidth / 2}px`; floatEl.style.top = `${btnRect.top - floatEl.offsetHeight - 10}px`; gsap.to(floatEl, { y: -60, opacity: 0, duration: 1.8, ease: 'power1.out', onComplete: () => floatEl.remove() }); }
     function showFloatingMessage(text, bgColor = 'var(--brand)', textColor = 'white') { const msgEl = document.createElement('div'); msgEl.textContent = text; msgEl.classList.add('floating-effect', 'floating-message'); msgEl.style.backgroundColor = bgColor; msgEl.style.color = textColor; msgEl.style.left = '50%'; msgEl.style.top = '15%'; msgEl.style.transform = 'translateX(-50%)'; msgEl.style.padding = '0.8rem 1.5rem'; msgEl.style.fontSize = '1.5em'; document.body.appendChild(msgEl); gsap.fromTo(msgEl, { opacity: 0, y: -20, scale: 0.8 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'back.out(1.7)' } ); setTimeout(() => { gsap.to(msgEl, { opacity: 0, y: 20, scale: 0.8, duration: 0.5, ease: 'back.in(1.7)', onComplete: () => msgEl.remove() }); }, 2300); }
 
-    // --- LEVEL MANAGEMENT ---
-    function initLevelManagement() { const storedLevels = localStorage.getItem('sightWordsSelectedLevels'); selectedLevels = storedLevels ? JSON.parse(storedLevels) : ['A']; Object.keys(allLevelWords).forEach(levelKey => { const levelItem = document.createElement('div'); levelItem.classList.add('level-item'); levelItem.dataset.level = levelKey; levelItem.textContent = `Level ${levelKey}`; const longPressHint = document.createElement('span'); longPressHint.classList.add('long-press-indicator'); longPressHint.textContent = '(hold to customize)'; levelItem.appendChild(longPressHint); if (selectedLevels.includes(levelKey)) { levelItem.classList.add('selected'); } levelItem.addEventListener('mousedown', (e) => handleLevelInteractionStart(e, levelKey)); levelItem.addEventListener('touchstart', (e) => handleLevelInteractionStart(e, levelKey), { passive: false }); levelItem.addEventListener('mouseup', handleLevelInteractionEnd); levelItem.addEventListener('mouseleave', handleLevelInteractionEnd); levelItem.addEventListener('touchend', handleLevelInteractionEnd); levelItem.addEventListener('touchcancel', handleLevelInteractionEnd); levelsDropdownMenu.appendChild(levelItem); }); levelsToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); levelsDropdownMenu.classList.toggle('visible'); }); document.addEventListener('click', (event) => { if (!levelsToggleBtn.contains(event.target) && !levelsDropdownMenu.contains(event.target)) { levelsDropdownMenu.classList.remove('visible'); } }); modalSaveBtn.addEventListener('click', saveCustomWordSelection); modalCloseBtn.addEventListener('click', closeWordSelectionModal); modalSelectAllBtn.addEventListener('click', () => toggleAllModalWords(true)); modalDeselectAllBtn.addEventListener('click', () => toggleAllModalWords(false)); updateActiveQuizWords(); }
-    function handleLevelInteractionStart(event, levelKey) { if(isMiniGameActive) return; event.preventDefault(); isLongPress = false; clearTimeout(longPressTimer); longPressTimer = setTimeout(() => { isLongPress = true; openWordSelectionModal(levelKey); levelsDropdownMenu.classList.remove('visible'); }, 500); }
-    function handleLevelInteractionEnd(event) { clearTimeout(longPressTimer); if (!isLongPress) { const target = event.currentTarget; if (target && target.dataset.level && !isLongPress) { toggleLevelSelection(target.dataset.level, target); } } }
-    function toggleLevelSelection(levelKey, levelItemElement) { const index = selectedLevels.indexOf(levelKey); if (index > -1) { selectedLevels.splice(index, 1); levelItemElement.classList.remove('selected'); } else { selectedLevels.push(levelKey); levelItemElement.classList.add('selected'); } localStorage.setItem('sightWordsSelectedLevels', JSON.stringify(selectedLevels)); updateActiveQuizWords(); }
-    function updateActiveQuizWords() { words = []; selectedLevels.forEach(levelKey => { const customWordsJson = localStorage.getItem(`${levelKey}_customWords`); if (customWordsJson) { const customWords = JSON.parse(customWordsJson); if (customWords.length > 0) { words.push(...customWords); } else { words.push(...allLevelWords[levelKey]); } } else { words.push(...allLevelWords[levelKey]); } }); words = [...new Set(words)]; if (words.length === 0 && allLevelWords.A) { words.push(...allLevelWords.A); if(!selectedLevels.includes('A')) { selectedLevels.push('A'); const levelAItem = levelsDropdownMenu.querySelector(`.level-item[data-level="A"]`); if(levelAItem) levelAItem.classList.add('selected'); localStorage.setItem('sightWordsSelectedLevels', JSON.stringify(selectedLevels)); } showFloatingMessage("Using Level A words as no others were selected.", "var(--brand-dark)"); } clearTimeout(questionTimeoutId); resetQuestionState(); setTimeout(nextQ, 100); }
-    function openWordSelectionModal(levelKey) { currentEditingLevelKey = levelKey; modalLevelTitle.textContent = `Customize Level ${levelKey} Words`; modalWordList.innerHTML = ''; const levelWords = allLevelWords[levelKey]; const customWordsJson = localStorage.getItem(`${levelKey}_customWords`); let customWords = []; if (customWordsJson) { customWords = JSON.parse(customWordsJson); } levelWords.forEach(word => { const itemDiv = document.createElement('div'); itemDiv.classList.add('modal-word-item'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.id = `modal-word-${word.replace(/\s+/g, '-')}`; checkbox.value = word; checkbox.checked = customWords.includes(word); const label = document.createElement('label'); label.htmlFor = checkbox.id; label.textContent = word; itemDiv.appendChild(checkbox); itemDiv.appendChild(label); itemDiv.addEventListener('click', (e) => { if (e.target !== checkbox) checkbox.checked = !checkbox.checked; }); modalWordList.appendChild(itemDiv); }); wordSelectionModal.classList.add('visible'); }
-    function closeWordSelectionModal() { wordSelectionModal.classList.remove('visible'); currentEditingLevelKey = null; }
-    function saveCustomWordSelection() { if (!currentEditingLevelKey) return; const selectedCustomWords = []; modalWordList.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => { selectedCustomWords.push(cb.value); }); localStorage.setItem(`${currentEditingLevelKey}_customWords`, JSON.stringify(selectedCustomWords)); closeWordSelectionModal(); updateActiveQuizWords(); }
-    function toggleAllModalWords(select) { modalWordList.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = select; }); }
 
-    // --- Pause Timer ---
-    function toggleTimer() {
-      if (timeLimit <= 0) return;                // “untimed” mode
-      if (!isTimerPaused) {
-        // PAUSE
+    // --- WORD LIST & LEVEL MANAGEMENT (REWORKED & UPDATED) ---
+    function initWordLevelManagementUI() {
+        populateWordListDropdown();
+        populateLevelsDropdown();
+
+        wordSourceToggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (levelsDropdownMenu.classList.contains('visible')) {
+                levelsDropdownMenu.classList.remove('visible');
+            } else if (wordListDropdownMenu.classList.contains('visible')) {
+                 wordListDropdownMenu.classList.remove('visible');
+            }
+            else {
+                wordListDropdownMenu.classList.add('visible');
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            const controlsRHSParent = document.getElementById('controls-RHS-container');
+            if (controlsRHSParent && !controlsRHSParent.contains(event.target)) {
+                 wordListDropdownMenu.classList.remove('visible');
+                 levelsDropdownMenu.classList.remove('visible');
+            }
+        });
+    }
+
+    function populateWordListDropdown() {
+        wordListDropdownMenu.innerHTML = '';
+        const listNames = { dolch: "Dolch", fry: "Fry", custom: "Custom" };
+        Object.keys(listNames).forEach(listKey => {
+            if (WORD_BANK[listKey]) {
+                const listItem = document.createElement('div');
+                listItem.classList.add('dropdown-item');
+                listItem.dataset.listKey = listKey;
+                listItem.textContent = listNames[listKey];
+                if (listKey === activeWordList) {
+                    listItem.classList.add('selected');
+                }
+
+                // Click to select list
+                let clickTimeout;
+                listItem.addEventListener('pointerdown', (e) => {
+                    e.preventDefault(); // Prevent text selection/drag on long press
+                    isLongPress = false;
+                    clearTimeout(longPressTimer);
+                    longPressTimer = setTimeout(() => {
+                        isLongPress = true;
+                        if (listKey === 'custom') { // Long press on "Custom" opens modal for custom list
+                            openWordCustomizationModal('custom', '__ALL__'); // Special level key for custom
+                            wordListDropdownMenu.classList.remove('visible');
+                            levelsDropdownMenu.classList.remove('visible');
+                        }
+                        // Could add long-press for Dolch/Fry here too if needed, e.g., to customize ALL levels of that list
+                    }, 600);
+                });
+
+                listItem.addEventListener('pointerup', (e) => {
+                    clearTimeout(longPressTimer);
+                    if (!isLongPress) { // Short click
+                        setActiveWordList(listKey);
+                        wordListDropdownMenu.classList.remove('visible');
+                        if (listKey !== 'custom') {
+                            levelsDropdownMenu.classList.add('visible');
+                        } else {
+                            levelsDropdownMenu.classList.remove('visible');
+                        }
+                    }
+                    isLongPress = false;
+                });
+                 listItem.addEventListener('pointerleave', () => clearTimeout(longPressTimer)); // Cancel long press if pointer leaves
+
+                wordListDropdownMenu.appendChild(listItem);
+            }
+        });
+    }
+
+    function setActiveWordList(newListKey) {
+        if (activeWordList === newListKey && selectedLevels.length > 0 && !(newListKey === 'custom' && selectedLevels[0] !== "__ALL__")) return;
+
+        activeWordList = newListKey;
+        localStorage.setItem('activeWordList', activeWordList);
+
+        if (newListKey === 'custom') {
+            selectedLevels = ["__ALL__"];
+        } else if (WORD_BANK[newListKey] && typeof WORD_BANK[newListKey] === 'object' && Object.keys(WORD_BANK[newListKey]).length > 0) {
+            selectedLevels = [Object.keys(WORD_BANK[newListKey])[0]]; // Default to first level of the new list
+        } else {
+            selectedLevels = []; // No levels for this list (e.g. empty Fry)
+        }
+        localStorage.setItem('selectedLevels', JSON.stringify(selectedLevels));
+
+        Array.from(wordListDropdownMenu.children).forEach(child => {
+            child.classList.toggle('selected', child.dataset.listKey === activeWordList);
+        });
+
+        populateLevelsDropdown();
+        updateActiveQuizWords();
+        updateWordSourceButtonText();
+    }
+
+    function populateLevelsDropdown() {
+        levelsDropdownMenu.innerHTML = '';
+
+        if (activeWordList === 'custom') { // "Custom" list has no sub-levels in this dropdown
+            levelsDropdownMenu.classList.remove('visible'); // Ensure it's hidden
+            updateWordSourceButtonText();
+            return;
+        }
+
+        const currentList = WORD_BANK[activeWordList];
+        if (!currentList || typeof currentList !== 'object') {
+             updateWordSourceButtonText(); return; // No levels to show
+        }
+
+        const levelKeys = Object.keys(currentList);
+        if (activeWordList === 'fry') {
+            levelKeys.sort((a, b) => parseInt(a.split('-')[0]) - parseInt(b.split('-')[0]));
+        } else { levelKeys.sort(); }
+
+
+        levelKeys.forEach(levelKey => {
+            const levelItem = document.createElement('div');
+            levelItem.classList.add('dropdown-item', 'level-item');
+            levelItem.dataset.level = levelKey;
+
+            levelItem.textContent = activeWordList === 'dolch' ? `Level ${levelKey}` : `Fry ${levelKey}`;
+
+            const longPressHint = document.createElement('span');
+            longPressHint.classList.add('long-press-indicator');
+            longPressHint.textContent = '(customize)';
+            levelItem.appendChild(longPressHint);
+
+            if (selectedLevels.includes(levelKey)) {
+                levelItem.classList.add('selected');
+            }
+
+            levelItem.addEventListener('mousedown', (e) => handleLevelInteractionStart(e, activeWordList, levelKey));
+            levelItem.addEventListener('touchstart', (e) => handleLevelInteractionStart(e, activeWordList, levelKey), { passive: false });
+            levelItem.addEventListener('mouseup', (e) => handleLevelInteractionEnd(e, levelKey, levelItem));
+            levelItem.addEventListener('mouseleave', (e) => handleLevelInteractionEnd(e, levelKey, levelItem));
+            levelItem.addEventListener('touchend', (e) => handleLevelInteractionEnd(e, levelKey, levelItem));
+            levelItem.addEventListener('touchcancel', (e) => handleLevelInteractionEnd(e, levelKey, levelItem));
+
+            levelsDropdownMenu.appendChild(levelItem);
+        });
+        updateWordSourceButtonText();
+    }
+
+    function handleLevelInteractionStart(event, listContext, levelKey) { // listContext is 'dolch' or 'fry'
+        if(isMiniGameActive) return;
+        event.preventDefault();
+        isLongPress = false;
+        clearTimeout(longPressTimer);
+        longPressTimer = setTimeout(() => {
+            isLongPress = true;
+            openWordCustomizationModal(listContext, levelKey); // Pass current list and its level
+            levelsDropdownMenu.classList.remove('visible');
+            wordListDropdownMenu.classList.remove('visible');
+        }, 600);
+    }
+
+    function handleLevelInteractionEnd(event, levelKey, levelItemElement) {
+        clearTimeout(longPressTimer);
+        if (!isLongPress) {
+            if (event.type === 'mouseup' || event.type === 'touchend') {
+                let target = event.target;
+                let isClickOnItem = false;
+                while(target && target !== document.body) {
+                    if (target === levelItemElement) { isClickOnItem = true; break; }
+                    target = target.parentElement;
+                }
+                if (isClickOnItem) {
+                    toggleLevelSelection(levelKey, levelItemElement);
+                }
+            }
+        }
+        isLongPress = false;
+    }
+
+    function toggleLevelSelection(levelKey, levelItemElement) {
+        const index = selectedLevels.indexOf(levelKey);
+        if (index > -1) {
+            if (selectedLevels.length > 1) {
+                 selectedLevels.splice(index, 1);
+                 levelItemElement.classList.remove('selected');
+            } else {
+                showFloatingMessage("At least one level must be selected.", "var(--brand-dark)");
+                return;
+            }
+        } else {
+            selectedLevels.push(levelKey);
+            levelItemElement.classList.add('selected');
+        }
+
+        if (activeWordList === 'fry') {
+            selectedLevels.sort((a, b) => parseInt(a.split('-')[0]) - parseInt(b.split('-')[0]));
+        } else { selectedLevels.sort(); }
+
+        localStorage.setItem('selectedLevels', JSON.stringify(selectedLevels));
+        updateActiveQuizWords();
+        updateWordSourceButtonText();
+    }
+
+    function updateWordSourceButtonText() {
+        const listName = activeWordList.charAt(0).toUpperCase() + activeWordList.slice(1);
+        let levelsText = 'None';
+        if (activeWordList === 'custom') {
+            levelsText = "All";
+        } else if (selectedLevels && selectedLevels.length > 0) {
+            if (activeWordList === 'fry' && selectedLevels.length > 2) {
+                levelsText = `${selectedLevels.length} groups`;
+            } else {
+                 levelsText = selectedLevels.join(',');
+            }
+        }
+        wordSourceToggleBtn.textContent = `${listName}: ${levelsText}`;
+    }
+
+
+    function updateActiveQuizWords() {
+        words = [];
+        const currentWordSet = new Set();
+
+        // 1. Add words from the active base list (Dolch, Fry), applying user's specific selections
+        if (activeWordList !== 'custom' && WORD_BANK[activeWordList] && typeof WORD_BANK[activeWordList] === 'object') {
+            selectedLevels.forEach(levelKey => {
+                if (WORD_BANK[activeWordList][levelKey]) {
+                    let baseWordsForLevel = [...WORD_BANK[activeWordList][levelKey]];
+                    const userSelectionsKey = `${activeWordList}_${levelKey}_userSelections`;
+                    const storedUserSelections = localStorage.getItem(userSelectionsKey);
+
+                    if (storedUserSelections) {
+                        try {
+                            const userSelectedSubset = JSON.parse(storedUserSelections);
+                            if (Array.isArray(userSelectedSubset)) {
+                                baseWordsForLevel = baseWordsForLevel.filter(word => userSelectedSubset.includes(word));
+                            }
+                        } catch (e) { console.error(`Error parsing user selections for ${userSelectionsKey}:`, e); }
+                    }
+                    baseWordsForLevel.forEach(word => currentWordSet.add(word));
+                }
+            });
+        }
+
+        // 2. ALWAYS add all words from the custom bank
+        (WORD_BANK.custom || []).forEach(word => currentWordSet.add(word));
+
+        words = Array.from(currentWordSet);
+
+        if (words.length === 0) {
+            showFloatingMessage("No words for selection. Defaulting to Dolch A + Custom.", "var(--brand-dark)");
+            activeWordList = 'dolch';
+            selectedLevels = ['A']; // Default to Dolch A
+            localStorage.setItem('activeWordList', activeWordList);
+            localStorage.setItem('selectedLevels', JSON.stringify(selectedLevels));
+
+            populateWordListDropdown(); // Update UI
+            populateLevelsDropdown();   // Update UI
+
+            (WORD_BANK.dolch.A || []).forEach(w => currentWordSet.add(w));
+            (WORD_BANK.custom || []).forEach(w => currentWordSet.add(w)); // Add custom to fallback too
+            words = Array.from(currentWordSet);
+            if (words.length === 0) words = ["the", "a"]; // Absolute fallback
+        }
+
+        updateWordSourceButtonText();
         clearTimeout(questionTimeoutId);
-        circleTimerInstance.stop();              // Halt ProgressBar.js animation
-        // Figure out how much time has already elapsed
-        remainingMs -= (Date.now() - timerStartTs);
-      } else {
-        // RESUME
-        timerStartTs = Date.now();
-        circleTimerInstance.animate(1, { duration: remainingMs });
-        questionTimeoutId = setTimeout(onDoneCallback, remainingMs);
-      }
-      isTimerPaused = !isTimerPaused;
+        resetQuestionState();
+        setTimeout(nextQ, 100);
+    }
+
+    // --- ENHANCED WORD CUSTOMIZATION MODAL (UPDATED) ---
+    function openWordCustomizationModal(listKey, levelKeyContext) { // levelKeyContext is "A", "1-100", or "__ALL__" for custom
+        currentModalListContext = listKey;
+        currentModalLevelContext = levelKeyContext; // This is the specific level for Dolch/Fry, or __ALL__ for Custom
+
+        modalSearchInput.value = '';
+        modalAddCustomWordBtn.classList.add('hidden'); // Hide initially
+
+        if (listKey === 'custom') {
+            modalTitle.textContent = `Customize: Custom Word List`;
+            modalLevelSelector.style.display = 'none';
+            modalLevelSelectorLabel.style.display = 'none';
+        } else { // Dolch or Fry
+            modalTitle.textContent = `Customize: ${listKey.charAt(0).toUpperCase() + listKey.slice(1)} - ${(listKey === 'dolch' ? "Level " : "")}${levelKeyContext}`;
+            modalLevelSelector.style.display = 'inline-block';
+            modalLevelSelectorLabel.style.display = 'inline-block';
+            modalLevelSelector.innerHTML = ''; // Clear old options
+
+            const levelsForThisList = Object.keys(WORD_BANK[listKey]);
+            if (listKey === 'fry') {
+                levelsForThisList.sort((a, b) => parseInt(a.split('-')[0]) - parseInt(b.split('-')[0]));
+            } else { levelsForThisList.sort(); }
+
+            levelsForThisList.forEach(lvl => {
+                const option = document.createElement('option');
+                option.value = lvl;
+                option.textContent = (listKey === 'dolch' ? `Level ${lvl}` : `${lvl}`);
+                modalLevelSelector.appendChild(option);
+            });
+            modalLevelSelector.value = levelKeyContext; // Set to the level that was long-pressed
+        }
+        populateModalWordList();
+        wordCustomizationModal.classList.add('visible');
+    }
+
+    function closeWordCustomizationModal() {
+        wordCustomizationModal.classList.remove('visible');
+    }
+
+    function populateModalWordList() {
+        modalWordList.innerHTML = '';
+        const searchTerm = modalSearchInput.value.toLowerCase().trim();
+        let wordsToDisplay = new Map(); // word -> {isCustomGlobal: bool, isSelectedForBaseLevel: bool, originalSource: string}
+        let foundResultsInCurrentList = false;
+
+        if (currentModalListContext === 'custom') {
+            // Viewing/Managing the global custom list
+            (WORD_BANK.custom || []).forEach(word => {
+                if (searchTerm === '' || word.toLowerCase().includes(searchTerm)) {
+                    wordsToDisplay.set(word, { isCustomGlobal: true, isSelectedForBaseLevel: true }); // isSelected means "part of custom list"
+                    foundResultsInCurrentList = true;
+                }
+            });
+        } else { // Viewing a Dolch or Fry level
+            const baseWordsForLevel = WORD_BANK[currentModalListContext]?.[currentModalLevelContext] || [];
+            const userSelectionsKey = `${currentModalListContext}_${currentModalLevelContext}_userSelections`;
+            let userSelectedSubsetForBaseLevel = null;
+            const storedUserSelections = localStorage.getItem(userSelectionsKey);
+            if (storedUserSelections) {
+                try { userSelectedSubsetForBaseLevel = JSON.parse(storedUserSelections); } catch (e) { /* ignore */ }
+            }
+
+            baseWordsForLevel.forEach(word => {
+                if (searchTerm === '' || word.toLowerCase().includes(searchTerm)) {
+                    let isSelected = true; // Default to selected if no subset defined for this base level
+                    if (userSelectedSubsetForBaseLevel && Array.isArray(userSelectedSubsetForBaseLevel)) {
+                        isSelected = userSelectedSubsetForBaseLevel.includes(word);
+                    }
+                    wordsToDisplay.set(word, { isCustomGlobal: WORD_BANK.custom.includes(word), isSelectedForBaseLevel: isSelected });
+                    foundResultsInCurrentList = true;
+                }
+            });
+        }
+
+        const sortedWords = Array.from(wordsToDisplay.keys()).sort((a, b) => a.localeCompare(b));
+
+        sortedWords.forEach(word => {
+            const wordData = wordsToDisplay.get(word);
+            const itemDiv = document.createElement('div');
+            itemDiv.classList.add('modal-word-item');
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = `modal-word-${currentModalListContext}-${currentModalLevelContext.replace(/\s+/g, '-')}-${word.replace(/\s+/g, '-')}`;
+            checkbox.value = word;
+            checkbox.checked = wordData.isSelectedForBaseLevel; // Checked = selected for this base level OR part of custom list
+
+            if (wordData.isCustomGlobal && currentModalListContext !== 'custom') { // If it's a custom word shown in a Dolch/Fry list view
+                itemDiv.classList.add('custom-word'); // Style it
+                // Checkbox for custom words in base list view might be tricky - does unchecking remove from GLOBAL custom?
+                // For now, let's say for base list views, checkbox only controls base list selection.
+                // Custom words are always "selected" in terms of being in the custom list.
+            } else if (currentModalListContext === 'custom') {
+                itemDiv.classList.add('custom-word'); // All words in custom view are custom
+            }
+
+
+            const label = document.createElement('label');
+            label.htmlFor = checkbox.id;
+            label.textContent = word;
+
+            itemDiv.appendChild(checkbox);
+            itemDiv.appendChild(label);
+            modalWordList.appendChild(itemDiv);
+        });
+
+        // Show "Add to Custom" button if search term not found in current view AND it's not already in global custom
+        if (searchTerm !== '' && !foundResultsInCurrentList && !WORD_BANK.custom.includes(searchTerm)) {
+            modalAddCustomWordTerm.textContent = searchTerm;
+            modalAddCustomWordBtn.classList.remove('hidden');
+        } else {
+            modalAddCustomWordBtn.classList.add('hidden');
+        }
+    }
+
+    function handleAddCustomWordFromModal() {
+        const newWord = modalSearchInput.value.trim(); // Term from search bar
+        if (newWord === '') return;
+
+        if (!WORD_BANK.custom.includes(newWord)) {
+            WORD_BANK.custom.push(newWord);
+            WORD_BANK.custom.sort();
+            localStorage.setItem('customBank', JSON.stringify(WORD_BANK.custom)); // Save custom list
+            showFloatingMessage(`"${newWord}" added to Custom list.`, "var(--correct-bg)");
+
+            // If currently viewing a Dolch/Fry list, this new custom word is now active.
+            // If currently viewing the custom list, refresh to show it.
+            populateModalWordList(); // Refresh modal list
+            updateActiveQuizWords(); // Make sure quiz words update immediately
+        } else {
+            showFloatingMessage(`"${newWord}" is already in Custom list.`, "var(--brand-light)", "var(--fg)");
+        }
+        modalSearchInput.value = ''; // Clear search
+        modalAddCustomWordBtn.classList.add('hidden');
+    }
+
+    function saveWordCustomizationModal() {
+        if (currentModalListContext === 'custom') {
+            // Managing the global custom list directly
+            const wordsToKeepInCustom = [];
+            modalWordList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                if (cb.checked) { // If checked, it stays in/is added to custom list
+                    wordsToKeepInCustom.push(cb.value);
+                }
+            });
+            WORD_BANK.custom = [...new Set(wordsToKeepInCustom)].sort();
+            localStorage.setItem('customBank', JSON.stringify(WORD_BANK.custom));
+        } else { // Managing selections for a Dolch or Fry level
+            const selectedWordsForThisBaseLevel = [];
+            modalWordList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                // Only consider words that are part of the original base list for this level
+                // (Custom words added via search are handled separately by WORD_BANK.custom)
+                if (WORD_BANK[currentModalListContext]?.[currentModalLevelContext]?.includes(cb.value)) {
+                    if (cb.checked) {
+                        selectedWordsForThisBaseLevel.push(cb.value);
+                    }
+                }
+            });
+
+            const userSelectionsKey = `${currentModalListContext}_${currentModalLevelContext}_userSelections`;
+            const originalBaseWordsForLevel = WORD_BANK[currentModalListContext]?.[currentModalLevelContext] || [];
+
+            // If all original base words are selected, clear the specific selection to use default.
+            if (selectedWordsForThisBaseLevel.length === originalBaseWordsForLevel.length &&
+                originalBaseWordsForLevel.every(w => selectedWordsForThisBaseLevel.includes(w))) {
+                localStorage.removeItem(userSelectionsKey);
+            } else {
+                localStorage.setItem(userSelectionsKey, JSON.stringify([...new Set(selectedWordsForThisBaseLevel)].sort()));
+            }
+        }
+
+        closeWordCustomizationModal();
+        updateActiveQuizWords(); // Refresh quiz with new settings
+        showFloatingMessage("Word customizations saved!", "var(--correct-bg)");
+    }
+
+    function toggleAllModalWords(select) { // Toggles all *visible* words in the modal list
+        modalWordList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.checked = select;
+        });
     }
 
   </script>
