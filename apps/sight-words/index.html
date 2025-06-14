@@ -393,14 +393,14 @@
         const dataToExport = {
             activeWordList: activeWordList,
             selectedLevels: selectedLevels,
-            customBank: WORD_BANK.custom, // customBank is now a flat array
+            customBank: WORD_BANK.custom,
             userSelections: {}
         };
 
         Object.keys(WORD_BANK).forEach(listKey => {
             if (listKey !== 'custom' && WORD_BANK[listKey] && typeof WORD_BANK[listKey] === 'object') {
                 dataToExport.userSelections[listKey] = {};
-                Object.keys(WORD_BANK[listKey]).forEach(levelKey => { // Iterate actual levels "A", "1-100", etc.
+                Object.keys(WORD_BANK[listKey]).forEach(levelKey => {
                     const selection = JSON.parse(localStorage.getItem(`${listKey}_${levelKey}_userSelections`) || 'null');
                     if (selection) {
                         dataToExport.userSelections[listKey][levelKey] = selection;
@@ -413,12 +413,21 @@
         const blob = new Blob([jsonString], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
+
+        // --- CHANGE: Hide the element to prevent layout shifts ---
+        a.style.display = 'none';
         a.href = url;
         a.download = `sight-words-quiz-data-${new Date().toISOString().slice(0,10)}.json`;
+        
         document.body.appendChild(a);
         a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        
+        // --- CHANGE: Delay cleanup to ensure download triggers ---
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 100); // 100ms is a safe, imperceptible delay
+
         showFloatingMessage("Word data downloaded!", "var(--brand-light)", "var(--fg)");
     }
 
@@ -440,31 +449,25 @@
 
             if (!importedData || typeof importedData.activeWordList !== 'string' ||
                 !Array.isArray(importedData.selectedLevels) ||
-                !Array.isArray(importedData.customBank) // Expect customBank to be an array
+                !Array.isArray(importedData.customBank)
                ) {
                 showFloatingMessage("Invalid file format or missing core fields.", "var(--incorrect-bg)");
                 return;
             }
 
-            // --- MODIFIED: Handle custom words with user choice ---
             const existingCustomWords = WORD_BANK.custom.length > 0;
             const incomingCustomWords = importedData.customBank.length > 0;
 
             if (existingCustomWords && incomingCustomWords) {
-                // There's a conflict, so ask the user how to proceed.
                 if (confirm("You have existing custom words. Click 'OK' to MERGE them with the imported list. Click 'Cancel' to REPLACE your list with the imported one.")) {
-                    // User clicked OK (Merge)
                     const combined = new Set([...WORD_BANK.custom, ...importedData.customBank]);
                     WORD_BANK.custom = Array.from(combined).sort();
                 } else {
-                    // User clicked Cancel (Replace)
                     WORD_BANK.custom = [...new Set(importedData.customBank)].sort();
                 }
             } else if (incomingCustomWords) {
-                // No existing words, so no conflict. Just adopt the new list.
                 WORD_BANK.custom = [...new Set(importedData.customBank)].sort();
             }
-            // If !incomingCustomWords, WORD_BANK.custom is not changed. This is the desired safe behavior to prevent accidental data loss.
             localStorage.setItem('customBank', JSON.stringify(WORD_BANK.custom));
 
 
@@ -495,7 +498,7 @@
                         newSelectedLevels = [validLevelsForList[0]];
                     }
                     selectedLevels = newSelectedLevels;
-                } else { // Fallback if activeWordList is somehow invalid (e.g. empty object)
+                } else {
                     selectedLevels = activeWordList === 'custom' ? ["__ALL__"] : (WORD_BANK.dolch ? [Object.keys(WORD_BANK.dolch)[0]] : []);
                 }
                 localStorage.setItem('selectedLevels', JSON.stringify(selectedLevels));
