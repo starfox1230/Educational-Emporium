@@ -783,7 +783,7 @@
     let isMiniGameActive = false;
     let availableMiniGames = []; 
     let currentMiniGameIdx = 0;
-    let animatedBackgroundsEnabled = localStorage.getItem('animatedBackgroundsEnabled') !== 'false';
+    let animatedBackgroundsEnabled = localStorage.getItem('animatedBackgroundsEnabled') !== 'true';
     let PREFERS_REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 
@@ -817,7 +817,8 @@
         }
 
         miniGamesEnabled = localStorage.getItem('miniGamesEnabled') === 'true';
-        animatedBackgroundsEnabled = localStorage.getItem('animatedBackgroundsEnabled') !== 'false';
+        const raw = localStorage.getItem('animatedBackgroundsEnabled');
+        animatedBackgroundsEnabled = (raw === 'true');
         currentGameMode = localStorage.getItem('sightWordsGameMode') || 'listenAndPickWord';
         const storedTimeLimit = localStorage.getItem('quizTimeLimit');
         if (storedTimeLimit !== null && !isNaN(parseInt(storedTimeLimit))) { timeLimit = parseInt(storedTimeLimit); }
