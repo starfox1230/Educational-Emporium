@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Focus Progress Bar</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            overflow: hidden;
+            transition: background-color 0.5s;
+            color: black;
+        }
+        #progress-container {
+            position: relative;
+            width: 80%;
+            height: 30px;
+            background-color: #ddd;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+            transition: background-color 0.5s;
+        }
+        #progress-bar {
+            height: 100%;
+            width: 0;
+            background-color: hotpink;
+            transition: width 0.5s, background-color 0.5s;
+        }
+        #progress-text {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: black;
+            font-weight: bold;
+            transition: color 0.5s;
+        }
+        #message {
+            font-size: 1.2em;
+            margin-top: 10px;
+        }
+        /* Adjusted Heart Container Styles */
+        #heart-container {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end; /* Right-justify the hearts */
+            margin-top: 10px;
+            font-size: 2em; /* Increased font size */
+            width: 80%; /* Adjust width to fit the layout */
+        }
+        .heart {
+            color: hotpink;
+            margin-left: 5px; /* Adjust margin for spacing */
+            transition: color 0.5s;
+        }
+        .greyed-out {
+            color: #ddd; /* Default grey color */
+        }
+        .night-mode .greyed-out {
+            color: #333; /* Darker grey for night mode */
+        }
+        #game-over-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            background: white;
+            border: 2px solid red;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+            z-index: 1;
+            color: red;
+        }
+        #game-over-overlay h2 {
+            font-size: 2em;
+            margin: 0;
+            font-weight: bold;
+        }
+        #restart-button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 1em;
+            background-color: hotpink;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .night-mode {
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+        }
+        .night-mode #progress-container {
+            background-color: #333;
+        }
+        .night-mode #progress-bar {
+            background-color: #4A90E2;
+        }
+        .night-mode #progress-text {
+            color: white;
+        }
+        .night-mode.red-mode #progress-bar {
+            background-color: #ff5555;
+        }
+        .red-mode #progress-bar {
+            background-color: red;
+        }
+        .night-mode #game-over-overlay {
+            background: #333;
+            color: #FF4C4C;
+        }
+        .night-mode #restart-button {
+            background-color: #FF4C4C;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translate(0); }
+            25% { transform: translate(-5px, -5px) rotate(-5deg); }
+            75% { transform: translate(5px, 5px) rotate(5deg); }
+        }
+        .pulse { animation: pulse 0.5s ease-in-out; }
+        .shake { animation: shake 0.5s ease-in-out; }
+        @keyframes hazyPulse {
+            0% { background-color: rgba(255, 0, 0, 0.1); }
+            50% { background-color: rgba(255, 0, 0, 0.3); }
+            100% { background-color: rgba(255, 0, 0, 0.1); }
+        }
+        #red-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            z-index: 1;
+            pointer-events: none;
+            animation: hazyPulse 1s infinite;
+        }
+        #countdown-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 10em;
+            color: red;
+            display: none;
+            z-index: 2;
+        }
+    </style>
+</head>
+<body>
+    <div id="heart-container">
+        <!-- Displaying five hearts initially -->
+        <span class="heart" id="heart1">&#9829;</span>
+        <span class="heart" id="heart2">&#9829;</span>
+        <span class="heart" id="heart3">&#9829;</span>
+        <span class="heart" id="heart4">&#9829;</span>
+        <span class="heart" id="heart5">&#9829;</span>
+    </div>
+
+    <div id="progress-container">
+        <div id="progress-bar"></div>
+        <div id="progress-text">0%</div>
+    </div>
+
+    <div id="message">Keep going!</div>
+
+    <div id="game-over-overlay">
+        <h2>Game Over</h2>
+        <button id="restart-button" onclick="restartGame()">Try Again</button>
+    </div>
+
+    <div id="red-overlay"></div>
+    <div id="countdown-overlay"></div>
+
+    <!-- Audio elements with preload attribute -->
+    <audio id="ding-sound" src="Ding.m4a" preload="auto"></audio>
+    <audio id="buzz-sound" src="Buzz.m4a" preload="auto"></audio>
+
+    <script>
+        let progress = 0;
+        let currentDisplayValue = 0;
+        let hearts = 5;
+        let nightMode = false;
+        let countdownTimer = null;
+        let countdownNumber = 3;
+        let countdownInterval = null;
+        let audioContext = null;
+        let isBuzzPlaying = false; // Flag to track buzz sound state
+
+        // Get DOM elements
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const message = document.getElementById('message');
+        const progressContainer = document.getElementById('progress-container');
+        const dingSound = document.getElementById('ding-sound');
+        const buzzSound = document.getElementById('buzz-sound');
+        const heartsArray = [
+            document.getElementById('heart1'),
+            document.getElementById('heart2'),
+            document.getElementById('heart3'),
+            document.getElementById('heart4'),
+            document.getElementById('heart5')
+        ];
+        const gameOverOverlay = document.getElementById('game-over-overlay');
+        const restartButton = document.getElementById('restart-button');
+        const countdownOverlay = document.getElementById('countdown-overlay');
+        const redOverlay = document.getElementById('red-overlay');
+
+        // Initialize audio context
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            
+            // Prime the audio elements
+            dingSound.load();
+            buzzSound.load();
+        }
+
+        // Function to play sound with proper error handling
+        async function playSound(sound) {
+            try {
+                if (!audioContext) {
+                    initAudio();
+                }
+
+                // Stop sound if it's currently playing
+                if (!sound.paused) {
+                    sound.pause();
+                    sound.currentTime = 0;
+                }
+
+                // If the sound is buzz, ensure only one play at a time
+                if (sound === buzzSound) {
+                    if (isBuzzPlaying) return; // Exit if buzz is still playing
+                    isBuzzPlaying = true;
+                    sound.addEventListener('ended', () => {
+                        isBuzzPlaying = false;
+                    }, { once: true });
+                }
+
+                const playPromise = sound.play();
+                if (playPromise !== undefined) {
+                    await playPromise;
+                }
+            } catch (error) {
+                console.error('Error playing sound:', error);
+            }
+        }
+
+        function toggleNightMode() {
+            nightMode = !nightMode;
+            document.body.classList.toggle('night-mode', nightMode);
+            document.body.classList.remove('red-mode');
+            progressBar.style.backgroundColor = nightMode ? '#4A90E2' : 'hotpink';
+        }
+
+        function animateProgress(oldValue, newValue) {
+            const step = oldValue < newValue ? 1 : -1;
+            let current = oldValue;
+            const interval = setInterval(() => {
+                current += step;
+                progressText.textContent = Math.max(0, current) + '%';
+                if (current === newValue || current < 0) {
+                    clearInterval(interval);
+                }
+            }, 50);
+        }
+
+        function updateProgress(change, silent = false) {
+            if (hearts === 0) return;
+
+            const oldProgress = progress;
+            progress += change;
+
+            if (progress > 100) progress = 100;
+            if (progress < 0) progress = 0;
+
+            progressBar.style.width = progress + '%';
+            animateProgress(currentDisplayValue, progress);
+            currentDisplayValue = progress;
+
+            if (progress === 100) {
+                message.textContent = 'You did it!';
+                return;
+            }
+
+            if (!silent) {
+                if (change > 0) {
+                    document.body.classList.remove('red-mode');
+                    progressBar.style.backgroundColor = nightMode ? '#4A90E2' : 'hotpink';
+                    progressContainer.classList.add('pulse');
+                    message.classList.add('pulse');
+                    message.textContent = 'Great job! Keep going!';
+                    playSound(dingSound);
+                } else if (change < 0) {
+                    document.body.classList.add('red-mode');
+                    progressBar.style.backgroundColor = '';
+                    progressContainer.classList.add('shake');
+                    message.classList.add('shake');
+                    message.textContent = 'Careful, focus!';
+                    playSound(buzzSound);
+                    loseHeart();
+                } else {
+                    message.textContent = '';
+                }
+            }
+
+            setTimeout(() => {
+                progressContainer.classList.remove('pulse');
+                message.classList.remove('pulse');
+                progressContainer.classList.remove('shake');
+                message.classList.remove('shake');
+            }, 500);
+        }
+
+        function loseHeart() {
+            if (hearts > 0) {
+                hearts--;
+                // Grey out the rightmost active heart
+                heartsArray[hearts].classList.add('greyed-out');
+            }
+            if (hearts === 0) {
+                gameOver();
+            }
+        }
+
+        function gameOver() {
+            gameOverOverlay.style.display = 'block';
+            message.textContent = '';
+        }
+
+        function restartGame() {
+            cancelCountdown();
+            progress = 0;
+            currentDisplayValue = 0;
+            hearts = 5;
+            progressBar.style.width = '0%';
+            progressText.textContent = '0%';
+            message.textContent = 'Keep going!';
+            gameOverOverlay.style.display = 'none';
+            document.body.classList.remove('red-mode');
+
+            // Reset all hearts to hotpink and reset audio flags
+            heartsArray.forEach(heart => heart.classList.remove('greyed-out'));
+            isBuzzPlaying = false;
+            dingSound.pause(); dingSound.currentTime = 0;
+            buzzSound.pause(); buzzSound.currentTime = 0;
+        }
+
+        function startCountdown() {
+            countdownNumber = 3;
+            countdownOverlay.textContent = countdownNumber;
+            countdownOverlay.style.display = 'block';
+            redOverlay.style.display = 'block';
+            countdownTimer = true;
+
+            countdownInterval = setInterval(() => {
+                countdownNumber--;
+                if (countdownNumber > 0) {
+                    countdownOverlay.textContent = countdownNumber;
+                } else {
+                    clearInterval(countdownInterval);
+                    countdownOverlay.style.display = 'none';
+                    redOverlay.style.display = 'none';
+                    countdownTimer = null;
+                    updateProgress(-5); // Trigger buzz
+                }
+            }, 1000);
+        }
+
+        function cancelCountdown() {
+            clearInterval(countdownInterval);
+            countdownOverlay.style.display = 'none';
+            redOverlay.style.display = 'none';
+            countdownTimer = null;
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (hearts > 0 && progress < 100 && event.key === ' ') {
+                event.preventDefault();
+                updateProgress(5);
+            }
+            if (hearts > 0 && progress > 0 && event.key === 'ArrowLeft') {
+                event.preventDefault();
+                if (!countdownTimer) {
+                    startCountdown();
+                } else {
+                    cancelCountdown();
+                }
+            }
+            if (event.key === '+') {
+                updateProgress(5, true);
+            }
+            if (event.key === '-') {
+                updateProgress(-5, true);
+            }
+            if (event.key === 'F12') {
+                toggleNightMode();
+            }
+            if (hearts === 0 && event.key === ' ') {
+                restartGame();
+            }
+        });
+
+        // Initialize audio elements
+        dingSound.load();
+        buzzSound.load();
+    </script>
+</body>
+</html>
