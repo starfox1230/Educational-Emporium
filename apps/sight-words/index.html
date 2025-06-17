@@ -1265,23 +1265,50 @@
         modalSearchInput.value = ''; modalAddCustomWordBtn.classList.add('hidden');
     }
     function saveWordCustomizationModal() {
-        if (currentModalListContext === 'custom') {
-            const wordsToKeepInCustom = [];
-            modalWordList.querySelectorAll('input[type="checkbox"]').forEach(cb => { if (cb.checked) { wordsToKeepInCustom.push(cb.value); } });
-            WORD_BANK.custom = [...new Set(wordsToKeepInCustom)].sort();
-            localStorage.setItem('customBank', JSON.stringify(WORD_BANK.custom));
+      if (currentModalListContext === 'custom') {
+        // 1. Grab whatever the user has checked in the modal
+        const selectedWords = Array.from(
+          modalWordList.querySelectorAll('input[type="checkbox"]:checked')
+        ).map(cb => cb.value);
+    
+        // 2. Merge those into the existing custom bank (no deletions)
+        WORD_BANK.custom = Array.from(
+          new Set([...WORD_BANK.custom, ...selectedWords])
+        ).sort();
+    
+        // 3. Persist
+        localStorage.setItem('customBank', JSON.stringify(WORD_BANK.custom));
+    
+      } else {
+        // unchanged: per-level customizations for Dolch/Fry lists
+        const selectedWordsForThisBaseLevel = [];
+        modalWordList
+          .querySelectorAll('input[type="checkbox"]')
+          .forEach(cb => {
+            if (cb.checked) selectedWordsForThisBaseLevel.push(cb.value);
+          });
+    
+        const userSelectionsKey = `${currentModalListContext}_${currentModalLevelContext}_userSelections`;
+        const originalBaseWordsForLevel = WORD_BANK[currentModalListContext]?.[currentModalLevelContext] || [];
+    
+        if (selectedWordsForThisBaseLevel.length === originalBaseWordsForLevel.length) {
+          localStorage.removeItem(userSelectionsKey);
         } else {
-            const selectedWordsForThisBaseLevel = [];
-            modalWordList.querySelectorAll('input[type="checkbox"]').forEach(cb => { if (cb.checked) { selectedWordsForThisBaseLevel.push(cb.value); } });
-            const userSelectionsKey = `${currentModalListContext}_${currentModalLevelContext}_userSelections`;
-            const originalBaseWordsForLevel = WORD_BANK[currentModalListContext]?.[currentModalLevelContext] || [];
-            if (selectedWordsForThisBaseLevel.length === originalBaseWordsForLevel.length) { localStorage.removeItem(userSelectionsKey); }
-            else { localStorage.setItem(userSelectionsKey, JSON.stringify([...new Set(selectedWordsForThisBaseLevel)].sort())); }
+          localStorage.setItem(
+            userSelectionsKey,
+            JSON.stringify([...new Set(selectedWordsForThisBaseLevel)].sort())
+          );
         }
-        closeWordCustomizationModal();
-        if (wordListModal.classList.contains('visible')) { updateWordListModalUI(); }
-        showFloatingMessage("Word customizations saved!", "var(--correct-bg)");
+      }
+    
+      // close modal, refresh UI, and show a confirmation
+      closeWordCustomizationModal();
+      if (wordListModal.classList.contains('visible')) {
+        updateWordListModalUI();
+      }
+      showFloatingMessage("Word customizations saved!", "var(--correct-bg)");
     }
+
     function toggleAllModalWords(select) { modalWordList.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = select; }); }
 
   </script>
