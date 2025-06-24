@@ -1241,40 +1241,81 @@
         wordCustomizationModal.classList.add('visible');
     }
     function closeWordCustomizationModal() { wordCustomizationModal.classList.remove('visible'); }
+  
     function populateModalWordList() {
-        modalWordList.innerHTML = ''; const searchTerm = modalSearchInput.value.toLowerCase().trim();
-        let wordsToDisplay = new Map(); let foundResultsInCurrentList = false;
-        if (currentModalListContext === 'custom') {
-            (WORD_BANK.custom || []).forEach(word => {
-                if (searchTerm === '' || word.toLowerCase().includes(searchTerm)) { wordsToDisplay.set(word, { isCustomGlobal: true, isSelectedForBaseLevel: true }); foundResultsInCurrentList = true; }
-            });
-        } else {
-            const baseWordsForLevel = WORD_BANK[currentModalListContext]?.[currentModalLevelContext] || [];
-            const userSelectionsKey = `${currentModalListContext}_${currentModalLevelContext}_userSelections`;
-            let userSelectedSubsetForBaseLevel = null;
-            const storedUserSelections = localStorage.getItem(userSelectionsKey);
-            if (storedUserSelections) { try { userSelectedSubsetForBaseLevel = JSON.parse(storedUserSelections); } catch (e) { /* ignore */ } }
-            baseWordsForLevel.forEach(word => {
-                if (searchTerm === '' || word.toLowerCase().includes(searchTerm)) {
-                    let isSelected = !Array.isArray(userSelectedSubsetForBaseLevel) || userSelectedSubsetForBaseLevel.includes(word);
-                    wordsToDisplay.set(word, { isCustomGlobal: WORD_BANK.custom.includes(word), isSelectedForBaseLevel: isSelected }); foundResultsInCurrentList = true;
-                }
-            });
+        modalWordList.innerHTML = '';
+        const searchTerm = modalSearchInput.value.toLowerCase().trim();
+    
+        // 1. Determine the unique key for localStorage based on the current context.
+        const levelKeyForStorage = (currentModalListContext === 'custom') ? '__ALL__' : currentModalLevelContext;
+        const userSelectionsKey = `${currentModalListContext}_${levelKeyForStorage}_userSelections`;
+    
+        // 2. Read the user's saved selections from storage ONE TIME.
+        let userSelectedSubset = null;
+        const storedUserSelections = localStorage.getItem(userSelectionsKey);
+        if (storedUserSelections) {
+            try {
+                // If there are saved selections, parse them into an array.
+                userSelectedSubset = JSON.parse(storedUserSelections);
+            } catch (e) {
+                console.error("Could not parse user selections for key:", userSelectionsKey, e);
+            }
         }
+    
+        // 3. Get the full list of words for the current context.
+        const baseWordsForContext = (currentModalListContext === 'custom')
+            ? (WORD_BANK.custom || [])
+            : (WORD_BANK[currentModalListContext]?.[currentModalLevelContext] || []);
+    
+        let wordsToDisplay = new Map();
+        let foundResultsInCurrentList = false;
+    
+        // 4. Loop through the full list and decide if each word should be checked.
+        baseWordsForContext.forEach(word => {
+            if (searchTerm === '' || word.toLowerCase().includes(searchTerm)) {
+                // THIS IS THE CORE FIX:
+                // - If userSelectedSubset is null (nothing saved), it means "select all", so isSelected is true.
+                // - If userSelectedSubset IS an array, check if the current word is in it.
+                const isSelected = !Array.isArray(userSelectedSubset) || userSelectedSubset.includes(word);
+    
+                wordsToDisplay.set(word, {
+                    isCustomGlobal: WORD_BANK.custom.includes(word), // For styling custom words
+                    isSelectedForBaseLevel: isSelected // Use the calculated checked state
+                });
+                foundResultsInCurrentList = true;
+            }
+        });
+    
+        // 5. Render the checkboxes (this part is unchanged).
         const sortedWords = Array.from(wordsToDisplay.keys()).sort((a, b) => a.localeCompare(b));
         sortedWords.forEach(word => {
             const wordData = wordsToDisplay.get(word);
-            const itemDiv = document.createElement('div'); itemDiv.classList.add('modal-word-item');
-            const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.id = `modal-word-${word.replace(/\s+/g, '-')}`;
-            checkbox.value = word; checkbox.checked = wordData.isSelectedForBaseLevel;
-            if (wordData.isCustomGlobal) { itemDiv.classList.add('custom-word'); }
-            const label = document.createElement('label'); label.htmlFor = checkbox.id; label.textContent = word;
-            itemDiv.appendChild(checkbox); itemDiv.appendChild(label);
+            const itemDiv = document.createElement('div');
+            itemDiv.classList.add('modal-word-item');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = `modal-word-${word.replace(/\s+/g, '-')}`;
+            checkbox.value = word;
+            checkbox.checked = wordData.isSelectedForBaseLevel; // Use the correctly determined state
+            if (wordData.isCustomGlobal) {
+                itemDiv.classList.add('custom-word');
+            }
+            const label = document.createElement('label');
+            label.htmlFor = checkbox.id;
+            label.textContent = word;
+            itemDiv.appendChild(checkbox);
+            itemDiv.appendChild(label);
             modalWordList.appendChild(itemDiv);
         });
-        if (searchTerm !== '' && !foundResultsInCurrentList && !WORD_BANK.custom.includes(searchTerm)) { modalAddCustomWordTerm.textContent = searchTerm; modalAddCustomWordBtn.classList.remove('hidden'); }
-        else { modalAddCustomWordBtn.classList.add('hidden'); }
+    
+        if (searchTerm !== '' && !foundResultsInCurrentList && !WORD_BANK.custom.includes(searchTerm)) {
+            modalAddCustomWordTerm.textContent = searchTerm;
+            modalAddCustomWordBtn.classList.remove('hidden');
+        } else {
+            modalAddCustomWordBtn.classList.add('hidden');
+        }
     }
+  
     function handleAddCustomWordFromModal() {
         const newWord = modalSearchInput.value.trim(); if (newWord === '') return;
         if (!WORD_BANK.custom.includes(newWord)) {
