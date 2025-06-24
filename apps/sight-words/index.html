@@ -1286,49 +1286,48 @@
         } else { showFloatingMessage(`"${newWord}" is already in Custom list.`, "var(--brand-light)", "var(--fg)"); }
         modalSearchInput.value = ''; modalAddCustomWordBtn.classList.add('hidden');
     }
+    
     function saveWordCustomizationModal() {
-      if (currentModalListContext === 'custom') {
-        // 1. Grab whatever the user has checked in the modal
+        // This function will now use the same, correct logic for ALL list types.
+    
+        // Get the list of words the user has currently checked in the modal.
         const selectedWords = Array.from(
-          modalWordList.querySelectorAll('input[type="checkbox"]:checked')
+            modalWordList.querySelectorAll('input[type="checkbox"]:checked')
         ).map(cb => cb.value);
     
-        // 2. Merge those into the existing custom bank (no deletions)
-        WORD_BANK.custom = Array.from(
-          new Set([...WORD_BANK.custom, ...selectedWords])
-        ).sort();
+        // Determine the full, unfiltered list of words for the current context.
+        const allPossibleWordsForContext = (currentModalListContext === 'custom')
+            ? WORD_BANK.custom
+            : (WORD_BANK[currentModalListContext]?.[currentModalLevelContext] || []);
     
-        // 3. Persist
-        localStorage.setItem('customBank', JSON.stringify(WORD_BANK.custom));
+        // Determine the unique key for storing this user selection "override" in local storage.
+        // The key for the custom list is special: '__ALL__'
+        const userSelectionsKey = `${currentModalListContext}_${currentModalListContext === 'custom' ? '__ALL__' : currentModalLevelContext}_userSelections`;
     
-      } else {
-        // unchanged: per-level customizations for Dolch/Fry lists
-        const selectedWordsForThisBaseLevel = [];
-        modalWordList
-          .querySelectorAll('input[type="checkbox"]')
-          .forEach(cb => {
-            if (cb.checked) selectedWordsForThisBaseLevel.push(cb.value);
-          });
+        // Check if the user's selection is identical to the full, default list.
+        const isSelectionIdenticalToDefault =
+            selectedWords.length === allPossibleWordsForContext.length &&
+            allPossibleWordsForContext.every(word => selectedWords.includes(word));
     
-        const userSelectionsKey = `${currentModalListContext}_${currentModalLevelContext}_userSelections`;
-        const originalBaseWordsForLevel = WORD_BANK[currentModalListContext]?.[currentModalLevelContext] || [];
-    
-        if (selectedWordsForThisBaseLevel.length === originalBaseWordsForLevel.length) {
-          localStorage.removeItem(userSelectionsKey);
+        if (isSelectionIdenticalToDefault) {
+            // If all words are selected, there's no need for an override.
+            // Remove any existing override from storage to use the full default list.
+            localStorage.removeItem(userSelectionsKey);
         } else {
-          localStorage.setItem(
-            userSelectionsKey,
-            JSON.stringify([...new Set(selectedWordsForThisBaseLevel)].sort())
-          );
+            // The user has made a specific sub-selection. Store this list as the override.
+            localStorage.setItem(userSelectionsKey, JSON.stringify(selectedWords.sort()));
         }
-      }
     
-      // close modal, refresh UI, and show a confirmation
-      closeWordCustomizationModal();
-      if (wordListModal.classList.contains('visible')) {
-        updateWordListModalUI();
-      }
-      showFloatingMessage("Word customizations saved!", "var(--correct-bg)");
+        // IMPORTANT: This function's purpose is to save the *selection state*.
+        // The master WORD_BANK.custom list is only modified when using the "Add Word" button.
+    
+        // --- Update UI and game state ---
+        closeWordCustomizationModal();
+        if (wordListModal.classList.contains('visible')) {
+            updateWordListModalUI(); // Update counts in the main selection modal.
+        }
+        updateQuizWordsFromSelectionState(); // Re-calculate the active words for the quiz immediately.
+        showFloatingMessage("Word customizations saved!", "var(--correct-bg)");
     }
 
     function toggleAllModalWords(select) { modalWordList.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = select; }); }
