@@ -914,24 +914,36 @@
         
         const storedSelectionState = localStorage.getItem('wordSelectionState');
         if (storedSelectionState) {
-            try { selectionState = JSON.parse(storedSelectionState); } 
-            catch (e) { console.error("Error parsing selectionState, creating default.", e); createDefaultSelectionState(); }
+            try {
+                selectionState = JSON.parse(storedSelectionState);
+            } catch {
+                createDefaultSelectionState();
+            }
         } else {
-            const oldActiveList = localStorage.getItem('activeWordList');
-            const oldSelectedLevels = JSON.parse(localStorage.getItem('selectedLevels') || 'null');
-            
-            if (oldActiveList && oldSelectedLevels) {
-                console.log("Migrating from old word list format...");
-                selectionState = {};
-                Object.keys(WORD_BANK).forEach(listKey => {
-                    selectionState[listKey] = {};
-                    if (listKey === 'custom') { selectionState.custom.all = (oldActiveList === 'custom'); } 
-                    else { Object.keys(WORD_BANK[listKey]).forEach(levelKey => { selectionState[listKey][levelKey] = (oldActiveList === listKey && oldSelectedLevels.includes(levelKey)); }); }
+            createDefaultSelectionState();
+        }
+    
+        // — MERGE IN ANY NEW BANKS/LEVELS (e.g. readingcom) SO OLD SAVED STATES
+        //   DON’T “LOSE” THEM WHEN YOU ADD NEW LISTS OR LESSONS —
+        Object.keys(WORD_BANK).forEach(listKey => {
+            if (!selectionState[listKey]) {
+                selectionState[listKey] = {};
+            }
+            if (listKey === 'custom') {
+                if (typeof selectionState.custom.all !== 'boolean') {
+                    selectionState.custom.all = true;
+                }
+            } else {
+                Object.keys(WORD_BANK[listKey]).forEach(levelKey => {
+                    if (typeof selectionState[listKey][levelKey] !== 'boolean') {
+                        selectionState[listKey][levelKey] = false;
+                    }
                 });
-                localStorage.removeItem('activeWordList');
-                localStorage.removeItem('selectedLevels');
-            } else { createDefaultSelectionState(); }
-            localStorage.setItem('wordSelectionState', JSON.stringify(selectionState));
+            }
+        });
+    
+        // Persist the now-complete state back to localStorage
+        localStorage.setItem('wordSelectionState', JSON.stringify(selectionState));
         }
 
         miniGamesEnabled = localStorage.getItem('miniGamesEnabled') === 'true';
