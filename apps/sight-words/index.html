@@ -260,16 +260,9 @@
         text-align: center;
         flex-shrink: 0;
     }
-    #word-list-save-btn {
-        width: 100%;
-        padding: 0.9rem;
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: white;
-        background-color: var(--brand);
-        border: none;
-        border-radius: 12px;
-        cursor: pointer;
+    .word-list-modal-footer p {
+        font-size: 0.8rem;
+        color: #888;
     }
 
     #quiz-container{ display:flex;justify-content:center;align-items:center; min-height: 30vh; padding:1rem; margin-top: 80px; /* Increased to clear taller top-bar */ height: calc(100vh - 80px - 70px); }
@@ -544,7 +537,7 @@
         <!-- Dynamically populated by JS -->
       </div>
       <div class="word-list-modal-footer">
-        <button id="word-list-save-btn">Save & Close</button>
+        <p>Your selections are saved automatically.</p>
       </div>
     </div>
   </div>
@@ -567,7 +560,6 @@
         </div>
         <button id="modal-add-custom-word-btn" class="hidden">Add "<span id="modal-add-custom-word-term"></span>" to Custom List</button>
         <div class="modal-actions">
-            <button id="modal-save-btn">Save & Use</button>
             <button id="modal-select-all-btn">Select All Visible</button>
             <button id="modal-deselect-all-btn">Deselect All Visible</button>
             <div class="io-buttons">
@@ -865,7 +857,6 @@
     const wordCountBadge = document.getElementById('word-count-badge');
     const wordListModal = document.getElementById('word-list-modal');
     const wordListCloseBtn = document.getElementById('word-list-close-btn');
-    const wordListSaveBtn = document.getElementById('word-list-save-btn');
     const wordListSummaryText = document.getElementById('word-list-summary-text');
     const wordListTotalCount = document.getElementById('word-list-total-count');
     const wordListTreeContainer = document.getElementById('word-list-tree-container');
@@ -879,7 +870,6 @@
     const modalWordList = document.getElementById('modal-word-list');
     const modalAddCustomWordBtn = document.getElementById('modal-add-custom-word-btn');
     const modalAddCustomWordTerm = document.getElementById('modal-add-custom-word-term');
-    const modalSaveBtn = document.getElementById('modal-save-btn');
     const modalSelectAllBtn = document.getElementById('modal-select-all-btn');
     const modalDeselectAllBtn = document.getElementById('modal-deselect-all-btn');
     const modalDownloadBtn = document.getElementById('modal-download-btn');
@@ -907,7 +897,6 @@
     let selectedSoundButton = null;
     let currentModalListContext = 'dolch';
     let currentModalLevelContext = 'A';    
-    let tempSelectionState = {}; // For non-destructive editing in the modal
     let miniGamesEnabled = localStorage.getItem('miniGamesEnabled') === 'true';
     let isMiniGameActive = false;
     let availableMiniGames = []; 
@@ -1002,7 +991,7 @@
       timerSel.value = timeLimit;
       timerDisp.textContent = timeLimit > 0 ? timeLimit+'s ⏱️' : 'Untimed ⏱️';
 
-      modalSaveBtn.addEventListener('click', saveWordCustomizationModal);
+      // modalSaveBtn listener removed - persistence is now instant
       modalCloseBtn.addEventListener('click', closeWordCustomizationModal);
       modalSelectAllBtn.addEventListener('click', () => toggleAllModalWords(true));
       modalDeselectAllBtn.addEventListener('click', () => toggleAllModalWords(false));
@@ -1065,7 +1054,7 @@
     const HoopBounceGame = { name: "Hoop Bounce", score: 0, gameTimerId: null, timerDisplayIntervalId: null, animationFrameId: null, container: null, onCompleteCallback: null, duration: 20000, elements: {}, hoopElement: null, isHoopActive: false, hoopRadius: 55, hoopEffectiveRadius: 50, hoopBorderThickness: 5, hoopPosition: { x: 0, y: 0 }, ballElement: null, ballRadius: 15, ballPosition: { x: 100, y: 100 }, ballVelocity: { x: 2, y: 1 }, gravity: 0.28, wallRestitution: 0.65, maxSpeed: 17, strongUpwardBounceForce: 13.5, maxHorizontalSpeedFromHoop: 7.5, boundOnPointerDown: null, boundOnPointerMove: null, boundOnPointerUp: null, boundGameLoop: null, start: function(containerElement, onComplete) { this.container = containerElement; this.onCompleteCallback = onComplete; this.score = 0; this.container.innerHTML = ''; speak("Keepy Uppy!"); const infoBar = document.createElement('div'); infoBar.className = 'minigame-info-bar'; this.elements.scoreDisplay = document.createElement('div'); this.elements.scoreDisplay.className = 'minigame-score'; infoBar.appendChild(this.elements.scoreDisplay); this.updateScoreDisplay(); this.elements.timerText = document.createElement('div'); this.elements.timerText.className = 'minigame-timer-text'; infoBar.appendChild(this.elements.timerText); this.container.appendChild(infoBar); this.hoopElement = document.createElement('div'); this.hoopElement.style.cssText = `position: absolute; width: ${this.hoopRadius * 2}px; height: ${this.hoopRadius * 2}px; border: ${this.hoopBorderThickness}px solid white; border-radius: 50%; box-sizing: border-box; display: none; pointer-events: none; opacity: 0.8;`; this.container.appendChild(this.hoopElement); this.ballElement = document.createElement('div'); this.ballElement.className = 'bounce-ball'; this.ballElement.style.cssText = `width: ${this.ballRadius * 2}px; height: ${this.ballRadius * 2}px; background-color: var(--brand-light); border-radius: 50%; position: absolute;`; this.container.appendChild(this.ballElement); this.ballPosition.x = this.container.clientWidth / 2; this.ballPosition.y = this.ballRadius + 50; this.ballVelocity.x = (Math.random() - 0.5) * 4; this.ballVelocity.y = 1; this.updateBallElementPosition(); this.boundOnPointerDown = this.onPointerDown.bind(this); this.boundOnPointerMove = this.onPointerMove.bind(this); this.boundOnPointerUp = this.onPointerUp.bind(this); this.boundGameLoop = this.gameLoop.bind(this); this.container.addEventListener('pointerdown', this.boundOnPointerDown); window.addEventListener('pointermove', this.boundOnPointerMove); window.addEventListener('pointerup', this.boundOnPointerUp); window.addEventListener('pointercancel', this.boundOnPointerUp); let timeLeftSeconds = this.duration / 1000; this.elements.timerText.textContent = `Time: ${timeLeftSeconds}s`; this.timerDisplayIntervalId = setInterval(() => { timeLeftSeconds--; this.elements.timerText.textContent = `Time: ${Math.max(0, timeLeftSeconds)}s`; if (timeLeftSeconds <= 0) clearInterval(this.timerDisplayIntervalId); }, 1000); this.gameTimerId = setTimeout(() => this.endGame(), this.duration); this.animationFrameId = requestAnimationFrame(this.boundGameLoop); }, onPointerDown: function(event) { let el = event.target; let isInsideContainer = false; while(el) { if (el === this.container) { isInsideContainer = true; break; } el = el.parentElement; } if(!isInsideContainer && event.target !== this.container) return; event.preventDefault(); this.isHoopActive = true; this.updateHoopElementPosition(event); this.hoopElement.style.display = 'block'; }, onPointerMove: function(event) { if (this.isHoopActive) { event.preventDefault(); this.updateHoopElementPosition(event); } }, onPointerUp: function(event) { if (this.isHoopActive) { this.isHoopActive = false; this.hoopElement.style.display = 'none'; } }, updateHoopElementPosition: function(event) { if (!this.container) return; const rect = this.container.getBoundingClientRect(); this.hoopPosition.x = event.clientX - rect.left; this.hoopPosition.y = event.clientY - rect.top; this.hoopElement.style.left = `${this.hoopPosition.x - this.hoopRadius}px`; this.hoopElement.style.top = `${this.hoopPosition.y - this.hoopRadius}px`; }, updateBallElementPosition: function() { if (!this.ballElement) return; this.ballElement.style.left = `${this.ballPosition.x - this.ballRadius}px`; this.ballElement.style.top = `${this.ballPosition.y - this.ballRadius}px`; }, gameLoop: function() { if (!this.container || !this.ballElement) { cancelAnimationFrame(this.animationFrameId); return; } this.applyPhysics(); this.checkWallCollisions(); if (this.isHoopActive) { this.checkHoopCollision(); } this.limitSpeed(); this.updateBallElementPosition(); this.animationFrameId = requestAnimationFrame(this.boundGameLoop); }, applyPhysics: function() { this.ballVelocity.y += this.gravity; this.ballPosition.x += this.ballVelocity.x; this.ballPosition.y += this.ballVelocity.y; }, limitSpeed: function() { const speed = Math.sqrt(this.ballVelocity.x * this.ballVelocity.x + this.ballVelocity.y * this.ballVelocity.y); if (speed > this.maxSpeed) { const factor = this.maxSpeed / speed; this.ballVelocity.x *= factor; this.ballVelocity.y *= factor; } }, checkWallCollisions: function() { const restitution = this.wallRestitution; if (this.ballPosition.x - this.ballRadius < 0) { this.ballPosition.x = this.ballRadius; this.ballVelocity.x *= -restitution; } if (this.ballPosition.x + this.ballRadius > this.container.clientWidth) { this.ballPosition.x = this.container.clientWidth - this.ballRadius; this.ballVelocity.x *= -restitution; } if (this.ballPosition.y - this.ballRadius < 0) { this.ballPosition.y = this.ballRadius; this.ballVelocity.y *= -restitution; } if (this.ballPosition.y + this.ballRadius > this.container.clientHeight) { this.ballPosition.y = this.container.clientHeight - this.ballRadius; this.ballVelocity.y *= -restitution; } }, checkHoopCollision: function() { const dx = this.ballPosition.x - this.hoopPosition.x; const dy = this.ballPosition.y - this.hoopPosition.y; const distance = Math.sqrt(dx * dx + dy * dy); const collisionDistance = this.hoopEffectiveRadius + this.ballRadius; if (distance < collisionDistance && distance > 0) { const normalX = dx / distance; const normalY = dy / distance; const velocityAlongNormal = this.ballVelocity.x * normalX + this.ballVelocity.y * normalY; if (velocityAlongNormal < 0) { this.ballVelocity.y = -this.strongUpwardBounceForce; const relativeHitX = this.ballPosition.x - this.hoopPosition.x; let normalizedHitX = Math.max(-1, Math.min(1, relativeHitX / this.hoopEffectiveRadius)); this.ballVelocity.x = normalizedHitX * this.maxHorizontalSpeedFromHoop; if (Math.abs(this.ballVelocity.x) < 0.5 && Math.abs(normalizedHitX) > 0.05) { this.ballVelocity.x = Math.sign(normalizedHitX) * 0.5; } const overlap = collisionDistance - distance; if (overlap > 0) { this.ballPosition.x += overlap * normalX * 1.05; this.ballPosition.y += overlap * normalY * 1.05; } this.score++; this.updateScoreDisplay(); playBell(); const ballRect = this.ballElement.getBoundingClientRect(); const confettiX = (ballRect.left + ballRect.right) / 2 / window.innerWidth; const confettiY = (ballRect.top + ballRect.bottom) / 2 / window.innerHeight; myConfetti({ particleCount: 25, spread: 45, origin: { x: confettiX, y: confettiY }, scalar: 0.6 }); speak(this.score, 1.4, 1.5); } } }, updateScoreDisplay: function() { if(this.elements.scoreDisplay) this.elements.scoreDisplay.textContent = `Bounces: ${this.score}`; }, endGame: function() { const canCallPrimaryCallback = !!this.onCompleteCallback; cancelAnimationFrame(this.animationFrameId); this.animationFrameId = null; clearInterval(this.timerDisplayIntervalId); this.timerDisplayIntervalId = null; clearTimeout(this.gameTimerId); this.gameTimerId = null; if (this.container) this.container.removeEventListener('pointerdown', this.boundOnPointerDown); window.removeEventListener('pointermove', this.boundOnPointerMove); window.removeEventListener('pointerup', this.boundOnPointerUp); window.removeEventListener('pointercancel', this.boundOnPointerUp); if (this.hoopElement && this.hoopElement.parentNode) this.hoopElement.remove(); this.hoopElement = null; if (this.ballElement && this.ballElement.parentNode) this.ballElement.remove(); this.ballElement = null; this.isHoopActive = false; if (canCallPrimaryCallback) { speak(`Congratulations! You bounced the ball ${this.score} times!`); const callbackToExecute = this.onCompleteCallback; this.onCompleteCallback = null; if (callbackToExecute) callbackToExecute(this.score); } }, destroy: function() { this.endGame(); if (this.container) { this.container.innerHTML = ''; } this.container = null; this.elements = {}; this.onCompleteCallback = null; } };
     const PuppyLaserDefenderGame = { name: "Puppy Laser Defender", score: 0, duration: 20000, lasers: [], invaders: [], container: null, onCompleteCallback: null, elements: {}, playerElement: null, playerPos: { x: 0, y: 0 }, gameTimerId: null, timerIntervalId: null, invaderIntervalId: null, animationFrameId: null, boundGameLoop: null, boundTapHandler: null, laserSpeed: 10, invaderBaseSpeed: 1.5, start: function(containerElement, onComplete) { this.container = containerElement; this.onCompleteCallback = onComplete; this.score = 0; this.lasers = []; this.invaders = []; this.container.innerHTML = ''; this.container.style.cursor = 'crosshair'; speak("Defend the puppy!"); const infoBar = document.createElement('div'); infoBar.className = 'minigame-info-bar'; this.elements.scoreDisplay = document.createElement('div'); this.elements.scoreDisplay.className = 'minigame-score'; infoBar.appendChild(this.elements.scoreDisplay); this.updateScoreDisplay(); const timerContainer = document.createElement('div'); timerContainer.className = 'minigame-timer-bar-container'; this.elements.timerBar = document.createElement('div'); this.elements.timerBar.className = 'minigame-timer-bar'; timerContainer.appendChild(this.elements.timerBar); infoBar.appendChild(timerContainer); this.container.appendChild(infoBar); this.playerElement = document.createElement('div'); this.playerElement.textContent = '🐶'; this.playerElement.style.cssText = 'position: absolute; font-size: 40px; bottom: 10px; left: 50%; transform: translateX(-50%); user-select: none;'; this.container.appendChild(this.playerElement); this.playerPos = null; let timeLeft = this.duration; this.elements.timerBar.style.width = '100%'; this.timerIntervalId = setInterval(() => { timeLeft -= 100; const progress = Math.max(0, (timeLeft / this.duration) * 100); this.elements.timerBar.style.width = `${progress}%`; if (timeLeft <= 0) clearInterval(this.timerIntervalId); }, 100); this.invaderIntervalId = setInterval(() => this.spawnInvader(), 900); this.gameTimerId = setTimeout(() => this.endGame(), this.duration); this.boundTapHandler = this.handleTap.bind(this); this.container.addEventListener('pointerdown', this.boundTapHandler); this.boundGameLoop = this.gameLoop.bind(this); this.animationFrameId = requestAnimationFrame(this.boundGameLoop); }, handleTap: function(event) { if (!this.container || !this.playerPos) return; event.preventDefault(); const rect = this.container.getBoundingClientRect(); const tapX = event.clientX - rect.left; const tapY = event.clientY - rect.top; const dx = tapX - this.playerPos.x; const dy = tapY - this.playerPos.y; const distance = Math.sqrt(dx * dx + dy * dy); if (distance === 0) return; const vx = (dx / distance) * this.laserSpeed; const vy = (dy / distance) * this.laserSpeed; this.spawnLaser(vx, vy); }, spawnLaser: function(vx, vy) { const laser = { element: document.createElement('div'), x: this.playerPos.x, y: this.playerPos.y, vx: vx, vy: vy, }; laser.element.textContent = '⚡'; laser.element.style.cssText = 'position: absolute; font-size: 24px; pointer-events: none; user-select: none; left: 0; top: 0; will-change: transform;'; laser.element.style.transform = `translate(${laser.x - 12}px, ${laser.y - 12}px)`; this.lasers.push(laser); this.container.appendChild(laser.element); }, spawnInvader: function() { if (!this.container) return; const containerWidth = this.container.clientWidth; const invaderSize = 40; const invader = { element: document.createElement('div'), x: Math.random() * (containerWidth - invaderSize), y: -invaderSize, speed: this.invaderBaseSpeed + Math.random() * 1.5 }; invader.element.textContent = '👾'; invader.element.style.cssText = 'position: absolute; font-size: 40px; pointer-events: none; user-select: none; left: 0; top: 0; will-change: transform;'; invader.element.style.transform = `translate(${invader.x}px, ${invader.y}px)`; this.invaders.push(invader); this.container.appendChild(invader.element); }, gameLoop: function() { if (!this.container) return; if (!this.playerPos) { const playerRect = this.playerElement.getBoundingClientRect(); const containerRect = this.container.getBoundingClientRect(); this.playerPos = { x: (playerRect.left + playerRect.width / 2) - containerRect.left, y: (playerRect.top + playerRect.height / 2) - containerRect.top, }; } this.updateLasers(); this.updateInvaders(); this.checkCollisions(); this.animationFrameId = requestAnimationFrame(this.boundGameLoop); }, updateLasers: function() { const containerRect = this.container.getBoundingClientRect(); for (let i = this.lasers.length - 1; i >= 0; i--) { const laser = this.lasers[i]; laser.x += laser.vx; laser.y += laser.vy; laser.element.style.transform = `translate(${laser.x - 12}px, ${laser.y - 12}px)`; if (laser.x < -20 || laser.x > containerRect.width + 20 || laser.y < -20 || laser.y > containerRect.height + 20) { laser.element.remove(); this.lasers.splice(i, 1); } } }, updateInvaders: function() { const containerHeight = this.container.clientHeight; for (let i = this.invaders.length - 1; i >= 0; i--) { const invader = this.invaders[i]; invader.y += invader.speed; invader.element.style.transform = `translate(${invader.x}px, ${invader.y}px)`; if (invader.y > containerHeight) { invader.element.remove(); this.invaders.splice(i, 1); } } }, checkCollisions: function() { for (let i = this.lasers.length - 1; i >= 0; i--) { for (let j = this.invaders.length - 1; j >= 0; j--) { const laser = this.lasers[i]; const invader = this.invaders[j]; const dx = (laser.x) - (invader.x + 20); const dy = (laser.y) - (invader.y + 20); const distance = Math.sqrt(dx * dx + dy * dy); const collisionThreshold = 12 + 20; if (distance < collisionThreshold) { this.score++; this.updateScoreDisplay(); playBell(); const invaderRect = invader.element.getBoundingClientRect(); const confettiX = (invaderRect.left + invaderRect.right) / 2 / window.innerWidth; const confettiY = (invaderRect.top + invaderRect.bottom) / 2 / window.innerHeight; myConfetti({ particleCount: 30, spread: 50, origin: { x: confettiX, y: confettiY }, scalar: 0.7 }); laser.element.remove(); this.lasers.splice(i, 1); invader.element.remove(); this.invaders.splice(j, 1); break; } } } }, updateScoreDisplay: function() { if (this.elements.scoreDisplay) { this.elements.scoreDisplay.textContent = `Score: ${this.score}`; } }, endGame: function() { const canCallPrimaryCallback = !!this.onCompleteCallback; cancelAnimationFrame(this.animationFrameId); clearInterval(this.invaderIntervalId); clearInterval(this.timerIntervalId); clearTimeout(this.gameTimerId); this.animationFrameId = null; this.invaderIntervalId = null; this.timerIntervalId = null; this.gameTimerId = null; if (this.container && this.boundTapHandler) { this.container.removeEventListener('pointerdown', this.boundTapHandler); this.container.style.cursor = 'default'; } this.lasers.forEach(l => l.element.remove()); this.invaders.forEach(inv => inv.element.remove()); if (this.playerElement) this.playerElement.remove(); this.lasers = []; this.invaders = []; if (canCallPrimaryCallback) { speak(`Game over! You defeated ${this.score} invaders!`); const callbackToExecute = this.onCompleteCallback; this.onCompleteCallback = null; if (callbackToExecute) { callbackToExecute(this.score); } } }, destroy: function() { this.endGame(); if (this.container) { this.container.innerHTML = ''; } this.container = null; this.elements = {}; this.onCompleteCallback = null; this.playerElement = null; } };
     const PuppyPatrolGame = { name: "Puppy Patrol", score: 0, duration: 20000, critters: [], container: null, onCompleteCallback: null, elements: {}, gameTimerId: null, timerIntervalId: null, animationFrameId: null, boundGameLoop: null, boundTapHandler: null, numPuppies: 8, numSharks: 4, minSpeed: 1, maxSpeed: 2.5, start: function(containerElement, onComplete) { this.container = containerElement; this.onCompleteCallback = onComplete; this.score = 0; this.critters = []; this.container.innerHTML = ''; this.container.style.cursor = 'pointer'; speak("Pat the puppies, but avoid the sharks!"); const infoBar = document.createElement('div'); infoBar.className = 'minigame-info-bar'; this.elements.scoreDisplay = document.createElement('div'); this.elements.scoreDisplay.className = 'minigame-score'; infoBar.appendChild(this.elements.scoreDisplay); this.updateScoreDisplay(); const timerContainer = document.createElement('div'); timerContainer.className = 'minigame-timer-bar-container'; this.elements.timerBar = document.createElement('div'); this.elements.timerBar.className = 'minigame-timer-bar'; timerContainer.appendChild(this.elements.timerBar); infoBar.appendChild(timerContainer); this.container.appendChild(infoBar); for (let i = 0; i < this.numPuppies; i++) { this.spawnCritter('puppy'); } for (let i = 0; i < this.numSharks; i++) { this.spawnCritter('shark'); } let timeLeft = this.duration; this.elements.timerBar.style.width = '100%'; this.timerIntervalId = setInterval(() => { timeLeft -= 100; const progress = Math.max(0, (timeLeft / this.duration) * 100); this.elements.timerBar.style.width = `${progress}%`; if (timeLeft <= 0) clearInterval(this.timerIntervalId); }, 100); this.gameTimerId = setTimeout(() => this.endGame(), this.duration); this.boundTapHandler = this.handleTap.bind(this); this.container.addEventListener('pointerdown', this.boundTapHandler); this.boundGameLoop = this.gameLoop.bind(this); this.animationFrameId = requestAnimationFrame(this.boundGameLoop); }, spawnCritter: function(type) { if (!this.container) return; const containerRect = this.container.getBoundingClientRect(); const size = (type === 'puppy') ? 40 : 45; const critter = { element: document.createElement('div'), type: type, size: size, x: Math.random() * (containerRect.width - size), y: Math.random() * (containerRect.height - size), vx: (Math.random() - 0.5) * 2 * (this.maxSpeed - this.minSpeed) + Math.sign(Math.random() - 0.5) * this.minSpeed, vy: (Math.random() - 0.5) * 2 * (this.maxSpeed - this.minSpeed) + Math.sign(Math.random() - 0.5) * this.minSpeed, }; critter.element.textContent = (type === 'puppy') ? '🐶' : '🦈'; critter.element.style.cssText = `position: absolute; font-size: ${size}px; user-select: none; left: 0; top: 0; will-change: transform; --critter-id: ${this.critters.length};`; critter.element.dataset.critterType = type; this.critters.push(critter); this.container.appendChild(critter.element); }, handleTap: function(event) { const targetElement = event.target; const critterType = targetElement.dataset.critterType; if (!critterType) return; const critterIndex = this.critters.findIndex(c => c.element === targetElement); if (critterIndex === -1) return; const critter = this.critters[critterIndex]; if (critter.type === 'puppy') { this.score++; playBell(); const rect = critter.element.getBoundingClientRect(); const confettiX = (rect.left + rect.right) / 2 / window.innerWidth; const confettiY = (rect.top + rect.bottom) / 2 / window.innerHeight; myConfetti({ particleCount: 30, spread: 50, origin: { x: confettiX, y: confettiY }, scalar: 0.8 }); critter.element.remove(); this.critters.splice(critterIndex, 1); this.spawnCritter('puppy'); } else if (critter.type === 'shark') { this.score--; playBuzz(); this.container.classList.add('red-flash-effect'); setTimeout(() => this.container.classList.remove('red-flash-effect'), 300); } this.updateScoreDisplay(); }, gameLoop: function() { if (!this.container) return; const containerRect = this.container.getBoundingClientRect(); this.critters.forEach(critter => { critter.x += critter.vx; critter.y += critter.vy; if (critter.x <= 0 || critter.x >= containerRect.width - critter.size) { critter.vx *= -1; critter.x = Math.max(0, Math.min(critter.x, containerRect.width - critter.size)); } if (critter.y <= 0 || critter.y >= containerRect.height - critter.size) { critter.vy *= -1; critter.y = Math.max(0, Math.min(critter.y, containerRect.height - critter.size)); } critter.element.style.transform = `translate(${critter.x}px, ${critter.y}px)`; }); this.animationFrameId = requestAnimationFrame(this.boundGameLoop); }, updateScoreDisplay: function() { if (this.elements.scoreDisplay) { this.elements.scoreDisplay.textContent = `Score: ${this.score}`; } }, endGame: function() { const canCallPrimaryCallback = !!this.onCompleteCallback; cancelAnimationFrame(this.animationFrameId); clearInterval(this.timerIntervalId); clearTimeout(this.gameTimerId); this.animationFrameId = null; this.timerIntervalId = null; this.gameTimerId = null; if (this.container && this.boundTapHandler) { this.container.removeEventListener('pointerdown', this.boundTapHandler); this.container.style.cursor = 'default'; this.container.classList.remove('red-flash-effect'); } this.critters.forEach(c => c.element.remove()); this.critters = []; if (canCallPrimaryCallback) { speak(`Great job! You saved ${Math.max(0, this.score)} puppies!`); const callbackToExecute = this.onCompleteCallback; this.onCompleteCallback = null; if (callbackToExecute) { callbackToExecute(this.score); } } }, destroy: function() { this.endGame(); if (this.container) { this.container.innerHTML = ''; } this.container = null; this.elements = {}; this.onCompleteCallback = null; } };
-  const UnicornDragonDash = { name: "Unicorn & Dragon Dash", score: 0, duration: 20000, critters: [], container: null, onCompleteCallback: null, elements: {}, gameTimerId: null, timerIntervalId: null, animationFrameId: null, boundGameLoop: null, boundTapHandler: null, numUnicorns: 8, numDragons: 4, minSpeed: 1, maxSpeed: 2.5, start: function(containerElement, onComplete) { this.container = containerElement; this.onCompleteCallback = onComplete; this.score = 0; this.critters = []; this.container.innerHTML = ''; this.container.style.cursor = 'pointer'; speak("Catch the unicorns, and dodge the dragons!"); const infoBar = document.createElement('div'); infoBar.className = 'minigame-info-bar'; this.elements.scoreDisplay = document.createElement('div'); this.elements.scoreDisplay.className = 'minigame-score'; infoBar.appendChild(this.elements.scoreDisplay); this.updateScoreDisplay(); const timerContainer = document.createElement('div'); timerContainer.className = 'minigame-timer-bar-container'; this.elements.timerBar = document.createElement('div'); this.elements.timerBar.className = 'minigame-timer-bar'; timerContainer.appendChild(this.elements.timerBar); infoBar.appendChild(timerContainer); this.container.appendChild(infoBar); for (let i = 0; i < this.numUnicorns; i++) { this.spawnCritter('unicorn'); } for (let i = 0; i < this.numDragons; i++) { this.spawnCritter('dragon'); } let timeLeft = this.duration; this.elements.timerBar.style.width = '100%'; this.timerIntervalId = setInterval(() => { timeLeft -= 100; const progress = Math.max(0, (timeLeft / this.duration) * 100); this.elements.timerBar.style.width = `${progress}%`; if (timeLeft <= 0) clearInterval(this.timerIntervalId); }, 100); this.gameTimerId = setTimeout(() => this.endGame(), this.duration); this.boundTapHandler = this.handleTap.bind(this); this.container.addEventListener('pointerdown', this.boundTapHandler); this.boundGameLoop = this.gameLoop.bind(this); this.animationFrameId = requestAnimationFrame(this.boundGameLoop); }, spawnCritter: function(type) { if (!this.container) return; const containerRect = this.container.getBoundingClientRect(); const size = (type === 'unicorn') ? 40 : 45; const critter = { element: document.createElement('div'), type: type, size: size, x: Math.random() * (containerRect.width - size), y: Math.random() * (containerRect.height - size), vx: (Math.random() - 0.5) * 2 * (this.maxSpeed - this.minSpeed) + Math.sign(Math.random() - 0.5) * this.minSpeed, vy: (Math.random() - 0.5) * 2 * (this.maxSpeed - this.minSpeed) + Math.sign(Math.random() - 0.5) * this.minSpeed, }; critter.element.textContent = (type === 'unicorn') ? '🦄' : '🐉'; critter.element.style.cssText = `position: absolute; font-size: ${size}px; user-select: none; left: 0; top: 0; will-change: transform;`; critter.element.dataset.critterType = type; this.critters.push(critter); this.container.appendChild(critter.element); }, handleTap: function(event) { const targetElement = event.target; const critterType = targetElement.dataset.critterType; if (!critterType) return; const critterIndex = this.critters.findIndex(c => c.element === targetElement); if (critterIndex === -1) return; const critter = this.critters[critterIndex]; if (critter.type === 'unicorn') { this.score++; playBell(); const rect = critter.element.getBoundingClientRect(); const confettiX = (rect.left + rect.right) / 2 / window.innerWidth; const confettiY = (rect.top + rect.bottom) / 2 / window.innerHeight; myConfetti({ particleCount: 30, spread: 50, origin: { x: confettiX, y: confettiY }, scalar: 0.8 }); critter.element.remove(); this.critters.splice(critterIndex, 1); this.spawnCritter('unicorn'); } else if (critter.type === 'dragon') { this.score--; playBuzz(); this.container.classList.add('red-flash-effect'); setTimeout(() => this.container.classList.remove('red-flash-effect'), 300); } this.updateScoreDisplay(); }, gameLoop: function() { if (!this.container) return; const containerRect = this.container.getBoundingClientRect(); this.critters.forEach(critter => { critter.x += critter.vx; critter.y += critter.vy; if (critter.x <= 0 || critter.x >= containerRect.width - critter.size) { critter.vx *= -1; critter.x = Math.max(0, Math.min(critter.x, containerRect.width - critter.size)); } if (critter.y <= 0 || critter.y >= containerRect.height - critter.size) { critter.vy *= -1; critter.y = Math.max(0, Math.min(critter.y, containerRect.height - critter.size)); } critter.element.style.transform = `translate(${critter.x}px, ${critter.y}px)`; }); this.animationFrameId = requestAnimationFrame(this.boundGameLoop); }, updateScoreDisplay: function() { if (this.elements.scoreDisplay) { this.elements.scoreDisplay.textContent = `Score: ${this.score}`; } }, endGame: function() { const canCallPrimaryCallback = !!this.onCompleteCallback; cancelAnimationFrame(this.animationFrameId); clearInterval(this.timerIntervalId); clearTimeout(this.gameTimerId); this.animationFrameId = null; this.timerIntervalId = null; this.gameTimerId = null; if (this.container && this.boundTapHandler) { this.container.removeEventListener('pointerdown', this.boundTapHandler); this.container.style.cursor = 'default'; this.container.classList.remove('red-flash-effect'); } this.critters.forEach(c => c.element.remove()); this.critters = []; if (canCallPrimaryCallback) { speak(`Fantastic! You befriended ${Math.max(0, this.score)} unicorns!`); const callbackToExecute = this.onCompleteCallback; this.onCompleteCallback = null; if (callbackToExecute) { callbackToExecute(this.score); } } }, destroy: function() { this.endGame(); if (this.container) { this.container.innerHTML = ''; } this.container = null; this.elements = {}; this.onCompleteCallback = null; } };
+    const UnicornDragonDash = { name: "Unicorn & Dragon Dash", score: 0, duration: 20000, critters: [], container: null, onCompleteCallback: null, elements: {}, gameTimerId: null, timerIntervalId: null, animationFrameId: null, boundGameLoop: null, boundTapHandler: null, numUnicorns: 8, numDragons: 4, minSpeed: 1, maxSpeed: 2.5, start: function(containerElement, onComplete) { this.container = containerElement; this.onCompleteCallback = onComplete; this.score = 0; this.critters = []; this.container.innerHTML = ''; this.container.style.cursor = 'pointer'; speak("Catch the unicorns, and dodge the dragons!"); const infoBar = document.createElement('div'); infoBar.className = 'minigame-info-bar'; this.elements.scoreDisplay = document.createElement('div'); this.elements.scoreDisplay.className = 'minigame-score'; infoBar.appendChild(this.elements.scoreDisplay); this.updateScoreDisplay(); const timerContainer = document.createElement('div'); timerContainer.className = 'minigame-timer-bar-container'; this.elements.timerBar = document.createElement('div'); this.elements.timerBar.className = 'minigame-timer-bar'; timerContainer.appendChild(this.elements.timerBar); infoBar.appendChild(timerContainer); this.container.appendChild(infoBar); for (let i = 0; i < this.numUnicorns; i++) { this.spawnCritter('unicorn'); } for (let i = 0; i < this.numDragons; i++) { this.spawnCritter('dragon'); } let timeLeft = this.duration; this.elements.timerBar.style.width = '100%'; this.timerIntervalId = setInterval(() => { timeLeft -= 100; const progress = Math.max(0, (timeLeft / this.duration) * 100); this.elements.timerBar.style.width = `${progress}%`; if (timeLeft <= 0) clearInterval(this.timerIntervalId); }, 100); this.gameTimerId = setTimeout(() => this.endGame(), this.duration); this.boundTapHandler = this.handleTap.bind(this); this.container.addEventListener('pointerdown', this.boundTapHandler); this.boundGameLoop = this.gameLoop.bind(this); this.animationFrameId = requestAnimationFrame(this.boundGameLoop); }, spawnCritter: function(type) { if (!this.container) return; const containerRect = this.container.getBoundingClientRect(); const size = (type === 'unicorn') ? 40 : 45; const critter = { element: document.createElement('div'), type: type, size: size, x: Math.random() * (containerRect.width - size), y: Math.random() * (containerRect.height - size), vx: (Math.random() - 0.5) * 2 * (this.maxSpeed - this.minSpeed) + Math.sign(Math.random() - 0.5) * this.minSpeed, vy: (Math.random() - 0.5) * 2 * (this.maxSpeed - this.minSpeed) + Math.sign(Math.random() - 0.5) * this.minSpeed, }; critter.element.textContent = (type === 'unicorn') ? '🦄' : '🐉'; critter.element.style.cssText = `position: absolute; font-size: ${size}px; user-select: none; left: 0; top: 0; will-change: transform;`; critter.element.dataset.critterType = type; this.critters.push(critter); this.container.appendChild(critter.element); }, handleTap: function(event) { const targetElement = event.target; const critterType = targetElement.dataset.critterType; if (!critterType) return; const critterIndex = this.critters.findIndex(c => c.element === targetElement); if (critterIndex === -1) return; const critter = this.critters[critterIndex]; if (critter.type === 'unicorn') { this.score++; playBell(); const rect = critter.element.getBoundingClientRect(); const confettiX = (rect.left + rect.right) / 2 / window.innerWidth; const confettiY = (rect.top + rect.bottom) / 2 / window.innerHeight; myConfetti({ particleCount: 30, spread: 50, origin: { x: confettiX, y: confettiY }, scalar: 0.8 }); critter.element.remove(); this.critters.splice(critterIndex, 1); this.spawnCritter('unicorn'); } else if (critter.type === 'dragon') { this.score--; playBuzz(); this.container.classList.add('red-flash-effect'); setTimeout(() => this.container.classList.remove('red-flash-effect'), 300); } this.updateScoreDisplay(); }, gameLoop: function() { if (!this.container) return; const containerRect = this.container.getBoundingClientRect(); this.critters.forEach(critter => { critter.x += critter.vx; critter.y += critter.vy; if (critter.x <= 0 || critter.x >= containerRect.width - critter.size) { critter.vx *= -1; critter.x = Math.max(0, Math.min(critter.x, containerRect.width - critter.size)); } if (critter.y <= 0 || critter.y >= containerRect.height - critter.size) { critter.vy *= -1; critter.y = Math.max(0, Math.min(critter.y, containerRect.height - critter.size)); } critter.element.style.transform = `translate(${critter.x}px, ${critter.y}px)`; }); this.animationFrameId = requestAnimationFrame(this.boundGameLoop); }, updateScoreDisplay: function() { if (this.elements.scoreDisplay) { this.elements.scoreDisplay.textContent = `Score: ${this.score}`; } }, endGame: function() { const canCallPrimaryCallback = !!this.onCompleteCallback; cancelAnimationFrame(this.animationFrameId); clearInterval(this.timerIntervalId); clearTimeout(this.gameTimerId); this.animationFrameId = null; this.timerIntervalId = null; this.gameTimerId = null; if (this.container && this.boundTapHandler) { this.container.removeEventListener('pointerdown', this.boundTapHandler); this.container.style.cursor = 'default'; this.container.classList.remove('red-flash-effect'); } this.critters.forEach(c => c.element.remove()); this.critters = []; if (canCallPrimaryCallback) { speak(`Fantastic! You befriended ${Math.max(0, this.score)} unicorns!`); const callbackToExecute = this.onCompleteCallback; this.onCompleteCallback = null; if (callbackToExecute) { callbackToExecute(this.score); } } }, destroy: function() { this.endGame(); if (this.container) { this.container.innerHTML = ''; } this.container = null; this.elements = {}; this.onCompleteCallback = null; } };
 
 
     // --- MINI-GAME SYSTEM (UNCHANGED) ---
@@ -1207,28 +1196,21 @@
     function showFloatingScore(message, targetButton, isError = false) { const floatEl = document.createElement('div'); floatEl.textContent = message; floatEl.classList.add('floating-effect'); floatEl.classList.add(isError ? 'floating-message' : 'floating-score'); if(isError) {floatEl.style.backgroundColor = 'var(--incorrect-bg)'; floatEl.style.color = '#333';} document.body.appendChild(floatEl); const btnRect = targetButton.getBoundingClientRect(); floatEl.style.left = `${btnRect.left + btnRect.width / 2 - floatEl.offsetWidth / 2}px`; floatEl.style.top = `${btnRect.top - floatEl.offsetHeight - 10}px`; gsap.to(floatEl, { y: -60, opacity: 0, duration: 1.8, ease: 'power1.out', onComplete: () => floatEl.remove() }); }
     function showFloatingMessage(text, bgColor = 'var(--brand)', textColor = 'white') { const msgEl = document.createElement('div'); msgEl.textContent = text; msgEl.classList.add('floating-effect', 'floating-message'); msgEl.style.backgroundColor = bgColor; msgEl.style.color = textColor; msgEl.style.left = '50%'; msgEl.style.top = '15%'; msgEl.style.transform = 'translateX(-50%)'; msgEl.style.padding = '0.8rem 1.5rem'; msgEl.style.fontSize = '1.5em'; document.body.appendChild(msgEl); gsap.fromTo(msgEl, { opacity: 0, y: -20, scale: 0.8 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'back.out(1.7)' } ); setTimeout(() => { gsap.to(msgEl, { opacity: 0, y: 20, scale: 0.8, duration: 0.5, ease: 'back.in(1.7)', onComplete: () => msgEl.remove() }); }, 2300); }
 
-    // --- NEW: WORD LIST MANAGEMENT (Modal-based) ---
+    // --- NEW: WORD LIST MANAGEMENT (Modal-based, with instant save) ---
     function initWordListModal() {
-        wordListOpenBtn.addEventListener('click', openWordListModal); // FIX: This listener now correctly opens the modal.
+        wordListOpenBtn.addEventListener('click', openWordListModal);
         wordListCloseBtn.addEventListener('click', closeWordListModal);
-        wordListSaveBtn.addEventListener('click', saveAndCloseWordListModal);
+        // "Save" button listener is removed, as changes are now instant.
     }
     
     function openWordListModal() {
-        tempSelectionState = JSON.parse(JSON.stringify(selectionState));
+        // No temporary state is needed anymore.
         renderWordListModalContent();
         wordListModal.classList.add('visible');
     }
 
     function closeWordListModal() {
         wordListModal.classList.remove('visible');
-    }
-
-    function saveAndCloseWordListModal() {
-        selectionState = JSON.parse(JSON.stringify(tempSelectionState));
-        localStorage.setItem('wordSelectionState', JSON.stringify(selectionState));
-        updateQuizWordsFromSelectionState();
-        closeWordListModal();
     }
 
     function renderWordListModalContent() {
@@ -1253,7 +1235,6 @@
                 const levelKeys = Object.keys(WORD_BANK[listKey]);
                 if (listKey === 'fry') { levelKeys.sort((a, b) => parseInt(a.split('-')[0]) - parseInt(b.split('-')[0])); }
                 levelKeys.forEach(levelKey => {
-                    // inside renderWordListModalContent (or createLevelItem)…
                     const displayName = bankDisplayNames[listKey];
                     const levelName =
                       listKey === 'dolch'       ? `Level ${levelKey}`    :
@@ -1275,8 +1256,17 @@
         const label = document.createElement('label');
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
-        checkbox.checked = tempSelectionState[listKey]?.[levelKey] || false;
-        checkbox.addEventListener('change', () => { tempSelectionState[listKey][levelKey] = checkbox.checked; updateWordListModalUI(); });
+        checkbox.checked = selectionState[listKey]?.[levelKey] || false;
+        checkbox.addEventListener('change', () => {
+            // Directly modify the main state
+            selectionState[listKey][levelKey] = checkbox.checked;
+            // Persist to localStorage
+            localStorage.setItem('wordSelectionState', JSON.stringify(selectionState));
+            // Update the UI counts in the modal
+            updateWordListModalUI();
+            // Update the actual quiz words
+            updateQuizWordsFromSelectionState();
+        });
         const nameSpan = document.createElement('span');
         nameSpan.textContent = levelName;
         const countSpan = document.createElement('span');
@@ -1356,7 +1346,7 @@
         clearTimeout(questionTimeoutId); resetQuestionState(); setTimeout(nextQ, 100);
     }
 
-    // --- WORD CUSTOMIZATION MODAL (Inner modal, adapted to work with new system) ---
+    // --- WORD CUSTOMIZATION MODAL (Inner modal, with instant save) ---
     function openWordCustomizationModal(listKey, levelKeyContext) {
         currentModalListContext = listKey;
         currentModalLevelContext = levelKeyContext;
@@ -1383,48 +1373,20 @@
     function populateModalWordList() {
         modalWordList.innerHTML = '';
         const searchTerm = modalSearchInput.value.toLowerCase().trim();
-    
-        // 1. Determine the unique key for localStorage based on the current context.
-        const levelKeyForStorage = (currentModalListContext === 'custom') ? '__ALL__' : currentModalLevelContext;
-        const userSelectionsKey = `${currentModalListContext}_${levelKeyForStorage}_userSelections`;
-    
-        // 2. Read the user's saved selections from storage ONE TIME.
+        const userSelectionsKey = `${currentModalListContext}_${(currentModalListContext === 'custom') ? '__ALL__' : currentModalLevelContext}_userSelections`;
         let userSelectedSubset = null;
         const storedUserSelections = localStorage.getItem(userSelectionsKey);
-        if (storedUserSelections) {
-            try {
-                // If there are saved selections, parse them into an array.
-                userSelectedSubset = JSON.parse(storedUserSelections);
-            } catch (e) {
-                console.error("Could not parse user selections for key:", userSelectionsKey, e);
-            }
-        }
-    
-        // 3. Get the full list of words for the current context.
-        const baseWordsForContext = (currentModalListContext === 'custom')
-            ? (WORD_BANK.custom || [])
-            : (WORD_BANK[currentModalListContext]?.[currentModalLevelContext] || []);
-    
+        if (storedUserSelections) { try { userSelectedSubset = JSON.parse(storedUserSelections); } catch (e) { console.error("Could not parse user selections for key:", userSelectionsKey, e); } }
+        const baseWordsForContext = (currentModalListContext === 'custom') ? (WORD_BANK.custom || []) : (WORD_BANK[currentModalListContext]?.[currentModalLevelContext] || []);
         let wordsToDisplay = new Map();
         let foundResultsInCurrentList = false;
-    
-        // 4. Loop through the full list and decide if each word should be checked.
         baseWordsForContext.forEach(word => {
             if (searchTerm === '' || word.toLowerCase().includes(searchTerm)) {
-                // THIS IS THE CORE FIX:
-                // - If userSelectedSubset is null (nothing saved), it means "select all", so isSelected is true.
-                // - If userSelectedSubset IS an array, check if the current word is in it.
                 const isSelected = !Array.isArray(userSelectedSubset) || userSelectedSubset.includes(word);
-    
-                wordsToDisplay.set(word, {
-                    isCustomGlobal: WORD_BANK.custom.includes(word), // For styling custom words
-                    isSelectedForBaseLevel: isSelected // Use the calculated checked state
-                });
+                wordsToDisplay.set(word, { isCustomGlobal: WORD_BANK.custom.includes(word), isSelectedForBaseLevel: isSelected });
                 foundResultsInCurrentList = true;
             }
         });
-    
-        // 5. Render the checkboxes (this part is unchanged).
         const sortedWords = Array.from(wordsToDisplay.keys()).sort((a, b) => a.localeCompare(b));
         sortedWords.forEach(word => {
             const wordData = wordsToDisplay.get(word);
@@ -1434,10 +1396,9 @@
             checkbox.type = 'checkbox';
             checkbox.id = `modal-word-${word.replace(/\s+/g, '-')}`;
             checkbox.value = word;
-            checkbox.checked = wordData.isSelectedForBaseLevel; // Use the correctly determined state
-            if (wordData.isCustomGlobal) {
-                itemDiv.classList.add('custom-word');
-            }
+            checkbox.checked = wordData.isSelectedForBaseLevel;
+            checkbox.addEventListener('change', persistModalWordSelections); // Instant save on change
+            if (wordData.isCustomGlobal) { itemDiv.classList.add('custom-word'); }
             const label = document.createElement('label');
             label.htmlFor = checkbox.id;
             label.textContent = word;
@@ -1445,7 +1406,6 @@
             itemDiv.appendChild(label);
             modalWordList.appendChild(itemDiv);
         });
-    
         if (searchTerm !== '' && !foundResultsInCurrentList && !WORD_BANK.custom.includes(searchTerm)) {
             modalAddCustomWordTerm.textContent = searchTerm;
             modalAddCustomWordBtn.classList.remove('hidden');
@@ -1466,51 +1426,30 @@
         modalSearchInput.value = ''; modalAddCustomWordBtn.classList.add('hidden');
     }
     
-    function saveWordCustomizationModal() {
-        // This function will now use the same, correct logic for ALL list types.
-    
-        // Get the list of words the user has currently checked in the modal.
-        const selectedWords = Array.from(
-            modalWordList.querySelectorAll('input[type="checkbox"]:checked')
-        ).map(cb => cb.value);
-    
-        // Determine the full, unfiltered list of words for the current context.
-        const allPossibleWordsForContext = (currentModalListContext === 'custom')
-            ? WORD_BANK.custom
-            : (WORD_BANK[currentModalListContext]?.[currentModalLevelContext] || []);
-    
-        // Determine the unique key for storing this user selection "override" in local storage.
-        // The key for the custom list is special: '__ALL__'
+    function persistModalWordSelections() {
+        const selectedWords = Array.from(modalWordList.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+        const allPossibleWordsForContext = (currentModalListContext === 'custom') ? WORD_BANK.custom : (WORD_BANK[currentModalListContext]?.[currentModalLevelContext] || []);
         const userSelectionsKey = `${currentModalListContext}_${currentModalListContext === 'custom' ? '__ALL__' : currentModalLevelContext}_userSelections`;
-    
-        // Check if the user's selection is identical to the full, default list.
-        const isSelectionIdenticalToDefault =
-            selectedWords.length === allPossibleWordsForContext.length &&
-            allPossibleWordsForContext.every(word => selectedWords.includes(word));
-    
+        const isSelectionIdenticalToDefault = selectedWords.length === allPossibleWordsForContext.length && allPossibleWordsForContext.every(word => selectedWords.includes(word));
         if (isSelectionIdenticalToDefault) {
-            // If all words are selected, there's no need for an override.
-            // Remove any existing override from storage to use the full default list.
             localStorage.removeItem(userSelectionsKey);
         } else {
-            // The user has made a specific sub-selection. Store this list as the override.
             localStorage.setItem(userSelectionsKey, JSON.stringify(selectedWords.sort()));
         }
-    
-        // IMPORTANT: This function's purpose is to save the *selection state*.
-        // The master WORD_BANK.custom list is only modified when using the "Add Word" button.
-    
-        // --- Update UI and game state ---
-        closeWordCustomizationModal();
         if (wordListModal.classList.contains('visible')) {
-            updateWordListModalUI(); // Update counts in the main selection modal.
+            updateWordListModalUI();
         }
-        updateQuizWordsFromSelectionState(); // Re-calculate the active words for the quiz immediately.
-        showFloatingMessage("Word customizations saved!", "var(--correct-bg)");
+        updateQuizWordsFromSelectionState();
     }
 
-    function toggleAllModalWords(select) { modalWordList.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = select; }); }
+    function toggleAllModalWords(select) {
+        modalWordList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.checked = select;
+        });
+        persistModalWordSelections();
+    }
 
   </script>
 </body>
 </html>
+
