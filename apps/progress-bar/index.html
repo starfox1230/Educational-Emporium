@@ -239,21 +239,21 @@
         .dreamy-purple-mode input:checked + .slider { background-color: #9d8ae3; }
         .dreamy-purple-mode input:focus + .slider { box-shadow: 0 0 1px #9d8ae3; }
         
-        /* Cotton Candy Theme */
+        /* --- UPDATED: Cotton Candy Theme with improved contrast --- */
         .cotton-candy-mode { background-color: #fce4ec; color: #880e4f; }
         .cotton-candy-mode #settings-icon { fill: #880e4f; }
         .cotton-candy-mode #settings-menu { background-color: #f8bbd0; color: #880e4f; box-shadow: 0 4px 15px rgba(136, 14, 79, 0.2); }
         .cotton-candy-mode .setting-item input[type="number"] { background-color: #fce4ec; border-color: #f48fb1; color: #880e4f; }
         .cotton-candy-mode .theme-button.active { border-color: #880e4f; }
-        .cotton-candy-mode #progress-container { background-color: #f48fb1; }
-        .cotton-candy-mode #progress-bar { background-color: #ff80ab; }
-        .cotton-candy-mode #progress-text { color: #880e4f; }
-        .cotton-candy-mode .greyed-out { color: #f48fb1; }
-        .cotton-candy-mode .heart { color: #ad1457; }
+        .cotton-candy-mode #progress-container { background-color: #f8bbd0; } /* Lighter container */
+        .cotton-candy-mode #progress-bar { background-color: #c2185b; }    /* Darker, vibrant bar */
+        .cotton-candy-mode #progress-text { color: white; }                  /* Text on bar is now white */
+        .cotton-candy-mode .greyed-out { color: #f8bbd0; }                   /* FIXED: Matches the container background */
+        .cotton-candy-mode .heart { color: #c2185b; }                        /* Matches the vibrant bar color */
         .cotton-candy-mode #game-over-overlay { background: #f8bbd0; color: #c2185b; }
         .cotton-candy-mode #restart-button { background-color: #c2185b; }
-        .cotton-candy-mode input:checked + .slider { background-color: #ff80ab; }
-        .cotton-candy-mode input:focus + .slider { box-shadow: 0 0 1px #ff80ab; }
+        .cotton-candy-mode input:checked + .slider { background-color: #c2185b; }
+        .cotton-candy-mode input:focus + .slider { box-shadow: 0 0 1px #c2185b; }
 
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
         @keyframes shake { 0%, 100% { transform: translate(0); } 25% { transform: translate(-5px, -5px) rotate(-5deg); } 75% { transform: translate(5px, 5px) rotate(5deg); } }
@@ -273,7 +273,7 @@
 <body>
     <div id="settings-container">
         <svg id="settings-icon" viewBox="0 0 24 24">
-            <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>
+            <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19-.15-.24-.42-.12-.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>
         </svg>
         <div id="settings-menu">
             <div class="setting-item">
@@ -334,7 +334,7 @@
         let countdownInterval = null;
         let audioContext = null;
         let isBuzzPlaying = false;
-        let audioInitialized = false; // NEW: Flag to track audio initialization
+        let audioInitialized = false;
 
         let tapModeEnabled = false;
         let totalSteps = 20;
@@ -359,22 +359,20 @@
         const themeButtons = document.querySelectorAll('.theme-button');
 
         function initAudio() {
-            if (audioInitialized) return; // Prevent re-initialization
+            if (audioInitialized) return;
             if (!audioContext) {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
             }
-            // Resume the context if it's suspended
             if (audioContext.state === 'suspended') {
                 audioContext.resume();
             }
             dingSound.load();
             buzzSound.load();
-            audioInitialized = true; // Set the flag
+            audioInitialized = true;
             console.log("Audio context initialized by user gesture.");
         }
 
         async function playSound(sound) {
-            // No need to check for audioContext here, as it will be initialized by the first gesture
             try {
                 if (!sound.paused) { sound.pause(); sound.currentTime = 0; }
                 if (sound === buzzSound) {
@@ -411,12 +409,12 @@
             const bar = document.getElementById('progress-bar');
             if (currentTheme === 'night') bar.style.backgroundColor = '#4A90E2';
             else if (currentTheme === 'purple') bar.style.backgroundColor = '#9d8ae3';
-            else if (currentTheme === 'cotton-candy') bar.style.backgroundColor = '#ff80ab';
+            else if (currentTheme === 'cotton-candy') bar.style.backgroundColor = '#c2185b';
             else bar.style.backgroundColor = 'hotpink';
         }
 
         settingsIcon.addEventListener('click', (e) => {
-            initAudio(); // Initialize audio if settings icon is the first interaction
+            initAudio();
             e.stopPropagation();
             toggleSettingsMenu(!settingsMenu.classList.contains('open'));
         });
@@ -573,7 +571,7 @@
         }
         
         document.addEventListener('keydown', (event) => {
-            initAudio(); // NEW: Unlock audio on first keydown
+            initAudio();
             if (event.key === ' ' && !event.repeat) {
                 event.preventDefault();
                 if (hearts === 0) {
@@ -591,7 +589,7 @@
         });
         
         document.body.addEventListener('click', (e) => {
-            initAudio(); // NEW: Unlock audio on first click
+            initAudio();
             if (settingsMenu.contains(e.target) || settingsIcon.contains(e.target)) return;
             if (tapModeEnabled && hearts > 0) {
                 const screenWidth = window.innerWidth;
@@ -603,7 +601,6 @@
             }
         });
         
-        // REMOVED: initAudio() is no longer called on load
         setTheme('day');
     </script>
 </body>
