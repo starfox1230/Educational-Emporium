@@ -18,9 +18,116 @@
             height: 100vh;
             background-color: #f0f0f0;
             overflow: hidden;
-            transition: background-color 0.5s;
+            transition: background-color 0.5s, color 0.5s;
             color: black;
         }
+
+        /* --- NEW: Settings Menu Styles --- */
+        #settings-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+        #settings-icon {
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            fill: #333;
+            transition: transform 0.3s, fill 0.5s;
+        }
+        #settings-icon:hover {
+            transform: rotate(45deg);
+        }
+        #settings-menu {
+            position: absolute;
+            top: 45px;
+            right: 0;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 15px;
+            width: 220px;
+            text-align: left;
+            opacity: 0;
+            transform: scale(0.95) translateY(-10px);
+            transform-origin: top right;
+            pointer-events: none;
+            transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+        }
+        #settings-menu.open {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            pointer-events: auto;
+        }
+        .setting-item {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .setting-item:last-child {
+            margin-bottom: 0;
+        }
+        .setting-item label {
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .setting-item input[type="number"] {
+            width: 60px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        /* Custom Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+        }
+        .switch input { display: none; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px; width: 20px;
+            left: 4px; bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: hotpink; }
+        input:focus + .slider { box-shadow: 0 0 1px hotpink; }
+        input:checked + .slider:before { transform: translateX(22px); }
+        /* Theme buttons */
+        #theme-selector {
+            display: flex;
+            justify-content: space-between;
+        }
+        .theme-button {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border-color 0.3s;
+        }
+        .theme-button.active {
+            border-color: #333;
+        }
+        #theme-day { background-color: #f0f0f0; border: 2px solid #333; }
+        #theme-night { background-color: #1e1e1e; }
+        #theme-purple { background-color: #4a2f5d; }
+
+
         #progress-container {
             position: relative;
             width: 80%;
@@ -54,28 +161,24 @@
             font-size: 1.2em;
             margin-top: 10px;
         }
-        /* Adjusted Heart Container Styles */
         #heart-container {
             display: flex;
             align-items: center;
-            justify-content: flex-end; /* Right-justify the hearts */
+            justify-content: flex-end;
             margin-top: 10px;
-            font-size: 2em; /* Increased font size */
-            width: 80%; /* Adjust width to fit the layout */
+            font-size: 2em;
+            width: 80%;
         }
         .heart {
             color: hotpink;
-            margin-left: 5px; /* Adjust margin for spacing */
+            margin-left: 5px;
             transition: color 0.5s;
         }
         .greyed-out {
-            color: #ddd; /* Default grey color */
-        }
-        .night-mode .greyed-out {
-            color: #333; /* Darker grey for night mode */
+            color: #ddd;
         }
         #game-over-overlay {
-            position: absolute;
+            position: fixed; /* Use fixed for better centering */
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -85,14 +188,10 @@
             border-radius: 10px;
             text-align: center;
             display: none;
-            z-index: 1;
+            z-index: 10;
             color: red;
         }
-        #game-over-overlay h2 {
-            font-size: 2em;
-            margin: 0;
-            font-weight: bold;
-        }
+        #game-over-overlay h2 { font-size: 2em; margin: 0; font-weight: bold; }
         #restart-button {
             margin-top: 10px;
             padding: 10px 20px;
@@ -103,82 +202,92 @@
             border-radius: 5px;
             cursor: pointer;
         }
-        .night-mode {
-            background-color: #1e1e1e;
-            color: #e0e0e0;
-        }
-        .night-mode #progress-container {
-            background-color: #333;
-        }
-        .night-mode #progress-bar {
-            background-color: #4A90E2;
-        }
-        .night-mode #progress-text {
-            color: white;
-        }
-        .night-mode.red-mode #progress-bar {
-            background-color: #ff5555;
-        }
-        .red-mode #progress-bar {
-            background-color: red;
-        }
-        .night-mode #game-over-overlay {
-            background: #333;
-            color: #FF4C4C;
-        }
-        .night-mode #restart-button {
-            background-color: #FF4C4C;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-        @keyframes shake {
-            0%, 100% { transform: translate(0); }
-            25% { transform: translate(-5px, -5px) rotate(-5deg); }
-            75% { transform: translate(5px, 5px) rotate(5deg); }
-        }
+        /* Red Mode (Losing Points) */
+        .red-mode #progress-bar { background-color: red !important; /* Use !important to override themes */ }
+
+        /* --- THEME STYLES --- */
+        /* Night Mode */
+        .night-mode { background-color: #1e1e1e; color: #e0e0e0; }
+        .night-mode #settings-icon { fill: #e0e0e0; }
+        .night-mode #settings-menu { background-color: #2a2a2a; color: #e0e0e0; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+        .night-mode .setting-item input[type="number"] { background-color: #333; border-color: #555; color: #e0e0e0; }
+        .night-mode .theme-button.active { border-color: white; }
+        .night-mode #progress-container { background-color: #333; }
+        .night-mode #progress-bar { background-color: #4A90E2; }
+        .night-mode #progress-text { color: white; }
+        .night-mode .greyed-out { color: #333; }
+        .night-mode .heart { color: #4A90E2; }
+        .night-mode #game-over-overlay { background: #333; color: #FF4C4C; }
+        .night-mode #restart-button { background-color: #FF4C4C; }
+        .night-mode input:checked + .slider { background-color: #4A90E2; }
+        .night-mode input:focus + .slider { box-shadow: 0 0 1px #4A90E2; }
+        
+        /* Dreamy Purple Mode */
+        .dreamy-purple-mode { background-color: #2c2a4a; color: #e0ddeb; }
+        .dreamy-purple-mode #settings-icon { fill: #e0ddeb; }
+        .dreamy-purple-mode #settings-menu { background-color: #4a2f5d; color: #e0ddeb; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+        .dreamy-purple-mode .setting-item input[type="number"] { background-color: #5e4370; border-color: #7b5a93; color: #e0ddeb; }
+        .dreamy-purple-mode .theme-button.active { border-color: white; }
+        .dreamy-purple-mode #progress-container { background-color: #4a2f5d; }
+        .dreamy-purple-mode #progress-bar { background-color: #9d8ae3; }
+        .dreamy-purple-mode #progress-text { color: white; }
+        .dreamy-purple-mode .greyed-out { color: #4a2f5d; }
+        .dreamy-purple-mode .heart { color: #d889e3; }
+        .dreamy-purple-mode #game-over-overlay { background: #4a2f5d; color: #ff7b7b; }
+        .dreamy-purple-mode #restart-button { background-color: #ff7b7b; }
+        .dreamy-purple-mode input:checked + .slider { background-color: #9d8ae3; }
+        .dreamy-purple-mode input:focus + .slider { box-shadow: 0 0 1px #9d8ae3; }
+        
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        @keyframes shake { 0%, 100% { transform: translate(0); } 25% { transform: translate(-5px, -5px) rotate(-5deg); } 75% { transform: translate(5px, 5px) rotate(5deg); } }
         .pulse { animation: pulse 0.5s ease-in-out; }
         .shake { animation: shake 0.5s ease-in-out; }
-        @keyframes hazyPulse {
-            0% { background-color: rgba(255, 0, 0, 0.1); }
-            50% { background-color: rgba(255, 0, 0, 0.3); }
-            100% { background-color: rgba(255, 0, 0, 0.1); }
-        }
+        @keyframes hazyPulse { 0% { background-color: rgba(255, 0, 0, 0.1); } 50% { background-color: rgba(255, 0, 0, 0.3); } 100% { background-color: rgba(255, 0, 0, 0.1); } }
         #red-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            width: 100%;
-            height: 100%;
-            display: none;
-            z-index: 1;
-            pointer-events: none;
-            animation: hazyPulse 1s infinite;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%;
+            display: none; z-index: 1; pointer-events: none; animation: hazyPulse 1s infinite;
         }
         #countdown-overlay {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 10em;
-            color: red;
-            display: none;
-            z-index: 2;
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 10em; color: red; display: none; z-index: 2;
         }
     </style>
 </head>
 <body>
+    <!-- NEW: Settings Menu -->
+    <div id="settings-container">
+        <svg id="settings-icon" viewBox="0 0 24 24">
+            <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>
+        </svg>
+        <div id="settings-menu">
+            <div class="setting-item">
+                <label for="tap-mode-toggle">Tap Mode</label>
+                <label class="switch">
+                    <input type="checkbox" id="tap-mode-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-item">
+                <label for="steps-input">Steps</label>
+                <input type="number" id="steps-input" value="20" min="2" max="100">
+            </div>
+            <div class="setting-item">
+                <label>Theme</label>
+                <div id="theme-selector">
+                    <div class="theme-button" id="theme-day" data-theme="day"></div>
+                    <div class="theme-button" id="theme-night" data-theme="night"></div>
+                    <div class="theme-button" id="theme-purple" data-theme="purple"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="heart-container">
-        <!-- Displaying five hearts initially -->
-        <span class="heart" id="heart1">&#9829;</span>
-        <span class="heart" id="heart2">&#9829;</span>
-        <span class="heart" id="heart3">&#9829;</span>
-        <span class="heart" id="heart4">&#9829;</span>
-        <span class="heart" id="heart5">&#9829;</span>
+        <span class="heart" id="heart1">♥</span>
+        <span class="heart" id="heart2">♥</span>
+        <span class="heart" id="heart3">♥</span>
+        <span class="heart" id="heart4">♥</span>
+        <span class="heart" id="heart5">♥</span>
     </div>
 
     <div id="progress-container">
@@ -196,7 +305,6 @@
     <div id="red-overlay"></div>
     <div id="countdown-overlay"></div>
 
-    <!-- Audio elements with preload attribute -->
     <audio id="ding-sound" src="Ding.m4a" preload="auto"></audio>
     <audio id="buzz-sound" src="Buzz.m4a" preload="auto"></audio>
 
@@ -204,12 +312,17 @@
         let progress = 0;
         let currentDisplayValue = 0;
         let hearts = 5;
-        let nightMode = false;
         let countdownTimer = null;
         let countdownNumber = 3;
         let countdownInterval = null;
         let audioContext = null;
-        let isBuzzPlaying = false; // Flag to track buzz sound state
+        let isBuzzPlaying = false;
+
+        // --- NEW: Settings Variables ---
+        let tapModeEnabled = false;
+        let totalSteps = 20;
+        let progressPerStep = 100 / totalSteps;
+        let currentTheme = 'day';
 
         // Get DOM elements
         const progressBar = document.getElementById('progress-bar');
@@ -218,17 +331,18 @@
         const progressContainer = document.getElementById('progress-container');
         const dingSound = document.getElementById('ding-sound');
         const buzzSound = document.getElementById('buzz-sound');
-        const heartsArray = [
-            document.getElementById('heart1'),
-            document.getElementById('heart2'),
-            document.getElementById('heart3'),
-            document.getElementById('heart4'),
-            document.getElementById('heart5')
-        ];
+        const heartsArray = Array.from(document.querySelectorAll('.heart'));
         const gameOverOverlay = document.getElementById('game-over-overlay');
         const restartButton = document.getElementById('restart-button');
         const countdownOverlay = document.getElementById('countdown-overlay');
         const redOverlay = document.getElementById('red-overlay');
+
+        // --- NEW: Settings DOM elements ---
+        const settingsIcon = document.getElementById('settings-icon');
+        const settingsMenu = document.getElementById('settings-menu');
+        const tapModeToggle = document.getElementById('tap-mode-toggle');
+        const stepsInput = document.getElementById('steps-input');
+        const themeButtons = document.querySelectorAll('.theme-button');
 
         // Initialize audio context
         function initAudio() {
@@ -238,91 +352,130 @@
             if (audioContext.state === 'suspended') {
                 audioContext.resume();
             }
-            
-            // Prime the audio elements
             dingSound.load();
             buzzSound.load();
         }
 
-        // Function to play sound with proper error handling
         async function playSound(sound) {
             try {
-                if (!audioContext) {
-                    initAudio();
-                }
-
-                // Stop sound if it's currently playing
-                if (!sound.paused) {
-                    sound.pause();
-                    sound.currentTime = 0;
-                }
-
-                // If the sound is buzz, ensure only one play at a time
+                if (!audioContext) { initAudio(); }
+                if (!sound.paused) { sound.pause(); sound.currentTime = 0; }
                 if (sound === buzzSound) {
-                    if (isBuzzPlaying) return; // Exit if buzz is still playing
+                    if (isBuzzPlaying) return;
                     isBuzzPlaying = true;
-                    sound.addEventListener('ended', () => {
-                        isBuzzPlaying = false;
-                    }, { once: true });
+                    sound.addEventListener('ended', () => { isBuzzPlaying = false; }, { once: true });
                 }
-
                 const playPromise = sound.play();
-                if (playPromise !== undefined) {
-                    await playPromise;
-                }
-            } catch (error) {
-                console.error('Error playing sound:', error);
+                if (playPromise !== undefined) { await playPromise; }
+            } catch (error) { console.error('Error playing sound:', error); }
+        }
+
+        // --- NEW: Settings Logic ---
+        function toggleSettingsMenu(show) {
+            if (show) {
+                settingsMenu.classList.add('open');
+            } else {
+                settingsMenu.classList.remove('open');
+            }
+        }
+        
+        function setTheme(theme) {
+            document.body.classList.remove('night-mode', 'dreamy-purple-mode');
+            currentTheme = theme;
+            
+            if (theme === 'night') {
+                document.body.classList.add('night-mode');
+            } else if (theme === 'purple') {
+                document.body.classList.add('dreamy-purple-mode');
+            }
+
+            // Update active button
+            themeButtons.forEach(button => {
+                button.classList.toggle('active', button.dataset.theme === theme);
+            });
+            
+            // Re-apply correct progress bar color if not in red-mode
+            if (!document.body.classList.contains('red-mode')) {
+                updateProgressBarColor();
             }
         }
 
-        function toggleNightMode() {
-            nightMode = !nightMode;
-            document.body.classList.toggle('night-mode', nightMode);
-            document.body.classList.remove('red-mode');
-            progressBar.style.backgroundColor = nightMode ? '#4A90E2' : 'hotpink';
+        function updateProgressBarColor() {
+            const bar = document.getElementById('progress-bar');
+            if (currentTheme === 'night') bar.style.backgroundColor = '#4A90E2';
+            else if (currentTheme === 'purple') bar.style.backgroundColor = '#9d8ae3';
+            else bar.style.backgroundColor = 'hotpink';
         }
 
+        settingsIcon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleSettingsMenu(!settingsMenu.classList.contains('open'));
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!settingsMenu.contains(e.target)) {
+                toggleSettingsMenu(false);
+            }
+        });
+
+        tapModeToggle.addEventListener('change', (e) => {
+            tapModeEnabled = e.target.checked;
+        });
+
+        stepsInput.addEventListener('input', (e) => {
+            let newSteps = parseInt(e.target.value, 10);
+            if (newSteps > 1 && newSteps <= 100) {
+                totalSteps = newSteps;
+                progressPerStep = 100 / totalSteps;
+            }
+        });
+        
+        themeButtons.forEach(button => {
+            button.addEventListener('click', () => setTheme(button.dataset.theme));
+        });
+
+        // --- UPDATED: Core Game Logic ---
         function animateProgress(oldValue, newValue) {
             const step = oldValue < newValue ? 1 : -1;
             let current = oldValue;
             const interval = setInterval(() => {
                 current += step;
-                progressText.textContent = Math.max(0, current) + '%';
-                if (current === newValue || current < 0) {
+                progressText.textContent = Math.round(Math.max(0, current)) + '%';
+                if ((step > 0 && current >= newValue) || (step < 0 && current <= newValue) || current < 0) {
                     clearInterval(interval);
+                    progressText.textContent = Math.round(Math.max(0, newValue)) + '%';
                 }
-            }, 50);
+            }, 20);
         }
 
         function updateProgress(change, silent = false) {
-            if (hearts === 0) return;
+            if (hearts === 0 || (progress === 100 && change > 0) || (progress === 0 && change < 0)) return;
 
             const oldProgress = progress;
             progress += change;
-
-            if (progress > 100) progress = 100;
-            if (progress < 0) progress = 0;
+            progress = Math.max(0, Math.min(100, progress));
 
             progressBar.style.width = progress + '%';
             animateProgress(currentDisplayValue, progress);
             currentDisplayValue = progress;
 
-            if (progress === 100) {
+            if (progress >= 100) {
+                progress = 100;
                 message.textContent = 'You did it!';
+                progressBar.style.width = '100%';
                 return;
             }
 
             if (!silent) {
                 if (change > 0) {
                     document.body.classList.remove('red-mode');
-                    progressBar.style.backgroundColor = nightMode ? '#4A90E2' : 'hotpink';
+                    updateProgressBarColor();
                     progressContainer.classList.add('pulse');
                     message.classList.add('pulse');
                     message.textContent = 'Great job! Keep going!';
                     playSound(dingSound);
                 } else if (change < 0) {
                     document.body.classList.add('red-mode');
-                    progressBar.style.backgroundColor = '';
                     progressContainer.classList.add('shake');
                     message.classList.add('shake');
                     message.textContent = 'Careful, focus!';
@@ -334,17 +487,14 @@
             }
 
             setTimeout(() => {
-                progressContainer.classList.remove('pulse');
-                message.classList.remove('pulse');
-                progressContainer.classList.remove('shake');
-                message.classList.remove('shake');
+                progressContainer.classList.remove('pulse', 'shake');
+                message.classList.remove('pulse', 'shake');
             }, 500);
         }
 
         function loseHeart() {
             if (hearts > 0) {
                 hearts--;
-                // Grey out the rightmost active heart
                 heartsArray[hearts].classList.add('greyed-out');
             }
             if (hearts === 0) {
@@ -367,8 +517,8 @@
             message.textContent = 'Keep going!';
             gameOverOverlay.style.display = 'none';
             document.body.classList.remove('red-mode');
+            updateProgressBarColor();
 
-            // Reset all hearts to hotpink and reset audio flags
             heartsArray.forEach(heart => heart.classList.remove('greyed-out'));
             isBuzzPlaying = false;
             dingSound.pause(); dingSound.currentTime = 0;
@@ -391,7 +541,7 @@
                     countdownOverlay.style.display = 'none';
                     redOverlay.style.display = 'none';
                     countdownTimer = null;
-                    updateProgress(-5); // Trigger buzz
+                    updateProgress(-progressPerStep); // Use dynamic step
                 }
             }, 1000);
         }
@@ -402,37 +552,48 @@
             redOverlay.style.display = 'none';
             countdownTimer = null;
         }
-
+        
+        // --- EVENT LISTENERS ---
         document.addEventListener('keydown', (event) => {
-            if (hearts > 0 && progress < 100 && event.key === ' ') {
+            if (event.key === ' ' && !event.repeat) {
                 event.preventDefault();
-                updateProgress(5);
-            }
-            if (hearts > 0 && progress > 0 && event.key === 'ArrowLeft') {
-                event.preventDefault();
-                if (!countdownTimer) {
-                    startCountdown();
+                if (hearts === 0) {
+                    restartGame();
                 } else {
-                    cancelCountdown();
+                    updateProgress(progressPerStep); // Use dynamic step
                 }
             }
-            if (event.key === '+') {
-                updateProgress(5, true);
+            if (event.key === 'ArrowLeft' && !event.repeat) {
+                event.preventDefault();
+                if (hearts > 0 && progress > 0) {
+                    if (!countdownTimer) startCountdown();
+                    else cancelCountdown();
+                }
             }
-            if (event.key === '-') {
-                updateProgress(-5, true);
+            // Silent controls for testing
+            if (event.key === '+') updateProgress(progressPerStep, true);
+            if (event.key === '-') updateProgress(-progressPerStep, true);
+        });
+        
+        // NEW: Tap listener
+        document.body.addEventListener('click', (e) => {
+            if (!tapModeEnabled || hearts === 0 || settingsMenu.contains(e.target) || settingsIcon.contains(e.target)) {
+                return;
             }
-            if (event.key === 'F12') {
-                toggleNightMode();
-            }
-            if (hearts === 0 && event.key === ' ') {
-                restartGame();
+
+            const screenWidth = window.innerWidth;
+            if (e.clientX < screenWidth / 2) {
+                // Left half
+                updateProgress(-progressPerStep);
+            } else {
+                // Right half
+                updateProgress(progressPerStep);
             }
         });
 
-        // Initialize audio elements
-        dingSound.load();
-        buzzSound.load();
+        // Initialize audio and theme on load
+        initAudio();
+        setTheme('day'); // Set initial theme
     </script>
 </body>
 </html>
