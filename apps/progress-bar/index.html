@@ -175,8 +175,9 @@
             margin-left: 5px;
             transition: color 0.5s;
         }
-        .greyed-out {
-            color: #ddd;
+        /* UPDATED SELECTOR for higher specificity */
+        .heart.greyed-out {
+            color: #ddd; /* Matches default #progress-container */
         }
         #game-over-overlay {
             position: fixed;
@@ -216,8 +217,9 @@
         .night-mode #progress-container { background-color: #333; }
         .night-mode #progress-bar { background-color: #4A90E2; }
         .night-mode #progress-text { color: white; }
-        .night-mode .greyed-out { color: #333; }
         .night-mode .heart { color: #4A90E2; }
+        /* UPDATED SELECTOR and color for Night Mode */
+        .night-mode .heart.greyed-out { color: #333; }
         .night-mode #game-over-overlay { background: #333; color: #FF4C4C; }
         .night-mode #restart-button { background-color: #FF4C4C; }
         .night-mode input:checked + .slider { background-color: #4A90E2; }
@@ -232,24 +234,26 @@
         .dreamy-purple-mode #progress-container { background-color: #4a2f5d; }
         .dreamy-purple-mode #progress-bar { background-color: #9d8ae3; }
         .dreamy-purple-mode #progress-text { color: white; }
-        .dreamy-purple-mode .greyed-out { color: #4a2f5d; }
         .dreamy-purple-mode .heart { color: #d889e3; }
+        /* UPDATED SELECTOR and color for Purple Mode */
+        .dreamy-purple-mode .heart.greyed-out { color: #4a2f5d; }
         .dreamy-purple-mode #game-over-overlay { background: #4a2f5d; color: #ff7b7b; }
         .dreamy-purple-mode #restart-button { background-color: #ff7b7b; }
         .dreamy-purple-mode input:checked + .slider { background-color: #9d8ae3; }
         .dreamy-purple-mode input:focus + .slider { box-shadow: 0 0 1px #9d8ae3; }
         
-        /* --- UPDATED: Cotton Candy Theme with improved contrast --- */
+        /* Cotton Candy Theme */
         .cotton-candy-mode { background-color: #fce4ec; color: #880e4f; }
         .cotton-candy-mode #settings-icon { fill: #880e4f; }
         .cotton-candy-mode #settings-menu { background-color: #f8bbd0; color: #880e4f; box-shadow: 0 4px 15px rgba(136, 14, 79, 0.2); }
         .cotton-candy-mode .setting-item input[type="number"] { background-color: #fce4ec; border-color: #f48fb1; color: #880e4f; }
         .cotton-candy-mode .theme-button.active { border-color: #880e4f; }
-        .cotton-candy-mode #progress-container { background-color: #f8bbd0; } /* Lighter container */
-        .cotton-candy-mode #progress-bar { background-color: #c2185b; }    /* Darker, vibrant bar */
-        .cotton-candy-mode #progress-text { color: white; }                  /* Text on bar is now white */
-        .cotton-candy-mode .greyed-out { color: #f8bbd0; }                   /* FIXED: Matches the container background */
-        .cotton-candy-mode .heart { color: #c2185b; }                        /* Matches the vibrant bar color */
+        .cotton-candy-mode #progress-container { background-color: #f8bbd0; }
+        .cotton-candy-mode #progress-bar { background-color: #c2185b; }
+        .cotton-candy-mode #progress-text { color: white; }
+        .cotton-candy-mode .heart { color: #c2185b; }
+        /* UPDATED SELECTOR and color for Cotton Candy Mode */
+        .cotton-candy-mode .heart.greyed-out { color: #f8bbd0; }
         .cotton-candy-mode #game-over-overlay { background: #f8bbd0; color: #c2185b; }
         .cotton-candy-mode #restart-button { background-color: #c2185b; }
         .cotton-candy-mode input:checked + .slider { background-color: #c2185b; }
