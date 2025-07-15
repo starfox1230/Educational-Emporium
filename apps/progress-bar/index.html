@@ -334,6 +334,7 @@
         let countdownInterval = null;
         let audioContext = null;
         let isBuzzPlaying = false;
+        let audioInitialized = false; // NEW: Flag to track audio initialization
 
         let tapModeEnabled = false;
         let totalSteps = 20;
@@ -358,19 +359,23 @@
         const themeButtons = document.querySelectorAll('.theme-button');
 
         function initAudio() {
+            if (audioInitialized) return; // Prevent re-initialization
             if (!audioContext) {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
             }
+            // Resume the context if it's suspended
             if (audioContext.state === 'suspended') {
                 audioContext.resume();
             }
             dingSound.load();
             buzzSound.load();
+            audioInitialized = true; // Set the flag
+            console.log("Audio context initialized by user gesture.");
         }
 
         async function playSound(sound) {
+            // No need to check for audioContext here, as it will be initialized by the first gesture
             try {
-                if (!audioContext) { initAudio(); }
                 if (!sound.paused) { sound.pause(); sound.currentTime = 0; }
                 if (sound === buzzSound) {
                     if (isBuzzPlaying) return;
@@ -411,12 +416,13 @@
         }
 
         settingsIcon.addEventListener('click', (e) => {
+            initAudio(); // Initialize audio if settings icon is the first interaction
             e.stopPropagation();
             toggleSettingsMenu(!settingsMenu.classList.contains('open'));
         });
 
         document.addEventListener('click', (e) => {
-            if (!settingsMenu.contains(e.target)) {
+            if (!settingsMenu.contains(e.target) && !settingsIcon.contains(e.target)) {
                 toggleSettingsMenu(false);
             }
         });
@@ -450,10 +456,8 @@
             }, 20);
         }
         
-        // REFACTORED: Now accepts a 'silent' flag
         function updateProgress(change, silent = false) {
-            if (hearts === 0) return;
-            if (progress === 100 && change > 0) return;
+            if (hearts === 0 || (progress === 100 && change > 0)) return;
             
             const oldProgress = progress;
             progress += change;
@@ -469,7 +473,6 @@
                 progressBar.style.width = '100%';
             }
 
-            // Only play sounds and show effects if not a silent update
             if (!silent && change > 0) {
                 document.body.classList.remove('red-mode');
                 updateProgressBarColor();
@@ -485,19 +488,14 @@
             }
         }
         
-        // NEW: Central function to handle all penalty logic
         function applyPenalty() {
             loseHeart();
             playSound(buzzSound);
-
             document.body.classList.add('red-mode');
             progressContainer.classList.add('shake');
             message.classList.add('shake');
             message.textContent = 'Careful, focus!';
-
-            // Update the progress bar silently after applying effects
             updateProgress(-progressPerStep, true);
-
             setTimeout(() => {
                 progressContainer.classList.remove('shake');
                 message.classList.remove('shake');
@@ -530,11 +528,10 @@
             gameOverOverlay.style.display = 'none';
             document.body.classList.remove('red-mode');
             updateProgressBarColor();
-
             heartsArray.forEach(heart => heart.classList.remove('greyed-out'));
             isBuzzPlaying = false;
-            dingSound.pause(); dingSound.currentTime = 0;
-            buzzSound.pause(); buzzSound.currentTime = 0;
+            if (dingSound) { dingSound.pause(); dingSound.currentTime = 0; }
+            if (buzzSound) { buzzSound.pause(); buzzSound.currentTime = 0; }
         }
 
         function startCountdown() {
@@ -553,7 +550,6 @@
                     countdownOverlay.style.display = 'none';
                     redOverlay.style.display = 'none';
                     countdownTimer = null;
-                    // FIXED: Call the dedicated penalty function
                     applyPenalty(); 
                 }
             }, 1000);
@@ -577,6 +573,7 @@
         }
         
         document.addEventListener('keydown', (event) => {
+            initAudio(); // NEW: Unlock audio on first keydown
             if (event.key === ' ' && !event.repeat) {
                 event.preventDefault();
                 if (hearts === 0) {
@@ -589,19 +586,13 @@
                 event.preventDefault();
                 handleNegativeAction();
             }
-            
-            // RESTORED: Silent controls for testing
-            if (event.key === '+') {
-                updateProgress(progressPerStep, true);
-            }
-            if (event.key === '-') {
-                updateProgress(-progressPerStep, true);
-            }
+            if (event.key === '+') updateProgress(progressPerStep, true);
+            if (event.key === '-') updateProgress(-progressPerStep, true);
         });
         
         document.body.addEventListener('click', (e) => {
+            initAudio(); // NEW: Unlock audio on first click
             if (settingsMenu.contains(e.target) || settingsIcon.contains(e.target)) return;
-
             if (tapModeEnabled && hearts > 0) {
                 const screenWidth = window.innerWidth;
                 if (e.clientX < screenWidth / 2) {
@@ -611,8 +602,8 @@
                 }
             }
         });
-
-        initAudio();
+        
+        // REMOVED: initAudio() is no longer called on load
         setTheme('day');
     </script>
 </body>
