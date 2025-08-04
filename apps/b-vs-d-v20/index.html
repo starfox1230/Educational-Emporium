@@ -184,8 +184,18 @@
     </div>
   </div>
 
-  <audio id="audio-correct" src="data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjQ1LjEwMAAAAAAAAAAAAAAA//tAwAAAAAAAAAAAAAAAAAAAAAAAAB4aW5nAAAA/wAAABYAAAJ2YWRlIGluIG1zOjAsIHZhZGUgb3V0IG1zOjI1MAA//uQxAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABsYW1lAAAA/wAAAAAAAAA//uYxAAEAAANIAAAAAFhpbmcAAAADAAAAAAAACgAAA3YAAAAnDGGF2ZjU4LjQ1LjEwMAAAAAA//uUxAMgAAANIAAAAAFhpbmcAAAADAAAAAAAACgAAA3YAAAAnDGGF2ZjU4LjQ1LjEwMA=="></audio>
-  <audio id="audio-buzz" src="data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjQ1LjEwMAAAAAAAAAAAAAAA//tAwAAAAAAAAAAAAAAAAAAAAAAAAB4aW5nAAAA/wAAABYAAAJ2YWRlIGluIG1zOjAsIHZhZGUgb3V0IG1zOjI1MAA//uQxAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABsYW1lAAAA/wAAAAAAAAA//uYxAAEAAANIAAAAAFhpbmcAAAADAAAAAAAACgAAA3YAAAAnDGGF2ZjU4LjQ1LjEwMAAAAAA//uUxAMgAAANIAAAAAFhpbmcAAAADAAAAAAAACgAAA3YAAAAnDGGF2ZjU4LjQ1LjEwMA=="></audio>
+  <!-- 
+    NEW: Audio elements for specific letter sounds.
+    REPLACE the src with your own Base64 encoded mp3 files.
+  -->
+  <audio id="audio-b-correct" src="data:audio/mpeg;base64,SUQz..."></audio>
+  <audio id="audio-b-wrong" src="data:audio/mpeg;base64,SUQz..."></audio>
+  <audio id="audio-d-correct" src="data:audio/mpeg;base64,SUQz..."></audio>
+  <audio id="audio-d-wrong" src="data:audio/mpeg;base64,SUQz..."></audio>
+  
+  <!-- MODIFIED: These are now for bonus/penalty sounds only -->
+  <audio id="audio-bonus" src="data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjQ1LjEwMAAAAAAAAAAAAAAA//tAwAAAAAAAAAAAAAAAAAAAAAAAAB4aW5nAAAA/wAAABYAAAJ2YWRlIGluIG1zOjAsIHZhZGUgb3V0IG1zOjI1MAA//uQxAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABsYW1lAAAA/wAAAAAAAAA//uYxAAEAAANIAAAAAFhpbmcAAAADAAAAAAAACgAAA3YAAAAnDGGF2ZjU4LjQ1LjEwMAAAAAA//uUxAMgAAANIAAAAAFhpbmcAAAADAAAAAAAACgAAA3YAAAAnDGGF2ZjU4LjQ1LjEwMA=="></audio>
+  <audio id="audio-penalty" src="data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjQ1LjEwMAAAAAAAAAAAAAAA//tAwAAAAAAAAAAAAAAAAAAAAAAAAB4aW5nAAAA/wAAABYAAAJ2YWRlIGluIG1zOjAsIHZhZGUgb3V0IG1zOjI1MAA//uQxAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABsYW1lAAAA/wAAAAAAAAA//uYxAAEAAANIAAAAAFhpbmcAAAADAAAAAAAACgAAA3YAAAAnDGGF2ZjU4LjQ1LjEwMAAAAAA//uUxAMgAAANIAAAAAFhpbmcAAAADAAAAAAAACgAAA3YAAAAnDGGF2ZjU4LjQ1LjEwMA=="></audio>
 
 <script>
 (function() {
@@ -204,22 +214,23 @@
   const comboProgressBar = document.getElementById('combo-progress-bar');
   const comboProgressBarInner = document.getElementById('combo-progress-bar-inner');
   const fruitGoalContainer = document.getElementById('fruit-goal-container');
-  const audioCorrect = document.getElementById('audio-correct');
-  const audioBuzz = document.getElementById('audio-buzz');
+  
+  // NEW: Get all audio elements
+  const audioBCorrect = document.getElementById('audio-b-correct');
+  const audioBWrong = document.getElementById('audio-b-wrong');
+  const audioDCorrect = document.getElementById('audio-d-correct');
+  const audioDWrong = document.getElementById('audio-d-wrong');
+  const audioBonus = document.getElementById('audio-bonus');
+  const audioPenalty = document.getElementById('audio-penalty');
 
   // Game State
-  let gameState = 'loading';
-  let score = 0, lives = 5, level = 1;
+  let gameState = 'loading', score = 0, lives = 5, level = 1;
   const maxLevels = 10;
-  
-  // NEW: A variable to hold the bottom boundary of the play area
   let playAreaBottom = window.innerHeight;
 
   // Game mechanic state variables
-  let comboCounter = 0;
-  const COMBO_GOAL = 4;
-  let fruitsCollected = 0;
-  const FRUITS_PER_LEVEL = 5;
+  let comboCounter = 0; const COMBO_GOAL = 4;
+  let fruitsCollected = 0; const FRUITS_PER_LEVEL = 5;
   const levelFruits = ['🍓', '🍎', '🍉', '🍇', '🍊', '🍍', '🍑', '🍒', '🥝', '🥭'];
 
   // Level State
@@ -241,13 +252,11 @@
     ============================================
   */
   
-  // MODIFIED: This function now also calculates the playable area height.
   function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    // NEW: Calculate the bottom boundary by subtracting the progress bar's height plus a small buffer.
     const progressBarHeight = comboProgressBar.offsetHeight || 10;
-    playAreaBottom = canvas.height - progressBarHeight - 5; // 5px buffer
+    playAreaBottom = canvas.height - progressBarHeight - 5;
   }
 
   function speak(text) {
@@ -271,13 +280,14 @@
     }
   }
   
-  function playCorrectSound() {
-      audioCorrect.currentTime = 0;
-      audioCorrect.play().catch(e => console.log("Audio play failed:", e));
+  // MODIFIED: Renamed for clarity. These now only play for non-letter interactions.
+  function playBonusSound() {
+      audioBonus.currentTime = 0;
+      audioBonus.play().catch(e => console.log("Audio play failed:", e));
   }
-  function playIncorrectSound() {
-      audioBuzz.currentTime = 0;
-      audioBuzz.play().catch(e => console.log("Audio play failed:", e));
+  function playPenaltySound() {
+      audioPenalty.currentTime = 0;
+      audioPenalty.play().catch(e => console.log("Audio play failed:", e));
   }
   
   const rand = (min, max) => Math.random() * (max - min) + min;
@@ -295,7 +305,6 @@
     ============================================
   */
 
-  // MODIFIED: This function now uses the playAreaBottom variable for spawning.
   function createSprite(type, glyphOverride = null) {
     const size = rand(canvas.height * 0.08, canvas.height * 0.15);
     const font = randChoice(fonts);
@@ -314,7 +323,6 @@
     const metrics = ctx.measureText(glyph);
     sprites.push({
       type, glyph, size, font,
-      // MODIFIED: Ensure sprites spawn above the progress bar.
       x: rand(metrics.width / 2, canvas.width - metrics.width / 2), 
       y: rand(size / 2, playAreaBottom - size / 2),
       vx: rand(-1.5, 1.5) * (1 + level * 0.1), vy: rand(-1.5, 1.5) * (1 + level * 0.1),
@@ -522,7 +530,14 @@
             comboCounter++;
             updateComboProgressBar();
             createEffect('correctBurst', s.x, s.y);
-            playCorrectSound();
+            // NEW: Play specific correct sound based on letter
+            if (s.glyph.toUpperCase() === 'B') {
+                audioBCorrect.currentTime = 0;
+                audioBCorrect.play().catch(e => console.log(e));
+            } else { // It's a D
+                audioDCorrect.currentTime = 0;
+                audioDCorrect.play().catch(e => console.log(e));
+            }
             if (comboCounter >= COMBO_GOAL) {
                 createSprite('bonus', levelFruits[level - 1] || '⭐');
                 comboCounter = 0;
@@ -530,20 +545,34 @@
             }
             break;
           case 'wrong':
+            mistake = true;
+            score = Math.max(0, score - 10);
+            lives--;
+            createEffect('error', s.x, s.y);
+            // NEW: Play specific wrong sound based on letter
+            if (s.glyph.toUpperCase() === 'B') {
+                audioBWrong.currentTime = 0;
+                audioBWrong.play().catch(e => console.log(e));
+            } else { // It's a D
+                audioDWrong.currentTime = 0;
+                audioDWrong.play().catch(e => console.log(e));
+            }
+            updateLivesUI();
+            break;
           case 'penalty':
             mistake = true;
-            score = Math.max(0, s.type === 'wrong' ? score - 10 : score - 50);
+            score = Math.max(0, score - 50);
             lives--;
-            const effectType = s.type === 'wrong' ? 'error' : 'explosion';
-            createEffect(effectType, s.x, s.y);
-            playIncorrectSound(); updateLivesUI();
+            createEffect('explosion', s.x, s.y);
+            playPenaltySound(); // MODIFIED: Use generic penalty sound
+            updateLivesUI();
             break;
           case 'bonus':
             fruitsCollected++;
             score += 50;
             updateFruitGoalUI();
             createEffect('confetti', s.x, s.y);
-            playCorrectSound();
+            playBonusSound(); // MODIFIED: Use generic bonus sound
             if (fruitsCollected >= FRUITS_PER_LEVEL) {
                 endLevel();
             }
@@ -552,7 +581,7 @@
             if (lives < 5) {
                 lives++; updateLivesUI();
                 createEffect('heartBurst', s.x, s.y);
-                playCorrectSound();
+                playBonusSound(); // MODIFIED: Use generic bonus sound
             }
             break;
         }
@@ -560,7 +589,7 @@
         if (mistake) {
             comboCounter = 0;
             updateComboProgressBar();
-            if (s.type === 'penalty') {
+            if (tappedSpriteType === 'penalty') {
                 screenShake = { duration: 10, magnitude: 8 };
             }
         }
@@ -587,23 +616,20 @@
     GAME LOOP (UPDATE & DRAW)
     ============================================
   */
-  // MODIFIED: This function now uses playAreaBottom for boundary checks.
   function updateSprites() {
     sprites.forEach(s => {
       s.x += s.vx;
       s.y += s.vy;
       
-      // Bounce off left and right edges
       if (s.x - s.width / 2 < 0 || s.x + s.width / 2 > canvas.width) {
           s.vx *= -1;
       }
       
-      // Bounce off top and bottom edges (respecting the new play area)
-      if (s.y - s.height / 2 < 0) {
-          s.y = s.height / 2; // Clamp to prevent getting stuck
+      if (s.y - s.height < 0) { // Check top edge
+          s.y = s.height;
           s.vy *= -1;
-      } else if (s.y + s.height / 2 > playAreaBottom) {
-          s.y = playAreaBottom - s.height / 2; // Clamp to prevent getting stuck
+      } else if (s.y > playAreaBottom) { // Check bottom edge (play area)
+          s.y = playAreaBottom;
           s.vy *= -1;
       }
     });
@@ -676,7 +702,7 @@
   */
   
   function init() {
-    resizeCanvas(); // This now also sets playAreaBottom
+    resizeCanvas();
     setupTTS();
     window.addEventListener('resize', resizeCanvas);
     canvas.addEventListener('pointerdown', e => {
