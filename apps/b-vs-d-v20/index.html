@@ -89,7 +89,6 @@
       text-shadow: var(--text-glow); transition: background-color 0.3s, color 0.3s;
     }
     .overlay button:hover, .overlay button:active { background-color: var(--accent); color: var(--bg); text-shadow: none; }
-    /* NEW: Style for disabled button during loading */
     .overlay button:disabled { cursor: wait; opacity: 0.5; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes countdown-pop { 0% { transform: scale(0.5); opacity: 0; } 70% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
@@ -156,9 +155,9 @@
   const fonts = ['Arial', 'Verdana', 'Georgia', 'Courier New', 'Times New Roman', 'Impact'];
   let screenShake = { duration: 0, magnitude: 0 };
   
-  // --- NEW: Web Audio API Setup ---
+  // --- Web Audio API Setup ---
   let audioCtx;
-  const soundCache = {}; // This will store our decoded audio buffers.
+  const soundCache = {};
   const soundsToLoad = {
       'b-correct': 'sounds/b-correct.mp3',
       'b-wrong': 'sounds/b-wrong.mp3',
@@ -206,15 +205,17 @@
     }
   }
 
-  // NEW: Function to initialize the AudioContext (must be called on user gesture)
-  function initAudioContext() {
+  // FIX: This entire audio loading and playing system has been revised for reliability.
+  async function loadAllSounds() {
+      // Create the AudioContext here, inside a user-initiated chain.
       if (!audioCtx) {
           audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       }
-  }
-
-  // NEW: Asynchronous function to fetch and decode all sounds.
-  async function loadAllSounds() {
+      // If the context is suspended, it must be resumed in a user gesture.
+      if (audioCtx.state === 'suspended') {
+          await audioCtx.resume();
+      }
+      
       const promises = Object.entries(soundsToLoad).map(async ([name, path]) => {
           try {
               const response = await fetch(path);
@@ -228,7 +229,6 @@
       await Promise.all(promises);
   }
 
-  // NEW: Single, reliable function to play any sound from the cache.
   function playSound(name) {
       if (!audioCtx || !soundCache[name]) {
           console.warn(`Sound not found or audio context not ready: ${name}`);
@@ -317,7 +317,7 @@
     startIntro();
   }
 
-  // MODIFIED: Manages the sound loading UI state.
+  // FIX: This flow is now robust. It waits for a click before loading audio.
   function startIntro() {
     gameState = 'intro';
     sprites = []; effects = [];
@@ -325,18 +325,21 @@
       overlayContent.innerHTML = `
         <h1>B or D</h1>
         <h2>Tap 4 correct letters in a row to spawn a fruit. Collect 5 fruits to pass the level!</h2>
-        <button id="start-btn" disabled>Loading Sounds...</button>
+        <button id="start-btn">Start Game</button>
       `;
       const startBtn = document.getElementById('start-btn');
+      
+      // The click handler is now the master initializer for audio.
+      startBtn.onclick = async () => {
+          startBtn.disabled = true;
+          startBtn.textContent = 'Loading Sounds...';
+          
+          await loadAllSounds(); // This now creates the AudioContext and loads sounds.
+          
+          startCountdown(); // Proceed only after sounds are ready.
+      };
 
-      initAudioContext();
-      loadAllSounds().then(() => {
-          startBtn.disabled = false;
-          startBtn.textContent = 'Start Game';
-          startBtn.onclick = startCountdown;
-      });
-
-    } else {
+    } else { // For subsequent levels, sounds are already loaded.
         overlayContent.innerHTML = `<h1>LEVEL ${level}</h1>`;
         setTimeout(startCountdown, 2000);
     }
@@ -656,10 +659,7 @@
     resizeCanvas();
     setupTTS();
     window.addEventListener('resize', resizeCanvas);
-    canvas.addEventListener('pointerdown', e => {
-        initAudioContext(); // Fallback to ensure context is ready if first tap is on canvas
-        handlePointerDown(e);
-    });
+    canvas.addEventListener('pointerdown', handlePointerDown);
     replayBtn.addEventListener('click', () => {
         if (gameState === 'playing') {
             speak(targetLetter === 'B' ? 'Bee' : 'Dee');
