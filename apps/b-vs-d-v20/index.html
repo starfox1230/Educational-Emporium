@@ -101,7 +101,6 @@
     }
     #replay-btn:active { transform: scale(0.9); }
 
-    /* NEW: Styles for the bottom HUD elements */
     .hud-bottom {
       position: fixed;
       bottom: 0;
@@ -294,7 +293,8 @@
     let glyph = glyphOverride;
 
     if (!glyph) {
-        if (type === 'penalty') glyph = randChoice(['💣', '💥', '🦈']);
+        // NEW: Simplified penalty sprites to always be a bomb.
+        if (type === 'penalty') glyph = '💣';
         else if (type === 'life') glyph = '❤';
         else {
           glyph = type === 'target' ? targetLetter : (targetLetter === 'B' ? 'D' : 'B');
@@ -505,8 +505,9 @@
       if (x > s.x - s.width / 2 && x < s.x + s.width / 2 && y > s.y - s.height / 2 && y < s.y + s.height) {
         
         let mistake = false;
+        const tappedSpriteType = s.type; // Keep track of what was tapped
 
-        switch(s.type) {
+        switch(tappedSpriteType) {
           case 'target':
             score += 10;
             comboCounter++;
@@ -555,7 +556,20 @@
             }
         }
         
-        updateScoreUI(); sprites.splice(i, 1); return;
+        updateScoreUI();
+        sprites.splice(i, 1);
+        
+        // NEW: Soft-lock prevention. If the player just tapped the last target, spawn more.
+        if (tappedSpriteType === 'target') {
+            const targetsRemaining = sprites.some(sprite => sprite.type === 'target');
+            if (!targetsRemaining) {
+                for (let j = 0; j < 3; j++) {
+                    createSprite('target');
+                }
+            }
+        }
+        
+        return;
       }
     }
   }
