@@ -184,11 +184,6 @@
     </div>
   </div>
 
-  <!-- 
-    MODIFIED: Audio elements now point to external files.
-    Make sure you have a 'sounds' folder next to this HTML file
-    containing all the specified audio files.
-  -->
   <audio id="audio-b-correct" src="sounds/b-correct.mp3" preload="auto"></audio>
   <audio id="audio-b-wrong"   src="sounds/b-wrong.mp3"   preload="auto"></audio>
   <audio id="audio-d-correct" src="sounds/d-correct.mp3" preload="auto"></audio>
@@ -669,7 +664,7 @@
               ctx.fillRect(e.x + p.x, e.y + p.y, p.w, p.h);
             }
         });
-      } else if (type === 'explosion') {
+      } else if (e.type === 'explosion') { // FIX: Was 'type', now correctly 'e.type'
         const grad = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, 200 * (1 - e.life));
         grad.addColorStop(0, 'rgba(255, 150, 50, 0.8)');
         grad.addColorStop(1, 'rgba(255, 50, 0, 0)');
