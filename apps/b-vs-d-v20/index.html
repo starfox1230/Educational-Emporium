@@ -201,6 +201,7 @@
   const replayBtn = document.getElementById('replay-btn');
   const overlay = document.getElementById('overlay');
   const overlayContent = document.getElementById('overlay-content');
+  const comboProgressBar = document.getElementById('combo-progress-bar');
   const comboProgressBarInner = document.getElementById('combo-progress-bar-inner');
   const fruitGoalContainer = document.getElementById('fruit-goal-container');
   const audioCorrect = document.getElementById('audio-correct');
@@ -211,6 +212,9 @@
   let score = 0, lives = 5, level = 1;
   const maxLevels = 10;
   
+  // NEW: A variable to hold the bottom boundary of the play area
+  let playAreaBottom = window.innerHeight;
+
   // Game mechanic state variables
   let comboCounter = 0;
   const COMBO_GOAL = 4;
@@ -237,9 +241,13 @@
     ============================================
   */
   
+  // MODIFIED: This function now also calculates the playable area height.
   function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    // NEW: Calculate the bottom boundary by subtracting the progress bar's height plus a small buffer.
+    const progressBarHeight = comboProgressBar.offsetHeight || 10;
+    playAreaBottom = canvas.height - progressBarHeight - 5; // 5px buffer
   }
 
   function speak(text) {
@@ -287,13 +295,13 @@
     ============================================
   */
 
+  // MODIFIED: This function now uses the playAreaBottom variable for spawning.
   function createSprite(type, glyphOverride = null) {
     const size = rand(canvas.height * 0.08, canvas.height * 0.15);
     const font = randChoice(fonts);
     let glyph = glyphOverride;
 
     if (!glyph) {
-        // NEW: Simplified penalty sprites to always be a bomb.
         if (type === 'penalty') glyph = '💣';
         else if (type === 'life') glyph = '❤';
         else {
@@ -306,7 +314,9 @@
     const metrics = ctx.measureText(glyph);
     sprites.push({
       type, glyph, size, font,
-      x: rand(metrics.width, canvas.width - metrics.width), y: rand(size, canvas.height - size),
+      // MODIFIED: Ensure sprites spawn above the progress bar.
+      x: rand(metrics.width / 2, canvas.width - metrics.width / 2), 
+      y: rand(size / 2, playAreaBottom - size / 2),
       vx: rand(-1.5, 1.5) * (1 + level * 0.1), vy: rand(-1.5, 1.5) * (1 + level * 0.1),
       width: metrics.width, height: size,
       color: type === 'target' || type === 'wrong' ? `hsl(${rand(0,360)}, 100%, 75%)` : '#ff4fa3'
@@ -487,7 +497,6 @@
       fruitGoalContainer.innerHTML = `${currentFruit} ${fruitsCollected} / ${FRUITS_PER_LEVEL}`;
   }
 
-
   /*
     ============================================
     INPUT HANDLING
@@ -505,7 +514,7 @@
       if (x > s.x - s.width / 2 && x < s.x + s.width / 2 && y > s.y - s.height / 2 && y < s.y + s.height) {
         
         let mistake = false;
-        const tappedSpriteType = s.type; // Keep track of what was tapped
+        const tappedSpriteType = s.type;
 
         switch(tappedSpriteType) {
           case 'target':
@@ -529,7 +538,7 @@
             createEffect(effectType, s.x, s.y);
             playIncorrectSound(); updateLivesUI();
             break;
-          case 'bonus': // This is the level fruit
+          case 'bonus':
             fruitsCollected++;
             score += 50;
             updateFruitGoalUI();
@@ -559,7 +568,6 @@
         updateScoreUI();
         sprites.splice(i, 1);
         
-        // NEW: Soft-lock prevention. If the player just tapped the last target, spawn more.
         if (tappedSpriteType === 'target') {
             const targetsRemaining = sprites.some(sprite => sprite.type === 'target');
             if (!targetsRemaining) {
@@ -579,11 +587,25 @@
     GAME LOOP (UPDATE & DRAW)
     ============================================
   */
+  // MODIFIED: This function now uses playAreaBottom for boundary checks.
   function updateSprites() {
     sprites.forEach(s => {
-      s.x += s.vx; s.y += s.vy;
-      if (s.x < s.width / 2 || s.x > canvas.width - s.width / 2) s.vx *= -1;
-      if (s.y < s.height || s.y > canvas.height) s.vy *= -1;
+      s.x += s.vx;
+      s.y += s.vy;
+      
+      // Bounce off left and right edges
+      if (s.x - s.width / 2 < 0 || s.x + s.width / 2 > canvas.width) {
+          s.vx *= -1;
+      }
+      
+      // Bounce off top and bottom edges (respecting the new play area)
+      if (s.y - s.height / 2 < 0) {
+          s.y = s.height / 2; // Clamp to prevent getting stuck
+          s.vy *= -1;
+      } else if (s.y + s.height / 2 > playAreaBottom) {
+          s.y = playAreaBottom - s.height / 2; // Clamp to prevent getting stuck
+          s.vy *= -1;
+      }
     });
   }
   
@@ -654,7 +676,8 @@
   */
   
   function init() {
-    resizeCanvas(); setupTTS();
+    resizeCanvas(); // This now also sets playAreaBottom
+    setupTTS();
     window.addEventListener('resize', resizeCanvas);
     canvas.addEventListener('pointerdown', e => {
         handlePointerDown(e);
