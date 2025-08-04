@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>B or D - Letter Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, maximum-scale=1">
+  <style>
+    /* 
+      ============================================
+      CSS VARIABLES & GLOBAL STYLES
+      ============================================
+    */
+    :root {
+      --bg: #0d0d1a;
+      --accent: #00e0ff;
+      --accent-dark: #00aacc;
+      --heart-on: #ff4fa3;
+      --heart-off: #4a4a5a;
+      --text-glow: 0 0 6px var(--accent);
+      --danger-glow: 0 0 6px #ff4757;
+      --bonus-glow: 0 0 6px #2ed573;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      background-color: var(--bg);
+      color: var(--accent);
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      
+      user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      touch-action: manipulation;
+      -ms-touch-action: manipulation;
+    }
+
+    canvas#game {
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    /* 
+      ============================================
+      UI & HUD STYLES
+      ============================================
+    */
+    #ui {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5vh 2vw;
+      box-sizing: border-box;
+    }
+
+    .hud {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    #score-container {
+      text-align: center;
+      position: absolute;
+      top: 1.5vh;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    #score {
+      font-size: clamp(3rem, 10vw, 5rem);
+      font-weight: bold;
+      text-shadow: var(--text-glow);
+    }
+    
+    #level-timer {
+      font-size: clamp(1rem, 4vw, 1.5rem);
+      margin-top: -10px;
+      opacity: 0.8;
+    }
+
+    #lives-container {
+      display: flex;
+      gap: 5px;
+    }
+
+    .heart {
+      font-size: clamp(1.5rem, 6vw, 2.5rem);
+      transition: all 0.3s ease;
+    }
+    .heart.on {
+      color: var(--heart-on);
+      text-shadow: 0 0 8px var(--heart-on);
+      opacity: 1;
+    }
+    .heart.off {
+      color: var(--heart-off);
+      text-shadow: none;
+      opacity: 0.6;
+    }
+
+    #replay-btn {
+      font-size: clamp(1.8rem, 7vw, 3rem);
+      background: none;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      pointer-events: auto;
+      padding: 0;
+      text-shadow: var(--text-glow);
+      transition: transform 0.2s ease;
+    }
+    #replay-btn:active {
+      transform: scale(0.9);
+      color: var(--accent-dark);
+    }
+
+    /* 
+      ============================================
+      OVERLAY STYLES
+      ============================================
+    */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(13, 13, 26, 0.85);
+      backdrop-filter: blur(5px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      color: var(--accent);
+      z-index: 10;
+      pointer-events: auto;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+
+    .overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .overlay h1 {
+      font-size: clamp(2rem, 15vw, 6rem);
+      margin: 0;
+      text-shadow: var(--text-glow);
+      animation: fadeIn 1s ease-out;
+    }
+    
+    .overlay h2 {
+      font-size: clamp(1.5rem, 8vw, 3rem);
+      margin: 10px 0 30px;
+    }
+
+    .overlay .countdown {
+      font-size: clamp(5rem, 25vw, 12rem);
+      font-weight: bold;
+      animation: countdown-pop 1s ease-out forwards;
+    }
+
+    .overlay button {
+      font-size: clamp(1.2rem, 6vw, 2rem);
+      padding: 15px 30px;
+      border: 2px solid var(--accent);
+      background-color: transparent;
+      color: var(--accent);
+      cursor: pointer;
+      border-radius: 10px;
+      text-shadow: var(--text-glow);
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .overlay button:hover, .overlay button:active {
+      background-color: var(--accent);
+      color: var(--bg);
+      text-shadow: none;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes countdown-pop {
+      0% { transform: scale(0.5); opacity: 0; }
+      70% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <div id="ui">
+    <div class="hud">
+      <button id="replay-btn" title="Replay Sound">🔊</button>
+      <div id="score-container">
+        <div id="score">0</div>
+        <div id="level-timer"></div>
+      </div>
+      <div id="lives-container">
+        <span class="heart on">❤</span>
+        <span class="heart on">❤</span>
+        <span class="heart on">❤</span>
+        <span class="heart on">❤</span>
+        <span class="heart on">❤</span>
+      </div>
+    </div>
+    <div id="overlay" class="overlay">
+      <div id="overlay-content"></div>
+    </div>
+  </div>
+
+<script>
+(function() {
+  'use strict';
+
+  // DOM Elements
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const scoreEl = document.getElementById('score');
+  const levelTimerEl = document.getElementById('level-timer');
+  const livesContainer = document.getElementById('lives-container');
+  const heartElements = livesContainer.querySelectorAll('.heart');
+  const replayBtn = document.getElementById('replay-btn');
+  const overlay = document.getElementById('overlay');
+  const overlayContent = document.getElementById('overlay-content');
+
+  // Game State
+  let gameState = 'loading';
+  let score = 0, lives = 5, level = 1;
+  const maxLevels = 10;
+  
+  // Level State
+  let targetLetter = '', targetCase = 'upper';
+  let levelTimer = 30, levelTimerId;
+  // NEW: Added an ID for the life spawner
+  let targetSpawnerId, distractorSpawnerId, lifeSpawnerId;
+
+  // Game Objects
+  let sprites = [], effects = [];
+  const fonts = ['Arial', 'Verdana', 'Georgia', 'Courier New', 'Times New Roman', 'Impact'];
+  let screenShake = { duration: 0, magnitude: 0 };
+  let lastTime = 0;
+  
+  // Audio
+  let voices = [], ttsUtterance = new SpeechSynthesisUtterance();
+  ttsUtterance.rate = 0.9; ttsUtterance.pitch = 1.1;
+  let audioCtx;
+
+  /*
+    ============================================
+    AUDIO FUNCTIONS (TTS & SFX)
+    ============================================
+  */
+  
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  function speak(text) {
+    if (!window.speechSynthesis) return;
+    speechSynthesis.cancel();
+    ttsUtterance.text = text;
+    speechSynthesis.speak(ttsUtterance);
+  }
+
+  function setupTTS() {
+    function loadVoices() {
+      voices = speechSynthesis.getVoices();
+      if (voices.length > 0) {
+        const preferredVoice = voices.find(v => v.lang.startsWith('en') && v.localService) || voices.find(v => v.lang.startsWith('en'));
+        if (preferredVoice) ttsUtterance.voice = preferredVoice;
+      }
+    }
+    loadVoices();
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+      speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }
+
+  function initAudio() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+  }
+
+  function playCorrectSound() {
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
+    osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.5);
+  }
+
+  function playIncorrectSound() {
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
+    osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.3);
+  }
+  
+  /*
+    ============================================
+    HELPER & UTILITY FUNCTIONS
+    ============================================
+  */
+  const rand = (min, max) => Math.random() * (max - min) + min;
+  const randChoice = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  
+  function clearSpawners() {
+    clearInterval(targetSpawnerId);
+    clearInterval(distractorSpawnerId);
+    // NEW: Clear the life spawner interval
+    clearInterval(lifeSpawnerId);
+  }
+
+  /*
+    ============================================
+    SPRITE & EFFECT MANAGEMENT
+    ============================================
+  */
+
+  function createSprite(type) {
+    const size = rand(canvas.height * 0.08, canvas.height * 0.15);
+    const font = randChoice(fonts);
+    let glyph;
+
+    if (type === 'bonus') glyph = randChoice(['🍓', '🍎', '🍉', '🍇', '🍊']);
+    else if (type === 'penalty') glyph = randChoice(['💣', '💥', '🦈']);
+    // NEW: Add a case for the 'life' sprite type
+    else if (type === 'life') glyph = '❤';
+    else {
+      glyph = type === 'target' ? targetLetter : (targetLetter === 'B' ? 'D' : 'B');
+      if (targetCase === 'lower') glyph = glyph.toLowerCase();
+    }
+
+    ctx.font = `bold ${size}px ${font}`;
+    const metrics = ctx.measureText(glyph);
+    sprites.push({
+      type, glyph, size, font,
+      x: rand(metrics.width, canvas.width - metrics.width), y: rand(size, canvas.height - size),
+      vx: rand(-1.5, 1.5) * (1 + level * 0.1), vy: rand(-1.5, 1.5) * (1 + level * 0.1),
+      width: metrics.width, height: size,
+      // NEW: Restored colorful letters and set a color for the life sprite
+      color: type === 'target' || type === 'wrong' ? `hsl(${rand(0,360)}, 100%, 75%)` : '#ff4fa3'
+    });
+  }
+
+  function createEffect(type, x, y) {
+    const effect = { type, x, y, life: 1 };
+    if (type === 'correctBurst') {
+        effect.radius = 0; effect.maxRadius = 50; effect.color = '#2ed573'; // Green
+    // NEW: Added a 'heartBurst' type for a pink effect.
+    } else if (type === 'heartBurst') {
+        effect.radius = 0; effect.maxRadius = 50; effect.color = 'var(--heart-on)'; // Pink
+    } else if (type === 'error') {
+        effect.radius = 0; effect.maxRadius = 60; effect.color = '#ff4757'; // Red
+    } else if (type === 'confetti') {
+      effect.particles = [];
+      for (let i = 0; i < 30; i++) {
+        effect.particles.push({
+          x: 0, y: 0, vx: rand(-10, 10), vy: rand(-15, -5),
+          w: rand(5, 10), h: rand(5, 10), life: 1, color: `hsl(${rand(0,360)}, 100%, 70%)`
+        });
+      }
+    } else if (type === 'explosion') {
+      screenShake = { duration: 15, magnitude: 15 };
+    }
+    effects.push(effect);
+  }
+
+
+  /*
+    ============================================
+    GAME FLOW & STATE CHANGES
+    ============================================
+  */
+  
+  function resetGame() {
+    score = 0; lives = 5; level = 1;
+    sprites = []; effects = [];
+    clearSpawners();
+    updateScoreUI(); updateLivesUI();
+    startIntro();
+  }
+
+  function startIntro() {
+    gameState = 'intro';
+    sprites = []; effects = [];
+    if (level === 1 && lives === 5) {
+      overlayContent.innerHTML = `
+        <h1>B or D</h1>
+        <h2>Tap the correct letter. Avoid the wrong ones and the dangers!</h2>
+        <button id="start-btn">Start Game</button>
+      `;
+      document.getElementById('start-btn').onclick = () => {
+        initAudio(); startCountdown();
+      };
+    } else {
+        overlayContent.innerHTML = `<h1>LEVEL ${level}</h1>`;
+        setTimeout(startCountdown, 2000);
+    }
+    overlay.classList.add('visible');
+  }
+
+  function startCountdown() {
+    gameState = 'countdown';
+    let count = 3;
+    function doCount() {
+      if (count > 0) {
+        overlayContent.innerHTML = `<div class="countdown">${count}</div>`;
+        speak(String(count--));
+        setTimeout(doCount, 1000);
+      } else {
+        overlay.classList.remove('visible');
+        startLevel();
+      }
+    }
+    doCount();
+  }
+
+  function startLevel() {
+    gameState = 'playing';
+    targetLetter = randChoice(['B', 'D']);
+    targetCase = randChoice(['upper', 'lower']);
+    
+    let targetPronounciation = targetLetter === 'B' ? 'Bee' : 'Dee';
+    speak(targetPronounciation);
+
+    const initialSpriteCount = 10 + level * 2;
+    for(let i = 0; i < initialSpriteCount; i++) {
+        createSprite(Math.random() < 0.5 ? 'target' : 'wrong');
+    }
+    
+    clearSpawners();
+    targetSpawnerId = setInterval(() => {
+        if (gameState === 'playing' && sprites.filter(s => s.type === 'target').length < 15) {
+            createSprite('target');
+        }
+    }, 4000);
+
+    distractorSpawnerId = setInterval(() => {
+        if (gameState === 'playing' && sprites.length < 40) {
+            if (Math.random() < 0.2 + level * 0.04) {
+                 createSprite(Math.random() < 0.6 ? 'bonus' : 'penalty');
+            }
+        }
+    }, 2000);
+    
+    // NEW: Spawner for life-gaining hearts
+    lifeSpawnerId = setInterval(() => {
+        // Only spawn a heart if lives are missing and one isn't already on screen
+        if (gameState === 'playing' && lives < 5 && !sprites.some(s => s.type === 'life')) {
+            createSprite('life');
+        }
+    }, 20000); // every 20 seconds
+
+    levelTimer = 30;
+    updateTimerUI();
+    levelTimerId = setInterval(() => {
+        if (--levelTimer <= 0) endLevel();
+        else updateTimerUI();
+    }, 1000);
+  }
+
+  function endLevel() {
+    gameState = 'levelEnd';
+    clearInterval(levelTimerId); clearSpawners();
+    levelTimerEl.textContent = 'Level Complete!';
+    if (level >= maxLevels) showVictory();
+    else { level++; setTimeout(startIntro, 2000); }
+  }
+  
+  function showGameOver() {
+    gameState = 'gameOver';
+    clearInterval(levelTimerId); clearSpawners();
+    speak("Game Over");
+    overlayContent.innerHTML = `
+      <h1>GAME OVER</h1><h2>Final Score: ${score}</h2><button id="restart-btn">Restart</button>`;
+    document.getElementById('restart-btn').onclick = resetGame;
+    overlay.classList.add('visible');
+  }
+
+  function showVictory() {
+    gameState = 'victory';
+    clearInterval(levelTimerId); clearSpawners();
+    speak("Congratulations, you win!");
+    overlayContent.innerHTML = `
+      <h1>YOU WIN!</h1><h2>Final Score: ${score}</h2><button id="play-again-btn">Play Again</button>`;
+    document.getElementById('play-again-btn').onclick = resetGame;
+    overlay.classList.add('visible');
+  }
+
+  /*
+    ============================================
+    UI UPDATE FUNCTIONS
+    ============================================
+  */
+  function updateScoreUI() { scoreEl.textContent = score; }
+  
+  function updateLivesUI() {
+    heartElements.forEach((heart, i) => {
+      heart.textContent = i < lives ? '❤' : '♡';
+      heart.className = `heart ${i < lives ? 'on' : 'off'}`;
+    });
+    if (lives <= 0 && gameState === 'playing') showGameOver();
+  }
+  
+  function updateTimerUI() {
+      levelTimerEl.innerHTML = `Level ${level}   |   Time: ${levelTimer}`;
+  }
+
+
+  /*
+    ============================================
+    INPUT HANDLING
+    ============================================
+  */
+
+  function handlePointerDown(e) {
+    e.preventDefault(); initAudio();
+    if (gameState !== 'playing') return;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left, y = e.clientY - rect.top;
+
+    for (let i = sprites.length - 1; i >= 0; i--) {
+      const s = sprites[i];
+      if (x > s.x - s.width / 2 && x < s.x + s.width / 2 &&
+          y > s.y - s.height / 2 && y < s.y + s.height) {
+        
+        switch(s.type) {
+          case 'target':
+            score += 10;
+            createEffect('correctBurst', s.x, s.y);
+            playCorrectSound();
+            break;
+          case 'wrong':
+            score = Math.max(0, score - 10); lives--;
+            createEffect('error', s.x, s.y);
+            screenShake = { duration: 10, magnitude: 8 };
+            playIncorrectSound(); updateLivesUI();
+            break;
+          case 'bonus':
+            score += 50;
+            createEffect('confetti', s.x, s.y);
+            playCorrectSound();
+            break;
+          case 'penalty':
+            score = Math.max(0, score - 50); lives--;
+            createEffect('explosion', s.x, s.y);
+            playIncorrectSound(); updateLivesUI();
+            break;
+          // NEW: Handle tapping the life sprite
+          case 'life':
+            if (lives < 5) {
+                lives++;
+                updateLivesUI();
+                createEffect('heartBurst', s.x, s.y);
+                playCorrectSound();
+            }
+            break;
+        }
+        updateScoreUI(); sprites.splice(i, 1); return;
+      }
+    }
+  }
+
+  /*
+    ============================================
+    GAME LOOP (UPDATE & DRAW)
+    ============================================
+  */
+  function updateSprites() {
+    sprites.forEach(s => {
+      s.x += s.vx; s.y += s.vy;
+      if (s.x < s.width / 2 || s.x > canvas.width - s.width / 2) s.vx *= -1;
+      if (s.y < s.height || s.y > canvas.height) s.vy *= -1;
+    });
+  }
+  
+  function updateEffects() {
+    for (let i = effects.length - 1; i >= 0; i--) {
+      const e = effects[i];
+      e.life -= 0.03;
+      if (e.life <= 0) { effects.splice(i, 1); continue; }
+      // NEW: Added heartBurst to the types that expand
+      if (e.type === 'correctBurst' || e.type === 'heartBurst' || e.type === 'error') e.radius += 3;
+      if (e.type === 'confetti') {
+        e.particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.5; p.life -= 0.03; });
+      }
+    }
+  }
+
+  function drawSprites() {
+    sprites.forEach(s => {
+      ctx.font = `bold ${s.size}px ${s.font}`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      // NEW: Use the sprite's color property. This allows the letters and life heart to be colored.
+      ctx.fillStyle = s.color;
+      ctx.fillText(s.glyph, s.x, s.y);
+    });
+  }
+
+  function drawEffects() {
+    effects.forEach(e => {
+      ctx.globalAlpha = e.life;
+      // NEW: Added heartBurst to the drawable effects
+      if (e.type === 'correctBurst' || e.type === 'heartBurst' || e.type === 'error') {
+        ctx.strokeStyle = e.color; ctx.lineWidth = 5 * e.life;
+        ctx.beginPath(); ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2); ctx.stroke();
+      } else if (e.type === 'confetti') {
+        e.particles.forEach(p => {
+            if (p.life > 0) {
+              ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
+              ctx.fillRect(e.x + p.x, e.y + p.y, p.w, p.h);
+            }
+        });
+      } else if (e.type === 'explosion') {
+        const grad = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, 200 * (1 - e.life));
+        grad.addColorStop(0, 'rgba(255, 150, 50, 0.8)');
+        grad.addColorStop(1, 'rgba(255, 50, 0, 0)');
+        ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+      ctx.globalAlpha = 1;
+    });
+  }
+
+  function mainLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (screenShake.duration > 0) {
+        ctx.save();
+        ctx.translate((Math.random() - 0.5) * screenShake.magnitude, (Math.random() - 0.5) * screenShake.magnitude);
+        screenShake.duration--;
+    }
+
+    if (gameState === 'playing') updateSprites();
+    updateEffects();
+    drawSprites(); drawEffects();
+    
+    if (screenShake.duration >= 0) ctx.restore();
+    requestAnimationFrame(mainLoop);
+  }
+
+  /*
+    ============================================
+    INITIALIZATION
+    ============================================
+  */
+  
+  function init() {
+    resizeCanvas(); setupTTS();
+    window.addEventListener('resize', resizeCanvas);
+    canvas.addEventListener('pointerdown', handlePointerDown);
+    replayBtn.addEventListener('click', () => {
+        if (gameState === 'playing') {
+            let targetPronounciation = targetLetter === 'B' ? 'Bee' : 'Dee';
+            speak(targetPronounciation);
+        }
+    });
+    startIntro();
+    requestAnimationFrame(mainLoop);
+  }
+
+  init();
+
+})();
+</script>
+</body>
+</html>
