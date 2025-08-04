@@ -117,8 +117,6 @@
     </div>
   </div>
 
-  <!-- Audio tags have been removed. All audio is handled by the Web Audio API in JavaScript. -->
-
 <script>
 (function() {
   'use strict';
@@ -155,7 +153,7 @@
   const fonts = ['Arial', 'Verdana', 'Georgia', 'Courier New', 'Times New Roman', 'Impact'];
   let screenShake = { duration: 0, magnitude: 0 };
   
-  // --- Web Audio API Setup ---
+  // --- Web Audio API & TTS Setup ---
   let audioCtx;
   const soundCache = {};
   const soundsToLoad = {
@@ -166,8 +164,6 @@
       'bonus': 'sounds/correct.m4a',
       'penalty': 'sounds/buzz.m4a'
   };
-
-  // TTS Audio
   let voices = [], ttsUtterance = new SpeechSynthesisUtterance();
   ttsUtterance.rate = 0.9; ttsUtterance.pitch = 1.1;
 
@@ -205,13 +201,10 @@
     }
   }
 
-  // FIX: This entire audio loading and playing system has been revised for reliability.
   async function loadAllSounds() {
-      // Create the AudioContext here, inside a user-initiated chain.
       if (!audioCtx) {
           audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       }
-      // If the context is suspended, it must be resumed in a user gesture.
       if (audioCtx.state === 'suspended') {
           await audioCtx.resume();
       }
@@ -317,7 +310,6 @@
     startIntro();
   }
 
-  // FIX: This flow is now robust. It waits for a click before loading audio.
   function startIntro() {
     gameState = 'intro';
     sprites = []; effects = [];
@@ -329,17 +321,19 @@
       `;
       const startBtn = document.getElementById('start-btn');
       
-      // The click handler is now the master initializer for audio.
       startBtn.onclick = async () => {
           startBtn.disabled = true;
           startBtn.textContent = 'Loading Sounds...';
           
-          await loadAllSounds(); // This now creates the AudioContext and loads sounds.
+          await loadAllSounds();
           
-          startCountdown(); // Proceed only after sounds are ready.
+          // FIX: Prime the Speech Synthesis engine to prevent conflicts.
+          speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+          
+          startCountdown();
       };
 
-    } else { // For subsequent levels, sounds are already loaded.
+    } else {
         overlayContent.innerHTML = `<h1>LEVEL ${level}</h1>`;
         setTimeout(startCountdown, 2000);
     }
@@ -373,7 +367,9 @@
     updateFruitGoalUI();
     updateLevelDisplay();
 
-    speak(targetLetter === 'B' ? 'Bee' : 'Dee');
+    // NEW: Use sound effects instead of TTS to announce the target.
+    if (targetLetter === 'B') playSound('b-correct');
+    else playSound('d-correct');
 
     const initialSpriteCount = 6 + level;
     for(let i = 0; i < initialSpriteCount; i++) {
@@ -662,7 +658,9 @@
     canvas.addEventListener('pointerdown', handlePointerDown);
     replayBtn.addEventListener('click', () => {
         if (gameState === 'playing') {
-            speak(targetLetter === 'B' ? 'Bee' : 'Dee');
+            // NEW: Use sound effects instead of TTS for replay.
+            if (targetLetter === 'B') playSound('b-correct');
+            else playSound('d-correct');
         }
     });
     startIntro();
