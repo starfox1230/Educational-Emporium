@@ -185,17 +185,17 @@
   </div>
 
   <!-- 
-    NEW: Audio elements for specific letter sounds.
-    REPLACE the src with your own Base64 encoded mp3 files.
+    MODIFIED: Audio elements now point to external files.
+    Make sure you have a 'sounds' folder next to this HTML file
+    containing all the specified audio files.
   -->
-  <audio id="audio-b-correct" src="data:audio/mpeg;base64,SUQz..."></audio>
-  <audio id="audio-b-wrong" src="data:audio/mpeg;base64,SUQz..."></audio>
-  <audio id="audio-d-correct" src="data:audio/mpeg;base64,SUQz..."></audio>
-  <audio id="audio-d-wrong" src="data:audio/mpeg;base64,SUQz..."></audio>
+  <audio id="audio-b-correct" src="sounds/b-correct.mp3" preload="auto"></audio>
+  <audio id="audio-b-wrong"   src="sounds/b-wrong.mp3"   preload="auto"></audio>
+  <audio id="audio-d-correct" src="sounds/d-correct.mp3" preload="auto"></audio>
+  <audio id="audio-d-wrong"   src="sounds/d-wrong.mp3"   preload="auto"></audio>
   
-  <!-- MODIFIED: These are now for bonus/penalty sounds only -->
-  <audio id="audio-bonus" src="data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjQ1LjEwMAAAAAAAAAAAAAAA//tAwAAAAAAAAAAAAAAAAAAAAAAAAB4aW5nAAAA/wAAABYAAAJ2YWRlIGluIG1zOjAsIHZhZGUgb3V0IG1zOjI1MAA//uQxAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABsYW1lAAAA/wAAAAAAAAA//uYxAAEAAANIAAAAAFhpbmcAAAADAAAAAAAACgAAA3YAAAAnDGGF2ZjU4LjQ1LjEwMAAAAAA//uUxAMgAAANIAAAAAFhpbmcAAAADAAAAAAAACgAAA3YAAAAnDGGF2ZjU4LjQ1LjEwMA=="></audio>
-  <audio id="audio-penalty" src="data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjQ1LjEwMAAAAAAAAAAAAAAA//tAwAAAAAAAAAAAAAAAAAAAAAAAAB4aW5nAAAA/wAAABYAAAJ2YWRlIGluIG1zOjAsIHZhZGUgb3V0IG1zOjI1MAA//uQxAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABsYW1lAAAA/wAAAAAAAAA//uYxAAEAAANIAAAAAFhpbmcAAAADAAAAAAAACgAAA3YAAAAnDGGF2ZjU4LjQ1LjEwMAAAAAA//uUxAMgAAANIAAAAAFhpbmcAAAADAAAAAAAACgAAA3YAAAAnDGGF2ZjU4LjQ1LjEwMA=="></audio>
+  <audio id="audio-bonus"   src="sounds/correct.m4a" preload="auto"></audio>
+  <audio id="audio-penalty" src="sounds/buzz.m4a"    preload="auto"></audio>
 
 <script>
 (function() {
@@ -215,7 +215,7 @@
   const comboProgressBarInner = document.getElementById('combo-progress-bar-inner');
   const fruitGoalContainer = document.getElementById('fruit-goal-container');
   
-  // NEW: Get all audio elements
+  // Audio elements
   const audioBCorrect = document.getElementById('audio-b-correct');
   const audioBWrong = document.getElementById('audio-b-wrong');
   const audioDCorrect = document.getElementById('audio-d-correct');
@@ -280,14 +280,13 @@
     }
   }
   
-  // MODIFIED: Renamed for clarity. These now only play for non-letter interactions.
   function playBonusSound() {
       audioBonus.currentTime = 0;
-      audioBonus.play().catch(e => console.log("Audio play failed:", e));
+      audioBonus.play().catch(e => console.error("Bonus sound play failed:", e));
   }
   function playPenaltySound() {
       audioPenalty.currentTime = 0;
-      audioPenalty.play().catch(e => console.log("Audio play failed:", e));
+      audioPenalty.play().catch(e => console.error("Penalty sound play failed:", e));
   }
   
   const rand = (min, max) => Math.random() * (max - min) + min;
@@ -530,14 +529,15 @@
             comboCounter++;
             updateComboProgressBar();
             createEffect('correctBurst', s.x, s.y);
-            // NEW: Play specific correct sound based on letter
+            
             if (s.glyph.toUpperCase() === 'B') {
                 audioBCorrect.currentTime = 0;
-                audioBCorrect.play().catch(e => console.log(e));
-            } else { // It's a D
+                audioBCorrect.play().catch(e => console.error(e));
+            } else {
                 audioDCorrect.currentTime = 0;
-                audioDCorrect.play().catch(e => console.log(e));
+                audioDCorrect.play().catch(e => console.error(e));
             }
+
             if (comboCounter >= COMBO_GOAL) {
                 createSprite('bonus', levelFruits[level - 1] || '⭐');
                 comboCounter = 0;
@@ -549,13 +549,13 @@
             score = Math.max(0, score - 10);
             lives--;
             createEffect('error', s.x, s.y);
-            // NEW: Play specific wrong sound based on letter
+            
             if (s.glyph.toUpperCase() === 'B') {
                 audioBWrong.currentTime = 0;
-                audioBWrong.play().catch(e => console.log(e));
-            } else { // It's a D
+                audioBWrong.play().catch(e => console.error(e));
+            } else {
                 audioDWrong.currentTime = 0;
-                audioDWrong.play().catch(e => console.log(e));
+                audioDWrong.play().catch(e => console.error(e));
             }
             updateLivesUI();
             break;
@@ -564,7 +564,7 @@
             score = Math.max(0, score - 50);
             lives--;
             createEffect('explosion', s.x, s.y);
-            playPenaltySound(); // MODIFIED: Use generic penalty sound
+            playPenaltySound();
             updateLivesUI();
             break;
           case 'bonus':
@@ -572,7 +572,7 @@
             score += 50;
             updateFruitGoalUI();
             createEffect('confetti', s.x, s.y);
-            playBonusSound(); // MODIFIED: Use generic bonus sound
+            playBonusSound();
             if (fruitsCollected >= FRUITS_PER_LEVEL) {
                 endLevel();
             }
@@ -581,7 +581,7 @@
             if (lives < 5) {
                 lives++; updateLivesUI();
                 createEffect('heartBurst', s.x, s.y);
-                playBonusSound(); // MODIFIED: Use generic bonus sound
+                playBonusSound();
             }
             break;
         }
@@ -625,10 +625,10 @@
           s.vx *= -1;
       }
       
-      if (s.y - s.height < 0) { // Check top edge
+      if (s.y - s.height < 0) {
           s.y = s.height;
           s.vy *= -1;
-      } else if (s.y > playAreaBottom) { // Check bottom edge (play area)
+      } else if (s.y > playAreaBottom) {
           s.y = playAreaBottom;
           s.vy *= -1;
       }
@@ -669,7 +669,7 @@
               ctx.fillRect(e.x + p.x, e.y + p.y, p.w, p.h);
             }
         });
-      } else if (e.type === 'explosion') {
+      } else if (type === 'explosion') {
         const grad = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, 200 * (1 - e.life));
         grad.addColorStop(0, 'rgba(255, 150, 50, 0.8)');
         grad.addColorStop(1, 'rgba(255, 50, 0, 0)');
