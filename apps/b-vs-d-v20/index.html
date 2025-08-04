@@ -20,27 +20,14 @@
     }
 
     html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      width: 100%;
-      overflow: hidden;
-      background-color: var(--bg);
-      color: var(--accent);
+      margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden;
+      background-color: var(--bg); color: var(--accent);
       font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-      user-select: none;
-      -webkit-user-select: none;
-      -ms-user-select: none;
-      touch-action: manipulation;
-      -ms-touch-action: manipulation;
+      user-select: none; -webkit-user-select: none; -ms-user-select: none;
+      touch-action: manipulation; -ms-touch-action: manipulation;
     }
 
-    canvas#game {
-      display: block;
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
+    canvas#game { display: block; position: absolute; top: 0; left: 0; }
 
     /* 
       ============================================
@@ -48,89 +35,35 @@
       ============================================
     */
     #ui {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 1.5vh 2vw;
-      box-sizing: border-box;
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 1.5vh 2vw; box-sizing: border-box;
     }
 
-    .hud-top {
-      width: 100%;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-    }
-
-    #score-container {
-      text-align: center;
-      position: absolute;
-      top: 1.5vh;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-
-    #score {
-      font-size: clamp(3rem, 10vw, 5rem);
-      font-weight: bold;
-      text-shadow: var(--text-glow);
-    }
-    
-    #level-display {
-      font-size: clamp(1rem, 4vw, 1.5rem);
-      margin-top: -10px;
-      opacity: 0.8;
-    }
-
+    .hud-top { width: 100%; display: flex; justify-content: space-between; align-items: flex-start; }
+    #score-container { text-align: center; position: absolute; top: 1.5vh; left: 50%; transform: translateX(-50%); }
+    #score { font-size: clamp(3rem, 10vw, 5rem); font-weight: bold; text-shadow: var(--text-glow); }
+    #level-display { font-size: clamp(1rem, 4vw, 1.5rem); margin-top: -10px; opacity: 0.8; }
     #lives-container { display: flex; gap: 5px; }
     .heart { font-size: clamp(1.5rem, 6vw, 2.5rem); transition: all 0.3s ease; }
     .heart.on { color: var(--heart-on); text-shadow: 0 0 8px var(--heart-on); opacity: 1; }
     .heart.off { color: var(--heart-off); text-shadow: none; opacity: 0.6; }
-
     #replay-btn {
-      font-size: clamp(1.8rem, 7vw, 3rem);
-      background: none; border: none; color: var(--accent);
+      font-size: clamp(1.8rem, 7vw, 3rem); background: none; border: none; color: var(--accent);
       cursor: pointer; pointer-events: auto; padding: 0;
       text-shadow: var(--text-glow); transition: transform 0.2s ease;
     }
     #replay-btn:active { transform: scale(0.9); }
 
-    .hud-bottom {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: auto;
-      pointer-events: none;
-    }
-
-    #combo-progress-bar {
-      width: 100%;
-      height: 10px;
-      background-color: rgba(255, 255, 255, 0.1);
-    }
+    .hud-bottom { position: fixed; bottom: 0; left: 0; width: 100%; height: auto; pointer-events: none; }
+    #combo-progress-bar { width: 100%; height: 10px; background-color: rgba(255, 255, 255, 0.1); }
     #combo-progress-bar-inner {
-      width: 0%;
-      height: 100%;
-      background-color: var(--combo-color);
-      box-shadow: 0 0 8px var(--combo-color);
-      transition: width 0.3s ease-in-out;
+      width: 0%; height: 100%; background-color: var(--combo-color);
+      box-shadow: 0 0 8px var(--combo-color); transition: width 0.3s ease-in-out;
     }
-
     #fruit-goal-container {
-      position: absolute;
-      bottom: 20px;
-      right: 2vw;
-      font-size: clamp(1.5rem, 5vw, 2.5rem);
-      font-weight: bold;
-      color: white;
-      text-shadow: 0 0 5px black, 0 0 10px black;
+      position: absolute; bottom: 20px; right: 2vw; font-size: clamp(1.5rem, 5vw, 2.5rem);
+      font-weight: bold; color: white; text-shadow: 0 0 5px black, 0 0 10px black;
     }
 
     /* 
@@ -139,8 +72,7 @@
       ============================================
     */
     .overlay {
-      position: fixed; top: 0; left: 0;
-      width: 100%; height: 100%;
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(13, 13, 26, 0.85); backdrop-filter: blur(5px);
       display: flex; flex-direction: column; justify-content: center; align-items: center;
       text-align: center; color: var(--accent); z-index: 10;
@@ -157,6 +89,8 @@
       text-shadow: var(--text-glow); transition: background-color 0.3s, color 0.3s;
     }
     .overlay button:hover, .overlay button:active { background-color: var(--accent); color: var(--bg); text-shadow: none; }
+    /* NEW: Style for disabled button during loading */
+    .overlay button:disabled { cursor: wait; opacity: 0.5; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes countdown-pop { 0% { transform: scale(0.5); opacity: 0; } 70% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
   </style>
@@ -184,13 +118,7 @@
     </div>
   </div>
 
-  <audio id="audio-b-correct" src="sounds/b-correct.mp3" preload="auto"></audio>
-  <audio id="audio-b-wrong"   src="sounds/b-wrong.mp3"   preload="auto"></audio>
-  <audio id="audio-d-correct" src="sounds/d-correct.mp3" preload="auto"></audio>
-  <audio id="audio-d-wrong"   src="sounds/d-wrong.mp3"   preload="auto"></audio>
-  
-  <audio id="audio-bonus"   src="sounds/correct.m4a" preload="auto"></audio>
-  <audio id="audio-penalty" src="sounds/buzz.m4a"    preload="auto"></audio>
+  <!-- Audio tags have been removed. All audio is handled by the Web Audio API in JavaScript. -->
 
 <script>
 (function() {
@@ -201,23 +129,14 @@
   const ctx = canvas.getContext('2d');
   const scoreEl = document.getElementById('score');
   const levelDisplayEl = document.getElementById('level-display');
-  const livesContainer = document.getElementById('lives-container');
-  const heartElements = livesContainer.querySelectorAll('.heart');
-  const replayBtn = document.getElementById('replay-btn');
-  const overlay = document.getElementById('overlay');
-  const overlayContent = document.getElementById('overlay-content');
   const comboProgressBar = document.getElementById('combo-progress-bar');
   const comboProgressBarInner = document.getElementById('combo-progress-bar-inner');
   const fruitGoalContainer = document.getElementById('fruit-goal-container');
+  const replayBtn = document.getElementById('replay-btn');
+  const overlay = document.getElementById('overlay');
+  const overlayContent = document.getElementById('overlay-content');
+  const heartElements = document.querySelectorAll('#lives-container .heart');
   
-  // Audio elements
-  const audioBCorrect = document.getElementById('audio-b-correct');
-  const audioBWrong = document.getElementById('audio-b-wrong');
-  const audioDCorrect = document.getElementById('audio-d-correct');
-  const audioDWrong = document.getElementById('audio-d-wrong');
-  const audioBonus = document.getElementById('audio-bonus');
-  const audioPenalty = document.getElementById('audio-penalty');
-
   // Game State
   let gameState = 'loading', score = 0, lives = 5, level = 1;
   const maxLevels = 10;
@@ -237,7 +156,19 @@
   const fonts = ['Arial', 'Verdana', 'Georgia', 'Courier New', 'Times New Roman', 'Impact'];
   let screenShake = { duration: 0, magnitude: 0 };
   
-  // Audio
+  // --- NEW: Web Audio API Setup ---
+  let audioCtx;
+  const soundCache = {}; // This will store our decoded audio buffers.
+  const soundsToLoad = {
+      'b-correct': 'sounds/b-correct.mp3',
+      'b-wrong': 'sounds/b-wrong.mp3',
+      'd-correct': 'sounds/d-correct.mp3',
+      'd-wrong': 'sounds/d-wrong.mp3',
+      'bonus': 'sounds/correct.m4a',
+      'penalty': 'sounds/buzz.m4a'
+  };
+
+  // TTS Audio
   let voices = [], ttsUtterance = new SpeechSynthesisUtterance();
   ttsUtterance.rate = 0.9; ttsUtterance.pitch = 1.1;
 
@@ -274,14 +205,39 @@
       speechSynthesis.onvoiceschanged = loadVoices;
     }
   }
-  
-  function playBonusSound() {
-      audioBonus.currentTime = 0;
-      audioBonus.play().catch(e => console.error("Bonus sound play failed:", e));
+
+  // NEW: Function to initialize the AudioContext (must be called on user gesture)
+  function initAudioContext() {
+      if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
   }
-  function playPenaltySound() {
-      audioPenalty.currentTime = 0;
-      audioPenalty.play().catch(e => console.error("Penalty sound play failed:", e));
+
+  // NEW: Asynchronous function to fetch and decode all sounds.
+  async function loadAllSounds() {
+      const promises = Object.entries(soundsToLoad).map(async ([name, path]) => {
+          try {
+              const response = await fetch(path);
+              const arrayBuffer = await response.arrayBuffer();
+              const decodedAudio = await audioCtx.decodeAudioData(arrayBuffer);
+              soundCache[name] = decodedAudio;
+          } catch (error) {
+              console.error(`Failed to load sound: ${name} from ${path}`, error);
+          }
+      });
+      await Promise.all(promises);
+  }
+
+  // NEW: Single, reliable function to play any sound from the cache.
+  function playSound(name) {
+      if (!audioCtx || !soundCache[name]) {
+          console.warn(`Sound not found or audio context not ready: ${name}`);
+          return;
+      }
+      const source = audioCtx.createBufferSource();
+      source.buffer = soundCache[name];
+      source.connect(audioCtx.destination);
+      source.start(0);
   }
   
   const rand = (min, max) => Math.random() * (max - min) + min;
@@ -361,6 +317,7 @@
     startIntro();
   }
 
+  // MODIFIED: Manages the sound loading UI state.
   function startIntro() {
     gameState = 'intro';
     sprites = []; effects = [];
@@ -368,9 +325,17 @@
       overlayContent.innerHTML = `
         <h1>B or D</h1>
         <h2>Tap 4 correct letters in a row to spawn a fruit. Collect 5 fruits to pass the level!</h2>
-        <button id="start-btn">Start Game</button>
+        <button id="start-btn" disabled>Loading Sounds...</button>
       `;
-      document.getElementById('start-btn').onclick = startCountdown;
+      const startBtn = document.getElementById('start-btn');
+
+      initAudioContext();
+      loadAllSounds().then(() => {
+          startBtn.disabled = false;
+          startBtn.textContent = 'Start Game';
+          startBtn.onclick = startCountdown;
+      });
+
     } else {
         overlayContent.innerHTML = `<h1>LEVEL ${level}</h1>`;
         setTimeout(startCountdown, 2000);
@@ -525,13 +490,8 @@
             updateComboProgressBar();
             createEffect('correctBurst', s.x, s.y);
             
-            if (s.glyph.toUpperCase() === 'B') {
-                audioBCorrect.currentTime = 0;
-                audioBCorrect.play().catch(e => console.error(e));
-            } else {
-                audioDCorrect.currentTime = 0;
-                audioDCorrect.play().catch(e => console.error(e));
-            }
+            if (s.glyph.toUpperCase() === 'B') playSound('b-correct');
+            else playSound('d-correct');
 
             if (comboCounter >= COMBO_GOAL) {
                 createSprite('bonus', levelFruits[level - 1] || '⭐');
@@ -545,13 +505,9 @@
             lives--;
             createEffect('error', s.x, s.y);
             
-            if (s.glyph.toUpperCase() === 'B') {
-                audioBWrong.currentTime = 0;
-                audioBWrong.play().catch(e => console.error(e));
-            } else {
-                audioDWrong.currentTime = 0;
-                audioDWrong.play().catch(e => console.error(e));
-            }
+            if (s.glyph.toUpperCase() === 'B') playSound('b-wrong');
+            else playSound('d-wrong');
+
             updateLivesUI();
             break;
           case 'penalty':
@@ -559,7 +515,7 @@
             score = Math.max(0, score - 50);
             lives--;
             createEffect('explosion', s.x, s.y);
-            playPenaltySound();
+            playSound('penalty');
             updateLivesUI();
             break;
           case 'bonus':
@@ -567,7 +523,7 @@
             score += 50;
             updateFruitGoalUI();
             createEffect('confetti', s.x, s.y);
-            playBonusSound();
+            playSound('bonus');
             if (fruitsCollected >= FRUITS_PER_LEVEL) {
                 endLevel();
             }
@@ -576,7 +532,7 @@
             if (lives < 5) {
                 lives++; updateLivesUI();
                 createEffect('heartBurst', s.x, s.y);
-                playBonusSound();
+                playSound('bonus');
             }
             break;
         }
@@ -664,7 +620,7 @@
               ctx.fillRect(e.x + p.x, e.y + p.y, p.w, p.h);
             }
         });
-      } else if (e.type === 'explosion') { // FIX: Was 'type', now correctly 'e.type'
+      } else if (e.type === 'explosion') {
         const grad = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, 200 * (1 - e.life));
         grad.addColorStop(0, 'rgba(255, 150, 50, 0.8)');
         grad.addColorStop(1, 'rgba(255, 50, 0, 0)');
@@ -701,6 +657,7 @@
     setupTTS();
     window.addEventListener('resize', resizeCanvas);
     canvas.addEventListener('pointerdown', e => {
+        initAudioContext(); // Fallback to ensure context is ready if first tap is on canvas
         handlePointerDown(e);
     });
     replayBtn.addEventListener('click', () => {
