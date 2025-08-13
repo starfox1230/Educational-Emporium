@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>A Fun Balloon Pop Game for Joseph!</title>
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"/>
+  <!-- Canvas Confetti Library -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  <style>
+    :root {
+      --brand: #26c6da;
+      --brand-light: #80deea;
+      --correct-bg: #a5d6a7;
+    }
+    *,*::before,*::after{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+    }
+    html,body {
+      height:100%;
+      overflow:hidden;
+      font-family:'Poppins',sans-serif;
+      color: #333;
+      background-color: #f0f8ff; /* A nice light blue sky color */
+      -webkit-tap-highlight-color:transparent;
+      touch-action:manipulation;
+      user-select: none; -webkit-user-select: none;
+    }
+
+    #confetti-canvas {
+      position:fixed;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      pointer-events:none;
+      z-index:1000;
+    }
+
+    /* Main game container */
+    #game-container {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    /* Top info bar */
+    .minigame-info-bar {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      right: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 15px;
+      background-color: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      border-radius: 12px;
+      font-size: 1.2rem;
+      z-index: 100;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .minigame-score {
+      font-weight: 600;
+    }
+    .minigame-timer-bar-container {
+      height: 20px;
+      flex-grow: 1;
+      margin: 0 20px;
+      background-color: rgba(0,0,0,0.1);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .minigame-timer-bar {
+      height: 100%;
+      width: 100%;
+      background-color: var(--brand-light);
+      transition: width 0.1s linear;
+    }
+
+    /* Balloon styles */
+    .balloon {
+      width: 65px;
+      height: 85px;
+      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      position: absolute;
+      user-select: none;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      padding-bottom: 5px;
+      box-shadow: inset -10px -10px 0 rgba(0,0,0,0.07);
+      transition: transform 0.2s ease-out;
+    }
+    .balloon:hover {
+        transform: scale(1.1);
+    }
+    .balloon::after {
+      content: '';
+      position: absolute;
+      bottom: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 10px solid;
+      border-top-color: inherit;
+    }
+    .balloon-rising {
+      animation: riseAnimation 6s linear forwards;
+    }
+    @keyframes riseAnimation {
+      from { transform: translateY(0); }
+      to { transform: translateY(-120vh); }
+    }
+
+    /* End Screen styles */
+    .end-screen {
+        background-color: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        padding: 40px;
+        border-radius: 20px;
+        text-align: center;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        z-index: 200;
+    }
+    .end-screen h2 {
+        font-size: 2.5rem;
+        color: #333;
+        margin-bottom: 1rem;
+    }
+    .end-screen p {
+        font-size: 1.5rem;
+        color: #555;
+        margin-bottom: 2rem;
+    }
+    #play-again-btn {
+        padding: 1rem 2.5rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: white;
+        background-color: var(--brand);
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: background-color 0.2s, transform 0.2s;
+    }
+    #play-again-btn:hover {
+        background-color: #00acc1;
+        transform: translateY(-3px);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="confetti-canvas"></canvas>
+  <div id="game-container">
+    <!-- Game content will be created by JavaScript -->
+  </div>
+
+  <script>
+    // --- BASIC SETUP ---
+    const gameContainer = document.getElementById('game-container');
+    const myConfetti = confetti.create(document.getElementById('confetti-canvas'), {
+        resize: true,
+        useWorker: true
+    });
+
+    // --- WEB AUDIO API FOR SOUNDS ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // Resume audio context on the first user interaction
+    if (audioCtx) {
+        window.addEventListener('pointerdown', () => {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }, { once: true });
+    }
+    function playOsc({ type = 'sine', freq = 440, dur = 0.3, vol = 1 }) {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+        osc.start(audioCtx.currentTime);
+        osc.stop(audioCtx.currentTime + dur);
+    }
+    function playBell() {
+        if (!audioCtx) return;
+        playOsc({ type: 'sine', freq: 660, dur: 0.3, vol: 0.6 });
+        setTimeout(() => playOsc({ type: 'sine', freq: 880, dur: 0.3, vol: 0.6 }), 120);
+    }
+    function speak(text) {
+        if ('speechSynthesis' in window) {
+            speechSynthesis.cancel();
+            let u = new SpeechSynthesisUtterance(text);
+            u.rate = 0.9;
+            u.pitch = 1.1;
+            speechSynthesis.speak(u);
+        }
+    }
+
+    // --- HELPER FUNCTION ---
+    function getRandomColor() {
+      const pastelColors = [
+        '#FFADAD', // Light Red/Pink
+        '#FFD6A5', // Light Orange
+        '#FDFFB6', // Light Yellow
+        '#CAFFBF', // Light Green
+        '#9BF6FF', // Light Cyan
+        '#A0C4FF', // Light Blue
+        '#BDB2FF', // Light Purple
+        '#FFC6FF', // Light Magenta
+      ];
+      return pastelColors[Math.floor(Math.random() * pastelColors.length)];
+    }
+
+
+    // --- THE BALLOON POP GAME OBJECT ---
+    const BalloonPopGame = {
+      name: "Balloon Pop",
+      score: 0,
+      gameTimerId: null,
+      timerIntervalId: null,
+      balloonIntervalId: null,
+      container: null,
+      onCompleteCallback: null,
+      duration: 30000, // Game lasts 30 seconds
+      balloonsOnScreen: [],
+      elements: {},
+      forgivingTapRadius: 70,
+      boundForgivingTapHandler: null,
+
+      start: function(containerElement, onComplete) {
+        this.container = containerElement;
+        this.onCompleteCallback = onComplete;
+        this.score = 0;
+        this.balloonsOnScreen = [];
+        this.container.innerHTML = ''; // Clear container
+
+        speak("Pop the balloons!");
+
+        // Create and add the info bar for score and timer
+        const infoBar = document.createElement('div');
+        infoBar.className = 'minigame-info-bar';
+        this.elements.scoreDisplay = document.createElement('div');
+        this.elements.scoreDisplay.className = 'minigame-score';
+        infoBar.appendChild(this.elements.scoreDisplay);
+        this.updateScoreDisplay();
+
+        const timerContainer = document.createElement('div');
+        timerContainer.className = 'minigame-timer-bar-container';
+        this.elements.timerBar = document.createElement('div');
+        this.elements.timerBar.className = 'minigame-timer-bar';
+        timerContainer.appendChild(this.elements.timerBar);
+        infoBar.appendChild(timerContainer);
+        this.container.appendChild(infoBar);
+
+        // Start the timer bar animation
+        let timeLeft = this.duration;
+        this.elements.timerBar.style.width = '100%';
+        this.timerIntervalId = setInterval(() => {
+          timeLeft -= 100;
+          const progress = Math.max(0, (timeLeft / this.duration) * 100);
+          this.elements.timerBar.style.width = `${progress}%`;
+          if (timeLeft <= 0) clearInterval(this.timerIntervalId);
+        }, 100);
+
+        // Start spawning balloons and set the game end timeout
+        this.balloonIntervalId = setInterval(() => this.spawnBalloon(), 600);
+        this.gameTimerId = setTimeout(() => this.endGame(), this.duration);
+
+        // Add the click/tap listener
+        this.boundForgivingTapHandler = this._handleForgivingTap.bind(this);
+        this.container.addEventListener('pointerdown', this.boundForgivingTapHandler);
+      },
+
+      _handleForgivingTap: function(event) {
+        if (!this.container) return;
+        const clickX = event.clientX;
+        const clickY = event.clientY;
+
+        // Check against all balloons on screen
+        for (let i = this.balloonsOnScreen.length - 1; i >= 0; i--) {
+          const balloonElement = this.balloonsOnScreen[i];
+          if (!balloonElement || !balloonElement.parentNode) {
+            this.balloonsOnScreen.splice(i, 1);
+            continue;
+          }
+
+          const balloonRect = balloonElement.getBoundingClientRect();
+          const balloonCenterX = balloonRect.left + balloonRect.width / 2;
+          const balloonCenterY = balloonRect.top + balloonRect.height / 2;
+          const distance = Math.sqrt(Math.pow(clickX - balloonCenterX, 2) + Math.pow(clickY - balloonCenterY, 2));
+
+          if (distance <= this.forgivingTapRadius) {
+            this.popBalloon(balloonElement);
+            // Once a balloon is popped, stop checking so one tap can't pop multiple balloons
+            break;
+          }
+        }
+      },
+
+      spawnBalloon: function() {
+        if (!this.container || this.balloonsOnScreen.length > 15) return;
+
+        const balloon = document.createElement('div');
+        balloon.className = 'balloon';
+        const color = getRandomColor();
+        balloon.style.backgroundColor = color;
+        balloon.style.borderColor = color; // For the triangle part
+        balloon.style.left = `${Math.random() * (this.container.clientWidth - 70)}px`;
+        balloon.style.bottom = '-100px';
+
+        this.container.appendChild(balloon);
+        this.balloonsOnScreen.push(balloon);
+
+        balloon.classList.add('balloon-rising');
+        balloon.addEventListener('animationend', () => {
+          const index = this.balloonsOnScreen.indexOf(balloon);
+          if (index > -1) {
+            this.balloonsOnScreen.splice(index, 1);
+          }
+          if (balloon.parentNode) {
+            balloon.remove();
+          }
+        }, { once: true });
+      },
+
+      popBalloon: function(balloonElement) {
+        const index = this.balloonsOnScreen.indexOf(balloonElement);
+        if (index === -1) return; // Already popped
+
+        playBell();
+
+        const rect = balloonElement.getBoundingClientRect();
+        const confettiX = (rect.left + rect.right) / 2 / window.innerWidth;
+        const confettiY = (rect.top + rect.bottom) / 2 / window.innerHeight;
+        myConfetti({
+          particleCount: 30,
+          spread: 50,
+          origin: { x: confettiX, y: confettiY },
+          scalar: 0.8
+        });
+
+        this.score++;
+        this.updateScoreDisplay();
+
+        // Remove from DOM and array
+        if (balloonElement.parentNode) {
+          balloonElement.remove();
+        }
+        this.balloonsOnScreen.splice(index, 1);
+      },
+
+      updateScoreDisplay: function() {
+        if (this.elements.scoreDisplay) {
+            this.elements.scoreDisplay.textContent = `Popped: ${this.score}`;
+        }
+      },
+
+      endGame: function() {
+        // Stop all timers and intervals
+        clearInterval(this.balloonIntervalId);
+        clearInterval(this.timerIntervalId);
+        clearTimeout(this.gameTimerId);
+
+        // Remove event listener
+        if (this.boundForgivingTapHandler && this.container) {
+          this.container.removeEventListener('pointerdown', this.boundForgivingTapHandler);
+        }
+
+        // Remove any remaining balloons
+        this.balloonsOnScreen.forEach(b => {
+          if (b.parentNode) b.remove();
+        });
+        this.balloonsOnScreen = [];
+
+        // Clear the game UI
+        this.container.innerHTML = '';
+
+        // Call the completion callback with the final score
+        if (this.onCompleteCallback) {
+          this.onCompleteCallback(this.score);
+        }
+      }
+    };
+
+
+    // --- GAME CONTROL LOGIC ---
+
+    function startGame() {
+        // This function is called to start a new game session.
+        gameContainer.innerHTML = '';
+        BalloonPopGame.start(gameContainer, handleGameCompletion);
+    }
+
+    function handleGameCompletion(finalScore) {
+        // This function is called when the game ends.
+        // It builds the "Play Again" screen.
+        gameContainer.innerHTML = `
+            <div class="end-screen">
+                <h2>Great Job!</h2>
+                <p>You popped ${finalScore} balloons!</p>
+                <button id="play-again-btn">Play Again</button>
+            </div>
+        `;
+        speak(`Game over! You popped ${finalScore} balloons!`);
+
+        document.getElementById('play-again-btn').addEventListener('click', startGame);
+    }
+
+    // Start the game for the first time when the page loads
+    document.addEventListener('DOMContentLoaded', startGame);
+
+  </script>
+</body>
+</html>
