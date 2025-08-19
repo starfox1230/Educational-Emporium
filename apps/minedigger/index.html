@@ -381,7 +381,7 @@
 
         // --- TEXTURES ---
         const textureLoader = new THREE.TextureLoader();
-        let grassTopTex, grassSideTex, mudTex, tntTex, chestTex;
+        let grassTopTex, mudTex, tntTex, chestTex;
         
         function loadTextures(callback) {
             const createFallbackTexture = (color) => {
@@ -395,21 +395,22 @@
             };
 
             let loaded = 0;
-            const total = 5;
+            const total = 4; // We are loading 4 distinct textures now
             const onLoaded = () => {
                 loaded++;
                 if (loaded === total) callback();
             };
 
-            grassTopTex = textureLoader.load('https://i.imgur.com/k28ABtC.png', onLoaded, undefined, () => { grassTopTex = createFallbackTexture('#34a12c'); onLoaded(); });
-            grassSideTex = textureLoader.load('https://i.imgur.com/vHqBDxH.png', onLoaded, undefined, () => { grassSideTex = createFallbackTexture('#8a6048'); onLoaded(); });
-            mudTex = textureLoader.load('https://i.imgur.com/bK4UKjM.png', onLoaded, undefined, () => { mudTex = createFallbackTexture('#59402c'); onLoaded(); });
-            tntTex = textureLoader.load('https://i.imgur.com/vH6G3WT.png', onLoaded, undefined, () => { tntTex = createFallbackTexture('#ff0000'); onLoaded(); });
-            chestTex = textureLoader.load('https://i.imgur.com/vH6G3WT.png', onLoaded, undefined, () => { chestTex = createFallbackTexture('#ffd700'); onLoaded(); });
+            grassTopTex = textureLoader.load('grass.png', onLoaded, undefined, () => { grassTopTex = createFallbackTexture('#34a12c'); onLoaded(); });
+            mudTex = textureLoader.load('mud.png', onLoaded, undefined, () => { mudTex = createFallbackTexture('#59402c'); onLoaded(); });
+            tntTex = textureLoader.load('tnt.png', onLoaded, undefined, () => { tntTex = createFallbackTexture('#ff0000'); onLoaded(); });
+            chestTex = textureLoader.load('chest.png', onLoaded, undefined, () => { chestTex = createFallbackTexture('#ffd700'); onLoaded(); });
 
-            [grassTopTex, grassSideTex, mudTex, tntTex, chestTex].forEach(tex => {
-                tex.magFilter = THREE.NearestFilter;
-                tex.minFilter = THREE.NearestFilter;
+            [grassTopTex, mudTex, tntTex, chestTex].forEach(tex => {
+                if (tex) {
+                    tex.magFilter = THREE.NearestFilter;
+                    tex.minFilter = THREE.NearestFilter;
+                }
             });
         }
         
@@ -466,6 +467,7 @@
             
             camera.position.set(10, 12, 10);
             camera.lookAt(0, 0, 0);
+            controls.target.set(0, 0, 0);
             controls.update();
             
             startTurn();
@@ -580,12 +582,12 @@
 
             // Grass Blocks (Top Layer)
             const grassMaterials = [
-                new THREE.MeshStandardMaterial({ map: grassSideTex }), // right
-                new THREE.MeshStandardMaterial({ map: grassSideTex }), // left
+                new THREE.MeshStandardMaterial({ map: mudTex }), // right
+                new THREE.MeshStandardMaterial({ map: mudTex }), // left
                 new THREE.MeshStandardMaterial({ map: grassTopTex }),  // top
                 new THREE.MeshStandardMaterial({ map: mudTex }),       // bottom
-                new THREE.MeshStandardMaterial({ map: grassSideTex }), // front
-                new THREE.MeshStandardMaterial({ map: grassSideTex })  // back
+                new THREE.MeshStandardMaterial({ map: mudTex }), // front
+                new THREE.MeshStandardMaterial({ map: mudTex })  // back
             ];
             grassBlocks = new THREE.InstancedMesh(blockGeom, grassMaterials, BOARD_SIZE * BOARD_SIZE);
             grassBlocks.castShadow = true;
@@ -628,7 +630,7 @@
                         scene.add(tntMesh);
                         tntBlocks.push(tntMesh);
                     } else if (type === 'chest') {
-                        const chestMat = new THREE.MeshStandardMaterial({ map: chestTex, map: createChestAtlasMaterial() });
+                        const chestMat = new THREE.MeshStandardMaterial({ map: chestTex });
                         chestBlock = new THREE.Mesh(blockGeom, chestMat);
                         chestBlock.position.set(wx, 0, wz);
                         chestBlock.castShadow = true;
@@ -642,21 +644,6 @@
             mudBlocks.instanceMatrix.needsUpdate = true;
             scene.add(grassBlocks);
             scene.add(mudBlocks);
-        }
-        
-        // Helper to use an atlas texture for TNT/Chest (simulated here)
-        function createChestAtlasMaterial() {
-             const materials = [
-                new THREE.MeshStandardMaterial({ map: chestTex }), // right
-                new THREE.MeshStandardMaterial({ map: chestTex }), // left
-                new THREE.MeshStandardMaterial({ map: chestTex }), // top
-                new THREE.MeshStandardMaterial({ map: chestTex }), // bottom
-                new THREE.MeshStandardMaterial({ map: chestTex }), // front with latch
-                new THREE.MeshStandardMaterial({ map: chestTex })  // back
-             ];
-             // In a real atlas, you'd adjust UVs. Here we just use the same texture.
-             materials[4].color.set(0xFFA500); // Make front slightly different
-             return materials;
         }
 
         // --- GAME LOGIC ---
@@ -708,13 +695,12 @@
                 coords.z * TILE_SIZE - offset
             );
 
-            // Trigger particles
-            spawnParticles(worldPos, '#8a6048'); // Dirt color
+            // Trigger particles with dirt color from mud texture
+            spawnParticles(worldPos, '#59402c');
 
             const revealedItem = boardData[coords.x][coords.z];
             
             if (revealedItem === 'mud') {
-                // Just a soft poof
                 endTurn();
             } else if (revealedItem === 'tnt') {
                 players[currentPlayerIndex].eliminated = true;
@@ -738,7 +724,6 @@
             } else if (winner) {
                 winnerNameEl.textContent = `${winner.name} found the Treasure!`;
             } else {
-                 // This case happens if last player is eliminated, but we check in endTurn
                 const survivor = players.find(p => !p.eliminated);
                 winnerNameEl.textContent = `${survivor.name} is the last one standing!`;
             }
@@ -754,7 +739,6 @@
             endModalEl.classList.add('hidden');
             hudEl.classList.add('hidden');
             lobbyEl.classList.remove('hidden');
-            // Full reset will happen on next startGame click
         }
         
         // --- UI & MESSAGES ---
@@ -876,8 +860,10 @@
             if (intersects.length > 0) {
                 const instanceId = intersects[0].instanceId;
                 const coords = instanceIdToCoords.get(instanceId);
-                if (!dugTiles.has(`${coords.x},${coords.z}`)) {
-                    if (currentHoveredInstanceId !== instanceId) {
+                // Only show hover if the tile hasn't been dug yet
+                const tileKey = `${coords.x},${coords.z}`;
+                if (!dugTiles.has(tileKey)) {
+                     if (currentHoveredInstanceId !== instanceId) {
                          currentHoveredInstanceId = instanceId;
                          const offset = (BOARD_SIZE * TILE_SIZE) / 2 - TILE_SIZE / 2;
                          hoverOutline.position.set(
@@ -898,10 +884,21 @@
         }
         
         function onPointerDown(event) {
-             if (event.target.tagName !== 'CANVAS') return; // Ignore clicks on UI
-             if (currentHoveredInstanceId !== -1) {
-                 processDig(currentHoveredInstanceId);
-             }
+            // Ignore clicks if they are on the UI or the game is inactive
+            if (event.target.tagName !== 'CANVAS' || !gameActive) return;
+
+            // **BUG FIX:** Perform a raycast directly on click for reliability,
+            // instead of relying on the hover state from onPointerMove.
+            pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+            pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            
+            raycaster.setFromCamera(pointer, camera);
+            const intersects = raycaster.intersectObject(grassBlocks);
+
+            if (intersects.length > 0) {
+                const instanceId = intersects[0].instanceId;
+                processDig(instanceId);
+            }
         }
 
         const clock = new THREE.Clock();
