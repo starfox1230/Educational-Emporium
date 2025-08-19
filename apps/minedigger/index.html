@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Block-Diggers</title>
+    <style>
+        /* --- Core Styles & Font --- */
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        :root {
+            --player1-color: #00FFFF; /* Teal */
+            --player2-color: #FF00FF; /* Magenta */
+            --player3-color: #FFD700; /* Gold */
+            --player4-color: #9400D3; /* Violet */
+            --ui-background: rgba(0, 0, 0, 0.6);
+            --ui-border: #555;
+            --text-color: #FFF;
+            --text-shadow: 2px 2px #000;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Press Start 2P', cursive;
+            background-color: #111;
+            color: var(--text-color);
+        }
+
+        #container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* --- UI Panels (Lobby, HUD, End Modal) --- */
+        .ui-panel {
+            position: absolute;
+            box-sizing: border-box;
+            background: var(--ui-background);
+            border: 4px solid var(--ui-border);
+            text-shadow: var(--text-shadow);
+            -webkit-font-smoothing: none;
+            image-rendering: pixelated;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* --- Lobby Screen --- */
+        #lobby {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 2rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            min-width: 300px;
+        }
+
+        #lobby h1 {
+            margin: 0;
+            font-size: 2rem;
+            color: #FFD700;
+        }
+
+        .player-setup {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .player-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .player-input label {
+            flex-shrink: 0;
+        }
+
+        .player-input input {
+            width: 100%;
+            background: #222;
+            border: 2px solid var(--ui-border);
+            color: var(--text-color);
+            padding: 8px;
+            font-family: inherit;
+            font-size: 0.8rem;
+        }
+        
+        .player-input .color-chip {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #fff;
+        }
+        .player-input[data-player="1"] .color-chip { background-color: var(--player1-color); }
+        .player-input[data-player="2"] .color-chip { background-color: var(--player2-color); }
+        .player-input[data-player="3"] .color-chip { background-color: var(--player3-color); }
+        .player-input[data-player="4"] .color-chip { background-color: var(--player4-color); }
+
+        select {
+            background: #222;
+            border: 2px solid var(--ui-border);
+            color: var(--text-color);
+            padding: 8px;
+            font-family: inherit;
+        }
+
+        button {
+            padding: 1rem 1.5rem;
+            font-family: inherit;
+            font-size: 1rem;
+            color: var(--text-color);
+            background: #3a3a3a;
+            border: 4px solid var(--ui-border);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background: #4a4a4a;
+        }
+        
+        button:active {
+            background: #2a2a2a;
+        }
+
+        /* --- In-Game HUD --- */
+        #hud {
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .hud-top-bar {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: var(--ui-background);
+            border: 4px solid var(--ui-border);
+        }
+
+        #game-title {
+            font-size: 1.2rem;
+        }
+
+        #turn-indicator {
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #turn-indicator-color {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            border: 2px solid #fff;
+        }
+        
+        .hud-player-list {
+            position: absolute;
+            top: 80px;
+            right: 10px;
+            padding: 10px;
+            min-width: 200px;
+        }
+        
+        .hud-player-list ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .hud-player-list li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hud-player-list li.eliminated {
+            opacity: 0.5;
+            text-decoration: line-through;
+        }
+        
+        .hud-bottom-bar {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px;
+            font-size: 0.7rem;
+            text-align: center;
+        }
+        
+        /* --- Pop-up Messages --- */
+        #message-ping {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            background: rgba(255, 0, 0, 0.7);
+            border: 4px solid #fff;
+            font-size: 1.2rem;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+        
+        #message-ping.show {
+            opacity: 1;
+        }
+
+        /* --- End Game Modal --- */
+        #end-modal {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 2rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            min-width: 400px;
+        }
+
+        #winner-name {
+            font-size: 1.5rem;
+            color: #FFD700;
+        }
+
+        .end-modal-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+
+    <!-- UI Elements -->
+    <div id="lobby" class="ui-panel">
+        <h1>Block-Diggers</h1>
+        <div class="player-setup">
+            <label for="player-count">Players:</label>
+            <select id="player-count">
+                <option value="1">1 Player</option>
+                <option value="2" selected>2 Players</option>
+                <option value="3">3 Players</option>
+                <option value="4">4 Players</option>
+            </select>
+            <div class="player-input" data-player="1">
+                <div class="color-chip"></div>
+                <label for="player1-name">P1:</label>
+                <input type="text" id="player1-name" value="Teal" maxlength="10">
+            </div>
+            <div class="player-input" data-player="2">
+                <div class="color-chip"></div>
+                <label for="player2-name">P2:</label>
+                <input type="text" id="player2-name" value="Magenta" maxlength="10">
+            </div>
+            <div class="player-input" data-player="3">
+                <div class="color-chip"></div>
+                <label for="player3-name">P3:</label>
+                <input type="text" id="player3-name" value="Gold" maxlength="10">
+            </div>
+            <div class="player-input" data-player="4">
+                <div class="color-chip"></div>
+                <label for="player4-name">P4:</label>
+                <input type="text" id="player4-name" value="Violet" maxlength="10">
+            </div>
+        </div>
+        <button id="start-game-btn">Start Game</button>
+    </div>
+
+    <div id="hud" class="hidden">
+        <div class="hud-top-bar ui-panel">
+            <div id="game-title">Block-Diggers</div>
+            <div id="turn-indicator">
+                Your Turn: <span id="turn-indicator-color"></span><span id="player-turn-name"></span>
+            </div>
+        </div>
+        <div class="hud-player-list ui-panel">
+            <ul id="player-list-ui"></ul>
+        </div>
+        <div class="hud-bottom-bar">
+             Drag to orbit • Scroll/Pinch to zoom • Click a grass block to dig
+        </div>
+    </div>
+    
+    <div id="message-ping" class="ui-panel"></div>
+
+    <div id="end-modal" class="ui-panel hidden">
+        <h2 id="winner-name"></h2>
+        <div class="end-modal-buttons">
+            <button id="play-again-btn">Play Again</button>
+            <button id="new-game-btn">New Game</button>
+        </div>
+    </div>
+
+    <!-- Import map for Three.js ES6 modules -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <!-- Main Game Script -->
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // --- CONSTANTS & CONFIG ---
+        const BOARD_SIZE = 10;
+        const TILE_SIZE = 1;
+        const TNT_COUNT = 2;
+        const PLAYER_COLORS = ['#00FFFF', '#FF00FF', '#FFD700', '#9400D3'];
+        const PARTICLE_COUNT = 200;
+        const PARTICLE_LIFETIME = 1.5;
+
+        // --- DOM ELEMENTS ---
+        const container = document.getElementById('container');
+        const lobbyEl = document.getElementById('lobby');
+        const hudEl = document.getElementById('hud');
+        const endModalEl = document.getElementById('end-modal');
+        const playerCountSelect = document.getElementById('player-count');
+        const playerInputs = [
+            document.querySelector('.player-input[data-player="1"]'),
+            document.querySelector('.player-input[data-player="2"]'),
+            document.querySelector('.player-input[data-player="3"]'),
+            document.querySelector('.player-input[data-player="4"]')
+        ];
+        const startGameBtn = document.getElementById('start-game-btn');
+        const turnIndicatorColor = document.getElementById('turn-indicator-color');
+        const playerTurnName = document.getElementById('player-turn-name');
+        const playerListUI = document.getElementById('player-list-ui');
+        const winnerNameEl = document.getElementById('winner-name');
+        const playAgainBtn = document.getElementById('play-again-btn');
+        const newGameBtn = document.getElementById('new-game-btn');
+        const messagePingEl = document.getElementById('message-ping');
+
+        // --- GAME STATE ---
+        let players = [];
+        let currentPlayerIndex = 0;
+        let gameActive = false;
+        let boardData = []; // Stores 'mud', 'tnt', 'chest'
+        let dugTiles = new Set();
+
+        // --- THREE.JS SETUP ---
+        let scene, camera, renderer, controls, raycaster, pointer;
+        let grassBlocks, mudBlocks, tntBlocks = [], chestBlock;
+        let hoverOutline;
+        let particles;
+        const dummy = new THREE.Object3D();
+        const instanceIdToCoords = new Map();
+        let currentHoveredInstanceId = -1;
+
+        // --- TEXTURES ---
+        const textureLoader = new THREE.TextureLoader();
+        let grassTopTex, grassSideTex, mudTex, tntTex, chestTex;
+        
+        function loadTextures(callback) {
+            const createFallbackTexture = (color) => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 16;
+                canvas.height = 16;
+                const context = canvas.getContext('2d');
+                context.fillStyle = color;
+                context.fillRect(0, 0, 16, 16);
+                return new THREE.CanvasTexture(canvas);
+            };
+
+            let loaded = 0;
+            const total = 5;
+            const onLoaded = () => {
+                loaded++;
+                if (loaded === total) callback();
+            };
+
+            grassTopTex = textureLoader.load('https://i.imgur.com/k28ABtC.png', onLoaded, undefined, () => { grassTopTex = createFallbackTexture('#34a12c'); onLoaded(); });
+            grassSideTex = textureLoader.load('https://i.imgur.com/vHqBDxH.png', onLoaded, undefined, () => { grassSideTex = createFallbackTexture('#8a6048'); onLoaded(); });
+            mudTex = textureLoader.load('https://i.imgur.com/bK4UKjM.png', onLoaded, undefined, () => { mudTex = createFallbackTexture('#59402c'); onLoaded(); });
+            tntTex = textureLoader.load('https://i.imgur.com/vH6G3WT.png', onLoaded, undefined, () => { tntTex = createFallbackTexture('#ff0000'); onLoaded(); });
+            chestTex = textureLoader.load('https://i.imgur.com/vH6G3WT.png', onLoaded, undefined, () => { chestTex = createFallbackTexture('#ffd700'); onLoaded(); });
+
+            [grassTopTex, grassSideTex, mudTex, tntTex, chestTex].forEach(tex => {
+                tex.magFilter = THREE.NearestFilter;
+                tex.minFilter = THREE.NearestFilter;
+            });
+        }
+        
+        // --- INITIALIZATION ---
+        function init() {
+            setupLobby();
+        }
+        
+        function setupLobby() {
+            playerCountSelect.addEventListener('change', updatePlayerInputs);
+            startGameBtn.addEventListener('click', startGame);
+            playAgainBtn.addEventListener('click', playAgain);
+            newGameBtn.addEventListener('click', newGame);
+            updatePlayerInputs();
+        }
+
+        function updatePlayerInputs() {
+            const count = parseInt(playerCountSelect.value, 10);
+            playerInputs.forEach((input, index) => {
+                input.style.display = index < count ? 'flex' : 'none';
+            });
+        }
+        
+        function startGame() {
+            const count = parseInt(playerCountSelect.value, 10);
+            players = [];
+            for (let i = 0; i < count; i++) {
+                const name = document.getElementById(`player${i+1}-name`).value || `Player ${i+1}`;
+                players.push({ name, color: PLAYER_COLORS[i], eliminated: false });
+            }
+            
+            lobbyEl.classList.add('hidden');
+            hudEl.classList.remove('hidden');
+
+            if (!scene) {
+                loadTextures(() => {
+                    initThree();
+                    resetAndStartGame();
+                });
+            } else {
+                resetAndStartGame();
+            }
+        }
+
+        function resetAndStartGame() {
+            // Reset game state
+            players.forEach(p => p.eliminated = false);
+            currentPlayerIndex = 0;
+            dugTiles.clear();
+            
+            generateBoard();
+            createBoardMeshes();
+            updatePlayerListUI();
+            
+            camera.position.set(10, 12, 10);
+            camera.lookAt(0, 0, 0);
+            controls.update();
+            
+            startTurn();
+        }
+
+        function initThree() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB);
+            scene.fog = new THREE.Fog(0x87CEEB, 20, 50);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.set(10, 12, 10);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            // Controls
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.minDistance = 5;
+            controls.maxDistance = 30;
+            controls.maxPolarAngle = Math.PI / 2.1;
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+            directionalLight.position.set(10, 20, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            directionalLight.shadow.camera.top = 10;
+            directionalLight.shadow.camera.bottom = -10;
+            directionalLight.shadow.camera.left = -10;
+            directionalLight.shadow.camera.right = 10;
+            scene.add(directionalLight);
+            
+            // Raycasting
+            raycaster = new THREE.Raycaster();
+            pointer = new THREE.Vector2();
+
+            // Hover Outline
+            const outlineGeom = new THREE.BoxGeometry(TILE_SIZE * 1.05, TILE_SIZE * 1.05, TILE_SIZE * 1.05);
+            const outlineMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.BackSide, transparent: true, opacity: 0.5 });
+            hoverOutline = new THREE.Mesh(outlineGeom, outlineMat);
+            hoverOutline.visible = false;
+            scene.add(hoverOutline);
+            
+            // Ground Plane
+            const groundGeom = new THREE.PlaneGeometry(30, 30);
+            const groundMat = new THREE.MeshStandardMaterial({ color: 0x556B2F });
+            const ground = new THREE.Mesh(groundGeom, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -0.55;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // Particles
+            initParticles();
+
+            // Event Listeners
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('pointermove', onPointerMove);
+            window.addEventListener('pointerdown', onPointerDown);
+
+            animate();
+        }
+
+        // --- BOARD GENERATION & MESH CREATION ---
+        function generateBoard() {
+            boardData = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill('mud'));
+            const positions = [];
+            for (let x = 0; x < BOARD_SIZE; x++) {
+                for (let z = 0; z < BOARD_SIZE; z++) {
+                    positions.push({x, z});
+                }
+            }
+
+            // Shuffle positions
+            for (let i = positions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [positions[i], positions[j]] = [positions[j], positions[i]];
+            }
+
+            // Place chest
+            const chestPos = positions.pop();
+            boardData[chestPos.x][chestPos.z] = 'chest';
+
+            // Place TNT
+            for (let i = 0; i < TNT_COUNT; i++) {
+                const tntPos = positions.pop();
+                boardData[tntPos.x][tntPos.z] = 'tnt';
+            }
+        }
+        
+        function createBoardMeshes() {
+            // Clear previous meshes
+            if (grassBlocks) scene.remove(grassBlocks);
+            if (mudBlocks) scene.remove(mudBlocks);
+            tntBlocks.forEach(b => scene.remove(b));
+            tntBlocks = [];
+            if (chestBlock) scene.remove(chestBlock);
+
+            const blockGeom = new THREE.BoxGeometry(TILE_SIZE, TILE_SIZE, TILE_SIZE);
+
+            // Grass Blocks (Top Layer)
+            const grassMaterials = [
+                new THREE.MeshStandardMaterial({ map: grassSideTex }), // right
+                new THREE.MeshStandardMaterial({ map: grassSideTex }), // left
+                new THREE.MeshStandardMaterial({ map: grassTopTex }),  // top
+                new THREE.MeshStandardMaterial({ map: mudTex }),       // bottom
+                new THREE.MeshStandardMaterial({ map: grassSideTex }), // front
+                new THREE.MeshStandardMaterial({ map: grassSideTex })  // back
+            ];
+            grassBlocks = new THREE.InstancedMesh(blockGeom, grassMaterials, BOARD_SIZE * BOARD_SIZE);
+            grassBlocks.castShadow = true;
+            grassBlocks.receiveShadow = true;
+            
+            // Mud Blocks (Bottom Layer - for performance, we instance them all)
+            const mudMat = new THREE.MeshStandardMaterial({ map: mudTex });
+            mudBlocks = new THREE.InstancedMesh(blockGeom, mudMat, BOARD_SIZE * BOARD_SIZE);
+            mudBlocks.castShadow = true;
+            mudBlocks.receiveShadow = true;
+
+            let grassInstanceId = 0;
+            let mudInstanceId = 0;
+            const offset = (BOARD_SIZE * TILE_SIZE) / 2 - TILE_SIZE / 2;
+
+            for (let x = 0; x < BOARD_SIZE; x++) {
+                for (let z = 0; z < BOARD_SIZE; z++) {
+                    const wx = x * TILE_SIZE - offset;
+                    const wz = z * TILE_SIZE - offset;
+
+                    // Grass
+                    dummy.position.set(wx, TILE_SIZE, wz);
+                    dummy.updateMatrix();
+                    grassBlocks.setMatrixAt(grassInstanceId, dummy.matrix);
+                    instanceIdToCoords.set(grassInstanceId, {x, z});
+                    grassInstanceId++;
+                    
+                    // Hidden Layer
+                    const type = boardData[x][z];
+                    if (type === 'mud') {
+                        dummy.position.set(wx, 0, wz);
+                        dummy.updateMatrix();
+                        mudBlocks.setMatrixAt(mudInstanceId++, dummy.matrix);
+                    } else if (type === 'tnt') {
+                        const tntMat = new THREE.MeshStandardMaterial({ map: tntTex });
+                        const tntMesh = new THREE.Mesh(blockGeom, tntMat);
+                        tntMesh.position.set(wx, 0, wz);
+                        tntMesh.castShadow = true;
+                        tntMesh.receiveShadow = true;
+                        scene.add(tntMesh);
+                        tntBlocks.push(tntMesh);
+                    } else if (type === 'chest') {
+                        const chestMat = new THREE.MeshStandardMaterial({ map: chestTex, map: createChestAtlasMaterial() });
+                        chestBlock = new THREE.Mesh(blockGeom, chestMat);
+                        chestBlock.position.set(wx, 0, wz);
+                        chestBlock.castShadow = true;
+                        chestBlock.receiveShadow = true;
+                        scene.add(chestBlock);
+                    }
+                }
+            }
+            mudBlocks.count = mudInstanceId;
+            grassBlocks.instanceMatrix.needsUpdate = true;
+            mudBlocks.instanceMatrix.needsUpdate = true;
+            scene.add(grassBlocks);
+            scene.add(mudBlocks);
+        }
+        
+        // Helper to use an atlas texture for TNT/Chest (simulated here)
+        function createChestAtlasMaterial() {
+             const materials = [
+                new THREE.MeshStandardMaterial({ map: chestTex }), // right
+                new THREE.MeshStandardMaterial({ map: chestTex }), // left
+                new THREE.MeshStandardMaterial({ map: chestTex }), // top
+                new THREE.MeshStandardMaterial({ map: chestTex }), // bottom
+                new THREE.MeshStandardMaterial({ map: chestTex }), // front with latch
+                new THREE.MeshStandardMaterial({ map: chestTex })  // back
+             ];
+             // In a real atlas, you'd adjust UVs. Here we just use the same texture.
+             materials[4].color.set(0xFFA500); // Make front slightly different
+             return materials;
+        }
+
+        // --- GAME LOGIC ---
+        function startTurn() {
+            gameActive = true;
+            const player = players[currentPlayerIndex];
+            turnIndicatorColor.style.backgroundColor = player.color;
+            playerTurnName.textContent = player.name;
+        }
+
+        function endTurn() {
+            // Check for survival win
+            const activePlayers = players.filter(p => !p.eliminated);
+            if (activePlayers.length <= 1 && players.length > 1) {
+                setTimeout(() => endGame(activePlayers[0]), 500);
+                return;
+            }
+            
+            let nextPlayerIndex = (currentPlayerIndex + 1) % players.length;
+            while(players[nextPlayerIndex].eliminated) {
+                nextPlayerIndex = (nextPlayerIndex + 1) % players.length;
+            }
+            currentPlayerIndex = nextPlayerIndex;
+            
+            setTimeout(startTurn, 750); // Small delay for effect viewing
+        }
+
+        function processDig(instanceId) {
+            if (!gameActive) return;
+            const coords = instanceIdToCoords.get(instanceId);
+            if (!coords || dugTiles.has(`${coords.x},${coords.z}`)) {
+                pingMessage("Already dug!");
+                return;
+            }
+
+            gameActive = false; // Prevent double clicks
+            dugTiles.add(`${coords.x},${coords.z}`);
+
+            // Hide the grass block
+            dummy.scale.set(0, 0, 0);
+            dummy.updateMatrix();
+            grassBlocks.setMatrixAt(instanceId, dummy.matrix);
+            grassBlocks.instanceMatrix.needsUpdate = true;
+
+            const offset = (BOARD_SIZE * TILE_SIZE) / 2 - TILE_SIZE / 2;
+            const worldPos = new THREE.Vector3(
+                coords.x * TILE_SIZE - offset,
+                TILE_SIZE,
+                coords.z * TILE_SIZE - offset
+            );
+
+            // Trigger particles
+            spawnParticles(worldPos, '#8a6048'); // Dirt color
+
+            const revealedItem = boardData[coords.x][coords.z];
+            
+            if (revealedItem === 'mud') {
+                // Just a soft poof
+                endTurn();
+            } else if (revealedItem === 'tnt') {
+                players[currentPlayerIndex].eliminated = true;
+                updatePlayerListUI();
+                spawnParticles(worldPos, '#FF0000', 30, 2.0); // Red explosion
+                pingMessage(`${players[currentPlayerIndex].name} hit TNT!`);
+                endTurn();
+            } else if (revealedItem === 'chest') {
+                spawnParticles(worldPos, '#FFD700', 50, 2.5); // Gold sparkles
+                endGame(players[currentPlayerIndex]);
+            }
+        }
+        
+        function endGame(winner) {
+            gameActive = false;
+            hudEl.classList.add('hidden');
+            endModalEl.classList.remove('hidden');
+
+            if (players.length === 1) {
+                winnerNameEl.textContent = `You found the Treasure!`;
+            } else if (winner) {
+                winnerNameEl.textContent = `${winner.name} found the Treasure!`;
+            } else {
+                 // This case happens if last player is eliminated, but we check in endTurn
+                const survivor = players.find(p => !p.eliminated);
+                winnerNameEl.textContent = `${survivor.name} is the last one standing!`;
+            }
+        }
+        
+        function playAgain() {
+            endModalEl.classList.add('hidden');
+            hudEl.classList.remove('hidden');
+            resetAndStartGame();
+        }
+
+        function newGame() {
+            endModalEl.classList.add('hidden');
+            hudEl.classList.add('hidden');
+            lobbyEl.classList.remove('hidden');
+            // Full reset will happen on next startGame click
+        }
+        
+        // --- UI & MESSAGES ---
+        function updatePlayerListUI() {
+            playerListUI.innerHTML = '';
+            players.forEach(player => {
+                const li = document.createElement('li');
+                if (player.eliminated) {
+                    li.classList.add('eliminated');
+                }
+                li.innerHTML = `
+                    <div class="color-chip" style="background-color: ${player.color}; border-color: #fff;"></div>
+                    <span>${player.name}</span>
+                `;
+                playerListUI.appendChild(li);
+            });
+        }
+        
+        let pingTimeout;
+        function pingMessage(text) {
+            messagePingEl.textContent = text;
+            messagePingEl.classList.add('show');
+            clearTimeout(pingTimeout);
+            pingTimeout = setTimeout(() => {
+                messagePingEl.classList.remove('show');
+            }, 1500);
+        }
+
+        // --- PARTICLE SYSTEM ---
+        function initParticles() {
+            const particleGeom = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+            const particleMat = new THREE.MeshBasicMaterial();
+            particles = new THREE.InstancedMesh(particleGeom, particleMat, PARTICLE_COUNT);
+            particles.userData.pool = [];
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                particles.userData.pool.push({
+                    active: false,
+                    velocity: new THREE.Vector3(),
+                    life: 0
+                });
+            }
+            scene.add(particles);
+        }
+        
+        function spawnParticles(position, color, count = 20, speed = 1.0) {
+            particles.material.color.set(color);
+            let spawned = 0;
+            for (let i = 0; i < PARTICLE_COUNT && spawned < count; i++) {
+                const p = particles.userData.pool[i];
+                if (!p.active) {
+                    p.active = true;
+                    p.life = PARTICLE_LIFETIME;
+                    dummy.position.copy(position);
+                    dummy.scale.set(1,1,1);
+                    dummy.updateMatrix();
+                    particles.setMatrixAt(i, dummy.matrix);
+
+                    p.velocity.set(
+                        (Math.random() - 0.5) * 2 * speed,
+                        Math.random() * 2.5 * speed,
+                        (Math.random() - 0.5) * 2 * speed
+                    );
+                    spawned++;
+                }
+            }
+            particles.instanceMatrix.needsUpdate = true;
+        }
+
+        function updateParticles(deltaTime) {
+            let needsUpdate = false;
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                const p = particles.userData.pool[i];
+                if (p.active) {
+                    needsUpdate = true;
+                    p.life -= deltaTime;
+                    
+                    if (p.life <= 0) {
+                        p.active = false;
+                        dummy.scale.set(0,0,0);
+                    } else {
+                        p.velocity.y -= 9.8 * deltaTime; // gravity
+                        
+                        particles.getMatrixAt(i, dummy.matrix);
+                        const pos = new THREE.Vector3().setFromMatrixPosition(dummy.matrix);
+                        pos.addScaledVector(p.velocity, deltaTime);
+                        dummy.position.copy(pos);
+
+                        const scale = Math.max(0, p.life / PARTICLE_LIFETIME);
+                        dummy.scale.set(scale, scale, scale);
+                    }
+                    dummy.updateMatrix();
+                    particles.setMatrixAt(i, dummy.matrix);
+                }
+            }
+            if (needsUpdate) {
+                particles.instanceMatrix.needsUpdate = true;
+            }
+        }
+        
+        // --- EVENT HANDLERS & ANIMATION LOOP ---
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function onPointerMove(event) {
+            if (!gameActive) {
+                hoverOutline.visible = false;
+                return;
+            };
+
+            pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+            pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            
+            raycaster.setFromCamera(pointer, camera);
+            const intersects = raycaster.intersectObject(grassBlocks);
+
+            if (intersects.length > 0) {
+                const instanceId = intersects[0].instanceId;
+                const coords = instanceIdToCoords.get(instanceId);
+                if (!dugTiles.has(`${coords.x},${coords.z}`)) {
+                    if (currentHoveredInstanceId !== instanceId) {
+                         currentHoveredInstanceId = instanceId;
+                         const offset = (BOARD_SIZE * TILE_SIZE) / 2 - TILE_SIZE / 2;
+                         hoverOutline.position.set(
+                            coords.x * TILE_SIZE - offset,
+                            TILE_SIZE,
+                            coords.z * TILE_SIZE - offset
+                         );
+                         hoverOutline.visible = true;
+                    }
+                } else {
+                    currentHoveredInstanceId = -1;
+                    hoverOutline.visible = false;
+                }
+            } else {
+                currentHoveredInstanceId = -1;
+                hoverOutline.visible = false;
+            }
+        }
+        
+        function onPointerDown(event) {
+             if (event.target.tagName !== 'CANVAS') return; // Ignore clicks on UI
+             if (currentHoveredInstanceId !== -1) {
+                 processDig(currentHoveredInstanceId);
+             }
+        }
+
+        const clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            const deltaTime = clock.getDelta();
+            
+            controls.update();
+            updateParticles(deltaTime);
+            renderer.render(scene, camera);
+        }
+
+        // --- START ---
+        init();
+    </script>
+</body>
+</html>
