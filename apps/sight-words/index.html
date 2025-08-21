@@ -1483,6 +1483,12 @@
   </script>
   <script>
     // This script prevents pinch-to-zoom in modern browsers
+  
+    // The MOST important listener for iOS/Safari
+    document.addEventListener('gesturestart', (event) => {
+      event.preventDefault();
+    }, { passive: false });
+  
     document.addEventListener('touchstart', (event) => {
       if (event.touches.length > 1) {
         event.preventDefault();
@@ -1495,6 +1501,7 @@
       }
     }, { passive: false });
   </script>
+  
 </body>
 </html>
 
