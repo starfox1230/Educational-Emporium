@@ -233,19 +233,19 @@ I will provide you with content from a single lesson of a children's textbook. Y
 
 **Non-Negotiable Technical & Design Requirements:**
 
-1.  **Single File Output:** The entire game, including all logic, styling, and assets, must be delivered in a single \`.html\` file.
+1.  **Single File Output:** The entire game, including all logic, styling, and assets, must be delivered in a single `.html` file.
 2.  **Inline Resources Only:**
-    *   **CSS:** All CSS must be contained within a \`<style>\` block in the \`<head>\` of the HTML document. Do not link to external stylesheets.
-    *   **JavaScript:** All JavaScript must be contained within a \`<script>\` block at the bottom of the \`<body>\`. Do not link to external scripts.
-    *   **No External Files:** You are strictly forbidden from using external images (\`.png\`, \`.jpg\`), audio files (\`.mp3\`, \`.wav\`), or fonts. The user will provide **nothing**.
+    *   **CSS:** All CSS must be contained within a `<style>` block in the `<head>` of the HTML document. Do not link to external stylesheets.
+    *   **JavaScript:** All JavaScript must be contained within a `<script>` block at the bottom of the `<body>`. Do not link to external scripts.
+    *   **No External Files:** You are strictly forbidden from using external images (`.png`, `.jpg`), audio files (`.mp3`, `.wav`), or fonts. The user will provide **nothing**.
 3.  **Asset Generation:**
     *   **Graphics:** All visuals, icons, characters, and game elements must be created programmatically. Use embedded SVG (Scalable Vector Graphics) directly in the HTML or create shapes using pure CSS. This ensures graphics are crisp and self-contained.
     *   **Audio:** All spoken words, numbers, sound effects, or instructions must be generated using the browser's **Web Speech API for Text-to-Speech (TTS)**. Create a simple, reusable function to handle speech synthesis.
 4.  **Kid-Proof & Touch-Friendly User Experience (UX):** This is the most critical requirement. The application must be robust against common issues children have with touch interfaces.
-    *   **Disable Zooming:** The page must not zoom when a child double-taps or uses a pinch gesture. Use the correct \`<meta name="viewport">\` tag: \`<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">\`.
-    *   **Disable Text Selection:** Text (like instructions) should not be selectable or highlightable when a child taps, double-taps, or presses and holds. Use the CSS property: \`user-select: none;\` on relevant elements and the body.
-    *   **Disable Tap Highlighting:** Remove the default gray/blue box that appears on mobile browsers when an element is tapped. Use the CSS property: \`-webkit-tap-highlight-color: transparent;\`.
-    *   **Prioritize Touch Events:** Use \`touchstart\` and \`touchend\` events for primary interactions instead of \`click\` where appropriate to create a more responsive feel and avoid issues with accidental double-taps.
+    *   **Disable Zooming:** The page must not zoom when a child double-taps or uses a pinch gesture. Use the correct `<meta name="viewport">` tag: `<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">`.
+    *   **Disable Text Selection:** Text (like instructions) should not be selectable or highlightable when a child taps, double-taps, or presses and holds. Use the CSS property: `user-select: none;` on relevant elements and the body.
+    *   **Disable Tap Highlighting:** Remove the default gray/blue box that appears on mobile browsers when an element is tapped. Use the CSS property: `-webkit-tap-highlight-color: transparent;`.
+    *   **Prioritize Touch Events:** Use `touchstart` and `touchend` events for primary interactions instead of `click` where appropriate to create a more responsive feel and avoid issues with accidental double-taps.
 
 **Standard Game Structure:**
 
@@ -270,10 +270,16 @@ Every game you create must follow this two-part structure:
     *   After the game round is over, display the score and a prominent "Play Again" button to restart the game portion.
 
 **Special Feature - Drawing Canvas:**
-*   **If the lesson involves writing, drawing, or tracing (letters, numbers, shapes), you must include an HTML \`<canvas>\` element.**
-*   Implement basic drawing functionality that allows a child to draw on the canvas with their finger (\`touchmove\` event).
+*   If the lesson involves writing, drawing, or tracing (letters, numbers, shapes), you **must** include an HTML `<canvas>` element.
+*   Implement basic drawing functionality that allows a child to draw on the canvas with their finger or mouse (`touchmove` and `mousemove` events).
 *   Include a "Clear" button to erase the canvas.
-*   If possible, overlay a faint guide of the shape/number they are supposed to trace.
+*   Overlay a faint, large guide of the shape/number they are supposed to trace directly onto the canvas.
+*   **Special Rule for Tracing the Number 1:** Standard fonts often render the number '1' with a top flag, which is confusing for tracing. To ensure the tracing guide for '1' is a simple vertical line, you will implement a specific visual substitution.
+    *   **Visual Guide Only:** When you render the faint text guide on the canvas (the number to be traced), you must programmatically replace every instance of the digit `1` with a lowercase letter `l`.
+        *   *Example 1:* If the number to trace is `1`, the guide on the canvas should display `l`.
+        *   *Example 2:* If the number is `51`, the guide should display `5l`.
+        *   *Example 3:* If the number is `11`, the guide should display `ll`.
+    *   **Do Not Affect Data or Speech:** This substitution is **purely visual** and must *only* apply to the text drawn onto the canvas. Any variable holding the actual number, and especially any text passed to the Text-to-Speech (TTS) function, must use the correct digit `1`. The TTS must always say "one", "fifty-one", or "eleven", **never** "L" or "five-L".
 
 ---
 **[START OF LESSON CONTENT]**
