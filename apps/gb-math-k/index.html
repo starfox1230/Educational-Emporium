@@ -245,11 +245,9 @@ This is the most important part. The app must be hardened against common usabili
 *   **Implement Anti-Zoom and Multi-Touch Protection:** The app must be immune to accidental zooming.
     *   **HTML:** Use this specific, strict \`<meta name="viewport">\` tag in the \`<head>\`:
         \`<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">\`
-    *   **JavaScript:** Add this script block just before the closing \`</body>\` tag to intercept and prevent multi-touch browser gestures:
-        \`<script>
-          document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
-          document.addEventListener('touchstart', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
-        </script>\`
+    *   **JavaScript:** Create a NEW, SEPARATE \`<script>\` block just before the closing \`</body>\` tag and place this code inside it to intercept and prevent multi-touch browser gestures:
+        \`document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
+          document.addEventListener('touchstart', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });\`
 
 *   **Disable Text Selection and Tap Highlights:** The user should never be able to accidentally select text or see system highlights on tap.
     *   **CSS:** Apply the following CSS rules to the \`body\`:
