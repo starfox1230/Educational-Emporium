@@ -193,7 +193,7 @@
             gap: 20px;
         }
 
-        #house-dropzone {
+        #house-dropzone, #game-house-dropzone {
             flex-grow: 1;
             background-color: #e0f7fa;
             border: 3px dashed var(--main-blue);
@@ -216,7 +216,7 @@
         .house-bg > div:nth-child(4) { background: #e8f5e9; }
 
 
-        #furniture-inventory {
+        #furniture-inventory-lesson, #furniture-inventory-game {
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -409,21 +409,33 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- TTS Function ---
     let speechAllowed = false;
     function speak(text, callback) {
-        if (!speechAllowed) {
+        if (!speechAllowed || !text) {
             if (callback) callback();
             return;
         }
+        // Cancel any previous speech to prevent queueing issues.
+        speechSynthesis.cancel();
+
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'en-US';
         utterance.rate = 0.9;
         utterance.onend = callback;
+        // Add an error handler to ensure the callback runs even if speech fails.
+        utterance.onerror = (e) => {
+            console.error('Speech Synthesis Error:', e);
+            if (callback) callback();
+        };
         speechSynthesis.speak(utterance);
     }
     
+    // --- FIX 1: MODIFIED START BUTTON LOGIC ---
     document.getElementById('start-btn').addEventListener('click', () => {
         speechAllowed = true;
+        // Immediately show the next screen for instant user feedback.
         showScreen('lesson');
-        startLesson();
+        // Directly speak a welcome message. The rest of the lesson starts in the callback.
+        // This pattern is required by browsers to enable audio.
+        speak("Let's get started!", startLesson);
     });
 
     function showScreen(screenName) {
@@ -526,7 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const pos = getPos(e);
         ctx.lineTo(pos.x, pos.y);
-        ctx.strokeStyle = var(--main-blue);
+        ctx.strokeStyle = 'var(--main-blue)';
         ctx.lineWidth = 8;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
@@ -581,7 +593,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const item = document.createElement('div');
         item.className = 'furniture-item';
         item.dataset.type = type;
-        item.innerHTML = `<svg viewBox="${furnitureTypes[type].viewBox}"><use href="#${furnitureTypes[type].svg}" /></svg>`;
+        item.innerHTML = `<svg viewBox="${furnitureTypes[type] ? furnitureTypes[type].viewBox : allFurnitureTypes[type].viewBox}"><use href="#${furnitureTypes[type] ? furnitureTypes[type].svg : allFurnitureTypes[type].svg}" /></svg>`;
         
         const startDrag = (e) => {
             e.preventDefault();
@@ -614,7 +626,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleDrop(e, dropzone) {
-        if (!draggedItem) return;
+        if (!draggedItem || !dropzone) return;
         e.preventDefault();
         const dropRect = dropzone.getBoundingClientRect();
         const touch = e.changedTouches ? e.changedTouches[0] : e;
@@ -627,11 +639,12 @@ document.addEventListener('DOMContentLoaded', () => {
             placedItem.innerHTML = draggedItem.innerHTML;
             placedItem.dataset.type = draggedItem.querySelector('svg use').href.baseVal.split('-').slice(1).join('-');
             
-            const xPos = ((touch.clientX - dropRect.left - (draggedItem.offsetWidth / 2)) / dropRect.width) * 100;
-            const yPos = ((touch.clientY - dropRect.top - (draggedItem.offsetHeight / 2)) / dropRect.height) * 100;
+            const itemWidth = 80; // Should match CSS
+            const xPos = ((touch.clientX - dropRect.left - (itemWidth / 2)) / dropRect.width) * 100;
+            const yPos = ((touch.clientY - dropRect.top - (itemWidth / 2 * (draggedItem.offsetHeight / draggedItem.offsetWidth) )) / dropRect.height) * 100;
             
-            placedItem.style.left = `${Math.max(0, Math.min(100 - (placedItem.offsetWidth / dropRect.width * 100), xPos))}%`;
-            placedItem.style.top = `${Math.max(0, Math.min(100 - (placedItem.offsetHeight / dropRect.height * 100), yPos))}%`;
+            placedItem.style.left = `${Math.max(0, Math.min(100 - (itemWidth / dropRect.width * 100), xPos))}%`;
+            placedItem.style.top = `${Math.max(0, Math.min(100 - ((itemWidth * (draggedItem.offsetHeight / draggedItem.offsetWidth)) / dropRect.height * 100), yPos))}%`;
             
             dropzone.appendChild(placedItem);
         }
@@ -640,12 +653,12 @@ document.addEventListener('DOMContentLoaded', () => {
         draggedItem = null;
     }
 
+    let currentDropzone = null;
     document.addEventListener('mousemove', handleMove);
     document.addEventListener('touchmove', handleMove, { passive: false });
     document.addEventListener('mouseup', (e) => handleDrop(e, currentDropzone));
     document.addEventListener('touchend', (e) => handleDrop(e, currentDropzone));
 
-    let currentDropzone = null;
 
     // --- House Lesson Logic ---
     const houseLessonSteps = [
@@ -663,14 +676,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function startHouseLesson() {
         currentDropzone = lessonDropzone;
-        populateInventory(lessonInventory);
+        populateInventory(lessonInventory, furnitureTypes);
         currentHouseStep = 0;
         loadHouseStep(0);
     }
     
-    function populateInventory(inventoryEl) {
+    function populateInventory(inventoryEl, items) {
         inventoryEl.innerHTML = '';
-        for (const type in furnitureTypes) {
+        for (const type in items) {
             inventoryEl.appendChild(createFurnitureItem(type));
         }
     }
@@ -700,11 +713,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const requiredItems = houseLessonSteps[currentHouseStep].items;
         let correct = true;
-        if (Object.keys(counts).length !== Object.keys(requiredItems).length) {
-            correct = false;
+        const requiredItemCount = Object.values(requiredItems).reduce((a, b) => a + b, 0);
+        
+        if (placedItems.length !== requiredItemCount) {
+             correct = false;
         } else {
             for(const type in requiredItems) {
-                if(counts[type] !== requiredItems[type]) {
+                if((counts[type] || 0) !== requiredItems[type]) {
                     correct = false;
                     break;
                 }
@@ -761,11 +776,7 @@ document.addEventListener('DOMContentLoaded', () => {
         shuffleArray(gameQuestions);
         loadGameQuestion();
         currentDropzone = gameDropzone;
-        
-        gameInventory.innerHTML = '';
-        for (const type in allFurnitureTypes) {
-             gameInventory.appendChild(createFurnitureItem(type));
-        }
+        populateInventory(gameInventory, allFurnitureTypes);
     }
 
     function shuffleArray(array) {
