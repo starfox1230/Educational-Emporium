@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lesson 2: Ten Frames & Counting</title>
+    <style>
+        :root {
+            --bg-color: #f0f8ff;
+            --main-blue: #4a90e2;
+            --light-blue: #aed9ff;
+            --main-green: #7ed321;
+            --light-green: #c8e6c9;
+            --main-red: #d0021b;
+            --main-yellow: #f8e71c;
+            --main-orange: #f5a623;
+            --text-dark: #333;
+            --border-color: #ccc;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+        }
+
+        .app-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: clamp(1.5rem, 6vw, 2.5rem);
+            color: var(--main-blue);
+        }
+
+        p.instructions {
+            font-size: clamp(1rem, 4vw, 1.5rem);
+            margin: 10px 0 20px;
+        }
+
+        button, .button {
+            padding: 15px 30px;
+            font-size: clamp(1rem, 4vw, 1.5rem);
+            font-weight: bold;
+            color: white;
+            background-color: var(--main-blue);
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #3a75c4;
+            transition: all 0.1s ease-in-out;
+        }
+
+        button:active, .button:active {
+            transform: translateY(5px);
+            box-shadow: none;
+        }
+
+        /* --- Lesson Specific Styles --- */
+        .lesson-step {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .lesson-content {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .ten-frame-container {
+            border: 3px solid var(--main-green);
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .ten-frame {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            width: 250px;
+            height: 100px;
+        }
+
+        .ten-frame-cell {
+            border: 2px solid var(--light-green);
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .ten-frame-cell svg {
+            width: 80%;
+            height: 80%;
+        }
+
+        .tracing-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        canvas {
+            border: 2px dashed var(--border-color);
+            border-radius: 10px;
+            background-color: #fff;
+            touch-action: none;
+        }
+
+        .clear-btn {
+            background-color: var(--main-orange);
+            box-shadow: 0 5px 0 #d99020;
+            padding: 10px 20px;
+            font-size: 1rem;
+        }
+        
+        .clear-btn:active {
+            box-shadow: none;
+        }
+
+        /* Color Identification Step */
+        .color-circles {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .color-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 4px solid white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+        .color-circle:active {
+            transform: scale(1.1);
+        }
+
+        /* House Activity */
+        .house-activity-container {
+            display: flex;
+            width: 100%;
+            height: 60vh;
+            max-height: 500px;
+            gap: 20px;
+        }
+
+        #house-dropzone {
+            flex-grow: 1;
+            background-color: #e0f7fa;
+            border: 3px dashed var(--main-blue);
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .house-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-rows: 1fr 1fr;
+            grid-template-columns: 1fr 1fr;
+        }
+        .house-bg > div:nth-child(1) { background: #fce4ec; }
+        .house-bg > div:nth-child(2) { background: #e3f2fd; }
+        .house-bg > div:nth-child(3) { background: #fffde7; }
+        .house-bg > div:nth-child(4) { background: #e8f5e9; }
+
+
+        #furniture-inventory {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 15px;
+            align-items: center;
+        }
+
+        .furniture-item {
+            width: 80px;
+            height: auto;
+            cursor: grab;
+            position: relative;
+            z-index: 10;
+        }
+        .furniture-item:active {
+            cursor: grabbing;
+        }
+        
+        .placed-item {
+            position: absolute;
+            width: 80px;
+            height: auto;
+            cursor: default;
+        }
+        
+        .drag-clone {
+            position: absolute;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0.8;
+            transform: scale(1.1);
+        }
+
+        /* Game Screen */
+        #game-screen .instructions {
+            background: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: 2px solid var(--main-blue);
+        }
+        
+        #score-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Initial Audio Enable Screen -->
+        <div id="start-screen" class="screen">
+            <h1>Lesson 2</h1>
+            <p class="instructions">Ten Frames & Counting</p>
+            <button id="start-btn">Click to Start</button>
+        </div>
+
+        <!-- Lesson Screen -->
+        <div id="lesson-screen" class="screen hidden">
+            <!-- Step 1: Ten Frames & Tracing -->
+            <div id="lesson-step-1" class="lesson-step">
+                <p class="instructions" id="lesson-instruction"></p>
+                <div class="lesson-content">
+                    <div class="ten-frame-container">
+                        <div class="ten-frame" id="ten-frame-display"></div>
+                    </div>
+                    <div class="tracing-area">
+                        <canvas id="tracing-canvas" width="150" height="150"></canvas>
+                        <button id="clear-canvas-btn" class="clear-btn">Clear</button>
+                    </div>
+                </div>
+                <button id="next-lesson-btn">Next</button>
+            </div>
+            
+            <!-- Step 2: Color Identification -->
+            <div id="lesson-step-2" class="lesson-step hidden">
+                <p class="instructions">Let's learn some colors! Tap a circle to hear its name.</p>
+                <div class="color-circles">
+                    <div class="color-circle" style="background-color: #8B4513;" data-color="brown"></div>
+                    <div class="color-circle" style="background-color: #DC143C;" data-color="red"></div>
+                    <div class="color-circle" style="background-color: #FFFFFF;" data-color="white"></div>
+                    <div class="color-circle" style="background-color: #4682B4;" data-color="blue"></div>
+                    <div class="color-circle" style="background-color: #FFA500;" data-color="orange"></div>
+                </div>
+                <button id="next-lesson-btn-2">Next</button>
+            </div>
+            
+            <!-- Step 3: House Decoration -->
+            <div id="lesson-step-3" class="lesson-step hidden">
+                 <p class="instructions">Let's decorate the house! Follow the instructions. Drag the furniture into the house.</p>
+                 <div class="house-activity-container">
+                     <div id="house-dropzone">
+                        <div class="house-bg">
+                            <div></div><div></div><div></div><div></div>
+                        </div>
+                     </div>
+                     <div id="furniture-inventory-lesson"></div>
+                 </div>
+                 <button id="check-house-btn" class="hidden">Done</button>
+                 <button id="clear-house-btn" class="hidden">Clear Furniture</button>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen hidden">
+            <h1 id="game-title">Let's Play a Game!</h1>
+            <p class="instructions" id="game-instruction"></p>
+            <div id="score-display">Score: 0</div>
+             <div class="house-activity-container">
+                 <div id="game-house-dropzone">
+                    <div class="house-bg">
+                        <div></div><div></div><div></div><div></div>
+                    </div>
+                 </div>
+                 <div id="furniture-inventory-game"></div>
+             </div>
+             <button id="check-answer-btn">Check Answer</button>
+        </div>
+
+        <!-- End Game Screen -->
+        <div id="end-screen" class="screen hidden">
+            <h1>Great Job!</h1>
+            <p id="final-score" class="instructions"></p>
+            <button id="play-again-btn">Play Again</button>
+        </div>
+    </div>
+    
+    <!-- SVG Definitions -->
+    <svg width="0" height="0" style="position:absolute;">
+        <defs>
+            <g id="svg-lamp">
+                <path d="M10 40 L40 40 L35 50 L15 50 Z" fill="#f5a623"/>
+                <path d="M24 20 L26 20 L26 40 L24 40 Z" fill="#c4c4c4"/>
+                <path d="M20 10 C 10 10, 10 20, 20 20 L30 20 C 40 20, 40 10, 30 10 Z" fill="#f8e71c"/>
+            </g>
+            <g id="svg-flowerpot">
+                <path d="M10 30 L40 30 L35 50 L15 50 Z" fill="#cd853f"/>
+                <circle cx="18" cy="20" r="10" fill="#ff69b4"/>
+                <circle cx="32" cy="20" r="10" fill="#ff69b4"/>
+                <circle cx="25" cy="15" r="10" fill="#ff1493"/>
+            </g>
+            <g id="svg-chair-orange">
+                <rect x="5" y="25" width="40" height="20" rx="5" fill="#f5a623"/>
+                <rect x="5" y="10" width="40" height="20" rx="5" fill="#ff8c00"/>
+                <rect x="5" y="45" width="10" height="10" fill="#c27b00"/>
+                <rect x="35" y="45" width="10" height="10" fill="#c27b00"/>
+            </g>
+            <g id="svg-couch-blue">
+                <rect x="5" y="30" width="90" height="30" rx="5" fill="#4a90e2"/>
+                <rect x="10" y="10" width="80" height="25" rx="5" fill="#5a9eee"/>
+                <rect x="5" y="25" width="10" height="25" rx="5" fill="#5a9eee"/>
+                <rect x="85" y="25" width="10" height="25" rx="5" fill="#5a9eee"/>
+            </g>
+            <g id="svg-couch-yellow">
+                <rect x="5" y="30" width="90" height="30" rx="5" fill="#f8e71c"/>
+                <rect x="10" y="10" width="80" height="25" rx="5" fill="#fafa55"/>
+                <rect x="5" y="25" width="10" height="25" rx="5" fill="#fafa55"/>
+                <rect x="85" y="25" width="10" height="25" rx="5" fill="#fafa55"/>
+            </g>
+            <g id="svg-bathtub">
+                <path d="M10 20 C 10 10, 90 10, 90 20 L 90 50 C 90 60, 80 60, 80 60 L 20 60 C 10 60, 10 50, 10 50 Z" fill="#add8e6"/>
+                <rect x="15" y="60" width="10" height="5" fill="#b0c4de"/>
+                <rect x="75" y="60" width="10" height="5" fill="#b0c4de"/>
+            </g>
+        </defs>
+    </svg>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const screens = {
+        start: document.getElementById('start-screen'),
+        lesson: document.getElementById('lesson-screen'),
+        game: document.getElementById('game-screen'),
+        end: document.getElementById('end-screen'),
+    };
+    const lessonSteps = {
+        step1: document.getElementById('lesson-step-1'),
+        step2: document.getElementById('lesson-step-2'),
+        step3: document.getElementById('lesson-step-3'),
+    };
+    
+    // --- TTS Function ---
+    let speechAllowed = false;
+    function speak(text, callback) {
+        if (!speechAllowed) {
+            if (callback) callback();
+            return;
+        }
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.9;
+        utterance.onend = callback;
+        speechSynthesis.speak(utterance);
+    }
+    
+    document.getElementById('start-btn').addEventListener('click', () => {
+        speechAllowed = true;
+        showScreen('lesson');
+        startLesson();
+    });
+
+    function showScreen(screenName) {
+        Object.values(screens).forEach(s => s.classList.add('hidden'));
+        screens[screenName].classList.remove('hidden');
+    }
+
+    function showLessonStep(stepName) {
+        Object.values(lessonSteps).forEach(s => s.classList.add('hidden'));
+        lessonSteps[stepName].classList.remove('hidden');
+    }
+
+    // --- Lesson Data & Logic ---
+    const tenFrameLessons = [
+        { count: 2, item: 'lamp', numberToTrace: '2' },
+        { count: 3, item: 'flowerpot', numberToTrace: '3' },
+        { count: 1, item: 'lamp', numberToTrace: '1' },
+        { count: 2, item: 'chair-orange', numberToTrace: '2' },
+    ];
+    let currentLessonIndex = 0;
+
+    const lessonInstructionEl = document.getElementById('lesson-instruction');
+    const tenFrameDisplay = document.getElementById('ten-frame-display');
+    const nextLessonBtn = document.getElementById('next-lesson-btn');
+
+    function startLesson() {
+        currentLessonIndex = 0;
+        loadTenFrameLesson(currentLessonIndex);
+    }
+    
+    function loadTenFrameLesson(index) {
+        const lesson = tenFrameLessons[index];
+        const instruction = `This is a ten frame. Let's count the items. There are ${lesson.count} item${lesson.count > 1 ? 's' : ''}. Trace the number ${lesson.numberToTrace}.`;
+        
+        lessonInstructionEl.textContent = instruction;
+        speak(instruction, () => {
+            setupTracingCanvas(lesson.numberToTrace);
+        });
+
+        tenFrameDisplay.innerHTML = '';
+        for(let i = 0; i < 10; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'ten-frame-cell';
+            if (i < lesson.count) {
+                const svgName = lesson.item.includes('chair') ? 'svg-chair-orange' : `svg-${lesson.item}`;
+                cell.innerHTML = `<svg viewBox="0 0 ${lesson.item.includes('chair') ? '50 60' : '50 50'}"><use href="#${svgName}" /></svg>`;
+            }
+            tenFrameDisplay.appendChild(cell);
+        }
+    }
+
+    nextLessonBtn.addEventListener('click', () => {
+        currentLessonIndex++;
+        if (currentLessonIndex < tenFrameLessons.length) {
+            loadTenFrameLesson(currentLessonIndex);
+        } else {
+            showLessonStep('step2');
+            speak("Great job with the ten frames! Now, let's learn some colors! Tap a circle to hear its name.");
+        }
+    });
+
+    // --- Tracing Canvas Logic ---
+    const canvas = document.getElementById('tracing-canvas');
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+    let guideNumber = '';
+
+    function setupTracingCanvas(number) {
+        guideNumber = number;
+        clearCanvas();
+    }
+
+    function drawGuide() {
+        ctx.font = '120px Arial Rounded MT Bold';
+        ctx.fillStyle = '#e0e0e0';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(guideNumber, canvas.width / 2, canvas.height / 2 + 5);
+    }
+
+    function getPos(event) {
+        const rect = canvas.getBoundingClientRect();
+        const touch = event.touches ? event.touches[0] : event;
+        return {
+            x: touch.clientX - rect.left,
+            y: touch.clientY - rect.top
+        };
+    }
+    
+    function startDrawing(e) {
+        e.preventDefault();
+        drawing = true;
+        const pos = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+    }
+
+    function draw(e) {
+        if (!drawing) return;
+        e.preventDefault();
+        const pos = getPos(e);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.strokeStyle = var(--main-blue);
+        ctx.lineWidth = 8;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+    }
+
+    function stopDrawing() {
+        drawing = false;
+        ctx.beginPath();
+    }
+    
+    function clearCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawGuide();
+    }
+
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
+    canvas.addEventListener('touchstart', startDrawing);
+    canvas.addEventListener('touchmove', draw);
+    canvas.addEventListener('touchend', stopDrawing);
+    document.getElementById('clear-canvas-btn').addEventListener('click', clearCanvas);
+
+    // --- Color Identification Logic ---
+    document.querySelectorAll('.color-circle').forEach(circle => {
+        circle.addEventListener('click', () => {
+            const color = circle.dataset.color;
+            speak(color);
+        });
+    });
+    
+    document.getElementById('next-lesson-btn-2').addEventListener('click', () => {
+        showLessonStep('step3');
+        startHouseLesson();
+    });
+
+    // --- Furniture & Drag-and-Drop Logic ---
+    const furnitureTypes = {
+        'couch-yellow': { svg: 'svg-couch-yellow', viewBox: '0 0 100 70', count: 2 },
+        'bathtub': { svg: 'svg-bathtub', viewBox: '0 0 100 70', count: 1 },
+        'chair-orange': { svg: 'svg-chair-orange', viewBox: '0 0 50 60', count: 2 },
+    };
+
+    let draggedItem = null;
+    let offsetX, offsetY;
+
+    function createFurnitureItem(type) {
+        const item = document.createElement('div');
+        item.className = 'furniture-item';
+        item.dataset.type = type;
+        item.innerHTML = `<svg viewBox="${furnitureTypes[type].viewBox}"><use href="#${furnitureTypes[type].svg}" /></svg>`;
+        
+        const startDrag = (e) => {
+            e.preventDefault();
+            const touch = e.touches ? e.touches[0] : e;
+            
+            draggedItem = document.createElement('div');
+            draggedItem.className = 'furniture-item drag-clone';
+            draggedItem.innerHTML = item.innerHTML;
+            document.body.appendChild(draggedItem);
+
+            const rect = item.getBoundingClientRect();
+            offsetX = touch.clientX - rect.left;
+            offsetY = touch.clientY - rect.top;
+
+            draggedItem.style.left = `${touch.clientX - offsetX}px`;
+            draggedItem.style.top = `${touch.clientY - offsetY}px`;
+        };
+
+        item.addEventListener('mousedown', startDrag);
+        item.addEventListener('touchstart', startDrag);
+        return item;
+    }
+
+    function handleMove(e) {
+        if (!draggedItem) return;
+        e.preventDefault();
+        const touch = e.touches ? e.touches[0] : e;
+        draggedItem.style.left = `${touch.clientX - offsetX}px`;
+        draggedItem.style.top = `${touch.clientY - offsetY}px`;
+    }
+
+    function handleDrop(e, dropzone) {
+        if (!draggedItem) return;
+        e.preventDefault();
+        const dropRect = dropzone.getBoundingClientRect();
+        const touch = e.changedTouches ? e.changedTouches[0] : e;
+
+        if (touch.clientX > dropRect.left && touch.clientX < dropRect.right &&
+            touch.clientY > dropRect.top && touch.clientY < dropRect.bottom) {
+            
+            const placedItem = document.createElement('div');
+            placedItem.className = 'placed-item';
+            placedItem.innerHTML = draggedItem.innerHTML;
+            placedItem.dataset.type = draggedItem.querySelector('svg use').href.baseVal.split('-').slice(1).join('-');
+            
+            const xPos = ((touch.clientX - dropRect.left - (draggedItem.offsetWidth / 2)) / dropRect.width) * 100;
+            const yPos = ((touch.clientY - dropRect.top - (draggedItem.offsetHeight / 2)) / dropRect.height) * 100;
+            
+            placedItem.style.left = `${Math.max(0, Math.min(100 - (placedItem.offsetWidth / dropRect.width * 100), xPos))}%`;
+            placedItem.style.top = `${Math.max(0, Math.min(100 - (placedItem.offsetHeight / dropRect.height * 100), yPos))}%`;
+            
+            dropzone.appendChild(placedItem);
+        }
+        
+        document.body.removeChild(draggedItem);
+        draggedItem = null;
+    }
+
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('touchmove', handleMove, { passive: false });
+    document.addEventListener('mouseup', (e) => handleDrop(e, currentDropzone));
+    document.addEventListener('touchend', (e) => handleDrop(e, currentDropzone));
+
+    let currentDropzone = null;
+
+    // --- House Lesson Logic ---
+    const houseLessonSteps = [
+        { text: "First, place two yellow couches in the house.", items: {'couch-yellow': 2} },
+        { text: "Great! Now, place one bathtub in the house.", items: {'bathtub': 1} },
+        { text: "Good job! Finally, place two orange chairs in the house.", items: {'chair-orange': 2} },
+        { text: "Awesome decorating! Click the button to clear the furniture.", items: {} }
+    ];
+    let currentHouseStep = 0;
+    
+    const lessonInventory = document.getElementById('furniture-inventory-lesson');
+    const lessonDropzone = document.getElementById('house-dropzone');
+    const checkHouseBtn = document.getElementById('check-house-btn');
+    const clearHouseBtn = document.getElementById('clear-house-btn');
+
+    function startHouseLesson() {
+        currentDropzone = lessonDropzone;
+        populateInventory(lessonInventory);
+        currentHouseStep = 0;
+        loadHouseStep(0);
+    }
+    
+    function populateInventory(inventoryEl) {
+        inventoryEl.innerHTML = '';
+        for (const type in furnitureTypes) {
+            inventoryEl.appendChild(createFurnitureItem(type));
+        }
+    }
+
+    function loadHouseStep(stepIndex) {
+        lessonDropzone.innerHTML = `<div class="house-bg"><div></div><div></div><div></div><div></div></div>`;
+        const step = houseLessonSteps[stepIndex];
+        document.querySelector('#lesson-step-3 .instructions').textContent = step.text;
+        speak(step.text);
+        
+        if (Object.keys(step.items).length > 0) {
+            checkHouseBtn.classList.remove('hidden');
+            clearHouseBtn.classList.add('hidden');
+        } else {
+            checkHouseBtn.classList.add('hidden');
+            clearHouseBtn.classList.remove('hidden');
+        }
+    }
+
+    checkHouseBtn.addEventListener('click', () => {
+        const placedItems = lessonDropzone.querySelectorAll('.placed-item');
+        const counts = {};
+        placedItems.forEach(item => {
+            const type = item.dataset.type;
+            counts[type] = (counts[type] || 0) + 1;
+        });
+
+        const requiredItems = houseLessonSteps[currentHouseStep].items;
+        let correct = true;
+        if (Object.keys(counts).length !== Object.keys(requiredItems).length) {
+            correct = false;
+        } else {
+            for(const type in requiredItems) {
+                if(counts[type] !== requiredItems[type]) {
+                    correct = false;
+                    break;
+                }
+            }
+        }
+        
+        if (correct) {
+            speak("That's right!", () => {
+                currentHouseStep++;
+                if (currentHouseStep < houseLessonSteps.length) {
+                    loadHouseStep(currentHouseStep);
+                }
+            });
+        } else {
+            speak("Oops, that's not quite right. Try again.");
+        }
+    });
+    
+    clearHouseBtn.addEventListener('click', () => {
+        lessonDropzone.innerHTML = `<div class="house-bg"><div></div><div></div><div></div><div></div></div>`;
+        speak("All clear! You did a great job learning. Are you ready to play a game?", () => {
+            const readyBtn = document.createElement('button');
+            readyBtn.textContent = "Ready to Play!";
+            readyBtn.onclick = () => {
+                showScreen('game');
+                startGame();
+            };
+            clearHouseBtn.parentElement.replaceChild(readyBtn, clearHouseBtn);
+        });
+    });
+
+    // --- Game Logic ---
+    const gameQuestions = [
+        { text: "Put 3 items in the house.", condition: (items) => items.length === 3 },
+        { text: "Put 1 blue couch in the house.", condition: (items) => items.length === 1 && items.filter(i => i.dataset.type === 'couch-blue').length === 1 },
+        { text: "Put 2 yellow couches in the house.", condition: (items) => items.length === 2 && items.filter(i => i.dataset.type === 'couch-yellow').length === 2 },
+        { text: "Put 1 bathtub and 2 orange chairs in the house.", condition: (items) => items.length === 3 && items.filter(i => i.dataset.type === 'bathtub').length === 1 && items.filter(i => i.dataset.type === 'chair-orange').length === 2 },
+        { text: "Put 4 items in the house.", condition: (items) => items.length === 4 },
+    ];
+
+    let score = 0;
+    let currentQuestionIndex = 0;
+    const gameInventory = document.getElementById('furniture-inventory-game');
+    const gameDropzone = document.getElementById('game-house-dropzone');
+    const gameInstructionEl = document.getElementById('game-instruction');
+    const scoreDisplay = document.getElementById('score-display');
+    const allFurnitureTypes = {...furnitureTypes, 'couch-blue': { svg: 'svg-couch-blue', viewBox: '0 0 100 70' } };
+
+
+    function startGame() {
+        score = 0;
+        currentQuestionIndex = 0;
+        updateScore();
+        shuffleArray(gameQuestions);
+        loadGameQuestion();
+        currentDropzone = gameDropzone;
+        
+        gameInventory.innerHTML = '';
+        for (const type in allFurnitureTypes) {
+             gameInventory.appendChild(createFurnitureItem(type));
+        }
+    }
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function loadGameQuestion() {
+        gameDropzone.innerHTML = `<div class="house-bg"><div></div><div></div><div></div><div></div></div>`;
+        const question = gameQuestions[currentQuestionIndex];
+        gameInstructionEl.textContent = question.text;
+        speak(question.text);
+    }
+    
+    function updateScore() {
+        scoreDisplay.textContent = `Score: ${score}`;
+    }
+
+    document.getElementById('check-answer-btn').addEventListener('click', () => {
+        const placedItems = Array.from(gameDropzone.querySelectorAll('.placed-item'));
+        const question = gameQuestions[currentQuestionIndex];
+        
+        if (question.condition(placedItems)) {
+            score++;
+            updateScore();
+            speak("You got it!", () => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < gameQuestions.length) {
+                    loadGameQuestion();
+                } else {
+                    endGame();
+                }
+            });
+        } else {
+            speak("Whoops, let's try that one again.", () => {
+                gameDropzone.innerHTML = `<div class="house-bg"><div></div><div></div><div></div><div></div></div>`;
+            });
+        }
+    });
+
+    function endGame() {
+        showScreen('end');
+        const finalScoreEl = document.getElementById('final-score');
+        const message = `You scored ${score} out of ${gameQuestions.length}!`;
+        finalScoreEl.textContent = message;
+        speak(`Great job! ${message}`);
+    }
+    
+    document.getElementById('play-again-btn').addEventListener('click', () => {
+        showScreen('game');
+        startGame();
+    });
+
+});
+</script>
+</body>
+</html>
