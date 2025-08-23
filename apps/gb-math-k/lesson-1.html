@@ -275,8 +275,15 @@
 <body>
 
     <div id="game-container">
+        <!-- Welcome Screen to enable Audio -->
+        <div id="welcome-screen" class="screen active">
+            <h1>Lesson 1: Numbers 1-3</h1>
+            <p>Ready to learn and play?</p>
+            <button id="start-btn" class="button">Start Learning</button>
+        </div>
+
         <!-- Part 1: Interactive Lesson Screen -->
-        <div id="lesson-screen" class="screen active">
+        <div id="lesson-screen" class="screen">
             <h1>Numbers 1 to 3</h1>
             <p class="instruction">Tap each number to hear its name!</p>
             <div id="lesson-numbers">
@@ -328,11 +335,13 @@
         document.addEventListener('DOMContentLoaded', () => {
             // --- Global Variables & DOM Elements ---
             const screens = {
+                welcome: document.getElementById('welcome-screen'),
                 lesson: document.getElementById('lesson-screen'),
                 game: document.getElementById('game-screen'),
                 end: document.getElementById('end-screen')
             };
 
+            const startBtn = document.getElementById('start-btn');
             const lessonNumbers = document.getElementById('lesson-numbers');
             const startGameBtn = document.getElementById('start-game-btn');
             const tracingArea = document.getElementById('tracing-area');
@@ -350,10 +359,7 @@
             function addSafeEventListener(element, handler) {
                 const eventType = 'ontouchstart' in window ? 'touchstart' : 'click';
                 element.addEventListener(eventType, (e) => {
-                    // Prevent default behavior like zooming or text selection on touch
-                    if (eventType === 'touchstart') {
-                        e.preventDefault();
-                    }
+                    if (eventType === 'touchstart') e.preventDefault();
                     handler(e);
                 });
             }
@@ -402,8 +408,7 @@
                 const canvas = document.getElementById(`canvas-${id}`);
                 const ctx = canvas.getContext('2d');
                 let isDrawing = false;
-                let lastX = 0;
-                let lastY = 0;
+                let lastX = 0, lastY = 0;
 
                 function drawGuide() {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -411,10 +416,7 @@
                     ctx.fillStyle = '#e0e0e0';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    
-                    // **ADJUSTMENT:** Replace '1' with 'l' for visual tracing guide only
                     const guideText = String(numberToTrace).replace(/1/g, 'l');
-                    
                     ctx.fillText(guideText, canvas.width / 2, canvas.height / 2);
                 }
 
@@ -424,7 +426,6 @@
                     const rect = canvas.getBoundingClientRect();
                     const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
                     const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-
                     ctx.beginPath();
                     ctx.moveTo(lastX, lastY);
                     ctx.lineTo(x, y);
@@ -475,17 +476,13 @@
                 isAnswering = false;
                 currentRound++;
                 updateScoreDisplay();
-                
                 document.querySelectorAll('.answer-btn').forEach(btn => btn.className = 'number-box answer-btn');
-
                 correctAnswer = Math.floor(Math.random() * 3) + 1;
                 const currentItem = svgItems[Math.floor(Math.random() * svgItems.length)];
-                
                 itemDisplay.innerHTML = '';
                 for (let i = 0; i < correctAnswer; i++) {
                     itemDisplay.innerHTML += currentItem.generator();
                 }
-
                 const question = `How many ${correctAnswer > 1 ? currentItem.plural : currentItem.name} do you see?`;
                 questionText.textContent = question;
                 speak(question);
@@ -495,10 +492,8 @@
                 if (isAnswering) return;
                 const selectedButton = e.target.closest('.answer-btn');
                 if (!selectedButton) return;
-                
                 isAnswering = true;
                 const selectedNumber = parseInt(selectedButton.dataset.number);
-                
                 if (selectedNumber === correctAnswer) {
                     selectedButton.classList.add('correct');
                     score++;
@@ -508,7 +503,6 @@
                     document.querySelector(`.answer-btn[data-number="${correctAnswer}"]`).classList.add('correct');
                     speak('Whoops! The answer is ' + correctAnswer, 0.9, 1.0);
                 }
-                
                 updateScoreDisplay();
                 setTimeout(nextRound, 2000);
             }
@@ -525,6 +519,13 @@
 
             // --- Initial Setup & Event Listeners ---
             function init() {
+                // START BUTTON (This is the key fix for audio)
+                addSafeEventListener(startBtn, () => {
+                    // This first user interaction unlocks the Web Speech API
+                    speak("Welcome! Let's learn about the numbers one, two, and three! Tap a number to hear it.");
+                    showScreen('lesson');
+                });
+
                 // Lesson setup
                 addSafeEventListener(lessonNumbers, (e) => {
                     const numberBox = e.target.closest('.number-box');
@@ -555,11 +556,6 @@
                 // Game and End screen setup
                 addSafeEventListener(answerOptions, handleAnswer);
                 addSafeEventListener(playAgainBtn, startGame);
-                
-                // Initial greeting
-                setTimeout(() => {
-                    speak("Welcome! Let's learn about the numbers one, two, and three! Tap a number to hear it.");
-                }, 500);
             }
 
             init();
