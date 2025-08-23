@@ -104,9 +104,9 @@
             margin-top: 20px;
         }
 
-        .button:hover, .button:active {
-            transform: scale(1.05);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+        .button:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
         /* Lesson Specific Styles */
@@ -134,8 +134,8 @@
             transition: transform 0.2s, background-color 0.2s;
         }
 
-        .number-box:hover {
-            transform: scale(1.1);
+        .number-box:active {
+            transform: scale(0.9);
             background-color: var(--bg-color);
         }
 
@@ -172,8 +172,8 @@
             cursor: pointer;
         }
         
-        .clear-button:hover {
-            opacity: 0.9;
+        .clear-button:active {
+            opacity: 0.8;
         }
 
         /* Game Specific Styles */
@@ -333,28 +333,30 @@
                 end: document.getElementById('end-screen')
             };
 
-            // Lesson elements
             const lessonNumbers = document.getElementById('lesson-numbers');
             const startGameBtn = document.getElementById('start-game-btn');
             const tracingArea = document.getElementById('tracing-area');
-            const canvases = {};
-
-            // Game elements
             const scoreDisplay = document.getElementById('score-display');
             const questionText = document.getElementById('question-text');
             const itemDisplay = document.getElementById('item-display');
             const answerOptions = document.getElementById('answer-options');
-
-            // End screen elements
             const endScoreDisplay = document.getElementById('end-score');
             const playAgainBtn = document.getElementById('play-again-btn');
 
-            // Game state
-            let score = 0;
+            let score = 0, currentRound = 0, correctAnswer = 0, isAnswering = false;
             const totalRounds = 5;
-            let currentRound = 0;
-            let correctAnswer = 0;
-            let isAnswering = false;
+
+            // --- Kid-Proof Event Listener Helper ---
+            function addSafeEventListener(element, handler) {
+                const eventType = 'ontouchstart' in window ? 'touchstart' : 'click';
+                element.addEventListener(eventType, (e) => {
+                    // Prevent default behavior like zooming or text selection on touch
+                    if (eventType === 'touchstart') {
+                        e.preventDefault();
+                    }
+                    handler(e);
+                });
+            }
 
             // --- Text-to-Speech (TTS) Function ---
             const synth = window.speechSynthesis;
@@ -396,21 +398,24 @@
             }
 
             // --- Canvas Drawing Logic ---
-            function setupCanvas(id, number) {
+            function setupCanvas(id, numberToTrace) {
                 const canvas = document.getElementById(`canvas-${id}`);
                 const ctx = canvas.getContext('2d');
-                canvases[id] = { canvas, ctx };
                 let isDrawing = false;
                 let lastX = 0;
                 let lastY = 0;
 
                 function drawGuide() {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.font = 'bold 80px Arial Rounded MT Bold';
+                    ctx.font = 'bold 80px Arial Rounded MT Bold, sans-serif';
                     ctx.fillStyle = '#e0e0e0';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText(number, canvas.width / 2, canvas.height / 2);
+                    
+                    // **ADJUSTMENT:** Replace '1' with 'l' for visual tracing guide only
+                    const guideText = String(numberToTrace).replace(/1/g, 'l');
+                    
+                    ctx.fillText(guideText, canvas.width / 2, canvas.height / 2);
                 }
 
                 function draw(e) {
@@ -427,20 +432,17 @@
                     [lastX, lastY] = [x, y];
                 }
 
-                function startDrawing(e) {
+                const startDrawing = (e) => {
                     isDrawing = true;
                     const rect = canvas.getBoundingClientRect();
                     [lastX, lastY] = [
                         (e.touches ? e.touches[0].clientX : e.clientX) - rect.left,
                         (e.touches ? e.touches[0].clientY : e.clientY) - rect.top
                     ];
-                }
+                };
+                const stopDrawing = () => isDrawing = false;
 
-                function stopDrawing() {
-                    isDrawing = false;
-                }
-
-                ctx.strokeStyle = varToCss('--primary-color');
+                ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim();
                 ctx.lineWidth = 6;
                 ctx.lineCap = 'round';
                 ctx.lineJoin = 'round';
@@ -455,10 +457,6 @@
 
                 drawGuide();
                 return { drawGuide };
-            }
-            
-            function varToCss(varName) {
-                return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
             }
 
             // --- Game Logic ---
@@ -504,15 +502,14 @@
                 if (selectedNumber === correctAnswer) {
                     selectedButton.classList.add('correct');
                     score++;
-                    speak('Yay!', 1.2, 1.5);
+                    speak('ding!', 1.5, 1.8);
                 } else {
                     selectedButton.classList.add('incorrect');
                     document.querySelector(`.answer-btn[data-number="${correctAnswer}"]`).classList.add('correct');
-                    speak('Oops! That was ' + correctAnswer, 0.9, 1.0);
+                    speak('Whoops! The answer is ' + correctAnswer, 0.9, 1.0);
                 }
                 
                 updateScoreDisplay();
-
                 setTimeout(nextRound, 2000);
             }
 
@@ -523,13 +520,13 @@
             function endGame() {
                 endScoreDisplay.textContent = `You got ${score} out of ${totalRounds} correct!`;
                 showScreen('end');
-                speak(`Great job! You got ${score} out of ${totalRounds} correct!`);
+                speak(`Great job! You finished the game! You got ${score} out of ${totalRounds} correct!`);
             }
 
             // --- Initial Setup & Event Listeners ---
             function init() {
                 // Lesson setup
-                lessonNumbers.addEventListener('click', (e) => {
+                addSafeEventListener(lessonNumbers, (e) => {
                     const numberBox = e.target.closest('.number-box');
                     if (numberBox) {
                         speak(numberBox.dataset.number);
@@ -542,7 +539,7 @@
                     3: setupCanvas(3, '3')
                 };
 
-                tracingArea.addEventListener('click', (e) => {
+                addSafeEventListener(tracingArea, (e) => {
                     const clearBtn = e.target.closest('.clear-button');
                     if (clearBtn) {
                         const canvasId = clearBtn.dataset.canvas;
@@ -550,20 +547,18 @@
                     }
                 });
 
-                startGameBtn.addEventListener('click', () => {
-                    speak('Let\'s play a game!');
+                addSafeEventListener(startGameBtn, () => {
+                    speak('Let\'s play!');
                     startGame();
                 });
 
-                // Game setup
-                answerOptions.addEventListener('click', handleAnswer);
+                // Game and End screen setup
+                addSafeEventListener(answerOptions, handleAnswer);
+                addSafeEventListener(playAgainBtn, startGame);
                 
-                // End screen setup
-                playAgainBtn.addEventListener('click', startGame);
-
                 // Initial greeting
                 setTimeout(() => {
-                    speak("Welcome! Let's learn about the numbers one, two, and three! Tap the numbers to hear them.");
+                    speak("Welcome! Let's learn about the numbers one, two, and three! Tap a number to hear it.");
                 }, 500);
             }
 
