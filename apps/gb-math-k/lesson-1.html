@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -257,7 +258,7 @@
             margin-bottom: 20px;
         }
 
-        /* Responsive adjustments for smaller screens */
+        /* Responsive adjustments */
         @media (max-height: 500px), (max-width: 600px) {
             h1 { margin: 5px 0; }
             .instruction { margin: 5px 0 10px 0; }
@@ -333,7 +334,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- Global Variables & DOM Elements ---
             const screens = {
                 welcome: document.getElementById('welcome-screen'),
                 lesson: document.getElementById('lesson-screen'),
@@ -355,27 +355,16 @@
             let score = 0, currentRound = 0, correctAnswer = 0, isAnswering = false;
             const totalRounds = 5;
 
-            // --- Kid-Proof Event Listener Helper ---
-            function addSafeEventListener(element, handler) {
-                const eventType = 'ontouchstart' in window ? 'touchstart' : 'click';
-                element.addEventListener(eventType, (e) => {
-                    if (eventType === 'touchstart') e.preventDefault();
-                    handler(e);
-                });
-            }
-
             // --- Text-to-Speech (TTS) Function ---
             const synth = window.speechSynthesis;
             function speak(text, rate = 0.9, pitch = 1.2) {
                 if (synth.speaking) {
                     synth.cancel();
                 }
-                if (text !== '') {
-                    const utterance = new SpeechSynthesisUtterance(text);
-                    utterance.rate = rate;
-                    utterance.pitch = pitch;
-                    synth.speak(utterance);
-                }
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = rate;
+                utterance.pitch = pitch;
+                synth.speak(utterance);
             }
             
             // --- SVG Asset Generation ---
@@ -397,7 +386,6 @@
                 }
             ];
 
-            // --- Screen Management ---
             function showScreen(screenId) {
                 Object.values(screens).forEach(screen => screen.classList.remove('active'));
                 screens[screenId].classList.add('active');
@@ -436,13 +424,10 @@
                 const startDrawing = (e) => {
                     isDrawing = true;
                     const rect = canvas.getBoundingClientRect();
-                    [lastX, lastY] = [
-                        (e.touches ? e.touches[0].clientX : e.clientX) - rect.left,
-                        (e.touches ? e.touches[0].clientY : e.clientY) - rect.top
-                    ];
+                    [lastX, lastY] = [(e.touches ? e.touches[0].clientX : e.clientX) - rect.left, (e.touches ? e.touches[0].clientY : e.clientY) - rect.top];
                 };
                 const stopDrawing = () => isDrawing = false;
-
+                
                 ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim();
                 ctx.lineWidth = 6;
                 ctx.lineCap = 'round';
@@ -455,7 +440,7 @@
                 canvas.addEventListener('touchstart', startDrawing, { passive: false });
                 canvas.addEventListener('touchmove', draw, { passive: false });
                 canvas.addEventListener('touchend', stopDrawing);
-
+                
                 drawGuide();
                 return { drawGuide };
             }
@@ -520,14 +505,13 @@
             // --- Initial Setup & Event Listeners ---
             function init() {
                 // START BUTTON (This is the key fix for audio)
-                addSafeEventListener(startBtn, () => {
-                    // This first user interaction unlocks the Web Speech API
+                startBtn.addEventListener('click', () => {
                     speak("Welcome! Let's learn about the numbers one, two, and three! Tap a number to hear it.");
                     showScreen('lesson');
                 });
 
                 // Lesson setup
-                addSafeEventListener(lessonNumbers, (e) => {
+                lessonNumbers.addEventListener('click', (e) => {
                     const numberBox = e.target.closest('.number-box');
                     if (numberBox) {
                         speak(numberBox.dataset.number);
@@ -540,7 +524,7 @@
                     3: setupCanvas(3, '3')
                 };
 
-                addSafeEventListener(tracingArea, (e) => {
+                tracingArea.addEventListener('click', (e) => {
                     const clearBtn = e.target.closest('.clear-button');
                     if (clearBtn) {
                         const canvasId = clearBtn.dataset.canvas;
@@ -548,14 +532,14 @@
                     }
                 });
 
-                addSafeEventListener(startGameBtn, () => {
+                startGameBtn.addEventListener('click', () => {
                     speak('Let\'s play!');
                     startGame();
                 });
 
                 // Game and End screen setup
-                addSafeEventListener(answerOptions, handleAnswer);
-                addSafeEventListener(playAgainBtn, startGame);
+                answerOptions.addEventListener('click', handleAnswer);
+                playAgainBtn.addEventListener('click', startGame);
             }
 
             init();
