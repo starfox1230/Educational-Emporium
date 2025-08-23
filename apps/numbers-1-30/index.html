@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Blast!</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- General Styles & New Color Palette --- */
+        :root {
+            --bg-color-1: #6a11cb;
+            --bg-color-2: #2575fc;
+            --panel-bg: rgba(255, 255, 255, 0.85);
+            --title-color: #ff4757;
+            --text-color: #3d3d3d;
+            --btn-bg: #ffffff;
+            --btn-shadow: #dcdde1;
+            --btn-correct-bg: #2ed573;
+            --btn-correct-shadow: #1e9952;
+            --btn-incorrect-bg: #ff6b81;
+            --btn-incorrect-shadow: #c83349;
+            --btn-found-bg: #747d8c;
+            --action-btn-bg: #feca57;
+            --action-btn-shadow: #ff9f43;
+            --particle-1: #ff4757;
+            --particle-2: #feca57;
+            --particle-3: #2ed573;
+            --particle-4: #5352ed;
+        }
+
+        body {
+            font-family: 'Fredoka One', cursive;
+            background: linear-gradient(135deg, var(--bg-color-1), var(--bg-color-2));
+            background-size: 200% 200%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 15px;
+            box-sizing: border-box;
+            color: var(--text-color);
+            overflow: hidden; /* Hide particles that fly off-screen */
+            animation: background-pan 15s linear infinite;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        @keyframes background-pan {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- Game Container --- */
+        .game-container {
+            background: var(--panel-bg);
+            padding: clamp(15px, 4vw, 30px);
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 0 10px rgba(255, 255, 255, 0.3);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            backdrop-filter: blur(5px);
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 8vw, 4rem);
+            color: var(--title-color);
+            text-shadow: 3px 3px 0 #fff;
+            margin: 0;
+            line-height: 1.1;
+        }
+
+        /* --- Message & Repeat Button Area --- */
+        .message-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0 20px 0;
+            min-height: 50px;
+        }
+
+        #message-box {
+            font-size: clamp(1.2rem, 4vw, 1.6rem);
+            flex-grow: 1;
+        }
+
+        #repeat-button {
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            opacity: 0.9;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+            display: none; /* Hidden by default */
+        }
+        #repeat-button:hover {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+
+        /* --- Number Grid & Buttons --- */
+        #number-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: clamp(8px, 2vw, 12px);
+        }
+
+        .number-btn {
+            aspect-ratio: 1 / 1;
+            font-size: clamp(1.5rem, 6vw, 2.5rem);
+            font-family: 'Fredoka One', cursive;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            background: var(--btn-bg);
+            color: var(--text-color);
+            box-shadow: 0 5px 0 var(--btn-shadow);
+            transition: all 0.1s ease-in-out;
+            position: relative;
+        }
+
+        .number-btn:hover:not(:disabled) {
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 7px 0 var(--btn-shadow);
+        }
+
+        .number-btn:active:not(:disabled) {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 var(--btn-shadow);
+        }
+
+        .number-btn.found {
+            background: var(--btn-found-bg);
+            color: white;
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #575e68;
+        }
+
+        /* --- Action Button (Start/Play Again) --- */
+        .action-button {
+            margin-top: 20px;
+            padding: 15px 30px;
+            font-size: clamp(1.5rem, 5vw, 2rem);
+            font-family: 'Fredoka One', cursive;
+            cursor: pointer;
+            border: none;
+            border-radius: 15px;
+            background: var(--action-btn-bg);
+            color: white;
+            text-shadow: 2px 2px 2px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 0 var(--action-btn-shadow);
+            transition: all 0.1s ease-in-out;
+        }
+        .action-button:hover {
+             transform: translateY(-2px);
+             box-shadow: 0 7px 0 var(--action-btn-shadow);
+        }
+        .action-button:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 var(--action-btn-shadow);
+        }
+        #play-again-button {
+            display: none;
+        }
+
+        /* --- Animations & Particles --- */
+        .animate-incorrect {
+            animation: incorrect-shake 0.4s ease;
+            background: var(--btn-incorrect-bg);
+            box-shadow: 0 5px 0 var(--btn-incorrect-shadow);
+        }
+
+        @keyframes incorrect-shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px) rotate(-5deg); }
+            40% { transform: translateX(8px) rotate(5deg); }
+            60% { transform: translateX(-8px) rotate(-5deg); }
+            80% { transform: translateX(8px) rotate(5deg); }
+        }
+
+        .particle {
+            position: absolute;
+            background: red;
+            border-radius: 50%;
+            animation: fly-out 0.8s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes fly-out {
+            0% {
+                transform: translate(0, 0);
+                opacity: 1;
+            }
+            100% {
+                transform: var(--translate-end);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <h1>Number Blast!</h1>
+        <div class="message-area">
+             <p id="message-box">Click "Start" to play!</p>
+             <button id="repeat-button">🔊</button>
+        </div>
+
+        <div id="number-grid"></div>
+
+        <button id="start-button" class="action-button">Start Game</button>
+        <button id="play-again-button" class="action-button">Play Again</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const grid = document.getElementById('number-grid');
+            const startButton = document.getElementById('start-button');
+            const playAgainButton = document.getElementById('play-again-button');
+            const messageBox = document.getElementById('message-box');
+            const repeatButton = document.getElementById('repeat-button');
+            const totalNumbers = 30;
+            let numbersToFind = [];
+            let currentNumber = null;
+            let canGuess = false;
+
+            // --- Robust Text-to-Speech Setup ---
+            const synth = window.speechSynthesis;
+            let voices = [];
+            let speechReady = false;
+
+            function populateVoiceList() {
+                voices = synth.getVoices().filter(voice => voice.lang.startsWith('en'));
+                if (voices.length > 0) {
+                    speechReady = true;
+                }
+            }
+
+            populateVoiceList();
+            if (synth.onvoiceschanged !== undefined) {
+                synth.onvoiceschanged = populateVoiceList;
+            }
+
+            function speak(text, rate = 0.9, pitch = 1.1) {
+                if (!speechReady) {
+                    console.log("Speech synthesis not ready yet.");
+                    return;
+                }
+                if (synth.speaking) {
+                    synth.cancel();
+                }
+                const utterance = new SpeechSynthesisUtterance(text);
+                
+                // Prioritize high-quality voices
+                utterance.voice = voices.find(v => v.name.includes('Google') && v.lang.startsWith('en-US')) ||
+                                  voices.find(v => v.name.includes('Zira') && v.lang.startsWith('en-US')) || // Microsoft
+                                  voices.find(v => v.name.includes('Samantha') && v.lang.startsWith('en-US')) || // Apple
+                                  voices.find(v => v.lang === 'en-US') ||
+                                  voices[0];
+                
+                utterance.rate = rate;
+                utterance.pitch = pitch;
+                synth.speak(utterance);
+            }
+
+            // --- Particle Effect ---
+            function createParticles(element) {
+                const rect = element.getBoundingClientRect();
+                const originX = rect.left + rect.width / 2;
+                const originY = rect.top + rect.height / 2;
+                const particleColors = ['var(--particle-1)', 'var(--particle-2)', 'var(--particle-3)', 'var(--particle-4)'];
+
+                for (let i = 0; i < 30; i++) {
+                    const p = document.createElement('div');
+                    p.classList.add('particle');
+                    document.body.appendChild(p);
+                    
+                    const size = Math.floor(Math.random() * 15 + 5);
+                    p.style.width = `${size}px`;
+                    p.style.height = `${size}px`;
+                    p.style.background = particleColors[i % particleColors.length];
+                    p.style.left = `${originX - size / 2}px`;
+                    p.style.top = `${originY - size / 2}px`;
+
+                    const angle = Math.random() * 360;
+                    const radius = Math.random() * 150 + 50;
+                    const endX = Math.cos(angle * Math.PI / 180) * radius;
+                    const endY = Math.sin(angle * Math.PI / 180) * radius;
+                    p.style.setProperty('--translate-end', `translate(${endX}px, ${endY}px)`);
+
+                    p.addEventListener('animationend', () => p.remove());
+                }
+            }
+
+            // --- Game Logic ---
+            function createGrid() {
+                grid.innerHTML = '';
+                for (let i = 1; i <= totalNumbers; i++) {
+                    const button = document.createElement('button');
+                    button.className = 'number-btn';
+                    button.textContent = i;
+                    button.dataset.number = i;
+                    button.addEventListener('click', handleGuess);
+                    grid.appendChild(button);
+                }
+            }
+
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+            }
+
+            function startGame() {
+                startButton.style.display = 'none';
+                playAgainButton.style.display = 'none';
+                
+                numbersToFind = Array.from({ length: totalNumbers }, (_, i) => i + 1);
+                shuffleArray(numbersToFind);
+                
+                document.querySelectorAll('.number-btn').forEach(btn => {
+                    btn.classList.remove('found', 'animate-incorrect');
+                    btn.disabled = false;
+                });
+                
+                setTimeout(nextTurn, 500);
+            }
+
+            function nextTurn() {
+                if (numbersToFind.length === 0) {
+                    endGame();
+                    return;
+                }
+                
+                currentNumber = numbersToFind.pop();
+                messageBox.textContent = "Listen for the number...";
+                repeatButton.style.display = 'inline-block';
+                speak(`Find ${currentNumber}`);
+                canGuess = true;
+            }
+
+            function handleGuess(event) {
+                if (!canGuess) return;
+
+                const clickedBtn = event.target;
+                const guessedNumber = parseInt(clickedBtn.dataset.number);
+
+                if (clickedBtn.classList.contains('animate-incorrect')) return;
+
+                if (guessedNumber === currentNumber) {
+                    canGuess = false;
+                    repeatButton.style.display = 'none';
+                    createParticles(clickedBtn);
+                    clickedBtn.style.background = 'var(--btn-correct-bg)';
+                    clickedBtn.style.boxShadow = '0 5px 0 var(--btn-correct-shadow)';
+                    
+                    speak('Awesome!');
+                    
+                    setTimeout(() => {
+                        clickedBtn.classList.add('found');
+                        clickedBtn.disabled = true;
+                        // Reset inline styles
+                        clickedBtn.style.background = '';
+                        clickedBtn.style.boxShadow = '';
+                        nextTurn();
+                    }, 1200);
+
+                } else {
+                    clickedBtn.classList.add('animate-incorrect');
+                    speak('Oops! Try again.');
+                    
+                    setTimeout(() => {
+                        clickedBtn.classList.remove('animate-incorrect');
+                    }, 500);
+                }
+            }
+
+            function endGame() {
+                messageBox.textContent = 'YOU DID IT! 🎉';
+                repeatButton.style.display = 'none';
+                speak('Wow! You found all the numbers! Great job!');
+                playAgainButton.style.display = 'inline-block';
+            }
+
+            // --- Event Listeners ---
+            createGrid();
+            startButton.addEventListener('click', startGame);
+            playAgainButton.addEventListener('click', startGame);
+            repeatButton.addEventListener('click', () => {
+                if (currentNumber !== null) {
+                    speak(`Find ${currentNumber}`);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
