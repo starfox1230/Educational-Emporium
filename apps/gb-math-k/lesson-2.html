@@ -413,14 +413,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (callback) callback();
             return;
         }
-        // Cancel any previous speech to prevent queueing issues.
         speechSynthesis.cancel();
 
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'en-US';
         utterance.rate = 0.9;
         utterance.onend = callback;
-        // Add an error handler to ensure the callback runs even if speech fails.
         utterance.onerror = (e) => {
             console.error('Speech Synthesis Error:', e);
             if (callback) callback();
@@ -428,13 +426,9 @@ document.addEventListener('DOMContentLoaded', () => {
         speechSynthesis.speak(utterance);
     }
     
-    // --- FIX 1: MODIFIED START BUTTON LOGIC ---
     document.getElementById('start-btn').addEventListener('click', () => {
         speechAllowed = true;
-        // Immediately show the next screen for instant user feedback.
         showScreen('lesson');
-        // Directly speak a welcome message. The rest of the lesson starts in the callback.
-        // This pattern is required by browsers to enable audio.
         speak("Let's get started!", startLesson);
     });
 
@@ -509,11 +503,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function drawGuide() {
+        // --- IMPLEMENTED SPECIAL RULE ---
+        // Replace '1' with 'l' for the visual tracing guide ONLY.
+        // The original `guideNumber` variable remains unchanged for TTS and logic.
+        const visualGuideText = guideNumber.toString().replaceAll('1', 'l');
+
         ctx.font = '120px Arial Rounded MT Bold';
         ctx.fillStyle = '#e0e0e0';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(guideNumber, canvas.width / 2, canvas.height / 2 + 5);
+        ctx.fillText(visualGuideText, canvas.width / 2, canvas.height / 2 + 5);
     }
 
     function getPos(event) {
@@ -588,12 +587,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let draggedItem = null;
     let offsetX, offsetY;
+    const allFurnitureTypes = {...furnitureTypes, 'couch-blue': { svg: 'svg-couch-blue', viewBox: '0 0 100 70' } };
 
     function createFurnitureItem(type) {
         const item = document.createElement('div');
         item.className = 'furniture-item';
         item.dataset.type = type;
-        item.innerHTML = `<svg viewBox="${furnitureTypes[type] ? furnitureTypes[type].viewBox : allFurnitureTypes[type].viewBox}"><use href="#${furnitureTypes[type] ? furnitureTypes[type].svg : allFurnitureTypes[type].svg}" /></svg>`;
+        item.innerHTML = `<svg viewBox="${allFurnitureTypes[type].viewBox}"><use href="#${allFurnitureTypes[type].svg}" /></svg>`;
         
         const startDrag = (e) => {
             e.preventDefault();
@@ -612,8 +612,8 @@ document.addEventListener('DOMContentLoaded', () => {
             draggedItem.style.top = `${touch.clientY - offsetY}px`;
         };
 
+        item.addEventListener('touchstart', startDrag, { passive: false });
         item.addEventListener('mousedown', startDrag);
-        item.addEventListener('touchstart', startDrag);
         return item;
     }
 
@@ -654,10 +654,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     let currentDropzone = null;
-    document.addEventListener('mousemove', handleMove);
     document.addEventListener('touchmove', handleMove, { passive: false });
-    document.addEventListener('mouseup', (e) => handleDrop(e, currentDropzone));
     document.addEventListener('touchend', (e) => handleDrop(e, currentDropzone));
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('mouseup', (e) => handleDrop(e, currentDropzone));
 
 
     // --- House Lesson Logic ---
@@ -766,8 +766,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const gameDropzone = document.getElementById('game-house-dropzone');
     const gameInstructionEl = document.getElementById('game-instruction');
     const scoreDisplay = document.getElementById('score-display');
-    const allFurnitureTypes = {...furnitureTypes, 'couch-blue': { svg: 'svg-couch-blue', viewBox: '0 0 100 70' } };
-
+    
 
     function startGame() {
         score = 0;
@@ -804,7 +803,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (question.condition(placedItems)) {
             score++;
             updateScore();
-            speak("You got it!", () => {
+            speak("Ding! You got it!", () => {
                 currentQuestionIndex++;
                 if (currentQuestionIndex < gameQuestions.length) {
                     loadGameQuestion();
