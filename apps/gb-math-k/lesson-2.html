@@ -503,11 +503,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function drawGuide() {
-        // --- IMPLEMENTED SPECIAL RULE ---
-        // Replace '1' with 'l' for the visual tracing guide ONLY.
-        // The original `guideNumber` variable remains unchanged for TTS and logic.
         const visualGuideText = guideNumber.toString().replaceAll('1', 'l');
-
         ctx.font = '120px Arial Rounded MT Bold';
         ctx.fillStyle = '#e0e0e0';
         ctx.textAlign = 'center';
@@ -560,8 +556,8 @@ document.addEventListener('DOMContentLoaded', () => {
     canvas.addEventListener('mousemove', draw);
     canvas.addEventListener('mouseup', stopDrawing);
     canvas.addEventListener('mouseout', stopDrawing);
-    canvas.addEventListener('touchstart', startDrawing);
-    canvas.addEventListener('touchmove', draw);
+    canvas.addEventListener('touchstart', startDrawing, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
     canvas.addEventListener('touchend', stopDrawing);
     document.getElementById('clear-canvas-btn').addEventListener('click', clearCanvas);
 
@@ -734,7 +730,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         } else {
-            speak("Oops, that's not quite right. Try again.");
+            // --- BUG FIX IMPLEMENTED HERE ---
+            speak("Oops, that's not quite right. Let's try again.", () => {
+                // Clear the house after speaking the message so the child can try again.
+                lessonDropzone.innerHTML = `<div class="house-bg"><div></div><div></div><div></div><div></div></div>`;
+            });
         }
     });
     
