@@ -2,159 +2,485 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Learning Hub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Interactive Learning Hub - Creator</title>
+    <style>
+        body {
+            background-color: #f4f7f6;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #1a5276;
+            border-bottom: 2px solid #aed6f1;
+            padding-bottom: 15px;
+        }
+        h2 {
+            color: #2e86c1;
+            margin-top: 40px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li a {
+            display: block;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background-color: #f9f9f9;
+            color: #34495e;
+            text-decoration: none;
+            border-left: 5px solid #bdc3c7;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        li a:hover {
+            background-color: #ecf0f1;
+            transform: translateX(5px);
+        }
+        .unit-1-link { border-left-color: #3498db; }
+        .unit-2-link { border-left-color: #27ae60; }
+        .unit-3-link { border-left-color: #e67e22; }
+        .assessment-link {
+            background-color: #eaf2f8;
+            font-weight: bold;
+        }
+        .unit-1-assessment { border-left-color: #2e86c1; color: #1a5276; }
+        .unit-2-assessment { border-left-color: #229954; color: #196f3d; background-color: #d5f5e3; }
+        .unit-3-assessment { border-left-color: #d35400; color: #af601a; background-color: #fdebd0; }
+
+        /* Creation Tool Styles */
+        .toggle-button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #fff;
+            background-color: #2980b9;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: background-color 0.2s;
+        }
+        .toggle-button:hover { background-color: #3498db; }
+        
+        #creation-tool {
+            padding: 20px;
+            border: 2px dashed #aed6f1;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        #creation-tool p { line-height: 1.6; }
+        #creation-tool label {
+            display: block;
+            font-weight: bold;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            color: #1a5276;
+        }
+        #lesson-selector {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 1em;
+        }
+        .output-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .output-container input[type="text"] {
+            flex-grow: 1;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: #e9ecef;
+            font-family: monospace;
+        }
+        .output-container button, #copy-prompt-btn {
+            padding: 10px 15px;
+            font-size: 0.9em;
+            color: #fff;
+            background-color: #27ae60;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background-color 0.2s;
+        }
+        .output-container button:hover, #copy-prompt-btn:hover { background-color: #2ecc71; }
+        
+        #prompt-output {
+            width: 100%;
+            box-sizing: border-box;
+            height: 250px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: #e9ecef;
+            font-family: monospace;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        #copy-prompt-btn {
+            display: block;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .ai-link {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background-color: #884ea0;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .ai-link:hover {
+             background-color: #9b59b6;
+        }
+    </style>
 </head>
-<body style="background-color: #f4f7f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 20px;">
+<body>
 
-    <div style="max-width: 900px; margin: 20px auto; background-color: #ffffff; padding: 30px 40px; border-radius: 12px; box-shadow: 0 6px 12px rgba(0,0,0,0.1);">
+    <div class="container">
 
-        <h1 style="text-align: center; color: #1a5276; border-bottom: 2px solid #aed6f1; padding-bottom: 15px;">Interactive Textbook Navigator</h1>
-        <p style="text-align: center; color: #566573; font-size: 1.1em;">Select a lesson below to begin your interactive game!</p>
+        <h1>Interactive Textbook Navigator</h1>
 
-        <!-- NOTE: The hover effect is done with inline JavaScript (onmouseover, onmouseout) as per the request. -->
-        <!-- This changes the style of the element directly when the mouse enters or leaves. -->
+        <!-- CREATION HELPER TOOL -->
+        <button id="toggle-tool-btn" class="toggle-button">Show Game Creation Helper</button>
+        <div id="creation-tool" style="display: none;">
+            <h2>Game Creation Helper</h2>
+            <p>Follow these steps to generate a new lesson game:</p>
+            <ol>
+                <li>Select the lesson you want to create from the dropdown menu.</li>
+                <li>Click <strong>Copy Filename</strong> and create a new empty HTML file with that exact name.</li>
+                <li>Click <strong>Copy Prompt</strong> to copy the complete instructions for the AI.</li>
+                <li>Go to the AI tool, paste the prompt, and add the specific lesson details at the end.</li>
+                <li>Copy the AI's generated code and paste it into your new file.</li>
+            </ol>
+            
+            <label for="lesson-selector">1. Select a Lesson:</label>
+            <select id="lesson-selector">
+                <option value="" disabled selected>-- Choose a lesson to begin --</option>
+            </select>
 
-        <h2 style="color: #2e86c1; margin-top: 40px;">Introduction</h2>
-        <ul style="list-style-type: none; padding: 0;">
-            <li><a href="hundreds-chart.html" style="display: block; padding: 15px; margin-bottom: 10px; background-color: #eaf2f8; color: #1b4f72; text-decoration: none; border-radius: 8px; font-weight: bold; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#d4e6f1'; this.style.transform='scale(1.02)';" onmouseout="this.style.backgroundColor='#eaf2f8'; this.style.transform='scale(1)';">Hundreds Chart</a></li>
-            <li><a href="about.html" style="display: block; padding: 15px; margin-bottom: 10px; background-color: #eaf2f8; color: #1b4f72; text-decoration: none; border-radius: 8px; font-weight: bold; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#d4e6f1'; this.style.transform='scale(1.02)';" onmouseout="this.style.backgroundColor='#eaf2f8'; this.style.transform='scale(1)';">About the Course</a></li>
-            <li><a href="faq.html" style="display: block; padding: 15px; margin-bottom: 10px; background-color: #eaf2f8; color: #1b4f72; text-decoration: none; border-radius: 8px; font-weight: bold; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#d4e6f1'; this.style.transform='scale(1.02)';" onmouseout="this.style.backgroundColor='#eaf2f8'; this.style.transform='scale(1)';">Frequently Asked Questions</a></li>
+            <div id="tool-outputs" style="display: none;">
+                <label for="filename-output">2. Required Filename:</label>
+                <div class="output-container">
+                    <input type="text" id="filename-output" readonly>
+                    <button id="copy-filename-btn">Copy Filename</button>
+                </div>
+
+                <label for="prompt-output">3. Master Prompt for AI:</label>
+                <textarea id="prompt-output" readonly></textarea>
+                <button id="copy-prompt-btn">Copy Prompt</button>
+
+                <p style="margin-top: 20px;"><strong>4. Go to the AI Tool:</strong></p>
+                <a href="https://aistudio.google.com/" target="_blank" class="ai-link">Open Google AI Studio</a>
+            </div>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid #ccc; margin: 40px 0;">
+
+        <!-- FULL LESSON LIST -->
+        <h2>Introduction</h2>
+        <ul>
+            <li><a href="hundreds-chart.html" class="unit-1-link">Hundreds Chart</a></li>
+            <li><a href="about.html" class="unit-1-link">About the Course</a></li>
+            <li><a href="faq.html" class="unit-1-link">Frequently Asked Questions</a></li>
         </ul>
 
-        <!-- Unit 1 -->
-        <h2 style="color: #2e86c1; margin-top: 40px;">Unit 1</h2>
-        <ul style="list-style-type: none; padding: 0;">
-            <li><a href="lesson-1.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 1: Numbers 1 to 3</a></li>
-            <li><a href="lesson-2.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 2: Ten Frames</a></li>
-            <li><a href="lesson-3.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 3: Numbers 4 to 5</a></li>
-            <li><a href="lesson-4.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 4: Order of Events</a></li>
-            <li><a href="lesson-5.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 5: Position Words</a></li>
-            <li><a href="lesson-6.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 6: Number Practice</a></li>
-            <li><a href="lesson-7.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 7: Numbers 6 to 7</a></li>
-            <li><a href="lesson-8.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 8: Matching: Part 1</a></li>
-            <li><a href="lesson-9.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 9: Numbers 8 to 9</a></li>
-            <li><a href="lesson-10.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 10: Ordinal Numbers: Part 1</a></li>
-            <li><a href="lesson-11.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 11: Numbers 10 to 11</a></li>
-            <li><a href="lesson-12.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 12: Ten Sticks: Part 1</a></li>
-            <li><a href="lesson-13.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 13: Plus and Equal Signs</a></li>
-            <li><a href="lesson-14.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 14: Ten Sticks: Part 2</a></li>
-            <li><a href="lesson-15.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 15: Counting to 30 Practice</a></li>
-            <li><a href="lesson-16.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 16: Addition</a></li>
-            <li><a href="lesson-17.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 17: Counting to 40 Practice</a></li>
-            <li><a href="lesson-18.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 18: Zero and Number 12</a></li>
-            <li><a href="lesson-19.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 19: Tally Marks up to 5</a></li>
-            <li><a href="lesson-20.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 20: Number Practice</a></li>
-            <li><a href="lesson-21.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 21: Counting to 60 Practice</a></li>
-            <li><a href="lesson-22.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 22: Number Practice</a></li>
-            <li><a href="lesson-23.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 23: Number Practice</a></li>
-            <li><a href="lesson-24.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 24: Number Practice</a></li>
-            <li><a href="lesson-25.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 25: The Teens: Part 1</a></li>
-            <li><a href="lesson-26.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 26: The Teens: Part 2</a></li>
-            <li><a href="lesson-27.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 27: Days of the Week</a></li>
-            <li><a href="lesson-28.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 28: Number Line Practice</a></li>
-            <li><a href="lesson-29.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 29: Ways to Make 5</a></li>
-            <li><a href="lesson-30.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 30: One More, One Less: Part 1</a></li>
-            <li><a href="lesson-31.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 31: Shapes</a></li>
-            <li><a href="lesson-32.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 32: Spatial Activities</a></li>
-            <li><a href="lesson-33.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 33: One More, One Less: Part 2</a></li>
-            <li><a href="lesson-34.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 34: Number Bonds: Part 1</a></li>
-            <li><a href="lesson-35.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 35: Making 4</a></li>
-            <li><a href="lesson-36.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 36: Addition Practice</a></li>
-            <li><a href="lesson-37.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 37: Ten Sticks: Part 3</a></li>
-            <li><a href="lesson-38.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #3498db; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 38: Longer and Shorter</a></li>
-            <li><a href="lesson-39-40.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #d6eaf8; color: #1a5276; text-decoration: none; border-left: 5px solid #2e86c1; font-weight: bold; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#aed6f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#d6eaf8'; this.style.transform='translateX(0px)';">Lessons 39–40: Unit Assessment</a></li>
+        <h2>Unit 1</h2>
+        <ul id="unit-1-list">
+            <!-- Lessons will be dynamically added here by JS -->
         </ul>
-
-        <!-- Unit 2 -->
-        <h2 style="color: #2e86c1; margin-top: 40px;">Unit 2</h2>
-        <ul style="list-style-type: none; padding: 0;">
-            <li><a href="lesson-41.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 41: Tally Marks to 10</a></li>
-            <li><a href="lesson-42.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 42: Numbers 20 to 40: Part 1</a></li>
-            <li><a href="lesson-43.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 43: Triangles</a></li>
-            <li><a href="lesson-44.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 44: Hundreds Chart</a></li>
-            <li><a href="lesson-45.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 45: Counting by 10s</a></li>
-            <li><a href="lesson-46.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 46: Addition Practice</a></li>
-            <li><a href="lesson-47.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 47: Spatial Activities</a></li>
-            <li><a href="lesson-48.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 48: Place Value: Part 1</a></li>
-            <li><a href="lesson-49.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 49: Ordinal Numbers: Part 2</a></li>
-            <li><a href="lesson-50.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 50: Sorting by Color and Shape</a></li>
-            <li><a href="lesson-51.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 51: Introduction to Clocks</a></li>
-            <li><a href="lesson-52.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 52: Time: Part 1</a></li>
-            <li><a href="lesson-53.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 53: Writing the Number 20</a></li>
-            <li><a href="lesson-54.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 54: Numbers 20 to 40: Part 2</a></li>
-            <li><a href="lesson-55.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 55: Time: Part 2</a></li>
-            <li><a href="lesson-56.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 56: Right and Left: Part 1</a></li>
-            <li><a href="lesson-57.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 57: Addition Stories: Part 1</a></li>
-            <li><a href="lesson-58.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 58: Pattern Blocks</a></li>
-            <li><a href="lesson-59.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 59: One More, One Less: Part 3</a></li>
-            <li><a href="lesson-60.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 60: Equal and Not Equal</a></li>
-            <li><a href="lesson-61.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 61: Time: Part 3</a></li>
-            <li><a href="lesson-62.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 62: Addition Stories: Part 2</a></li>
-            <li><a href="lesson-63.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 63: Ordinal Numbers: Part 3</a></li>
-            <li><a href="lesson-64.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 64: Number Bonds: Part 2</a></li>
-            <li><a href="lesson-65.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 65: Counting Backward: 10 to 1</a></li>
-            <li><a href="lesson-66.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 66: Patterns: Part 1</a></li>
-            <li><a href="lesson-67.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 67: Numbers 40 to 60: Part 1</a></li>
-            <li><a href="lesson-68.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 68: Place Value: Part 2</a></li>
-            <li><a href="lesson-69.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 69: Time: Part 4</a></li>
-            <li><a href="lesson-70.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 70: Patterns: Part 2</a></li>
-            <li><a href="lesson-71.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 71: Right and Left: Part 2</a></li>
-            <li><a href="lesson-72.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 72: The Calendar: Part 1</a></li>
-            <li><a href="lesson-73.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 73: Numbers 40 to 60: Part 2</a></li>
-            <li><a href="lesson-74.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 74: Reading and Creating Graphs</a></li>
-            <li><a href="lesson-75.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 75: Matching: Part 2</a></li>
-            <li><a href="lesson-76.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 76: Estimating</a></li>
-            <li><a href="lesson-77.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 77: Vertical Addition</a></li>
-            <li><a href="lesson-78.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #27ae60; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 78: Number Patterns</a></li>
-            <li><a href="lesson-79-80.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #d5f5e3; color: #196f3d; text-decoration: none; border-left: 5px solid #229954; font-weight: bold; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#abebc6'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#d5f5e3'; this.style.transform='translateX(0px)';">Lessons 79–80: Unit Assessment</a></li>
+        
+        <h2>Unit 2</h2>
+        <ul id="unit-2-list">
+            <!-- Lessons will be dynamically added here by JS -->
         </ul>
-
-        <!-- Unit 3 -->
-        <h2 style="color: #2e86c1; margin-top: 40px;">Unit 3</h2>
-        <ul style="list-style-type: none; padding: 0;">
-            <li><a href="lesson-81.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 81: Counting by 2s</a></li>
-            <li><a href="lesson-82.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 82: Comparing Numbers</a></li>
-            <li><a href="lesson-83.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 83: The Calendar: Part 2</a></li>
-            <li><a href="lesson-84.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 84: Heavier or Lighter</a></li>
-            <li><a href="lesson-85.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 85: Even and Odd</a></li>
-            <li><a href="lesson-86.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 86: Even and Odd Games</a></li>
-            <li><a href="lesson-87.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 87: Numbers 60 to 80: Part 1</a></li>
-            <li><a href="lesson-88.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 88: Doubles Addition to 4 + 4</a></li>
-            <li><a href="lesson-89.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 89: The Penny and the Nickel</a></li>
-            <li><a href="lesson-90.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 90: Counting Backward: 20 to 1</a></li>
-            <li><a href="lesson-91.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 91: Numbers 60 to 80: Part 2</a></li>
-            <li><a href="lesson-92.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 92: Counting by 5s</a></li>
-            <li><a href="lesson-93.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 93: Subtraction: Part 1</a></li>
-            <li><a href="lesson-94.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 94: Subtraction: Part 2</a></li>
-            <li><a href="lesson-95.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 95: The Dime</a></li>
-            <li><a href="lesson-96.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 96: Number Bonds: Part 3</a></li>
-            <li><a href="lesson-97.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 97: Ordinal Numbers: Part 4</a></li>
-            <li><a href="lesson-98.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 98: Dividing Items in Half</a></li>
-            <li><a href="lesson-99.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 99: Measuring with Centimeters</a></li>
-            <li><a href="lesson-100.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 100: Measuring with Inches</a></li>
-            <li><a href="lesson-101.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 101: Dividing Groups in Half</a></li>
-            <li><a href="lesson-102.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 102: Addition with Pennies</a></li>
-            <li><a href="lesson-103.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 103: Making 10: Part 1</a></li>
-            <li><a href="lesson-104.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 104: Subtraction Game</a></li>
-            <li><a href="lesson-105.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 105: Comparing Volumes of Liquid</a></li>
-            <li><a href="lesson-106.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 106: 2D and 3D Shapes</a></li>
-            <li><a href="lesson-107.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 107: Spheres</a></li>
-            <li><a href="lesson-108.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 108: Months of the Year</a></li>
-            <li><a href="lesson-109.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 109: Practice Counting from 80 to 100</a></li>
-            <li><a href="lesson-110.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 110: Seasons</a></li>
-            <li><a href="lesson-111.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 111: Making 10: Part 2</a></li>
-            <li><a href="lesson-112.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 112: Subtraction Stories</a></li>
-            <li><a href="lesson-113.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 113: Patterns: Part 3</a></li>
-            <li><a href="lesson-114.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 114: Symmetry</a></li>
-            <li><a href="lesson-115.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 115: Time: Part 5</a></li>
-            <li><a href="lesson-116.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 116: Paying for Items Using Cents</a></li>
-            <li><a href="lesson-117.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 117: The Calendar: Part 3</a></li>
-            <li><a href="lesson-118.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; color: #34495e; text-decoration: none; border-left: 5px solid #e67e22; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#ecf0f1'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#f9f9f9'; this.style.transform='translateX(0px)';">Lesson 118: One More, One Less: Part 4</a></li>
-            <li><a href="lesson-119-120.html" style="display: block; padding: 12px 15px; margin-bottom: 8px; background-color: #fdebd0; color: #af601a; text-decoration: none; border-left: 5px solid #d35400; font-weight: bold; transition: transform 0.2s, background-color 0.2s;" onmouseover="this.style.backgroundColor='#f5cba7'; this.style.transform='translateX(5px)';" onmouseout="this.style.backgroundColor='#fdebd0'; this.style.transform='translateX(0px)';">Lessons 119–120: Course Assessment</a></li>
+        
+        <h2>Unit 3</h2>
+        <ul id="unit-3-list">
+            <!-- Lessons will be dynamically added here by JS -->
         </ul>
-
+        
     </div>
 
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const masterPrompt = `You are an expert educational game developer specializing in creating engaging, self-contained, and touch-friendly web applications for young children (ages 4-7). Your primary focus is on converting static textbook lessons into interactive HTML games.
+
+**Your Core Task:**
+I will provide you with content from a single lesson of a children's textbook. Your task is to create a complete, self-contained, interactive educational mini-game in a single HTML file that teaches the lesson's concept and then tests it with a fun, replayable activity.
+
+**Non-Negotiable Technical & Design Requirements:**
+
+1.  **Single File Output:** The entire game, including all logic, styling, and assets, must be delivered in a single \`.html\` file.
+2.  **Inline Resources Only:**
+    *   **CSS:** All CSS must be contained within a \`<style>\` block in the \`<head>\` of the HTML document. Do not link to external stylesheets.
+    *   **JavaScript:** All JavaScript must be contained within a \`<script>\` block at the bottom of the \`<body>\`. Do not link to external scripts.
+    *   **No External Files:** You are strictly forbidden from using external images (\`.png\`, \`.jpg\`), audio files (\`.mp3\`, \`.wav\`), or fonts. The user will provide **nothing**.
+3.  **Asset Generation:**
+    *   **Graphics:** All visuals, icons, characters, and game elements must be created programmatically. Use embedded SVG (Scalable Vector Graphics) directly in the HTML or create shapes using pure CSS. This ensures graphics are crisp and self-contained.
+    *   **Audio:** All spoken words, numbers, sound effects, or instructions must be generated using the browser's **Web Speech API for Text-to-Speech (TTS)**. Create a simple, reusable function to handle speech synthesis.
+4.  **Kid-Proof & Touch-Friendly User Experience (UX):** This is the most critical requirement. The application must be robust against common issues children have with touch interfaces.
+    *   **Disable Zooming:** The page must not zoom when a child double-taps or uses a pinch gesture. Use the correct \`<meta name="viewport">\` tag: \`<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">\`.
+    *   **Disable Text Selection:** Text (like instructions) should not be selectable or highlightable when a child taps, double-taps, or presses and holds. Use the CSS property: \`user-select: none;\` on relevant elements and the body.
+    *   **Disable Tap Highlighting:** Remove the default gray/blue box that appears on mobile browsers when an element is tapped. Use the CSS property: \`-webkit-tap-highlight-color: transparent;\`.
+    *   **Prioritize Touch Events:** Use \`touchstart\` and \`touchend\` events for primary interactions instead of \`click\` where appropriate to create a more responsive feel and avoid issues with accidental double-taps.
+
+**Standard Game Structure:**
+
+Every game you create must follow this two-part structure:
+
+**Part 1: The Interactive Lesson**
+*   **Goal:** To teach the core concept of the lesson in a guided, interactive way.
+*   **Execution:**
+    *   Begin by clearly stating the lesson's goal in simple terms (e.g., "Let's learn about the numbers 1, 2, and 3!"). Use TTS to speak the instructions aloud.
+    *   Present the information from the textbook interactively. For example, if the lesson shows three apples, display three SVG apples and have the TTS say "three" when the child taps on them.
+    *   Use positive, encouraging audio and visual feedback.
+    *   Guide the user through the activity as described in the lesson.
+    *   End with a clear transition to the game, like a button that says "Ready to Play?".
+
+**Part 2: The Replayable Game**
+*   **Goal:** To test the student's understanding of the concept in a repeatable game loop.
+*   **Execution:**
+    *   Design a simple game that directly reinforces the lesson. (e.g., For "Numbers 1-3", the game could be "Pop the balloon with the number 2!").
+    *   The game should randomize or vary slightly on each playthrough to maintain interest.
+    *   Provide immediate and clear feedback. A happy chime sound (simulated via TTS saying "ding!" or similar) and green color for correct answers; a gentle "whoops" sound and red color for incorrect answers.
+    *   Keep score or track progress (e.g., "3 out of 5 correct!").
+    *   After the game round is over, display the score and a prominent "Play Again" button to restart the game portion.
+
+**Special Feature - Drawing Canvas:**
+*   **If the lesson involves writing, drawing, or tracing (letters, numbers, shapes), you must include an HTML \`<canvas>\` element.**
+*   Implement basic drawing functionality that allows a child to draw on the canvas with their finger (\`touchmove\` event).
+*   Include a "Clear" button to erase the canvas.
+*   If possible, overlay a faint guide of the shape/number they are supposed to trace.
+
+---
+**[START OF LESSON CONTENT]**
+
+*(Paste the lesson description, a transcription of the text, or an image here.)*
+
+**[END OF LESSON CONTENT]**`;
+        
+        const lessons = [
+            // Unit 1
+            { unit: 1, number: 1, title: 'Numbers 1 to 3' },
+            { unit: 1, number: 2, title: 'Ten Frames' },
+            { unit: 1, number: 3, title: 'Numbers 4 to 5' },
+            { unit: 1, number: 4, title: 'Order of Events' },
+            { unit: 1, number: 5, title: 'Position Words' },
+            { unit: 1, number: 6, title: 'Number Practice' },
+            { unit: 1, number: 7, title: 'Numbers 6 to 7' },
+            { unit: 1, number: 8, title: 'Matching: Part 1' },
+            { unit: 1, number: 9, title: 'Numbers 8 to 9' },
+            { unit: 1, number: 10, title: 'Ordinal Numbers: Part 1' },
+            { unit: 1, number: 11, title: 'Numbers 10 to 11' },
+            { unit: 1, number: 12, title: 'Ten Sticks: Part 1' },
+            { unit: 1, number: 13, title: 'Plus and Equal Signs' },
+            { unit: 1, number: 14, title: 'Ten Sticks: Part 2' },
+            { unit: 1, number: 15, title: 'Counting to 30 Practice' },
+            { unit: 1, number: 16, title: 'Addition' },
+            { unit: 1, number: 17, title: 'Counting to 40 Practice' },
+            { unit: 1, number: 18, title: 'Zero and Number 12' },
+            { unit: 1, number: 19, title: 'Tally Marks up to 5' },
+            { unit: 1, number: 20, title: 'Number Practice' },
+            { unit: 1, number: 21, title: 'Counting to 60 Practice' },
+            { unit: 1, number: 22, title: 'Number Practice' },
+            { unit: 1, number: 23, title: 'Number Practice' },
+            { unit: 1, number: 24, title: 'Number Practice' },
+            { unit: 1, number: 25, title: 'The Teens: Part 1' },
+            { unit: 1, number: 26, title: 'The Teens: Part 2' },
+            { unit: 1, number: 27, title: 'Days of the Week' },
+            { unit: 1, number: 28, title: 'Number Line Practice' },
+            { unit: 1, number: 29, title: 'Ways to Make 5' },
+            { unit: 1, number: 30, title: 'One More, One Less: Part 1' },
+            { unit: 1, number: 31, title: 'Shapes' },
+            { unit: 1, number: 32, title: 'Spatial Activities' },
+            { unit: 1, number: 33, title: 'One More, One Less: Part 2' },
+            { unit: 1, number: 34, title: 'Number Bonds: Part 1' },
+            { unit: 1, number: 35, title: 'Making 4' },
+            { unit: 1, number: 36, title: 'Addition Practice' },
+            { unit: 1, number: 37, title: 'Ten Sticks: Part 3' },
+            { unit: 1, number: 38, title: 'Longer and Shorter' },
+            { unit: 1, number: '39-40', title: 'Unit Assessment', assessment: true },
+            // Unit 2
+            { unit: 2, number: 41, title: 'Tally Marks to 10' },
+            { unit: 2, number: 42, title: 'Numbers 20 to 40: Part 1' },
+            { unit: 2, number: 43, title: 'Triangles' },
+            { unit: 2, number: 44, title: 'Hundreds Chart' },
+            { unit: 2, number: 45, title: 'Counting by 10s' },
+            { unit: 2, number: 46, title: 'Addition Practice' },
+            { unit: 2, number: 47, title: 'Spatial Activities' },
+            { unit: 2, number: 48, title: 'Place Value: Part 1' },
+            { unit: 2, number: 49, title: 'Ordinal Numbers: Part 2' },
+            { unit: 2, number: 50, title: 'Sorting by Color and Shape' },
+            { unit: 2, number: 51, title: 'Introduction to Clocks' },
+            { unit: 2, number: 52, title: 'Time: Part 1' },
+            { unit: 2, number: 53, title: 'Writing the Number 20' },
+            { unit: 2, number: 54, title: 'Numbers 20 to 40: Part 2' },
+            { unit: 2, number: 55, title: 'Time: Part 2' },
+            { unit: 2, number: 56, title: 'Right and Left: Part 1' },
+            { unit: 2, number: 57, title: 'Addition Stories: Part 1' },
+            { unit: 2, number: 58, title: 'Pattern Blocks' },
+            { unit: 2, number: 59, title: 'One More, One Less: Part 3' },
+            { unit: 2, number: 60, title: 'Equal and Not Equal' },
+            { unit: 2, number: 61, title: 'Time: Part 3' },
+            { unit: 2, number: 62, title: 'Addition Stories: Part 2' },
+            { unit: 2, number: 63, title: 'Ordinal Numbers: Part 3' },
+            { unit: 2, number: 64, title: 'Number Bonds: Part 2' },
+            { unit: 2, number: 65, title: 'Counting Backward: 10 to 1' },
+            { unit: 2, number: 66, title: 'Patterns: Part 1' },
+            { unit: 2, number: 67, title: 'Numbers 40 to 60: Part 1' },
+            { unit: 2, number: 68, title: 'Place Value: Part 2' },
+            { unit: 2, number: 69, title: 'Time: Part 4' },
+            { unit: 2, number: 70, title: 'Patterns: Part 2' },
+            { unit: 2, number: 71, title: 'Right and Left: Part 2' },
+            { unit: 2, number: 72, title: 'The Calendar: Part 1' },
+            { unit: 2, number: 73, title: 'Numbers 40 to 60: Part 2' },
+            { unit: 2, number: 74, title: 'Reading and Creating Graphs' },
+            { unit: 2, number: 75, title: 'Matching: Part 2' },
+            { unit: 2, number: 76, title: 'Estimating' },
+            { unit: 2, number: 77, title: 'Vertical Addition' },
+            { unit: 2, number: 78, title: 'Number Patterns' },
+            { unit: 2, number: '79-80', title: 'Unit Assessment', assessment: true },
+            // Unit 3
+            { unit: 3, number: 81, title: 'Counting by 2s' },
+            { unit: 3, number: 82, title: 'Comparing Numbers' },
+            { unit: 3, number: 83, title: 'The Calendar: Part 2' },
+            { unit: 3, number: 84, title: 'Heavier or Lighter' },
+            { unit: 3, number: 85, title: 'Even and Odd' },
+            { unit: 3, number: 86, title: 'Even and Odd Games' },
+            { unit: 3, number: 87, title: 'Numbers 60 to 80: Part 1' },
+            { unit: 3, number: 88, title: 'Doubles Addition to 4 + 4' },
+            { unit: 3, number: 89, title: 'The Penny and the Nickel' },
+            { unit: 3, number: 90, title: 'Counting Backward: 20 to 1' },
+            { unit: 3, number: 91, title: 'Numbers 60 to 80: Part 2' },
+            { unit: 3, number: 92, title: 'Counting by 5s' },
+            { unit: 3, number: 93, title: 'Subtraction: Part 1' },
+            { unit: 3, number: 94, title: 'Subtraction: Part 2' },
+            { unit: 3, number: 95, title: 'The Dime' },
+            { unit: 3, number: 96, title: 'Number Bonds: Part 3' },
+            { unit: 3, number: 97, title: 'Ordinal Numbers: Part 4' },
+            { unit: 3, number: 98, title: 'Dividing Items in Half' },
+            { unit: 3, number: 99, title: 'Measuring with Centimeters' },
+            { unit: 3, number: 100, title: 'Measuring with Inches' },
+            { unit: 3, number: 101, title: 'Dividing Groups in Half' },
+            { unit: 3, number: 102, title: 'Addition with Pennies' },
+            { unit: 3, number: 103, title: 'Making 10: Part 1' },
+            { unit: 3, number: 104, title: 'Subtraction Game' },
+            { unit: 3, number: 105, title: 'Comparing Volumes of Liquid' },
+            { unit: 3, number: 106, title: '2D and 3D Shapes' },
+            { unit: 3, number: 107, title: 'Spheres' },
+            { unit: 3, number: 108, title: 'Months of the Year' },
+            { unit: 3, number: 109, title: 'Practice Counting from 80 to 100' },
+            { unit: 3, number: 110, title: 'Seasons' },
+            { unit: 3, number: 111, title: 'Making 10: Part 2' },
+            { unit: 3, number: 112, title: 'Subtraction Stories' },
+            { unit: 3, number: 113, title: 'Patterns: Part 3' },
+            { unit: 3, number: 114, title: 'Symmetry' },
+            { unit: 3, number: 115, title: 'Time: Part 5' },
+            { unit: 3, number: 116, title: 'Paying for Items Using Cents' },
+            { unit: 3, number: 117, title: 'The Calendar: Part 3' },
+            { unit: 3, number: 118, title: 'One More, One Less: Part 4' },
+            { unit: 3, number: '119-120', title: 'Course Assessment', assessment: true }
+        ];
+
+        const lessonSelector = document.getElementById('lesson-selector');
+        const unit1List = document.getElementById('unit-1-list');
+        const unit2List = document.getElementById('unit-2-list');
+        const unit3List = document.getElementById('unit-3-list');
+        const toolOutputs = document.getElementById('tool-outputs');
+        const filenameOutput = document.getElementById('filename-output');
+        const promptOutput = document.getElementById('prompt-output');
+
+        // Populate dropdown and lesson lists
+        lessons.forEach(lesson => {
+            const isAssessment = lesson.assessment;
+            const lessonLabel = isAssessment ? `Lessons ${lesson.number}: ${lesson.title}` : `Lesson ${lesson.number}: ${lesson.title}`;
+            const filename = `lesson-${lesson.number}.html`;
+
+            // Populate Dropdown
+            const option = document.createElement('option');
+            option.value = filename;
+            option.textContent = `Unit ${lesson.unit} - ${lessonLabel}`;
+            option.dataset.lessonData = JSON.stringify(lesson);
+            lessonSelector.appendChild(option);
+            
+            // Populate Main Lists
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.href = filename;
+            a.textContent = lessonLabel;
+            a.classList.add(`unit-${lesson.unit}-link`);
+            if (isAssessment) {
+                a.classList.add('assessment-link', `unit-${lesson.unit}-assessment`);
+            }
+            li.appendChild(a);
+
+            if (lesson.unit === 1) unit1List.appendChild(li);
+            else if (lesson.unit === 2) unit2List.appendChild(li);
+            else if (lesson.unit === 3) unit3List.appendChild(li);
+        });
+
+        // Toggle tool visibility
+        const toggleBtn = document.getElementById('toggle-tool-btn');
+        const creationTool = document.getElementById('creation-tool');
+        toggleBtn.addEventListener('click', () => {
+            const isHidden = creationTool.style.display === 'none';
+            creationTool.style.display = isHidden ? 'block' : 'none';
+            toggleBtn.textContent = isHidden ? 'Hide Game Creation Helper' : 'Show Game Creation Helper';
+        });
+
+        // Handle lesson selection
+        lessonSelector.addEventListener('change', (e) => {
+            if (!e.target.value) {
+                toolOutputs.style.display = 'none';
+                return;
+            }
+            filenameOutput.value = e.target.value;
+            promptOutput.value = masterPrompt;
+            toolOutputs.style.display = 'block';
+        });
+
+        // Handle copy buttons
+        function setupCopyButton(buttonId, inputId, originalText) {
+            const button = document.getElementById(buttonId);
+            const input = document.getElementById(inputId);
+            button.addEventListener('click', () => {
+                navigator.clipboard.writeText(input.value).then(() => {
+                    button.textContent = 'Copied!';
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Failed to copy: ', err);
+                });
+            });
+        }
+
+        setupCopyButton('copy-filename-btn', 'filename-output', 'Copy Filename');
+        setupCopyButton('copy-prompt-btn', 'prompt-output', 'Copy Prompt');
+    });
+    </script>
 </body>
 </html>
