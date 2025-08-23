@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lesson 1: Numbers 1 to 3</title>
+    <style>
+        :root {
+            --bg-color: #e0f7fa;
+            --primary-color: #00796b;
+            --secondary-color: #ffca28;
+            --text-color: #333;
+            --correct-color: #4caf50;
+            --incorrect-color: #f44336;
+            --canvas-border: #b2dfdb;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 900px;
+            height: 100%;
+            max-height: 600px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+        }
+
+        p, .instruction {
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            color: #555;
+            max-width: 90%;
+            margin: 10px 0 20px 0;
+        }
+
+        .button {
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 50px;
+            padding: 15px 30px;
+            font-size: clamp(1.2rem, 4vw, 1.8rem);
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 20px;
+        }
+
+        .button:hover, .button:active {
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+        }
+
+        /* Lesson Specific Styles */
+        #lesson-numbers {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .number-box {
+            width: 100px;
+            height: 100px;
+            background-color: #fff;
+            border: 4px solid var(--primary-color);
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 60px;
+            font-weight: bold;
+            color: var(--primary-color);
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        .number-box:hover {
+            transform: scale(1.1);
+            background-color: var(--bg-color);
+        }
+
+        #tracing-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .canvas-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tracing-canvas {
+            border: 3px solid var(--canvas-border);
+            border-radius: 15px;
+            background-color: #f9f9f9;
+            cursor: crosshair;
+        }
+
+        .clear-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 5px 15px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        
+        .clear-button:hover {
+            opacity: 0.9;
+        }
+
+        /* Game Specific Styles */
+        #game-screen {
+            gap: 20px;
+        }
+        #score-display {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        #item-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            min-height: 150px;
+            flex-wrap: wrap;
+        }
+        
+        #item-display svg {
+            width: 80px;
+            height: 80px;
+            animation: bounceIn 0.5s;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.1); opacity: 0; }
+            60% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        #answer-options {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .answer-btn {
+            width: 80px;
+            height: 80px;
+            font-size: 50px;
+            transition: transform 0.2s, background-color 0.2s, border-color 0.2s;
+        }
+        
+        .answer-btn.correct {
+            background-color: var(--correct-color);
+            border-color: #388e3c;
+            color: white;
+            animation: correct-jiggle 0.5s;
+        }
+
+        .answer-btn.incorrect {
+            background-color: var(--incorrect-color);
+            border-color: #d32f2f;
+            color: white;
+            animation: incorrect-shake 0.5s;
+        }
+
+        @keyframes correct-jiggle {
+            0%, 100% { transform: scale(1.1) rotate(0deg); }
+            25% { transform: scale(1.1) rotate(-5deg); }
+            75% { transform: scale(1.1) rotate(5deg); }
+        }
+
+        @keyframes incorrect-shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+            20%, 40%, 60%, 80% { transform: translateX(10px); }
+        }
+
+
+        /* End Screen Styles */
+        #end-score {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-height: 500px), (max-width: 600px) {
+            h1 { margin: 5px 0; }
+            .instruction { margin: 5px 0 10px 0; }
+            #tracing-area { gap: 10px; }
+            .canvas-container { gap: 5px; }
+            .tracing-canvas { width: 80px; height: 80px; }
+            .clear-button { padding: 4px 10px; font-size: 0.8rem;}
+            .number-box, .answer-btn { width: 70px; height: 70px; font-size: 40px; }
+            #item-display svg { width: 60px; height: 60px; }
+            .button { padding: 10px 20px; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <!-- Part 1: Interactive Lesson Screen -->
+        <div id="lesson-screen" class="screen active">
+            <h1>Numbers 1 to 3</h1>
+            <p class="instruction">Tap each number to hear its name!</p>
+            <div id="lesson-numbers">
+                <div class="number-box" data-number="1">1</div>
+                <div class="number-box" data-number="2">2</div>
+                <div class="number-box" data-number="3">3</div>
+            </div>
+            
+            <p class="instruction">Now, try to trace the numbers!</p>
+            <div id="tracing-area">
+                <div class="canvas-container">
+                    <canvas class="tracing-canvas" id="canvas-1" width="100" height="100"></canvas>
+                    <button class="clear-button" data-canvas="1">Clear</button>
+                </div>
+                <div class="canvas-container">
+                    <canvas class="tracing-canvas" id="canvas-2" width="100" height="100"></canvas>
+                    <button class="clear-button" data-canvas="2">Clear</button>
+                </div>
+                <div class="canvas-container">
+                    <canvas class="tracing-canvas" id="canvas-3" width="100" height="100"></canvas>
+                    <button class="clear-button" data-canvas="3">Clear</button>
+                </div>
+            </div>
+
+            <button id="start-game-btn" class="button">Ready to Play?</button>
+        </div>
+
+        <!-- Part 2: Replayable Game Screen -->
+        <div id="game-screen" class="screen">
+            <div id="score-display">Score: 0 / 5</div>
+            <h2 id="question-text">How many items do you see?</h2>
+            <div id="item-display"></div>
+            <div id="answer-options">
+                <div class="number-box answer-btn" data-number="1">1</div>
+                <div class="number-box answer-btn" data-number="2">2</div>
+                <div class="number-box answer-btn" data-number="3">3</div>
+            </div>
+        </div>
+
+        <!-- End of Game Screen -->
+        <div id="end-screen" class="screen">
+            <h1>Great Job!</h1>
+            <p id="end-score">You got 0 out of 5 correct!</p>
+            <button id="play-again-btn" class="button">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Global Variables & DOM Elements ---
+            const screens = {
+                lesson: document.getElementById('lesson-screen'),
+                game: document.getElementById('game-screen'),
+                end: document.getElementById('end-screen')
+            };
+
+            // Lesson elements
+            const lessonNumbers = document.getElementById('lesson-numbers');
+            const startGameBtn = document.getElementById('start-game-btn');
+            const tracingArea = document.getElementById('tracing-area');
+            const canvases = {};
+
+            // Game elements
+            const scoreDisplay = document.getElementById('score-display');
+            const questionText = document.getElementById('question-text');
+            const itemDisplay = document.getElementById('item-display');
+            const answerOptions = document.getElementById('answer-options');
+
+            // End screen elements
+            const endScoreDisplay = document.getElementById('end-score');
+            const playAgainBtn = document.getElementById('play-again-btn');
+
+            // Game state
+            let score = 0;
+            const totalRounds = 5;
+            let currentRound = 0;
+            let correctAnswer = 0;
+            let isAnswering = false;
+
+            // --- Text-to-Speech (TTS) Function ---
+            const synth = window.speechSynthesis;
+            function speak(text, rate = 0.9, pitch = 1.2) {
+                if (synth.speaking) {
+                    synth.cancel();
+                }
+                if (text !== '') {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.rate = rate;
+                    utterance.pitch = pitch;
+                    synth.speak(utterance);
+                }
+            }
+            
+            // --- SVG Asset Generation ---
+            const svgItems = [
+                {
+                    name: "shovel",
+                    plural: "shovels",
+                    generator: () => `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><g fill="#8d6e63"><path d="M47 0 H 53 V 40 H 65 V 45 H 35 V 40 H 47 Z" /></g><path d="M50 42 C 30 42, 25 70, 25 80 Q 50 100, 75 80 C 75 70, 70 42, 50 42 Z" fill="#c0c0c0" stroke="#555" stroke-width="3" /></svg>`
+                },
+                {
+                    name: "birdhouse",
+                    plural: "birdhouses",
+                    generator: () => `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M15 40 H 85 V 90 H 15 Z" fill="#d2b48c" stroke="#8b4513" stroke-width="3"/><path d="M10 45 L 50 10 L 90 45 Z" fill="#a0522d" stroke="#8b4513" stroke-width="3"/><circle cx="50" cy="65" r="12" fill="#5c4033" /></svg>`
+                },
+                {
+                    name: "flower",
+                    plural: "flowers",
+                    generator: () => `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="15" fill="#ffeb3b" /><ellipse cx="50" cy="25" rx="15" ry="20" fill="#f44336" /><ellipse cx="75" cy="50" rx="20" ry="15" fill="#f44336" /><ellipse cx="50" cy="75" rx="15" ry="20" fill="#f44336" /><ellipse cx="25" cy="50" rx="20" ry="15" fill="#f44336" /><path d="M50 50 Q 50 80 50 95" stroke="#4caf50" stroke-width="5" stroke-linecap="round"/></svg>`
+                }
+            ];
+
+            // --- Screen Management ---
+            function showScreen(screenId) {
+                Object.values(screens).forEach(screen => screen.classList.remove('active'));
+                screens[screenId].classList.add('active');
+            }
+
+            // --- Canvas Drawing Logic ---
+            function setupCanvas(id, number) {
+                const canvas = document.getElementById(`canvas-${id}`);
+                const ctx = canvas.getContext('2d');
+                canvases[id] = { canvas, ctx };
+                let isDrawing = false;
+                let lastX = 0;
+                let lastY = 0;
+
+                function drawGuide() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.font = 'bold 80px Arial Rounded MT Bold';
+                    ctx.fillStyle = '#e0e0e0';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(number, canvas.width / 2, canvas.height / 2);
+                }
+
+                function draw(e) {
+                    if (!isDrawing) return;
+                    e.preventDefault();
+                    const rect = canvas.getBoundingClientRect();
+                    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+                    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+
+                    ctx.beginPath();
+                    ctx.moveTo(lastX, lastY);
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                    [lastX, lastY] = [x, y];
+                }
+
+                function startDrawing(e) {
+                    isDrawing = true;
+                    const rect = canvas.getBoundingClientRect();
+                    [lastX, lastY] = [
+                        (e.touches ? e.touches[0].clientX : e.clientX) - rect.left,
+                        (e.touches ? e.touches[0].clientY : e.clientY) - rect.top
+                    ];
+                }
+
+                function stopDrawing() {
+                    isDrawing = false;
+                }
+
+                ctx.strokeStyle = varToCss('--primary-color');
+                ctx.lineWidth = 6;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+
+                canvas.addEventListener('mousedown', startDrawing);
+                canvas.addEventListener('mousemove', draw);
+                canvas.addEventListener('mouseup', stopDrawing);
+                canvas.addEventListener('mouseout', stopDrawing);
+                canvas.addEventListener('touchstart', startDrawing, { passive: false });
+                canvas.addEventListener('touchmove', draw, { passive: false });
+                canvas.addEventListener('touchend', stopDrawing);
+
+                drawGuide();
+                return { drawGuide };
+            }
+            
+            function varToCss(varName) {
+                return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+            }
+
+            // --- Game Logic ---
+            function startGame() {
+                score = 0;
+                currentRound = 0;
+                showScreen('game');
+                nextRound();
+            }
+
+            function nextRound() {
+                if (currentRound >= totalRounds) {
+                    endGame();
+                    return;
+                }
+                isAnswering = false;
+                currentRound++;
+                updateScoreDisplay();
+                
+                document.querySelectorAll('.answer-btn').forEach(btn => btn.className = 'number-box answer-btn');
+
+                correctAnswer = Math.floor(Math.random() * 3) + 1;
+                const currentItem = svgItems[Math.floor(Math.random() * svgItems.length)];
+                
+                itemDisplay.innerHTML = '';
+                for (let i = 0; i < correctAnswer; i++) {
+                    itemDisplay.innerHTML += currentItem.generator();
+                }
+
+                const question = `How many ${correctAnswer > 1 ? currentItem.plural : currentItem.name} do you see?`;
+                questionText.textContent = question;
+                speak(question);
+            }
+
+            function handleAnswer(e) {
+                if (isAnswering) return;
+                const selectedButton = e.target.closest('.answer-btn');
+                if (!selectedButton) return;
+                
+                isAnswering = true;
+                const selectedNumber = parseInt(selectedButton.dataset.number);
+                
+                if (selectedNumber === correctAnswer) {
+                    selectedButton.classList.add('correct');
+                    score++;
+                    speak('Yay!', 1.2, 1.5);
+                } else {
+                    selectedButton.classList.add('incorrect');
+                    document.querySelector(`.answer-btn[data-number="${correctAnswer}"]`).classList.add('correct');
+                    speak('Oops! That was ' + correctAnswer, 0.9, 1.0);
+                }
+                
+                updateScoreDisplay();
+
+                setTimeout(nextRound, 2000);
+            }
+
+            function updateScoreDisplay() {
+                scoreDisplay.textContent = `Score: ${score} / ${totalRounds}`;
+            }
+
+            function endGame() {
+                endScoreDisplay.textContent = `You got ${score} out of ${totalRounds} correct!`;
+                showScreen('end');
+                speak(`Great job! You got ${score} out of ${totalRounds} correct!`);
+            }
+
+            // --- Initial Setup & Event Listeners ---
+            function init() {
+                // Lesson setup
+                lessonNumbers.addEventListener('click', (e) => {
+                    const numberBox = e.target.closest('.number-box');
+                    if (numberBox) {
+                        speak(numberBox.dataset.number);
+                    }
+                });
+
+                const canvasInstances = {
+                    1: setupCanvas(1, '1'),
+                    2: setupCanvas(2, '2'),
+                    3: setupCanvas(3, '3')
+                };
+
+                tracingArea.addEventListener('click', (e) => {
+                    const clearBtn = e.target.closest('.clear-button');
+                    if (clearBtn) {
+                        const canvasId = clearBtn.dataset.canvas;
+                        canvasInstances[canvasId].drawGuide();
+                    }
+                });
+
+                startGameBtn.addEventListener('click', () => {
+                    speak('Let\'s play a game!');
+                    startGame();
+                });
+
+                // Game setup
+                answerOptions.addEventListener('click', handleAnswer);
+                
+                // End screen setup
+                playAgainBtn.addEventListener('click', startGame);
+
+                // Initial greeting
+                setTimeout(() => {
+                    speak("Welcome! Let's learn about the numbers one, two, and three! Tap the numbers to hear them.");
+                }, 500);
+            }
+
+            init();
+        });
+    </script>
+</body>
+</html>
