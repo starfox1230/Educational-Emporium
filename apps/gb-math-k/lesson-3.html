@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lesson 3: Numbers 4 to 5</title>
+    <style>
+        :root {
+            --bg-color: #f0f8ff;
+            --main-blue: #4a90e2;
+            --main-green: #50e3c2;
+            --main-red: #e35050;
+            --text-color: #333;
+            --border-color: #ddd;
+            --yellow: #f5a623;
+            --orange: #f88c52;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: 'Arial Rounded MT Bold', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #game-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+        
+        h1 {
+            font-size: clamp(2rem, 8vw, 3rem);
+            color: var(--main-blue);
+        }
+
+        p {
+            font-size: clamp(1.2rem, 5vw, 1.8rem);
+            margin-bottom: 20px;
+        }
+        
+        .interactive-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+        }
+        
+        .interactive-area svg {
+            max-width: 200px;
+            max-height: 150px;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.2));
+        }
+
+        .number-choices {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .btn, .choice-btn {
+            padding: 15px 30px;
+            font-size: clamp(1.5rem, 6vw, 2.5rem);
+            font-weight: bold;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            background-color: var(--main-blue);
+            color: white;
+            box-shadow: 0 5px 0 #3a7ac2;
+            transition: all 0.1s ease-in-out;
+        }
+        
+        .btn:active, .choice-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #3a7ac2;
+        }
+        
+        .btn.start-game-btn {
+            background-color: var(--main-green);
+            box-shadow: 0 5px 0 #3e9e87;
+        }
+
+        .btn.start-game-btn:active {
+             box-shadow: 0 2px 0 #3e9e87;
+        }
+
+        /* Canvas Tracing */
+        #tracing-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        #tracing-canvas {
+            border: 3px dashed var(--border-color);
+            border-radius: 10px;
+            touch-action: none;
+            background-color: #fff;
+        }
+
+        .canvas-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Game Screen */
+        #game-screen .question {
+            font-size: clamp(1.5rem, 6vw, 2.5rem);
+        }
+
+        #item-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            width: 90%;
+            min-height: 150px;
+        }
+        
+        .game-item {
+            width: 50px;
+            height: 50px;
+        }
+
+        #game-answers {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .feedback {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .feedback.correct {
+            background-color: rgba(80, 227, 194, 0.7);
+        }
+        
+        .feedback.incorrect {
+            background-color: rgba(227, 80, 80, 0.7);
+        }
+
+        #score {
+            font-size: 1.5rem;
+            color: var(--main-blue);
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <!-- Lesson Screens -->
+        <div id="intro-screen" class="screen active">
+            <h1>Numbers 4 and 5</h1>
+            <p>Let's learn about the numbers four and five!</p>
+            <button id="start-lesson-btn" class="btn">Start Lesson</button>
+        </div>
+
+        <div id="dog-screen" class="screen">
+            <div class="interactive-area">
+                <!-- SVG Poodle -->
+                <svg id="poodle-svg" viewBox="0 0 100 80">
+                    <path d="M40,55 Q50,65 60,55 T80,55" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M30,30 C10,30 10,50 30,50 C50,50 50,30 30,30 Z" fill="#eee" stroke="#555" stroke-width="2"/>
+                    <circle cx="28" cy="38" r="2" fill="#333"/>
+                    <path d="M30,28 C20,15 40,15 30,28" fill="#eee" stroke="#555" stroke-width="2"/>
+                    <path d="M40,40 C50,30 65,30 70,40 C75,50 65,60 55,60 C45,60 30,50 40,40 Z" fill="#eee" stroke="#555" stroke-width="2"/>
+                    <line x1="45" y1="60" x2="45" y2="75" stroke="#555" stroke-width="2"/>
+                    <line x1="65" y1="60" x2="65" y2="75" stroke="#555" stroke-width="2"/>
+                    <line x1="48" y1="45" x2="48" y2="25" stroke="#555" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="68" y1="45" x2="68" y2="25" stroke="#555" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <p id="dog-question">How many legs does the dog have?</p>
+                <div id="dog-choices" class="number-choices">
+                    <button class="choice-btn" data-answer="3">3</button>
+                    <button class="choice-btn" data-answer="4">4</button>
+                    <button class="choice-btn" data-answer="5">5</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="fish-screen" class="screen">
+            <div class="interactive-area">
+                <!-- SVG Fish -->
+                 <svg id="fish-svg" viewBox="0 0 100 50">
+                    <path d="M 10,25 C 20,10 80,10 90,25 C 80,40 20,40 10,25" fill="#4a90e2" stroke="#333" stroke-width="1.5"/>
+                    <path d="M 90,25 L 98,18 L 98,32 Z" fill="#f88c52" stroke="#333" stroke-width="1.5"/>
+                    <circle cx="20" cy="23" r="3" fill="white"/>
+                    <circle cx="20" cy="23" r="1.5" fill="black"/>
+                    <path d="M 50,14 C 55,20 55,30 50,36" fill="none" stroke="#f5a623" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M 42,16 C 47,21 47,29 42,34" fill="none" stroke="#f5a623" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M 34,18 C 39,22 39,28 34,32" fill="none" stroke="#f5a623" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M 58,13 C 63,20 63,30 58,37" fill="none" stroke="#f5a623" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M 66,14 C 71,21 71,30 66,36" fill="none" stroke="#f5a623" stroke-width="3" stroke-linecap="round"/>
+                </svg>
+                <p id="fish-question">How many yellow stripes does the fish have?</p>
+                <div id="fish-choices" class="number-choices">
+                    <button class="choice-btn" data-answer="4">4</button>
+                    <button class="choice-btn" data-answer="5">5</button>
+                    <button class="choice-btn" data-answer="6">6</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="tracing-screen" class="screen">
+             <div id="tracing-section">
+                <p>Now, let's practice writing!</p>
+                <div class="canvas-controls">
+                    <button id="trace-4-btn" class="btn">Trace 4</button>
+                    <button id="trace-5-btn" class="btn">Trace 5</button>
+                    <button id="clear-canvas-btn" class="btn" style="background-color: var(--orange); box-shadow: 0 5px 0 #d86c32;">Clear</button>
+                </div>
+                <canvas id="tracing-canvas"></canvas>
+                <button id="to-game-btn" class="btn start-game-btn">Ready to Play?</button>
+            </div>
+        </div>
+        
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen">
+            <div id="score">Score: 0/0</div>
+            <p class="question" id="game-question">Is this the number 4?</p>
+            <div id="item-container"></div>
+            <div id="game-answers">
+                <!-- YES checkmark -->
+                <button class="choice-btn" data-answer="yes" style="background-color: var(--main-green); box-shadow: 0 5px 0 #3e9e87;">
+                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </button>
+                <!-- NO X -->
+                <button class="choice-btn" data-answer="no" style="background-color: var(--main-red); box-shadow: 0 5px 0 #c33a3a;">
+                     <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- End Game Screen -->
+        <div id="end-screen" class="screen">
+             <h1>Great Job!</h1>
+             <p id="final-score">Your score: 5/5</p>
+             <button id="play-again-btn" class="btn start-game-btn">Play Again</button>
+        </div>
+
+    </div>
+
+    <div id="feedback-flash" class="feedback"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const screens = document.querySelectorAll('.screen');
+            const introScreen = document.getElementById('intro-screen');
+            const dogScreen = document.getElementById('dog-screen');
+            const fishScreen = document.getElementById('fish-screen');
+            const tracingScreen = document.getElementById('tracing-screen');
+            const gameScreen = document.getElementById('game-screen');
+            const endScreen = document.getElementById('end-screen');
+
+            const startLessonBtn = document.getElementById('start-lesson-btn');
+            const toGameBtn = document.getElementById('to-game-btn');
+            const playAgainBtn = document.getElementById('play-again-btn');
+            const feedbackFlash = document.getElementById('feedback-flash');
+
+            // --- Speech Synthesis ---
+            let voices = [];
+            function loadVoices() {
+                voices = window.speechSynthesis.getVoices();
+            }
+            loadVoices();
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+
+            function speak(text) {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel(); // Cancel any previous speech
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'en-US';
+                    
+                    // Find a kid-friendly voice if available
+                    let selectedVoice = voices.find(voice => voice.name.includes('Google US English') || voice.name.includes('Samantha') || voice.name.includes('Zoe')) || voices[0];
+                    utterance.voice = selectedVoice;
+                    
+                    utterance.pitch = 1.2;
+                    utterance.rate = 0.9;
+                    window.speechSynthesis.speak(utterance);
+                }
+            }
+
+            // --- Navigation ---
+            function showScreen(screenId) {
+                screens.forEach(screen => {
+                    screen.classList.remove('active');
+                });
+                document.getElementById(screenId).classList.add('active');
+            }
+
+            startLessonBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                showScreen('dog-screen');
+                speak("Let's count! How many legs does the dog have?");
+            });
+            
+            toGameBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                showScreen('game-screen');
+                startGame();
+            });
+
+            playAgainBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                showScreen('game-screen');
+                startGame();
+            });
+
+            // --- Feedback ---
+            function showFeedback(correct) {
+                feedbackFlash.innerHTML = correct ? '✔️' : '❌';
+                feedbackFlash.className = `feedback ${correct ? 'correct' : 'incorrect'}`;
+                feedbackFlash.style.opacity = 1;
+                speak(correct ? 'Yes!' : 'Whoops!');
+                setTimeout(() => {
+                    feedbackFlash.style.opacity = 0;
+                }, 700);
+            }
+
+            // --- Lesson Logic ---
+            // Dog Counting
+            document.getElementById('dog-choices').addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const target = e.target.closest('.choice-btn');
+                if (!target) return;
+
+                const answer = target.dataset.answer;
+                if (answer === '4') {
+                    showFeedback(true);
+                    setTimeout(() => {
+                        showScreen('fish-screen');
+                        speak("That's right! Four legs. Now, how many yellow stripes does the fish have?");
+                    }, 1000);
+                } else {
+                    showFeedback(false);
+                    speak("Not quite. Try counting again.");
+                }
+            });
+
+            // Fish Counting
+            document.getElementById('fish-choices').addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const target = e.target.closest('.choice-btn');
+                if (!target) return;
+                
+                const answer = target.dataset.answer;
+                if (answer === '5') {
+                    showFeedback(true);
+                    setTimeout(() => {
+                        showScreen('tracing-screen');
+                        speak("Correct! Five stripes. Now, let's practice writing the numbers.");
+                        setupCanvas();
+                    }, 1000);
+                } else {
+                    showFeedback(false);
+                    speak("Let's try that one more time.");
+                }
+            });
+
+            // --- Canvas Tracing Logic ---
+            const canvas = document.getElementById('tracing-canvas');
+            const ctx = canvas.getContext('2d');
+            let drawing = false;
+            
+            function setupCanvas() {
+                const dpr = window.devicePixelRatio || 1;
+                const rect = canvas.getBoundingClientRect();
+                canvas.width = Math.min(window.innerWidth * 0.8, 300) * dpr;
+                canvas.height = Math.min(window.innerWidth * 0.8, 300) * dpr;
+                ctx.scale(dpr, dpr);
+                canvas.style.width = `${canvas.width / dpr}px`;
+                canvas.style.height = `${canvas.height / dpr}px`;
+                
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 10;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+            }
+            
+            function getPos(evt) {
+                const rect = canvas.getBoundingClientRect();
+                const touch = evt.touches ? evt.touches[0] : evt;
+                return {
+                    x: touch.clientX - rect.left,
+                    y: touch.clientY - rect.top
+                };
+            }
+
+            function startDrawing(e) {
+                drawing = true;
+                const pos = getPos(e);
+                ctx.beginPath();
+                ctx.moveTo(pos.x, pos.y);
+            }
+
+            function draw(e) {
+                if (!drawing) return;
+                e.preventDefault();
+                const pos = getPos(e);
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+            }
+
+            function stopDrawing() {
+                drawing = false;
+                ctx.closePath();
+            }
+
+            function clearCanvas() {
+                const dpr = window.devicePixelRatio || 1;
+                ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+            }
+
+            function drawGuide(number) {
+                clearCanvas();
+                const dpr = window.devicePixelRatio || 1;
+                const width = canvas.width / dpr;
+                const height = canvas.height / dpr;
+                ctx.save();
+                ctx.fillStyle = '#e0e0e0';
+                ctx.font = `bold ${height * 0.8}px 'Arial Rounded MT Bold', sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                // Visual substitution for '1' is not needed here, but the logic would be:
+                // const visualNumber = String(number).replace(/1/g, 'l');
+                // ctx.fillText(visualNumber, width / 2, height / 2);
+                
+                ctx.fillText(number, width / 2, height / 1.8);
+                ctx.restore();
+            }
+            
+            document.getElementById('trace-4-btn').addEventListener('touchstart', (e) => { e.preventDefault(); drawGuide(4); speak("Trace the number four."); });
+            document.getElementById('trace-5-btn').addEventListener('touchstart', (e) => { e.preventDefault(); drawGuide(5); speak("Trace the number five."); });
+            document.getElementById('clear-canvas-btn').addEventListener('touchstart', (e) => { e.preventDefault(); clearCanvas(); });
+
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseleave', stopDrawing);
+            canvas.addEventListener('touchstart', startDrawing);
+            canvas.addEventListener('touchmove', draw);
+            canvas.addEventListener('touchend', stopDrawing);
+
+            // --- Game Logic ---
+            const MAX_ROUNDS = 5;
+            let score, currentRound, currentQuestion;
+
+            const itemContainer = document.getElementById('item-container');
+            const gameQuestionEl = document.getElementById('game-question');
+            const scoreEl = document.getElementById('score');
+
+            function createLeafSVG() {
+                const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                svg.setAttribute('viewBox', '0 0 50 50');
+                svg.classList.add('game-item');
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute('d', 'M25,2 C20,15 10,20 25,48 C40,20 30,15 25,2 Z');
+                const colors = ['#84a98c', '#52796f', '#354f52'];
+                path.setAttribute('fill', colors[Math.floor(Math.random() * colors.length)]);
+                svg.appendChild(path);
+                return svg;
+            }
+
+            function startGame() {
+                score = 0;
+                currentRound = 0;
+                nextRound();
+            }
+
+            function nextRound() {
+                if (currentRound >= MAX_ROUNDS) {
+                    endGame();
+                    return;
+                }
+                currentRound++;
+                updateScore();
+
+                // Generate question
+                const targetNumber = Math.random() < 0.5 ? 4 : 5;
+                let itemCount = Math.floor(Math.random() * 5) + 2; // 2 to 6 items
+                if (Math.random() < 0.5) { // 50% chance to show the correct number of items
+                    itemCount = targetNumber;
+                }
+
+                currentQuestion = {
+                    target: targetNumber,
+                    count: itemCount,
+                    correctAnswer: itemCount === targetNumber ? 'yes' : 'no'
+                };
+                
+                gameQuestionEl.textContent = `Do you see ${targetNumber} leaves?`;
+                speak(`Do you see ${targetNumber} leaves?`);
+                
+                // Display items
+                itemContainer.innerHTML = '';
+                for (let i = 0; i < itemCount; i++) {
+                    itemContainer.appendChild(createLeafSVG());
+                }
+            }
+            
+            document.getElementById('game-answers').addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const target = e.target.closest('.choice-btn');
+                if (!target) return;
+                
+                const userAnswer = target.dataset.answer;
+                const isCorrect = userAnswer === currentQuestion.correctAnswer;
+
+                if (isCorrect) {
+                    score++;
+                }
+                
+                showFeedback(isCorrect);
+                updateScore();
+
+                setTimeout(nextRound, 1200);
+            });
+
+            function updateScore() {
+                scoreEl.textContent = `Score: ${score}/${currentRound}`;
+            }
+
+            function endGame() {
+                document.getElementById('final-score').textContent = `Your final score: ${score}/${MAX_ROUNDS}`;
+                showScreen('end-screen');
+                speak(`Great job! You scored ${score} out of ${MAX_ROUNDS}.`);
+            }
+
+            // Initial load
+            speak("Welcome! Let's learn about the numbers four and five.");
+        });
+    </script>
+</body>
+</html>
