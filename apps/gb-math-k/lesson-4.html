@@ -220,6 +220,7 @@
             background: #eef6ff;
             border-radius: 15px;
             padding: 10px;
+            position: relative; /* <<< CRITICAL FIX: This line was missing */
         }
         
         .draggable {
@@ -515,7 +516,7 @@
             document.getElementById('keypad').innerHTML = '';
         }
 
-        // --- Sequencing Game (FULLY REVISED & WORKING) ---
+        // --- Sequencing Game (REVISED & WORKING) ---
         let currentSequence, droppedCount, draggedItem = null, initialX, initialY;
         function startSequencingGame() {
             resetSequencingGame();
@@ -540,14 +541,14 @@
                 const target = e.target.closest('.draggable:not(.correct)');
                 if (!target) return;
                 draggedItem = target;
-                draggedItem.style.transition = 'none'; // Prevent transition while dragging
+                draggedItem.style.transition = 'none';
                 const touch = e.touches ? e.touches[0] : e;
                 const rect = draggedItem.getBoundingClientRect();
                 initialX = touch.clientX - rect.left;
                 initialY = touch.clientY - rect.top;
                 draggedItem.classList.add('dragging');
-                draggedItem.style.left = `${touch.clientX - initialX}px`;
-                draggedItem.style.top = `${touch.clientY - initialY}px`;
+                draggedItem.style.left = `${rect.left}px`;
+                draggedItem.style.top = `${rect.top}px`;
             }
             function dragMove(e) {
                 if (!draggedItem) return;
@@ -603,7 +604,7 @@
             }
         }
 
-        // --- Count & Trace Game (REVISED & WORKING) ---
+        // --- Count & Trace Game (WORKING) ---
         let currentCountable, currentCount;
         const canvas = document.getElementById('trace-canvas');
         const ctx = canvas.getContext('2d');
