@@ -206,6 +206,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            z-index: 1000;
         }
         
         .speaker-icon {
@@ -310,6 +311,7 @@
             bottom: 10px;
             left: 50%;
             transform: translateX(-50%);
+            z-index: 10;
         }
         
         /* Feedback */
@@ -476,12 +478,12 @@
                 <g id="bird-4" class="house-item" data-id="bird"><path d="M280 130 C 285 120, 295 120, 300 130 L 290 145 Z" fill="#c62828"/><circle cx="296" cy="128" r="2" fill="black"/></g>
                 <g id="bird-5" class="house-item" data-id="bird"><path d="M200 80 C 205 70, 215 70, 220 80 L 210 95 Z" fill="#c62828"/><circle cx="216" cy="78" r="2" fill="black"/></g>
                 
-                <g id="basket-1" class="house-item" data-id="basket"><rect x="90" y="225" width="25" height="15" fill="#8d6e63"/><circle cx="95" cy="235" r="5" fill="#f48fb1"/><circle cx="103" cy="232" r="6" fill="#ba68c8"/><circle cx="110" cy="235" r="5" fill="#81c784"/></g>
-                <g id="basket-2" class="house-item" data-id="basket"><rect x="285" y="225" width="25" height="15" fill="#8d6e63"/><circle cx="290" cy="235" r="5" fill="#f48fb1"/><circle cx="298" cy="232" r="6" fill="#ba68c8"/><circle cx="305" cy="235" r="5" fill="#81c784"/></g>
+                <g id="basket-1" class="house-item" data-id="basket"><rect x="90" y="225" width="25" height="20" fill="transparent"/><rect x="90" y="225" width="25" height="15" fill="#8d6e63"/><circle cx="95" cy="235" r="5" fill="#f48fb1"/><circle cx="103" cy="232" r="6" fill="#ba68c8"/><circle cx="110" cy="235" r="5" fill="#81c784"/></g>
+                <g id="basket-2" class="house-item" data-id="basket"><rect x="285" y="225" width="25" height="20" fill="transparent"/><rect x="285" y="225" width="25" height="15" fill="#8d6e63"/><circle cx="290" cy="235" r="5" fill="#f48fb1"/><circle cx="298" cy="232" r="6" fill="#ba68c8"/><circle cx="305" cy="235" r="5" fill="#81c784"/></g>
                 
-                <g id="box-1" class="house-item" data-id="box"><rect x="115" y="290" width="50" height="15" fill="#a1887f"/><rect x="120" y="285" width="5" height="10" fill="green"/><rect x="135" y="282" width="5" height="13" fill="green"/><rect x="150" y="285" width="5" height="10" fill="green"/></g>
-                <g id="box-2" class="house-item" data-id="box"><rect x="235" y="290" width="50" height="15" fill="#a1887f"/><rect x="240" y="285" width="5" height="10" fill="green"/><rect x="255" y="282" width="5" height="13" fill="green"/><rect x="270" y="285" width="5" height="10" fill="green"/></g>
-                <g id="box-3" class="house-item" data-id="box"><rect x="105" y="350" width="50" height="15" fill="#a1887f"/><rect x="110" y="345" width="5" height="10" fill="green"/><rect x="125" y="342" width="5" height="13" fill="green"/><rect x="140" y="345" width="5" height="10" fill="green"/></g>
+                <g id="box-1" class="house-item" data-id="box"><rect x="115" y="282" width="50" height="23" fill="transparent"/><rect x="115" y="290" width="50" height="15" fill="#a1887f"/><rect x="120" y="285" width="5" height="10" fill="green"/><rect x="135" y="282" width="5" height="13" fill="green"/><rect x="150" y="285" width="5" height="10" fill="green"/></g>
+                <g id="box-2" class="house-item" data-id="box"><rect x="235" y="282" width="50" height="23" fill="transparent"/><rect x="235" y="290" width="50" height="15" fill="#a1887f"/><rect x="240" y="285" width="5" height="10" fill="green"/><rect x="255" y="282" width="5" height="13" fill="green"/><rect x="270" y="285" width="5" height="10" fill="green"/></g>
+                <g id="box-3" class="house-item" data-id="box"><rect x="105" y="342" width="50" height="23" fill="transparent"/><rect x="105" y="350" width="50" height="15" fill="#a1887f"/><rect x="110" y="345" width="5" height="10" fill="green"/><rect x="125" y="342" width="5" height="13" fill="green"/><rect x="140" y="345" width="5" height="10" fill="green"/></g>
             </svg>
             `;
         }
@@ -660,8 +662,6 @@
         function resetGame() {
             activityArea.innerHTML = '';
             nextGameBtn.style.display = 'none';
-             const existingBtn = document.getElementById('check-answer-btn');
-            if (existingBtn) existingBtn.remove();
         }
 
         function setupNewRound() {
@@ -689,7 +689,6 @@
             activityArea.insertAdjacentHTML('beforeend', `<div id="carrot-source">${createCarrotSVG()}</div>`);
             
             const carrotSource = document.getElementById('carrot-source');
-            const slots = document.querySelectorAll('.ten-frame-slot');
 
             carrotSource.addEventListener('mousedown', startDrag);
             carrotSource.addEventListener('touchstart', startDrag);
@@ -721,7 +720,6 @@
                     document.removeEventListener('touchmove', move);
                     document.removeEventListener('touchend', end);
                     
-                    let dropped = false;
                     const dropTarget = document.elementFromPoint(
                         (e.changedTouches ? e.changedTouches[0] : e).clientX,
                         (e.changedTouches ? e.changedTouches[0] : e).clientY
@@ -730,7 +728,6 @@
                     if(dropTarget && dropTarget.classList.contains('ten-frame-slot') && !dropTarget.innerHTML) {
                         dropTarget.innerHTML = createCarrotSVG();
                         currentCarrots++;
-                        dropped = true;
                         if (currentCarrots === 3) {
                             speak("Yay! Three carrots! The rabbit will be happy.");
                             showFeedback(true, () => nextGameBtn.style.display = 'block');
@@ -769,10 +766,10 @@
                 item.style.width = `${size}px`;
                 item.style.height = `${size}px`;
                 item.style.left = `${Math.random() * (container.clientWidth - size)}px`;
-                item.style.top = `${Math.random() * (container.clientHeight - size - 60)}px`;
+                item.style.top = `${Math.random() * (container.clientHeight - size - 80)}px`; // Adjusted top to avoid button
                 
                 item.addEventListener('click', () => {
-                    const isSelected = item.classList.toggle('selected');
+                    item.classList.toggle('selected');
                     const selectedCount = container.querySelectorAll('.selected').length;
 
                     if (selectedCount > 3) {
@@ -789,7 +786,7 @@
             checkBtn.className = 'btn';
             checkBtn.textContent = 'Check';
             checkBtn.style.display = 'none';
-            gameScreen.appendChild(checkBtn);
+            activityArea.appendChild(checkBtn); // FIX: Appended to activityArea
             
             checkBtn.addEventListener('click', () => {
                 const selectedCount = container.querySelectorAll('.selected').length;
