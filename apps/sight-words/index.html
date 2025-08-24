@@ -1198,7 +1198,7 @@
           currentStreak = 0;
         }
         targetButtonElement.classList.add('animate__animated', isCorrect ? 'animate__pulse' : 'animate__shakeX');
-        const isMiniGameDue = isCorrect && miniGamesEnabled && score > 0 && score % 10 === 0;
+        const isMiniGameDue = isCorrect && miniGamesEnabled && score > 0 && score % 5 === 0;
         targetButtonElement.addEventListener('animationend', () => {
             targetButtonElement.classList.remove('animate__animated', 'animate__pulse', 'animate__shakeX');
             if (targetButtonElement.classList.contains('sound-btn')) { targetButtonElement.classList.remove('sound-btn-selected'); }
