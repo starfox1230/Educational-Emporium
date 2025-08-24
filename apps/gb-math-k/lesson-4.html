@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lesson 4: Order of Events</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        /* --- Basic Setup & Kid-Proofing --- */
+        :root {
+            --bg-color: #f0f8ff;
+            --primary-color: #4a90e2;
+            --secondary-color: #50e3c2;
+            --accent-color: #f5a623;
+            --text-color: #333;
+            --correct-color: #7ed321;
+            --incorrect-color: #d0021b;
+            --font-family: 'Arial', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        body {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        /* --- Game Container & Screen Management --- */
+        #game-container {
+            width: 100%;
+            max-width: 800px;
+            height: 100%;
+            max-height: 600px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            max-width: 90%;
+        }
+
+        /* --- Buttons & UI Elements --- */
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            background-color: #3a80d2;
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color);
+        }
+        .btn-secondary:hover {
+            background-color: #40c3a2;
+        }
+        
+        .btn-accent {
+            background-color: var(--accent-color);
+        }
+        .btn-accent:hover {
+            background-color: #e59613;
+        }
+
+        .speaker-icon {
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 1.2rem;
+            padding: 10px 15px;
+        }
+
+        /* --- Welcome & Phone Number Screen --- */
+        #phone-input-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        #phone-input {
+            padding: 15px;
+            font-size: 1.5rem;
+            border: 2px solid var(--primary-color);
+            border-radius: 10px;
+            text-align: center;
+            width: 300px;
+        }
+        
+        /* --- Sequencing Game --- */
+        #sequencing-game-screen .game-area {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+            height: 40%;
+            margin-bottom: 20px;
+        }
+        
+        .drop-zone {
+            width: 150px;
+            height: 150px;
+            border: 3px dashed var(--secondary-color);
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .drop-zone::before {
+            content: attr(data-label);
+            position: absolute;
+            top: -30px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        #draggable-container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            height: 35%;
+            background: #eef6ff;
+            border-radius: 15px;
+            padding: 10px;
+        }
+        
+        .draggable {
+            width: 130px;
+            height: 130px;
+            cursor: grab;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.2s;
+            touch-action: none;
+            position: relative;
+        }
+        
+        .draggable.dragging {
+            opacity: 0.5;
+            transform: scale(1.1);
+            z-index: 1000;
+        }
+        .draggable.correct {
+            border: 4px solid var(--correct-color);
+            border-radius: 15px;
+            cursor: default;
+        }
+
+        /* --- Count & Trace Game --- */
+        #count-trace-game-screen .game-area {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #item-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 250px;
+            align-items: center;
+        }
+
+        .countable-item {
+            width: 60px;
+            height: 60px;
+        }
+
+        #tracing-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #trace-canvas {
+            border: 2px solid var(--primary-color);
+            border-radius: 10px;
+            background-color: #fdfdfd;
+            touch-action: none;
+        }
+
+        /* --- Phone Number Practice --- */
+        #phone-display {
+            font-size: 2rem;
+            letter-spacing: 5px;
+            margin-bottom: 20px;
+            background: #eef6ff;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: monospace;
+        }
+        
+        #phone-display .typed {
+            color: var(--correct-color);
+        }
+        
+        #keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 300px;
+        }
+
+        .keypad-btn {
+            width: 80px;
+            height: 60px;
+            font-size: 2rem;
+        }
+        
+        /* --- Feedback Styles --- */
+        .feedback {
+            font-size: 1.5rem;
+            font-weight: bold;
+            height: 40px;
+            color: var(--primary-color);
+            transition: opacity 0.3s;
+        }
+
+        @keyframes correct-pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .correct-animation {
+            animation: correct-pop 0.5s ease-out;
+        }
+
+        @keyframes incorrect-shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .incorrect-animation {
+            animation: incorrect-shake 0.3s ease-in-out;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <!-- Screen 1: Welcome & Phone Number Entry -->
+        <div id="welcome-screen" class="screen active">
+            <h1>Order of Events</h1>
+            <p>Hello! Today we'll learn that things happen in a special order. First, let's learn a very important number.</p>
+            <div id="phone-input-container">
+                <label for="phone-input" style="font-size: 1.2rem;">Grown-ups, please enter your phone number:</label>
+                <input type="tel" id="phone-input" placeholder="e.g. 555-1234">
+            </div>
+            <button class="btn" id="start-btn">Let's Start!</button>
+        </div>
+
+        <!-- Screen 2: Main Menu -->
+        <div id="menu-screen" class="screen">
+            <h1>What should we play?</h1>
+            <button class="btn" id="play-sequencing-btn">Order of Events Game</button>
+            <button class="btn btn-secondary" id="play-count-trace-btn">Count & Trace Game</button>
+            <button class="btn btn-accent" id="play-phone-btn">Practice My Number</button>
+        </div>
+
+        <!-- Screen 3: Sequencing Game -->
+        <div id="sequencing-game-screen" class="screen">
+            <button class="btn back-button" onclick="showScreen('menu-screen')">Back</button>
+            <div class="feedback" id="sequencing-feedback"></div>
+            <div class="game-area">
+                <div class="drop-zone" data-label="1" data-order="1"></div>
+                <div class="drop-zone" data-label="2" data-order="2"></div>
+                <div class="drop-zone" data-label="3" data-order="3"></div>
+            </div>
+            <div id="draggable-container"></div>
+        </div>
+        
+        <!-- Screen 4: Count & Trace Game -->
+        <div id="count-trace-game-screen" class="screen">
+            <button class="btn back-button" onclick="showScreen('menu-screen')">Back</button>
+            <div class="feedback" id="count-trace-feedback"></div>
+            <div class="game-area">
+                <div id="item-container"></div>
+                <div id="tracing-area">
+                    <canvas id="trace-canvas" width="200" height="200"></canvas>
+                    <button id="clear-canvas-btn" class="btn btn-secondary">Clear</button>
+                </div>
+            </div>
+            <button class="btn" id="next-trace-btn">Next</button>
+        </div>
+
+        <!-- Screen 5: Phone Number Practice -->
+        <div id="phone-practice-screen" class="screen">
+            <button class="btn back-button" onclick="showScreen('menu-screen')">Back</button>
+            <div class="feedback" id="phone-feedback"></div>
+            <div id="phone-display"></div>
+            <div id="keypad"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- Core Game Logic & Setup ---
+        const screens = document.querySelectorAll('.screen');
+        let synth;
+        let parentPhoneNumber = '';
+
+        // SVG Asset Generation
+        const SVGs = {
+            speaker: `<svg viewBox="0 0 100 100" fill="currentColor"><path d="M10 35 H30 L50 15 V85 L30 65 H10 Z" /><path d="M55 40 A15 15 0 0 1 55 60" stroke="currentColor" stroke-width="5" fill="none" /><path d="M65 30 A25 25 0 0 1 65 70" stroke="currentColor" stroke-width="5" fill="none" /></svg>`,
+            snowman: [
+                `<svg viewBox="0 0 100 100"><circle cx="50" cy="75" r="25" fill="#e0f7fa"/></svg>`,
+                `<svg viewBox="0 0 100 100"><circle cx="50" cy="75" r="25" fill="#e0f7fa"/><circle cx="50" cy="35" r="18" fill="#e0f7fa"/></svg>`,
+                `<svg viewBox="0 0 100 100"><path d="M40 50 l-20 -10 M60 50 l20 -10" stroke="#8d6e63" stroke-width="4" stroke-linecap="round"/><circle cx="50" cy="80" r="20" fill="#e0f7fa"/><circle cx="50" cy="50" r="15" fill="#e0f7fa"/><circle cx="50" cy="25" r="10" fill="#e0f7fa"/><rect x="40" y="10" width="20" height="5" fill="#212121"/><rect x="45" y="5" width="10" height="10" fill="#212121"/><circle cx="46" cy="25" r="1" fill="black"/><circle cx="54" cy="25" r="1" fill="black"/><path d="M47 30 q3 3 6 0" stroke="orange" stroke-width="2" fill="none"/><path d="M35 45 Q50 50 65 45" stroke="#f44336" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`
+            ],
+            plant: [
+                `<svg viewBox="0 0 100 100"><path d="M25 85 h50 v-15 h-50 z" fill="#c8a47e"/><path d="M30 70 h40 v-5 h-40 z" fill="#b38a5f"/><path d="M50 70 v-10 q -10 0 -10 -10" stroke="#8bc34a" stroke-width="4" fill="none" stroke-linecap="round"/></svg>`,
+                `<svg viewBox="0 0 100 100"><path d="M25 85 h50 v-15 h-50 z" fill="#c8a47e"/><path d="M30 70 h40 v-5 h-40 z" fill="#b38a5f"/><path d="M50 70 v-25" stroke="#8bc34a" stroke-width="4" fill="none"/><path d="M50 55 q -15 0 -15 -15" stroke="#8bc34a" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M50 55 q 15 0 15 -15" stroke="#8bc34a" stroke-width="4" fill="none" stroke-linecap="round"/></svg>`,
+                `<svg viewBox="0 0 100 100"><path d="M25 85 h50 v-15 h-50 z" fill="#c8a47e"/><path d="M30 70 h40 v-5 h-40 z" fill="#b38a5f"/><path d="M50 70 v-30" stroke="#8bc34a" stroke-width="4" fill="none"/><path d="M50 60 q -15 0 -15 -15" stroke="#8bc34a" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M50 60 q 15 0 15 -15" stroke="#8bc34a" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="50" cy="30" r="5" fill="yellow"/><circle cx="50" cy="30" r="10" fill="pink" opacity="0.8"/><circle cx="58" cy="38" r="10" fill="pink" opacity="0.8"/><circle cx="42" cy="38" r="10" fill="pink" opacity="0.8"/><circle cx="60" cy="25" r="10" fill="pink" opacity="0.8"/><circle cx="40" cy="25" r="10" fill="pink" opacity="0.8"/></svg>`
+            ],
+            chicken: [
+                `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="50" rx="25" ry="30" fill="#fffde7" stroke="#f5f5f5" stroke-width="2"/></svg>`,
+                `<svg viewBox="0 0 100 100"><path d="M25 50 a25 30 0 1 0 50 0 v-10 l-10 5 l10 5 l-10 -5 l-5 5 l5 -5 l-10 5 Z" fill="#fffde7" stroke="#f5f5f5" stroke-width="2"/><circle cx="45" cy="40" r="3" fill="black"/><path d="M50 42 q5 2 10 0" stroke="orange" fill="orange" stroke-width="2"/></svg>`,
+                `<svg viewBox="0 0 100 100"><circle cx="50" cy="60" r="25" fill="#ffeb3b"/><circle cx="65" cy="35" r="15" fill="#ffeb3b"/><circle cx="70" cy="32" r="3" fill="black"/><path d="M75 38 q5 2 10 0" stroke="orange" fill="orange" stroke-width="2"/></svg>`
+            ],
+            acorn: `<svg viewBox="0 0 100 100"><path d="M40 40 C 40 20, 60 20, 60 40 V 50 H 40 Z" fill="#8d6e63"/><path d="M50 35 L 50 25" stroke="#6d4c41" stroke-width="4"/><path d="M40 50 C 40 70, 60 70, 60 50 Q 50 80, 40 50" fill="#a1887f"/></svg>`,
+            beetle: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="50" rx="30" ry="20" fill="#616161"/><circle cx="50" cy="25" r="10" fill="#424242"/><circle cx="45" cy="22" r="2" fill="white"/><circle cx="55" cy="22" r="2" fill="white"/><path d="M50 35 V 70" stroke="#212121" stroke-width="2"/><path d="M40 40 L 20 30 M40 50 L 20 50 M40 60 L 20 70 M60 40 L 80 30 M60 50 L 80 50 M60 60 L 80 70" stroke="#424242" stroke-width="3" stroke-linecap="round"/></svg>`
+        };
+
+        const sequences = [
+            { name: 'snowman', images: SVGs.snowman, instruction: 'Let\'s build a snowman! Put the pictures in order.' },
+            { name: 'plant', images: SVGs.plant, instruction: 'Let\'s grow a plant! What happens first?' },
+            { name: 'chicken', images: SVGs.chicken, instruction: 'A baby chick is hatching! Put the steps in order.' }
+        ];
+
+        const countables = [
+            { name: 'acorns', image: SVGs.acorn },
+            { name: 'beetles', image: SVGs.beetle }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                synth = window.speechSynthesis;
+            } catch (e) {
+                console.error("Speech Synthesis not supported.");
+            }
+            
+            document.getElementById('start-btn').addEventListener('click', () => {
+                const phoneInput = document.getElementById('phone-input');
+                parentPhoneNumber = phoneInput.value.replace(/\D/g, ''); // Store only digits
+                if (parentPhoneNumber.length > 3) {
+                     showScreen('menu-screen');
+                     speak("Great! Let's get started. Choose a game to play.");
+                } else {
+                    speak("Please ask a grown up to enter a valid phone number.");
+                    phoneInput.classList.add('incorrect-animation');
+                    setTimeout(() => phoneInput.classList.remove('incorrect-animation'), 500);
+                }
+            });
+            
+            document.getElementById('play-sequencing-btn').addEventListener('click', () => startSequencingGame());
+            document.getElementById('play-count-trace-btn').addEventListener('click', () => startCountTraceGame());
+            document.getElementById('play-phone-btn').addEventListener('click', () => startPhonePractice());
+            
+            setupDraggableEvents();
+            setupCanvas();
+        });
+
+        function speak(text) {
+            if (!synth) return;
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.9;
+            utterance.pitch = 1.2;
+            synth.cancel();
+            synth.speak(utterance);
+        }
+
+        function showScreen(screenId) {
+            screens.forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // --- State Reset Functions ---
+        function resetSequencingGame() {
+            const feedback = document.getElementById('sequencing-feedback');
+            const draggableContainer = document.getElementById('draggable-container');
+            const dropZones = document.querySelectorAll('.drop-zone');
+            
+            feedback.textContent = '';
+            draggableContainer.innerHTML = '';
+            dropZones.forEach(zone => {
+                zone.innerHTML = '';
+                zone.classList.remove('filled');
+            });
+        }
+        
+        function resetCountTraceGame() {
+            document.getElementById('count-trace-feedback').textContent = '';
+            document.getElementById('item-container').innerHTML = '';
+            clearCanvas();
+        }
+
+        function resetPhonePractice() {
+            document.getElementById('phone-feedback').textContent = '';
+            document.getElementById('phone-display').innerHTML = '';
+            document.getElementById('keypad').innerHTML = '';
+        }
+
+        // --- Sequencing Game ---
+        let currentSequence;
+        let droppedCount = 0;
+
+        function startSequencingGame() {
+            resetSequencingGame();
+            showScreen('sequencing-game-screen');
+            
+            currentSequence = sequences[Math.floor(Math.random() * sequences.length)];
+            droppedCount = 0;
+
+            const items = [
+                { order: 1, svg: currentSequence.images[0] },
+                { order: 2, svg: currentSequence.images[1] },
+                { order: 3, svg: currentSequence.images[2] }
+            ];
+
+            // Shuffle and display draggable items
+            items.sort(() => Math.random() - 0.5);
+            const draggableContainer = document.getElementById('draggable-container');
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'draggable';
+                div.dataset.order = item.order;
+                div.innerHTML = item.svg;
+                draggableContainer.appendChild(div);
+            });
+            
+            speak(currentSequence.instruction);
+        }
+        
+        let draggedItem = null;
+        
+        function setupDraggableEvents() {
+            const container = document.getElementById('sequencing-game-screen');
+
+            container.addEventListener('touchstart', (e) => {
+                if (e.target.closest('.draggable:not(.correct)')) {
+                    draggedItem = e.target.closest('.draggable');
+                    draggedItem.classList.add('dragging');
+                }
+            }, { passive: false });
+
+            container.addEventListener('touchmove', (e) => {
+                if (draggedItem) {
+                    e.preventDefault();
+                    let touch = e.touches[0];
+                    draggedItem.style.position = 'absolute';
+                    draggedItem.style.left = `${touch.clientX - draggedItem.offsetWidth / 2}px`;
+                    draggedItem.style.top = `${touch.clientY - draggedItem.offsetHeight / 2}px`;
+                }
+            }, { passive: false });
+
+            container.addEventListener('touchend', (e) => {
+                if (!draggedItem) return;
+
+                draggedItem.style.display = 'none'; // Temporarily hide to find element underneath
+                const dropZone = document.elementFromPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY)?.closest('.drop-zone');
+                draggedItem.style.display = 'flex';
+
+                draggedItem.classList.remove('dragging');
+                draggedItem.style.position = 'relative';
+                draggedItem.style.left = 'auto';
+                draggedItem.style.top = 'auto';
+
+                if (dropZone && !dropZone.classList.contains('filled')) {
+                    handleDrop(draggedItem, dropZone);
+                } else {
+                    draggedItem.classList.add('incorrect-animation');
+                    setTimeout(() => draggedItem.classList.remove('incorrect-animation'), 300);
+                }
+                draggedItem = null;
+            });
+        }
+        
+        function handleDrop(item, zone) {
+            const itemOrder = item.dataset.order;
+            const zoneOrder = zone.dataset.order;
+            const feedbackEl = document.getElementById('sequencing-feedback');
+
+            if (itemOrder === zoneOrder) {
+                zone.appendChild(item);
+                item.classList.add('correct');
+                zone.classList.add('filled');
+                item.style.cursor = 'default';
+                feedbackEl.textContent = 'Correct!';
+                speak('Yes!');
+                droppedCount++;
+                if (droppedCount === 3) {
+                    feedbackEl.textContent = 'You did it! Great job!';
+                    speak('You did it! Great job!');
+                    setTimeout(startSequencingGame, 3000);
+                }
+            } else {
+                feedbackEl.textContent = 'Not quite, try again!';
+                speak('Not quite, try again!');
+                item.classList.add('incorrect-animation');
+                setTimeout(() => item.classList.remove('incorrect-animation'), 300);
+            }
+        }
+
+        // --- Count & Trace Game ---
+        let currentCountable, currentCount;
+        const canvas = document.getElementById('trace-canvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        
+        function startCountTraceGame() {
+            resetCountTraceGame();
+            showScreen('count-trace-game-screen');
+            
+            currentCountable = countables[Math.floor(Math.random() * countables.length)];
+            currentCount = Math.floor(Math.random() * 4) + 2; // 2 to 5 items
+
+            const itemContainer = document.getElementById('item-container');
+            for(let i=0; i < currentCount; i++) {
+                const div = document.createElement('div');
+                div.className = 'countable-item';
+                div.innerHTML = currentCountable.image;
+                itemContainer.appendChild(div);
+            }
+
+            drawNumberGuide(currentCount);
+
+            speak(`How many ${currentCountable.name}? Let's count! ... There are ${currentCount}. Now, trace the number ${currentCount}.`);
+        }
+
+        function setupCanvas() {
+            const clearBtn = document.getElementById('clear-canvas-btn');
+            clearBtn.addEventListener('click', clearCanvas);
+            document.getElementById('next-trace-btn').addEventListener('click', startCountTraceGame);
+
+            function getPos(e) {
+                const rect = canvas.getBoundingClientRect();
+                const touch = e.touches ? e.touches[0] : e;
+                return {
+                    x: (touch.clientX - rect.left) * (canvas.width / rect.width),
+                    y: (touch.clientY - rect.top) * (canvas.height / rect.height)
+                };
+            }
+
+            function start(e) {
+                isDrawing = true;
+                const pos = getPos(e);
+                ctx.beginPath();
+                ctx.moveTo(pos.x, pos.y);
+            }
+
+            function draw(e) {
+                if (!isDrawing) return;
+                e.preventDefault();
+                const pos = getPos(e);
+                ctx.lineTo(pos.x, pos.y);
+                ctx.strokeStyle = 'var(--accent-color)';
+                ctx.lineWidth = 10;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.stroke();
+            }
+
+            function stop() {
+                if (isDrawing) {
+                    ctx.closePath();
+                    isDrawing = false;
+                }
+            }
+            
+            canvas.addEventListener('mousedown', start);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stop);
+            canvas.addEventListener('mouseout', stop);
+
+            canvas.addEventListener('touchstart', start, { passive: false });
+            canvas.addEventListener('touchmove', draw, { passive: false });
+            canvas.addEventListener('touchend', stop);
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawNumberGuide(currentCount);
+        }
+
+        function drawNumberGuide(num) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.font = '150px ' + getComputedStyle(document.body).fontFamily;
+            ctx.fillStyle = '#e0e0e0';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Special rule for '1' tracing guide
+            let guideChar = num.toString();
+            if (num === 1) {
+                guideChar = 'l'; 
+            }
+            
+            ctx.fillText(guideChar, canvas.width / 2, canvas.height / 2);
+        }
+        
+        // --- Phone Number Practice ---
+        let currentTypedNumber = '';
+
+        function startPhonePractice() {
+            resetPhonePractice();
+            showScreen('phone-practice-screen');
+            currentTypedNumber = '';
+
+            const keypadContainer = document.getElementById('keypad');
+            const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, '', 0, ''];
+            numbers.forEach(num => {
+                if (num === '') {
+                    keypadContainer.appendChild(document.createElement('div'));
+                } else {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn keypad-btn';
+                    btn.textContent = num;
+                    btn.addEventListener('click', () => handleKeypadPress(num));
+                    keypadContainer.appendChild(btn);
+                }
+            });
+            updatePhoneDisplay();
+            speak("Let's practice your special number. Tap the numbers in order.");
+        }
+        
+        function handleKeypadPress(num) {
+            const nextDigit = parentPhoneNumber[currentTypedNumber.length];
+            if (num.toString() === nextDigit) {
+                currentTypedNumber += num;
+                updatePhoneDisplay();
+                if (currentTypedNumber.length === parentPhoneNumber.length) {
+                    document.getElementById('phone-feedback').textContent = 'You did it! Amazing!';
+                    speak('You did it! Amazing memory!');
+                    setTimeout(startPhonePractice, 3000);
+                }
+            } else {
+                const keypad = document.getElementById('keypad');
+                keypad.classList.add('incorrect-animation');
+                setTimeout(() => keypad.classList.remove('incorrect-animation'), 300);
+                speak('Oops, try the next number.');
+            }
+        }
+        
+        function updatePhoneDisplay() {
+            const display = document.getElementById('phone-display');
+            let html = '';
+            for (let i = 0; i < parentPhoneNumber.length; i++) {
+                if (i < currentTypedNumber.length) {
+                    html += `<span class="typed">${parentPhoneNumber[i]}</span>`;
+                } else {
+                    html += `<span>_</span>`;
+                }
+            }
+            display.innerHTML = html;
+        }
+
+    </script>
+    
+    <!-- Anti-Gesture Script: Placed just before closing body tag -->
+    <script>
+      document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
+      document.addEventListener('touchstart', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+    </script>
+</body>
+</html>
