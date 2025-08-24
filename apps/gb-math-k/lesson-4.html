@@ -74,14 +74,19 @@
         }
         
         h1 {
-            font-size: 2.5rem;
+            font-size: 2.2rem;
             color: var(--primary-color);
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+        }
+        
+        h2 {
+            font-size: 1.8rem;
+            color: var(--secondary-color);
         }
 
         p {
             font-size: 1.2rem;
-            line-height: 1.6;
+            line-height: 1.5;
             max-width: 90%;
         }
 
@@ -118,21 +123,13 @@
             background-color: #e59613;
         }
 
-        .speaker-icon {
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
-            position: absolute;
-            top: 20px;
-            right: 20px;
-        }
-        
         .back-button {
             position: absolute;
             top: 20px;
             left: 20px;
             font-size: 1.2rem;
             padding: 10px 15px;
+            z-index: 10;
         }
 
         /* --- Welcome & Phone Number Screen --- */
@@ -150,6 +147,39 @@
             border-radius: 10px;
             text-align: center;
             width: 300px;
+        }
+
+        /* --- Interactive Lesson Screen --- */
+        #lesson-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            flex-grow: 1;
+        }
+        .lesson-example, .lesson-example-grid {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .lesson-example svg, .lesson-example-grid svg {
+            width: 80px;
+            height: 80px;
+        }
+        .lesson-example p {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        .lesson-example-grid {
+            max-width: 300px;
+        }
+        #lesson-controls {
+            padding-bottom: 20px;
         }
         
         /* --- Sequencing Game --- */
@@ -288,16 +318,6 @@
             transition: opacity 0.3s;
         }
 
-        @keyframes correct-pop {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
-        
-        .correct-animation {
-            animation: correct-pop 0.5s ease-out;
-        }
-
         @keyframes incorrect-shake {
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-10px); }
@@ -312,7 +332,7 @@
 </head>
 <body>
     <div id="game-container">
-        <!-- Screen 1: Welcome & Phone Number Entry -->
+        <!-- Screen 1: Welcome -->
         <div id="welcome-screen" class="screen active">
             <h1>Order of Events</h1>
             <p>Hello! Today we'll learn that things happen in a special order. First, let's learn a very important number.</p>
@@ -320,18 +340,26 @@
                 <label for="phone-input" style="font-size: 1.2rem;">Grown-ups, please enter your phone number:</label>
                 <input type="tel" id="phone-input" placeholder="e.g. 555-1234">
             </div>
-            <button class="btn" id="start-btn">Let's Start!</button>
+            <button class="btn" id="start-btn">Let's Learn!</button>
         </div>
 
-        <!-- Screen 2: Main Menu -->
+        <!-- Screen 2: Interactive Lesson -->
+        <div id="lesson-screen" class="screen">
+            <div id="lesson-content"></div>
+            <div id="lesson-controls">
+                <button class="btn" id="next-lesson-btn">Next</button>
+            </div>
+        </div>
+
+        <!-- Screen 3: Main Menu -->
         <div id="menu-screen" class="screen">
-            <h1>What should we play?</h1>
+            <h1>What should we practice?</h1>
             <button class="btn" id="play-sequencing-btn">Order of Events Game</button>
             <button class="btn btn-secondary" id="play-count-trace-btn">Count & Trace Game</button>
             <button class="btn btn-accent" id="play-phone-btn">Practice My Number</button>
         </div>
 
-        <!-- Screen 3: Sequencing Game -->
+        <!-- Screen 4: Sequencing Game -->
         <div id="sequencing-game-screen" class="screen">
             <button class="btn back-button" onclick="showScreen('menu-screen')">Back</button>
             <div class="feedback" id="sequencing-feedback"></div>
@@ -343,7 +371,7 @@
             <div id="draggable-container"></div>
         </div>
         
-        <!-- Screen 4: Count & Trace Game -->
+        <!-- Screen 5: Count & Trace Game -->
         <div id="count-trace-game-screen" class="screen">
             <button class="btn back-button" onclick="showScreen('menu-screen')">Back</button>
             <div class="feedback" id="count-trace-feedback"></div>
@@ -357,7 +385,7 @@
             <button class="btn" id="next-trace-btn">Next</button>
         </div>
 
-        <!-- Screen 5: Phone Number Practice -->
+        <!-- Screen 6: Phone Number Practice -->
         <div id="phone-practice-screen" class="screen">
             <button class="btn back-button" onclick="showScreen('menu-screen')">Back</button>
             <div class="feedback" id="phone-feedback"></div>
@@ -375,7 +403,7 @@
 
         // SVG Asset Generation
         const SVGs = {
-            speaker: `<svg viewBox="0 0 100 100" fill="currentColor"><path d="M10 35 H30 L50 15 V85 L30 65 H10 Z" /><path d="M55 40 A15 15 0 0 1 55 60" stroke="currentColor" stroke-width="5" fill="none" /><path d="M65 30 A25 25 0 0 1 65 70" stroke="currentColor" stroke-width="5" fill="none" /></svg>`,
+            phone: `<svg viewBox="0 0 100 100"><path d="M20 70 Q 25 50 40 50 L 60 50 Q 75 50 80 70" fill="#f48fb1" /><path d="M15 70 H 85 L 80 85 H 20 Z" fill="#ec407a" /><circle cx="50" cy="80" r="3" fill="#f8bbd0" /><circle cx="40" cy="75" r="3" fill="#f8bbd0" /><circle cx="60" cy="75" r="3" fill="#f8bbd0" /><path d="M30 48 L 25 30 L 40 35 Z" fill="#f48fb1" /><path d="M70 48 L 75 30 L 60 35 Z" fill="#f48fb1" /></svg>`,
             snowman: [
                 `<svg viewBox="0 0 100 100"><circle cx="50" cy="75" r="25" fill="#e0f7fa"/></svg>`,
                 `<svg viewBox="0 0 100 100"><circle cx="50" cy="75" r="25" fill="#e0f7fa"/><circle cx="50" cy="35" r="18" fill="#e0f7fa"/></svg>`,
@@ -394,13 +422,11 @@
             acorn: `<svg viewBox="0 0 100 100"><path d="M40 40 C 40 20, 60 20, 60 40 V 50 H 40 Z" fill="#8d6e63"/><path d="M50 35 L 50 25" stroke="#6d4c41" stroke-width="4"/><path d="M40 50 C 40 70, 60 70, 60 50 Q 50 80, 40 50" fill="#a1887f"/></svg>`,
             beetle: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="50" rx="30" ry="20" fill="#616161"/><circle cx="50" cy="25" r="10" fill="#424242"/><circle cx="45" cy="22" r="2" fill="white"/><circle cx="55" cy="22" r="2" fill="white"/><path d="M50 35 V 70" stroke="#212121" stroke-width="2"/><path d="M40 40 L 20 30 M40 50 L 20 50 M40 60 L 20 70 M60 40 L 80 30 M60 50 L 80 50 M60 60 L 80 70" stroke="#424242" stroke-width="3" stroke-linecap="round"/></svg>`
         };
-
         const sequences = [
             { name: 'snowman', images: SVGs.snowman, instruction: 'Let\'s build a snowman! Put the pictures in order.' },
             { name: 'plant', images: SVGs.plant, instruction: 'Let\'s grow a plant! What happens first?' },
             { name: 'chicken', images: SVGs.chicken, instruction: 'A baby chick is hatching! Put the steps in order.' }
         ];
-
         const countables = [
             { name: 'acorns', image: SVGs.acorn },
             { name: 'beetles', image: SVGs.beetle }
@@ -415,10 +441,9 @@
             
             document.getElementById('start-btn').addEventListener('click', () => {
                 const phoneInput = document.getElementById('phone-input');
-                parentPhoneNumber = phoneInput.value.replace(/\D/g, ''); // Store only digits
+                parentPhoneNumber = phoneInput.value.replace(/\D/g, '');
                 if (parentPhoneNumber.length > 3) {
-                     showScreen('menu-screen');
-                     speak("Great! Let's get started. Choose a game to play.");
+                     startLesson();
                 } else {
                     speak("Please ask a grown up to enter a valid phone number.");
                     phoneInput.classList.add('incorrect-animation');
@@ -426,6 +451,7 @@
                 }
             });
             
+            document.getElementById('next-lesson-btn').addEventListener('click', handleNextLessonStep);
             document.getElementById('play-sequencing-btn').addEventListener('click', () => startSequencingGame());
             document.getElementById('play-count-trace-btn').addEventListener('click', () => startCountTraceGame());
             document.getElementById('play-phone-btn').addEventListener('click', () => startPhonePractice());
@@ -448,15 +474,65 @@
             document.getElementById(screenId).classList.add('active');
         }
 
+        // --- PART 1: Interactive Lesson ---
+        let lessonStep = 0;
+        const lessonSteps = [
+            {
+                html: `<h1>Order of Events</h1><p>Let's suppose I am making a peanut butter and jelly sandwich. Do I need to get out the bread first or spread the peanut butter first?</p><p>Things have to happen in a certain order!</p>`,
+                speech: "Let's suppose I am making a peanut butter and jelly sandwich. Do I need to get out the bread first, or spread the peanut butter first? You're right, get the bread out first! Many things have to happen in a certain order."
+            },
+            {
+                html: `<h2>First, Next, Last</h2><p>Look at the chick. First, it's in an egg. Next, the egg cracks. Last, the chick is out!</p><div class="lesson-example"><div>${SVGs.chicken[0]}<p>1</p></div><div>${SVGs.chicken[1]}<p>2</p></div><div>${SVGs.chicken[2]}<p>3</p></div></div>`,
+                speech: "Look at the chick. First, it's in an egg. Next, the egg cracks. Last, the chick is out! One, two, three."
+            },
+            {
+                html: `<h2>Let's Count!</h2><p>Sometimes we need to count things. How many acorns are here?</p><div class="lesson-example-grid">${SVGs.acorn.repeat(5)}</div><p>There are 5 acorns!</p>`,
+                speech: "Sometimes we need to count things. How many acorns are here? Let's count! One, two, three, four, five! There are five acorns!"
+            },
+            {
+                html: `<h2>Practice Your Number</h2><p>It's also important to practice special things, like remembering a phone number. We will practice this too!</p><div class="lesson-example">${SVGs.phone}</div>`,
+                speech: "It's also important to practice special things, like remembering a phone number. We will practice this too!"
+            },
+            {
+                html: `<h1>Great job!</h1><p>Now you know about order, counting, and practicing. Are you ready to play some games?</p>`,
+                speech: "Great job! Now you know about order, counting, and practicing. Are you ready to play some games?"
+            }
+        ];
+
+        function startLesson() {
+            lessonStep = 0;
+            showScreen('lesson-screen');
+            updateLessonContent();
+        }
+
+        function updateLessonContent() {
+            const contentDiv = document.getElementById('lesson-content');
+            const nextBtn = document.getElementById('next-lesson-btn');
+            const currentStepData = lessonSteps[lessonStep];
+            
+            contentDiv.innerHTML = currentStepData.html;
+            speak(currentStepData.speech);
+            
+            nextBtn.textContent = (lessonStep >= lessonSteps.length - 1) ? 'Play Games!' : 'Next';
+        }
+        
+        function handleNextLessonStep() {
+            lessonStep++;
+            if (lessonStep < lessonSteps.length) {
+                updateLessonContent();
+            } else {
+                showScreen('menu-screen');
+                speak("Choose a game to practice.");
+            }
+        }
+        
+        // --- PART 2: Replayable Games ---
+
         // --- State Reset Functions ---
         function resetSequencingGame() {
-            const feedback = document.getElementById('sequencing-feedback');
-            const draggableContainer = document.getElementById('draggable-container');
-            const dropZones = document.querySelectorAll('.drop-zone');
-            
-            feedback.textContent = '';
-            draggableContainer.innerHTML = '';
-            dropZones.forEach(zone => {
+            document.getElementById('sequencing-feedback').textContent = '';
+            document.getElementById('draggable-container').innerHTML = '';
+            document.querySelectorAll('.drop-zone').forEach(zone => {
                 zone.innerHTML = '';
                 zone.classList.remove('filled');
             });
@@ -475,8 +551,8 @@
         }
 
         // --- Sequencing Game ---
-        let currentSequence;
-        let droppedCount = 0;
+        let currentSequence, droppedCount;
+        let draggedItem = null;
 
         function startSequencingGame() {
             resetSequencingGame();
@@ -485,13 +561,7 @@
             currentSequence = sequences[Math.floor(Math.random() * sequences.length)];
             droppedCount = 0;
 
-            const items = [
-                { order: 1, svg: currentSequence.images[0] },
-                { order: 2, svg: currentSequence.images[1] },
-                { order: 3, svg: currentSequence.images[2] }
-            ];
-
-            // Shuffle and display draggable items
+            const items = [{ order: 1, svg: currentSequence.images[0] }, { order: 2, svg: currentSequence.images[1] }, { order: 3, svg: currentSequence.images[2] }];
             items.sort(() => Math.random() - 0.5);
             const draggableContainer = document.getElementById('draggable-container');
             items.forEach(item => {
@@ -505,73 +575,24 @@
             speak(currentSequence.instruction);
         }
         
-        let draggedItem = null;
-        
         function setupDraggableEvents() {
             const container = document.getElementById('sequencing-game-screen');
-
-            container.addEventListener('touchstart', (e) => {
-                if (e.target.closest('.draggable:not(.correct)')) {
-                    draggedItem = e.target.closest('.draggable');
-                    draggedItem.classList.add('dragging');
-                }
-            }, { passive: false });
-
-            container.addEventListener('touchmove', (e) => {
-                if (draggedItem) {
-                    e.preventDefault();
-                    let touch = e.touches[0];
-                    draggedItem.style.position = 'absolute';
-                    draggedItem.style.left = `${touch.clientX - draggedItem.offsetWidth / 2}px`;
-                    draggedItem.style.top = `${touch.clientY - draggedItem.offsetHeight / 2}px`;
-                }
-            }, { passive: false });
-
-            container.addEventListener('touchend', (e) => {
-                if (!draggedItem) return;
-
-                draggedItem.style.display = 'none'; // Temporarily hide to find element underneath
-                const dropZone = document.elementFromPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY)?.closest('.drop-zone');
-                draggedItem.style.display = 'flex';
-
-                draggedItem.classList.remove('dragging');
-                draggedItem.style.position = 'relative';
-                draggedItem.style.left = 'auto';
-                draggedItem.style.top = 'auto';
-
-                if (dropZone && !dropZone.classList.contains('filled')) {
-                    handleDrop(draggedItem, dropZone);
-                } else {
-                    draggedItem.classList.add('incorrect-animation');
-                    setTimeout(() => draggedItem.classList.remove('incorrect-animation'), 300);
-                }
-                draggedItem = null;
-            });
+            container.addEventListener('touchstart', e => { if (e.target.closest('.draggable:not(.correct)')) { draggedItem = e.target.closest('.draggable'); draggedItem.classList.add('dragging'); } }, { passive: false });
+            container.addEventListener('touchmove', e => { if (draggedItem) { e.preventDefault(); let t = e.touches[0]; draggedItem.style.position = 'absolute'; draggedItem.style.left = `${t.clientX - draggedItem.offsetWidth / 2}px`; draggedItem.style.top = `${t.clientY - draggedItem.offsetHeight / 2}px`; } }, { passive: false });
+            container.addEventListener('touchend', e => { if (!draggedItem) return; draggedItem.style.display='none'; const dropZone = document.elementFromPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY)?.closest('.drop-zone'); draggedItem.style.display='flex'; draggedItem.classList.remove('dragging'); draggedItem.style.position = 'relative'; draggedItem.style.left = 'auto'; draggedItem.style.top = 'auto'; if (dropZone && !dropZone.classList.contains('filled')) { handleDrop(draggedItem, dropZone); } else { draggedItem.classList.add('incorrect-animation'); setTimeout(() => draggedItem.classList.remove('incorrect-animation'), 300); } draggedItem = null; });
         }
         
         function handleDrop(item, zone) {
-            const itemOrder = item.dataset.order;
-            const zoneOrder = zone.dataset.order;
             const feedbackEl = document.getElementById('sequencing-feedback');
-
-            if (itemOrder === zoneOrder) {
+            if (item.dataset.order === zone.dataset.order) {
                 zone.appendChild(item);
                 item.classList.add('correct');
                 zone.classList.add('filled');
-                item.style.cursor = 'default';
-                feedbackEl.textContent = 'Correct!';
-                speak('Yes!');
-                droppedCount++;
-                if (droppedCount === 3) {
-                    feedbackEl.textContent = 'You did it! Great job!';
-                    speak('You did it! Great job!');
-                    setTimeout(startSequencingGame, 3000);
-                }
+                feedbackEl.textContent = 'Correct!'; speak('Yes!'); droppedCount++;
+                if (droppedCount === 3) { feedbackEl.textContent = 'You did it! Great job!'; speak('You did it! Great job!'); setTimeout(startSequencingGame, 3000); }
             } else {
-                feedbackEl.textContent = 'Not quite, try again!';
-                speak('Not quite, try again!');
-                item.classList.add('incorrect-animation');
-                setTimeout(() => item.classList.remove('incorrect-animation'), 300);
+                feedbackEl.textContent = 'Not quite, try again!'; speak('Not quite, try again!');
+                item.classList.add('incorrect-animation'); setTimeout(() => item.classList.remove('incorrect-animation'), 300);
             }
         }
 
@@ -584,91 +605,36 @@
         function startCountTraceGame() {
             resetCountTraceGame();
             showScreen('count-trace-game-screen');
-            
             currentCountable = countables[Math.floor(Math.random() * countables.length)];
-            currentCount = Math.floor(Math.random() * 4) + 2; // 2 to 5 items
-
+            currentCount = Math.floor(Math.random() * 8) + 2; // 2 to 9 items
             const itemContainer = document.getElementById('item-container');
             for(let i=0; i < currentCount; i++) {
-                const div = document.createElement('div');
-                div.className = 'countable-item';
-                div.innerHTML = currentCountable.image;
-                itemContainer.appendChild(div);
+                itemContainer.innerHTML += `<div class="countable-item">${currentCountable.image}</div>`;
             }
-
             drawNumberGuide(currentCount);
-
-            speak(`How many ${currentCountable.name}? Let's count! ... There are ${currentCount}. Now, trace the number ${currentCount}.`);
+            speak(`How many ${currentCountable.name}? There are ${currentCount}. Now, trace the number ${currentCount}.`);
         }
 
         function setupCanvas() {
-            const clearBtn = document.getElementById('clear-canvas-btn');
-            clearBtn.addEventListener('click', clearCanvas);
+            document.getElementById('clear-canvas-btn').addEventListener('click', clearCanvas);
             document.getElementById('next-trace-btn').addEventListener('click', startCountTraceGame);
-
-            function getPos(e) {
-                const rect = canvas.getBoundingClientRect();
-                const touch = e.touches ? e.touches[0] : e;
-                return {
-                    x: (touch.clientX - rect.left) * (canvas.width / rect.width),
-                    y: (touch.clientY - rect.top) * (canvas.height / rect.height)
-                };
-            }
-
-            function start(e) {
-                isDrawing = true;
-                const pos = getPos(e);
-                ctx.beginPath();
-                ctx.moveTo(pos.x, pos.y);
-            }
-
-            function draw(e) {
-                if (!isDrawing) return;
-                e.preventDefault();
-                const pos = getPos(e);
-                ctx.lineTo(pos.x, pos.y);
-                ctx.strokeStyle = 'var(--accent-color)';
-                ctx.lineWidth = 10;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-                ctx.stroke();
-            }
-
-            function stop() {
-                if (isDrawing) {
-                    ctx.closePath();
-                    isDrawing = false;
-                }
-            }
-            
-            canvas.addEventListener('mousedown', start);
-            canvas.addEventListener('mousemove', draw);
-            canvas.addEventListener('mouseup', stop);
-            canvas.addEventListener('mouseout', stop);
-
-            canvas.addEventListener('touchstart', start, { passive: false });
-            canvas.addEventListener('touchmove', draw, { passive: false });
-            canvas.addEventListener('touchend', stop);
+            function getPos(e) { const r = canvas.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e; return {x:(t.clientX - r.left)*(canvas.width/r.width), y:(t.clientY - r.top)*(canvas.height/r.height)}; }
+            function start(e) { isDrawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+            function draw(e) { if (!isDrawing) return; e.preventDefault(); const p=getPos(e); ctx.lineTo(p.x,p.y); ctx.strokeStyle = 'var(--accent-color)'; ctx.lineWidth=10; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.stroke(); }
+            function stop() { if(isDrawing){ctx.closePath(); isDrawing=false;} }
+            ['mousedown', 'touchstart'].forEach(evt => canvas.addEventListener(evt, start, { passive: false }));
+            ['mousemove', 'touchmove'].forEach(evt => canvas.addEventListener(evt, draw, { passive: false }));
+            ['mouseup', 'mouseout', 'touchend'].forEach(evt => canvas.addEventListener(evt, stop));
         }
 
-        function clearCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawNumberGuide(currentCount);
-        }
+        function clearCanvas() { ctx.clearRect(0,0,canvas.width,canvas.height); drawNumberGuide(currentCount); }
 
         function drawNumberGuide(num) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.font = '150px ' + getComputedStyle(document.body).fontFamily;
-            ctx.fillStyle = '#e0e0e0';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            
-            // Special rule for '1' tracing guide
+            ctx.fillStyle = '#e0e0e0'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             let guideChar = num.toString();
-            if (num === 1) {
-                guideChar = 'l'; 
-            }
-            
+            if (num === 1) guideChar = 'l';
             ctx.fillText(guideChar, canvas.width / 2, canvas.height / 2);
         }
         
@@ -677,22 +643,10 @@
 
         function startPhonePractice() {
             resetPhonePractice();
-            showScreen('phone-practice-screen');
-            currentTypedNumber = '';
-
+            showScreen('phone-practice-screen'); currentTypedNumber = '';
             const keypadContainer = document.getElementById('keypad');
             const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, '', 0, ''];
-            numbers.forEach(num => {
-                if (num === '') {
-                    keypadContainer.appendChild(document.createElement('div'));
-                } else {
-                    const btn = document.createElement('button');
-                    btn.className = 'btn keypad-btn';
-                    btn.textContent = num;
-                    btn.addEventListener('click', () => handleKeypadPress(num));
-                    keypadContainer.appendChild(btn);
-                }
-            });
+            numbers.forEach(num => { if (num === '') { keypadContainer.appendChild(document.createElement('div')); } else { const btn = document.createElement('button'); btn.className='btn keypad-btn'; btn.textContent=num; btn.addEventListener('click',()=>handleKeypadPress(num)); keypadContainer.appendChild(btn); } });
             updatePhoneDisplay();
             speak("Let's practice your special number. Tap the numbers in order.");
         }
@@ -700,34 +654,20 @@
         function handleKeypadPress(num) {
             const nextDigit = parentPhoneNumber[currentTypedNumber.length];
             if (num.toString() === nextDigit) {
-                currentTypedNumber += num;
-                updatePhoneDisplay();
-                if (currentTypedNumber.length === parentPhoneNumber.length) {
-                    document.getElementById('phone-feedback').textContent = 'You did it! Amazing!';
-                    speak('You did it! Amazing memory!');
-                    setTimeout(startPhonePractice, 3000);
-                }
+                currentTypedNumber += num; updatePhoneDisplay();
+                if (currentTypedNumber.length === parentPhoneNumber.length) { document.getElementById('phone-feedback').textContent='You did it! Amazing!'; speak('You did it! Amazing memory!'); setTimeout(startPhonePractice, 3000); }
             } else {
                 const keypad = document.getElementById('keypad');
-                keypad.classList.add('incorrect-animation');
-                setTimeout(() => keypad.classList.remove('incorrect-animation'), 300);
+                keypad.classList.add('incorrect-animation'); setTimeout(() => keypad.classList.remove('incorrect-animation'), 300);
                 speak('Oops, try the next number.');
             }
         }
         
         function updatePhoneDisplay() {
-            const display = document.getElementById('phone-display');
-            let html = '';
-            for (let i = 0; i < parentPhoneNumber.length; i++) {
-                if (i < currentTypedNumber.length) {
-                    html += `<span class="typed">${parentPhoneNumber[i]}</span>`;
-                } else {
-                    html += `<span>_</span>`;
-                }
-            }
+            const display = document.getElementById('phone-display'); let html = '';
+            for (let i=0; i<parentPhoneNumber.length; i++) { html += (i<currentTypedNumber.length) ? `<span class="typed">${parentPhoneNumber[i]}</span>` : `<span>_</span>`; }
             display.innerHTML = html;
         }
-
     </script>
     
     <!-- Anti-Gesture Script: Placed just before closing body tag -->
