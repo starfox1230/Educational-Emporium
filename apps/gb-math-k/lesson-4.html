@@ -17,11 +17,7 @@
             --font-family: 'Arial', sans-serif;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         html, body {
             width: 100%;
@@ -68,27 +64,11 @@
             align-items: center;
             justify-content: space-around;
         }
+        .screen.active { display: flex; }
 
-        .screen.active {
-            display: flex;
-        }
-        
-        h1 {
-            font-size: 2.2rem;
-            color: var(--primary-color);
-            margin-bottom: 15px;
-        }
-        
-        h2 {
-            font-size: 1.8rem;
-            color: var(--secondary-color);
-        }
-
-        p {
-            font-size: 1.2rem;
-            line-height: 1.5;
-            max-width: 90%;
-        }
+        h1 { font-size: 2.2rem; color: var(--primary-color); margin-bottom: 15px; }
+        h2 { font-size: 1.8rem; color: var(--secondary-color); }
+        p { font-size: 1.2rem; line-height: 1.5; max-width: 90%; }
 
         /* --- Buttons & UI Elements --- */
         .btn {
@@ -103,222 +83,95 @@
             transition: transform 0.2s, background-color 0.2s;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-
-        .btn:hover {
-            transform: scale(1.05);
-            background-color: #3a80d2;
-        }
-        
-        .btn-secondary {
-            background-color: var(--secondary-color);
-        }
-        .btn-secondary:hover {
-            background-color: #40c3a2;
-        }
-        
-        .btn-accent {
-            background-color: var(--accent-color);
-        }
-        .btn-accent:hover {
-            background-color: #e59613;
-        }
+        .btn:hover { transform: scale(1.05); background-color: #3a80d2; }
+        .btn-secondary { background-color: var(--secondary-color); }
+        .btn-secondary:hover { background-color: #40c3a2; }
+        .btn-accent { background-color: var(--accent-color); }
+        .btn-accent:hover { background-color: #e59613; }
 
         .back-button {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            font-size: 1.2rem;
-            padding: 10px 15px;
-            z-index: 10;
+            position: absolute; top: 20px; left: 20px;
+            font-size: 1.2rem; padding: 10px 15px; z-index: 10;
         }
 
         /* --- Welcome & Phone Number Screen --- */
-        #phone-input-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-        }
-        
+        #phone-input-container { display: flex; flex-direction: column; align-items: center; gap: 15px; }
         #phone-input {
-            padding: 15px;
-            font-size: 1.5rem;
-            border: 2px solid var(--primary-color);
-            border-radius: 10px;
-            text-align: center;
-            width: 300px;
+            padding: 15px; font-size: 1.5rem; border: 2px solid var(--primary-color);
+            border-radius: 10px; text-align: center; width: 300px;
         }
 
         /* --- Interactive Lesson Screen --- */
-        #lesson-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            flex-grow: 1;
-        }
+        #lesson-content { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; flex-grow: 1; }
         .lesson-example, .lesson-example-grid {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-top: 10px;
+            display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; margin-top: 10px;
         }
-        .lesson-example svg, .lesson-example-grid svg {
-            width: 80px;
-            height: 80px;
-        }
-        .lesson-example p {
-            font-size: 2rem;
-            font-weight: bold;
-            color: var(--primary-color);
-        }
-        .lesson-example-grid {
-            max-width: 300px;
-        }
-        #lesson-controls {
-            padding-bottom: 20px;
-        }
-        
+        .lesson-example svg, .lesson-example-grid svg { width: 80px; height: 80px; }
+        .lesson-example p { font-size: 2rem; font-weight: bold; color: var(--primary-color); }
+        .lesson-example-grid { max-width: 300px; }
+        #lesson-controls { padding-bottom: 20px; }
+
         /* --- Sequencing Game --- */
         #sequencing-game-screen .game-area {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            width: 100%;
-            height: 40%;
-            margin-bottom: 20px;
+            display: flex; justify-content: space-around; align-items: center;
+            width: 100%; height: 40%; margin-bottom: 20px;
         }
-        
         .drop-zone {
-            width: 150px;
-            height: 150px;
+            width: 150px; height: 150px;
             border: 3px dashed var(--secondary-color);
-            border-radius: 15px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
+            border-radius: 15px; display: flex; justify-content: center; align-items: center; position: relative;
         }
-
         .drop-zone::before {
-            content: attr(data-label);
-            position: absolute;
-            top: -30px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--primary-color);
+            content: attr(data-label); position: absolute; top: -30px;
+            font-size: 1.5rem; font-weight: bold; color: var(--primary-color);
         }
 
         #draggable-container {
-            display: flex;
-            justify-content: space-around;
-            width: 100%;
-            height: 35%;
-            background: #eef6ff;
-            border-radius: 15px;
-            padding: 10px;
-            position: relative; /* <<< CRITICAL FIX: This line was missing */
+            display: flex; justify-content: space-around; align-items: center;
+            width: 100%; height: 35%;
+            background: #eef6ff; border-radius: 15px; padding: 10px;
+            position: relative; 
         }
-        
+
         .draggable {
-            width: 130px;
-            height: 130px;
-            cursor: grab;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: transform 0.2s;
+            width: 130px; height: 130px;
+            cursor: grab; display: flex; justify-content: center; align-items: center;
+            transition: transform 0.2s, top 0.3s ease, left 0.3s ease;
             touch-action: none;
+            background: #fff; border-radius: 12px;
         }
-        
-        .draggable.dragging {
-            opacity: 0.5;
-            transform: scale(1.1);
-            z-index: 1000;
+        .draggable.dragging { 
+            opacity: 0.7; transform: scale(1.05); z-index: 1000;
             position: absolute;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            transition: none; /* Disable transition while dragging for smooth movement */
         }
-        .draggable.correct {
-            border: 4px solid var(--correct-color);
-            border-radius: 15px;
-            cursor: default;
-        }
+        .draggable.correct { border: 4px solid var(--correct-color); cursor: default; }
+        .draggable svg { width: 100%; height: 100%; display: block; }
 
         /* --- Count & Trace Game --- */
-        #count-trace-game-screen .game-area {
-            display: flex;
-            gap: 20px;
-            width: 100%;
-            align-items: center;
-            justify-content: center;
-        }
-
+        #count-trace-game-screen .game-area { display: flex; gap: 20px; width: 100%; align-items: center; justify-content: center; }
         #item-container {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            width: 250px;
-            height: 250px;
-            align-content: center;
-            justify-items: center;
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+            width: 250px; height: 250px; align-content: center; justify-items: center;
         }
-
-        .countable-item {
-            width: 60px;
-            height: 60px;
-        }
-
-        #tracing-area {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-        }
-
-        #trace-canvas {
-            border: 2px solid var(--primary-color);
-            border-radius: 10px;
-            background-color: #fdfdfd;
-            touch-action: none;
-        }
+        .countable-item { width: 60px; height: 60px; }
+        #tracing-area { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        #trace-canvas { border: 2px solid var(--primary-color); border-radius: 10px; background-color: #fdfdfd; touch-action: none; }
 
         /* --- Phone Number Practice --- */
         #phone-display {
-            font-size: 2rem;
-            letter-spacing: 5px;
-            margin-bottom: 20px;
-            background: #eef6ff;
-            padding: 15px;
-            border-radius: 10px;
-            font-family: monospace;
+            font-size: 2rem; letter-spacing: 5px; margin-bottom: 20px;
+            background: #eef6ff; padding: 15px; border-radius: 10px; font-family: monospace;
         }
-        
-        #phone-display .typed {
-            color: var(--correct-color);
-        }
-        
-        #keypad {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            max-width: 300px;
-        }
+        #phone-display .typed { color: var(--correct-color); }
+        #keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 300px; }
+        .keypad-btn { width: 80px; height: 60px; font-size: 2rem; }
 
-        .keypad-btn {
-            width: 80px;
-            height: 60px;
-            font-size: 2rem;
-        }
-        
         /* --- Feedback Styles --- */
         .feedback {
-            font-size: 1.5rem;
-            font-weight: bold;
-            height: 40px;
-            color: var(--primary-color);
-            transition: opacity 0.3s;
+            font-size: 1.5rem; font-weight: bold; height: 40px;
+            color: var(--primary-color); transition: opacity 0.3s;
         }
 
         @keyframes incorrect-shake {
@@ -326,10 +179,7 @@
             25% { transform: translateX(-10px); }
             75% { transform: translateX(10px); }
         }
-        
-        .incorrect-animation {
-            animation: incorrect-shake 0.3s ease-in-out;
-        }
+        .incorrect-animation { animation: incorrect-shake 0.3s ease-in-out; }
     </style>
 </head>
 <body>
@@ -345,55 +195,12 @@
             <button class="btn" id="start-btn">Let's Learn!</button>
         </div>
 
-        <!-- Screen 2: Interactive Lesson -->
-        <div id="lesson-screen" class="screen">
-            <div id="lesson-content"></div>
-            <div id="lesson-controls">
-                <button class="btn" id="next-lesson-btn">Next</button>
-            </div>
-        </div>
-
-        <!-- Screen 3: Main Menu -->
-        <div id="menu-screen" class="screen">
-            <h1>What should we practice?</h1>
-            <button class="btn" id="play-sequencing-btn">Order of Events Game</button>
-            <button class="btn btn-secondary" id="play-count-trace-btn">Count & Trace Game</button>
-            <button class="btn btn-accent" id="play-phone-btn">Practice My Number</button>
-        </div>
-
-        <!-- Screen 4: Sequencing Game -->
-        <div id="sequencing-game-screen" class="screen">
-            <button class="btn back-button" onclick="showScreen('menu-screen')">Back</button>
-            <div class="feedback" id="sequencing-feedback"></div>
-            <div class="game-area">
-                <div class="drop-zone" data-label="1" data-order="1"></div>
-                <div class="drop-zone" data-label="2" data-order="2"></div>
-                <div class="drop-zone" data-label="3" data-order="3"></div>
-            </div>
-            <div id="draggable-container"></div>
-        </div>
-        
-        <!-- Screen 5: Count & Trace Game -->
-        <div id="count-trace-game-screen" class="screen">
-            <button class="btn back-button" onclick="showScreen('menu-screen')">Back</button>
-            <div class="feedback" id="count-trace-feedback"></div>
-            <div class="game-area">
-                <div id="item-container"></div>
-                <div id="tracing-area">
-                    <canvas id="trace-canvas" width="200" height="200"></canvas>
-                    <button id="clear-canvas-btn" class="btn btn-secondary">Clear</button>
-                </div>
-            </div>
-            <button class="btn" id="next-trace-btn">Next</button>
-        </div>
-
-        <!-- Screen 6: Phone Number Practice -->
-        <div id="phone-practice-screen" class="screen">
-            <button class="btn back-button" onclick="showScreen('menu-screen')">Back</button>
-            <div class="feedback" id="phone-feedback"></div>
-            <div id="phone-display"></div>
-            <div id="keypad"></div>
-        </div>
+        <!-- All other screens -->
+        <div id="lesson-screen" class="screen"><div id="lesson-content"></div><div id="lesson-controls"><button class="btn" id="next-lesson-btn">Next</button></div></div>
+        <div id="menu-screen" class="screen"><h1>What should we practice?</h1><button class="btn" id="play-sequencing-btn">Order of Events Game</button><button class="btn btn-secondary" id="play-count-trace-btn">Count & Trace Game</button><button class="btn btn-accent" id="play-phone-btn">Practice My Number</button></div>
+        <div id="sequencing-game-screen" class="screen"><button class="btn back-button" onclick="showScreen('menu-screen')">Back</button><div class="feedback" id="sequencing-feedback"></div><div class="game-area"><div class="drop-zone" data-label="1" data-order="1"></div><div class="drop-zone" data-label="2" data-order="2"></div><div class="drop-zone" data-label="3" data-order="3"></div></div><div id="draggable-container"></div></div>
+        <div id="count-trace-game-screen" class="screen"><button class="btn back-button" onclick="showScreen('menu-screen')">Back</button><div class="feedback" id="count-trace-feedback"></div><div class="game-area"><div id="item-container"></div><div id="tracing-area"><canvas id="trace-canvas" width="200" height="200"></canvas><button id="clear-canvas-btn" class="btn btn-secondary">Clear</button></div></div><button class="btn" id="next-trace-btn">Next</button></div>
+        <div id="phone-practice-screen" class="screen"><button class="btn back-button" onclick="showScreen('menu-screen')">Back</button><div class="feedback" id="phone-feedback"></div><div id="phone-display"></div><div id="keypad"></div></div>
     </div>
 
     <script>
@@ -423,6 +230,7 @@
             acorn: `<svg viewBox="0 0 100 100"><path d="M40 40 C 40 20, 60 20, 60 40 V 50 H 40 Z" fill="#8d6e63"/><path d="M50 35 L 50 25" stroke="#6d4c41" stroke-width="4"/><path d="M40 50 C 40 70, 60 70, 60 50 Q 50 80, 40 50" fill="#a1887f"/></svg>`,
             beetle: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="50" rx="30" ry="20" fill="#616161"/><circle cx="50" cy="25" r="10" fill="#424221"/><circle cx="45" cy="22" r="2" fill="white"/><circle cx="55" cy="22" r="2" fill="white"/><path d="M50 35 V 70" stroke="#212121" stroke-width="2"/><path d="M40 40 L 20 30 M40 50 L 20 50 M40 60 L 20 70 M60 40 L 80 30 M60 50 L 80 50 M60 60 L 80 70" stroke="#424242" stroke-width="3" stroke-linecap="round"/></svg>`
         };
+
         const sequences = [
             { name: 'snowman', images: SVGs.snowman, instruction: 'Let\'s build a snowman! Put the pictures in order.' },
             { name: 'plant', images: SVGs.plant, instruction: 'Let\'s grow a plant! What happens first?' },
@@ -435,13 +243,12 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             try { synth = window.speechSynthesis; } catch (e) { console.error("Speech Synthesis not supported."); }
-            
+
             document.getElementById('start-btn').addEventListener('click', () => {
                 const phoneInput = document.getElementById('phone-input');
                 parentPhoneNumber = phoneInput.value.replace(/\D/g, '');
-                if (parentPhoneNumber.length > 3) {
-                     startLesson();
-                } else {
+                if (parentPhoneNumber.length > 3) { startLesson(); } 
+                else {
                     speak("Please ask a grown up to enter a valid phone number.");
                     phoneInput.classList.add('incorrect-animation');
                     setTimeout(() => phoneInput.classList.remove('incorrect-animation'), 500);
@@ -457,226 +264,113 @@
             setupCanvas();
         });
 
-        function speak(text) {
-            if (!synth) return;
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = 0.9;
-            utterance.pitch = 1.2;
-            synth.cancel();
-            synth.speak(utterance);
-        }
-
-        function showScreen(screenId) {
-            screens.forEach(s => s.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
-        }
+        function speak(text) { if (!synth) return; const u = new SpeechSynthesisUtterance(text); u.rate = 0.9; u.pitch = 1.2; synth.cancel(); synth.speak(u); }
+        function showScreen(screenId) { screens.forEach(s => s.classList.remove('active')); document.getElementById(screenId).classList.add('active'); }
 
         // --- PART 1: Interactive Lesson ---
         let lessonStep = 0;
         const lessonSteps = [
-            { html: `<h1>Order of Events</h1><p>Many things have to happen in a certain order. To make a sandwich, you get the bread out *before* you spread the peanut butter!</p>`, speech: "Many things have to happen in a certain order. To make a sandwich, you get the bread out *before* you spread the peanut butter!" },
+            { html: `<h1>Order of Events</h1><p>Many things have to happen in a certain order. To make a sandwich, you get the bread out *before* you spread the peanut butter!</p>`, speech: "Many things have to happen in a certain order. To make a sandwich, you get the bread out before you spread the peanut butter!" },
             { html: `<h2>First, Next, Last</h2><p>Look at the chick. First, it's in an egg. Next, the egg cracks. Last, the chick is out!</p><div class="lesson-example"><div>${SVGs.chicken[0]}<p>1</p></div><div>${SVGs.chicken[1]}<p>2</p></div><div>${SVGs.chicken[2]}<p>3</p></div></div>`, speech: "Look at the chick. First, it's in an egg. Next, the egg cracks. Last, the chick is out! One, two, three." },
             { html: `<h2>Let's Count!</h2><p>Sometimes we need to count things. How many acorns are here?</p><div class="lesson-example-grid">${SVGs.acorn.repeat(5)}</div><p>There are 5 acorns!</p>`, speech: "Sometimes we need to count things. How many acorns are here? Let's count! One, two, three, four, five! There are five acorns!" },
             { html: `<h2>Practice Your Number</h2><p>It's also important to remember special things, like a phone number. We will practice this too!</p><div class="lesson-example">${SVGs.phone}</div>`, speech: "It's also important to remember special things, like a phone number. We will practice this too!" },
             { html: `<h1>Great job!</h1><p>Now you know about order, counting, and practicing. Are you ready to play some games?</p>`, speech: "Great job! Now you know about order, counting, and practicing. Are you ready to play some games?" }
         ];
         function startLesson() { lessonStep = 0; showScreen('lesson-screen'); updateLessonContent(); }
-        function updateLessonContent() {
-            const contentDiv = document.getElementById('lesson-content');
-            const nextBtn = document.getElementById('next-lesson-btn');
-            contentDiv.innerHTML = lessonSteps[lessonStep].html;
-            speak(lessonSteps[lessonStep].speech);
-            nextBtn.textContent = (lessonStep >= lessonSteps.length - 1) ? 'Play Games!' : 'Next';
-        }
-        function handleNextLessonStep() {
-            lessonStep++;
-            if (lessonStep < lessonSteps.length) { updateLessonContent(); } 
-            else { showScreen('menu-screen'); speak("Choose a game to practice."); }
-        }
-        
+        function updateLessonContent() { const data = lessonSteps[lessonStep]; document.getElementById('lesson-content').innerHTML = data.html; speak(data.speech); document.getElementById('next-lesson-btn').textContent = (lessonStep >= lessonSteps.length - 1) ? 'Play Games!' : 'Next'; }
+        function handleNextLessonStep() { lessonStep++; if (lessonStep < lessonSteps.length) { updateLessonContent(); } else { showScreen('menu-screen'); speak("Choose a game to practice."); } }
+
         // --- PART 2: Replayable Games ---
+        function resetSequencingGame() { document.getElementById('sequencing-feedback').textContent = ''; document.getElementById('draggable-container').innerHTML = ''; document.querySelectorAll('.drop-zone').forEach(z => { z.innerHTML = ''; z.classList.remove('filled', 'correct'); }); }
+        function resetCountTraceGame() { document.getElementById('count-trace-feedback').textContent = ''; document.getElementById('item-container').innerHTML = ''; clearCanvas(); }
+        function resetPhonePractice() { document.getElementById('phone-feedback').textContent = ''; document.getElementById('phone-display').innerHTML = ''; document.getElementById('keypad').innerHTML = ''; }
 
-        // --- State Reset Functions ---
-        function resetSequencingGame() {
-            document.getElementById('sequencing-feedback').textContent = '';
-            document.getElementById('draggable-container').innerHTML = '';
-            document.querySelectorAll('.drop-zone').forEach(zone => {
-                zone.innerHTML = '';
-                zone.classList.remove('filled', 'correct');
-            });
-        }
-        function resetCountTraceGame() {
-            document.getElementById('count-trace-feedback').textContent = '';
-            document.getElementById('item-container').innerHTML = '';
-            clearCanvas();
-        }
-        function resetPhonePractice() {
-            document.getElementById('phone-feedback').textContent = '';
-            document.getElementById('phone-display').innerHTML = '';
-            document.getElementById('keypad').innerHTML = '';
-        }
-
-        // --- Sequencing Game (REVISED & WORKING) ---
-        let currentSequence, droppedCount, draggedItem = null, initialX, initialY;
+        // --- Sequencing Game (FINAL & WORKING) ---
+        let currentSequence, droppedCount;
         function startSequencingGame() {
             resetSequencingGame();
             showScreen('sequencing-game-screen');
             currentSequence = sequences[Math.floor(Math.random() * sequences.length)];
             droppedCount = 0;
-            const items = [{ order: 1, svg: currentSequence.images[0] }, { order: 2, svg: currentSequence.images[1] }, { order: 3, svg: currentSequence.images[2] }];
-            items.sort(() => Math.random() - 0.5);
-            const draggableContainer = document.getElementById('draggable-container');
-            items.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'draggable';
-                div.dataset.order = item.order;
-                div.innerHTML = item.svg;
-                draggableContainer.appendChild(div);
-            });
+            const items = [{ order: 1, svg: currentSequence.images[0] }, { order: 2, svg: currentSequence.images[1] }, { order: 3, svg: currentSequence.images[2] }].sort(() => Math.random() - 0.5);
+            const host = document.getElementById('draggable-container');
+            items.forEach(item => { const el = document.createElement('div'); el.className = 'draggable'; el.dataset.order = item.order; el.innerHTML = item.svg; host.appendChild(el); });
             speak(currentSequence.instruction);
         }
         function setupDraggableEvents() {
+            let draggedItem = null, dx = 0, dy = 0;
             const container = document.getElementById('game-container');
-            function dragStart(e) {
+            const onDown = (e) => {
                 const target = e.target.closest('.draggable:not(.correct)');
                 if (!target) return;
                 draggedItem = target;
-                draggedItem.style.transition = 'none';
-                const touch = e.touches ? e.touches[0] : e;
+                draggedItem.setPointerCapture?.(e.pointerId);
                 const rect = draggedItem.getBoundingClientRect();
-                initialX = touch.clientX - rect.left;
-                initialY = touch.clientY - rect.top;
+                dx = e.clientX - rect.left; dy = e.clientY - rect.top;
                 draggedItem.classList.add('dragging');
                 draggedItem.style.left = `${rect.left}px`;
                 draggedItem.style.top = `${rect.top}px`;
-            }
-            function dragMove(e) {
+            };
+            const onMove = (e) => {
                 if (!draggedItem) return;
-                e.preventDefault();
-                const touch = e.touches ? e.touches[0] : e;
-                draggedItem.style.left = `${touch.clientX - initialX}px`;
-                draggedItem.style.top = `${touch.clientY - initialY}px`;
-            }
-            function dragEnd(e) {
+                draggedItem.style.left = `${e.clientX - dx}px`;
+                draggedItem.style.top = `${e.clientY - dy}px`;
+            };
+            const onUp = (e) => {
                 if (!draggedItem) return;
-                let dropped = false;
-                const touch = e.changedTouches ? e.changedTouches[0] : e;
-                const dropZones = document.querySelectorAll('.drop-zone');
-                for (const zone of dropZones) {
-                    const rect = zone.getBoundingClientRect();
-                    if (touch.clientX > rect.left && touch.clientX < rect.right && touch.clientY > rect.top && touch.clientY < rect.bottom && !zone.classList.contains('filled')) {
-                        handleDrop(draggedItem, zone);
-                        dropped = true;
-                        break;
-                    }
+                draggedItem.releasePointerCapture?.(e.pointerId);
+                const target = document.elementFromPoint(e.clientX, e.clientY);
+                const zone = target ? target.closest('.drop-zone') : null;
+                if (zone && !zone.classList.contains('filled')) {
+                    const item = draggedItem;
+                    draggedItem = null;
+                    handleDrop(item, zone);
+                } else {
+                    const item = draggedItem;
+                    draggedItem = null;
+                    item.classList.remove('dragging');
+                    item.style.left = ''; item.style.top = '';
+                    item.classList.add('incorrect-animation');
+                    setTimeout(() => item.classList.remove('incorrect-animation'), 300);
                 }
-                if (!dropped) {
-                    draggedItem.classList.add('incorrect-animation');
-                    setTimeout(() => draggedItem.classList.remove('incorrect-animation'), 300);
-                }
-                draggedItem.classList.remove('dragging');
-                draggedItem.style.position = '';
-                draggedItem.style.left = '';
-                draggedItem.style.top = '';
-                draggedItem.style.transition = '';
-                draggedItem = null;
-            }
-            container.addEventListener('touchstart', dragStart, { passive: false });
-            container.addEventListener('touchmove', dragMove, { passive: false });
-            container.addEventListener('touchend', dragEnd);
+            };
+            container.addEventListener('pointerdown', onDown);
+            container.addEventListener('pointermove', onMove);
+            container.addEventListener('pointerup', onUp);
+            container.addEventListener('pointercancel', onUp);
         }
         function handleDrop(item, zone) {
             const feedbackEl = document.getElementById('sequencing-feedback');
             if (item.dataset.order === zone.dataset.order) {
                 zone.appendChild(item);
-                item.classList.add('correct');
-                zone.classList.add('filled');
+                item.classList.remove('dragging');
+                item.style.left = ''; item.style.top = '';
+                item.classList.add('correct'); zone.classList.add('filled');
                 feedbackEl.textContent = 'Correct!'; speak('Yes!'); droppedCount++;
-                if (droppedCount === 3) {
-                    feedbackEl.textContent = 'You did it! Great job!';
-                    speak('You did it! Great job!');
-                    setTimeout(startSequencingGame, 3000);
-                }
+                if (droppedCount === 3) { feedbackEl.textContent = 'You did it!'; speak('You did it! Great job!'); setTimeout(startSequencingGame, 2500); }
             } else {
                 feedbackEl.textContent = 'Not quite, try again!'; speak('Not quite, try again!');
+                item.classList.remove('dragging');
+                item.style.left = ''; item.style.top = '';
                 item.classList.add('incorrect-animation');
                 setTimeout(() => item.classList.remove('incorrect-animation'), 300);
             }
         }
 
         // --- Count & Trace Game (WORKING) ---
-        let currentCountable, currentCount;
-        const canvas = document.getElementById('trace-canvas');
-        const ctx = canvas.getContext('2d');
-        let isDrawing = false;
-        function startCountTraceGame() {
-            resetCountTraceGame();
-            showScreen('count-trace-game-screen');
-            currentCountable = countables[Math.floor(Math.random() * countables.length)];
-            currentCount = Math.floor(Math.random() * 8) + 2;
-            const itemContainer = document.getElementById('item-container');
-            for(let i = 0; i < currentCount; i++) {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'countable-item';
-                itemDiv.innerHTML = currentCountable.image;
-                itemContainer.appendChild(itemDiv);
-            }
-            drawNumberGuide(currentCount);
-            speak(`How many ${currentCountable.name}? There are ${currentCount}. Now, trace the number ${currentCount}.`);
-        }
-        function setupCanvas() {
-            document.getElementById('clear-canvas-btn').addEventListener('click', clearCanvas);
-            document.getElementById('next-trace-btn').addEventListener('click', startCountTraceGame);
-            function getPos(e) { const r = canvas.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e; return { x: (t.clientX - r.left) * (canvas.width / r.width), y: (t.clientY - r.top) * (canvas.height / r.height) }; }
-            function start(e) { isDrawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
-            function draw(e) { if (!isDrawing) return; e.preventDefault(); const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.strokeStyle = 'var(--accent-color)'; ctx.lineWidth = 10; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(); }
-            function stop() { if(isDrawing) { ctx.closePath(); isDrawing = false; } }
-            ['mousedown', 'touchstart'].forEach(evt => canvas.addEventListener(evt, start, { passive: false }));
-            ['mousemove', 'touchmove'].forEach(evt => canvas.addEventListener(evt, draw, { passive: false }));
-            ['mouseup', 'mouseout', 'touchend'].forEach(evt => canvas.addEventListener(evt, stop));
-        }
-        function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); drawNumberGuide(currentCount); }
-        function drawNumberGuide(num) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.font = '150px ' + getComputedStyle(document.body).fontFamily;
-            ctx.fillStyle = '#e0e0e0'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            let guideChar = num ? num.toString() : '';
-            if (num === 1) guideChar = 'l';
-            ctx.fillText(guideChar, canvas.width / 2, canvas.height / 2);
-        }
-        
+        let currentCountable, currentCount; const canvas = document.getElementById('trace-canvas'); const ctx = canvas.getContext('2d'); let isDrawing = false;
+        function startCountTraceGame() { resetCountTraceGame(); showScreen('count-trace-game-screen'); currentCountable = countables[Math.floor(Math.random() * countables.length)]; currentCount = Math.floor(Math.random() * 8) + 2; const container = document.getElementById('item-container'); for(let i=0; i<currentCount; i++) { const div = document.createElement('div'); div.className = 'countable-item'; div.innerHTML = currentCountable.image; container.appendChild(div); } drawNumberGuide(currentCount); speak(`How many ${currentCountable.name}? There are ${currentCount}. Now, trace the number ${currentCount}.`); }
+        function setupCanvas() { document.getElementById('clear-canvas-btn').addEventListener('click', clearCanvas); document.getElementById('next-trace-btn').addEventListener('click', startCountTraceGame); function getPos(e) { const r = canvas.getBoundingClientRect(), t = e.touches?e.touches[0]:e; return { x:(t.clientX-r.left)*(canvas.width/r.width), y:(t.clientY-r.top)*(canvas.height/r.height) }; } function start(e) { isDrawing = true; const p=getPos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); } function draw(e) { if(!isDrawing)return; e.preventDefault(); const p=getPos(e); ctx.lineTo(p.x,p.y); ctx.strokeStyle='var(--accent-color)'; ctx.lineWidth=10; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.stroke(); } function stop() { if(isDrawing){ctx.closePath();isDrawing=false;} } ['mousedown','touchstart'].forEach(evt=>canvas.addEventListener(evt,start,{passive:false})); ['mousemove','touchmove'].forEach(evt=>canvas.addEventListener(evt,draw,{passive:false})); ['mouseup','mouseout','touchend'].forEach(evt=>canvas.addEventListener(evt,stop)); }
+        function clearCanvas() { ctx.clearRect(0,0,canvas.width,canvas.height); drawNumberGuide(currentCount); }
+        function drawNumberGuide(num) { ctx.clearRect(0,0,canvas.width,canvas.height); ctx.font='150px '+getComputedStyle(document.body).fontFamily; ctx.fillStyle='#e0e0e0'; ctx.textAlign='center'; ctx.textBaseline='middle'; let guideChar=num?num.toString():''; if(num===1)guideChar='l'; ctx.fillText(guideChar,canvas.width/2,canvas.height/2); }
+
         // --- Phone Number Practice (WORKING) ---
         let currentTypedNumber = '';
-        function startPhonePractice() {
-            resetPhonePractice();
-            showScreen('phone-practice-screen'); currentTypedNumber = '';
-            const keypadContainer = document.getElementById('keypad');
-            const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, '', 0, ''];
-            numbers.forEach(num => {
-                if (num === '') { keypadContainer.appendChild(document.createElement('div')); } 
-                else { const btn = document.createElement('button'); btn.className = 'btn keypad-btn'; btn.textContent = num; btn.addEventListener('click', () => handleKeypadPress(num)); keypadContainer.appendChild(btn); }
-            });
-            updatePhoneDisplay();
-            speak("Let's practice your special number. Tap the numbers in order.");
-        }
-        function handleKeypadPress(num) {
-            const nextDigit = parentPhoneNumber[currentTypedNumber.length];
-            if (num.toString() === nextDigit) {
-                currentTypedNumber += num; updatePhoneDisplay();
-                if (currentTypedNumber.length === parentPhoneNumber.length) { document.getElementById('phone-feedback').textContent = 'You did it! Amazing!'; speak('You did it! Amazing memory!'); setTimeout(startPhonePractice, 3000); }
-            } else {
-                const keypad = document.getElementById('keypad');
-                keypad.classList.add('incorrect-animation'); setTimeout(() => keypad.classList.remove('incorrect-animation'), 300);
-                speak('Oops, try the next number.');
-            }
-        }
-        function updatePhoneDisplay() {
-            const display = document.getElementById('phone-display'); let html = '';
-            for (let i = 0; i < parentPhoneNumber.length; i++) { html += (i < currentTypedNumber.length) ? `<span class="typed">${parentPhoneNumber[i]}</span>` : `<span>_</span>`; }
-            display.innerHTML = html;
-        }
+        function startPhonePractice() { resetPhonePractice(); showScreen('phone-practice-screen'); currentTypedNumber = ''; const container = document.getElementById('keypad'); const nums = [1,2,3,4,5,6,7,8,9,'',0,'']; nums.forEach(n => { if(n==='') { container.appendChild(document.createElement('div')); } else { const btn = document.createElement('button'); btn.className = 'btn keypad-btn'; btn.textContent = n; btn.addEventListener('click', () => handleKeypadPress(n)); container.appendChild(btn); } }); updatePhoneDisplay(); speak("Let's practice your special number."); }
+        function handleKeypadPress(num) { const next = parentPhoneNumber[currentTypedNumber.length]; if (num.toString() === next) { currentTypedNumber += num; updatePhoneDisplay(); if (currentTypedNumber.length === parentPhoneNumber.length) { document.getElementById('phone-feedback').textContent = 'You did it!'; speak('Amazing memory!'); setTimeout(startPhonePractice, 3000); } } else { const keypad=document.getElementById('keypad'); keypad.classList.add('incorrect-animation'); setTimeout(()=>keypad.classList.remove('incorrect-animation'), 300); speak('Oops, try again.'); } }
+        function updatePhoneDisplay() { const display=document.getElementById('phone-display'); let html = ''; for (let i=0;i<parentPhoneNumber.length;i++) { html += (i<currentTypedNumber.length)?`<span class="typed">${parentPhoneNumber[i]}</span>`:`<span>_</span>`; } display.innerHTML = html; }
     </script>
-    
+
     <!-- Anti-Gesture Script: Placed just before closing body tag -->
     <script>
       document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
