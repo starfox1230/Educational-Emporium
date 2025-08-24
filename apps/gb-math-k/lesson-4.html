@@ -259,7 +259,9 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 10px;
             width: 250px;
-            align-items: center;
+            height: 250px;
+            align-content: center;
+            justify-items: center;
         }
 
         .countable-item {
@@ -452,9 +454,9 @@
             });
             
             document.getElementById('next-lesson-btn').addEventListener('click', handleNextLessonStep);
-            document.getElementById('play-sequencing-btn').addEventListener('click', () => startSequencingGame());
-            document.getElementById('play-count-trace-btn').addEventListener('click', () => startCountTraceGame());
-            document.getElementById('play-phone-btn').addEventListener('click', () => startPhonePractice());
+            document.getElementById('play-sequencing-btn').addEventListener('click', startSequencingGame);
+            document.getElementById('play-count-trace-btn').addEventListener('click', startCountTraceGame);
+            document.getElementById('play-phone-btn').addEventListener('click', startPhonePractice);
             
             setupDraggableEvents();
             setupCanvas();
@@ -551,8 +553,7 @@
         }
 
         // --- Sequencing Game ---
-        let currentSequence, droppedCount;
-        let draggedItem = null;
+        let currentSequence, droppedCount, draggedItem = null;
 
         function startSequencingGame() {
             resetSequencingGame();
@@ -577,9 +578,44 @@
         
         function setupDraggableEvents() {
             const container = document.getElementById('sequencing-game-screen');
-            container.addEventListener('touchstart', e => { if (e.target.closest('.draggable:not(.correct)')) { draggedItem = e.target.closest('.draggable'); draggedItem.classList.add('dragging'); } }, { passive: false });
-            container.addEventListener('touchmove', e => { if (draggedItem) { e.preventDefault(); let t = e.touches[0]; draggedItem.style.position = 'absolute'; draggedItem.style.left = `${t.clientX - draggedItem.offsetWidth / 2}px`; draggedItem.style.top = `${t.clientY - draggedItem.offsetHeight / 2}px`; } }, { passive: false });
-            container.addEventListener('touchend', e => { if (!draggedItem) return; draggedItem.style.display='none'; const dropZone = document.elementFromPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY)?.closest('.drop-zone'); draggedItem.style.display='flex'; draggedItem.classList.remove('dragging'); draggedItem.style.position = 'relative'; draggedItem.style.left = 'auto'; draggedItem.style.top = 'auto'; if (dropZone && !dropZone.classList.contains('filled')) { handleDrop(draggedItem, dropZone); } else { draggedItem.classList.add('incorrect-animation'); setTimeout(() => draggedItem.classList.remove('incorrect-animation'), 300); } draggedItem = null; });
+            container.addEventListener('touchstart', e => {
+                const target = e.target.closest('.draggable:not(.correct)');
+                if (target) {
+                    draggedItem = target;
+                    draggedItem.classList.add('dragging');
+                }
+            }, { passive: false });
+
+            container.addEventListener('touchmove', e => {
+                if (draggedItem) {
+                    e.preventDefault();
+                    let touch = e.touches[0];
+                    draggedItem.style.position = 'absolute';
+                    draggedItem.style.left = `${touch.clientX - draggedItem.offsetWidth / 2}px`;
+                    draggedItem.style.top = `${touch.clientY - draggedItem.offsetHeight / 2}px`;
+                }
+            }, { passive: false });
+
+            container.addEventListener('touchend', e => {
+                if (!draggedItem) return;
+                
+                draggedItem.style.display = 'none';
+                const dropZone = document.elementFromPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY)?.closest('.drop-zone');
+                draggedItem.style.display = 'flex';
+
+                draggedItem.classList.remove('dragging');
+                draggedItem.style.position = 'relative';
+                draggedItem.style.left = 'auto';
+                draggedItem.style.top = 'auto';
+
+                if (dropZone && !dropZone.classList.contains('filled')) {
+                    handleDrop(draggedItem, dropZone);
+                } else {
+                    draggedItem.classList.add('incorrect-animation');
+                    setTimeout(() => draggedItem.classList.remove('incorrect-animation'), 300);
+                }
+                draggedItem = null;
+            });
         }
         
         function handleDrop(item, zone) {
@@ -589,10 +625,15 @@
                 item.classList.add('correct');
                 zone.classList.add('filled');
                 feedbackEl.textContent = 'Correct!'; speak('Yes!'); droppedCount++;
-                if (droppedCount === 3) { feedbackEl.textContent = 'You did it! Great job!'; speak('You did it! Great job!'); setTimeout(startSequencingGame, 3000); }
+                if (droppedCount === 3) {
+                    feedbackEl.textContent = 'You did it! Great job!';
+                    speak('You did it! Great job!');
+                    setTimeout(startSequencingGame, 3000);
+                }
             } else {
                 feedbackEl.textContent = 'Not quite, try again!'; speak('Not quite, try again!');
-                item.classList.add('incorrect-animation'); setTimeout(() => item.classList.remove('incorrect-animation'), 300);
+                item.classList.add('incorrect-animation');
+                setTimeout(() => item.classList.remove('incorrect-animation'), 300);
             }
         }
 
@@ -607,10 +648,14 @@
             showScreen('count-trace-game-screen');
             currentCountable = countables[Math.floor(Math.random() * countables.length)];
             currentCount = Math.floor(Math.random() * 8) + 2; // 2 to 9 items
+            
             const itemContainer = document.getElementById('item-container');
-            for(let i=0; i < currentCount; i++) {
-                itemContainer.innerHTML += `<div class="countable-item">${currentCountable.image}</div>`;
+            let itemsHTML = '';
+            for(let i = 0; i < currentCount; i++) {
+                itemsHTML += `<div class="countable-item">${currentCountable.image}</div>`;
             }
+            itemContainer.innerHTML = itemsHTML;
+
             drawNumberGuide(currentCount);
             speak(`How many ${currentCountable.name}? There are ${currentCount}. Now, trace the number ${currentCount}.`);
         }
@@ -618,23 +663,38 @@
         function setupCanvas() {
             document.getElementById('clear-canvas-btn').addEventListener('click', clearCanvas);
             document.getElementById('next-trace-btn').addEventListener('click', startCountTraceGame);
-            function getPos(e) { const r = canvas.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e; return {x:(t.clientX - r.left)*(canvas.width/r.width), y:(t.clientY - r.top)*(canvas.height/r.height)}; }
-            function start(e) { isDrawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
-            function draw(e) { if (!isDrawing) return; e.preventDefault(); const p=getPos(e); ctx.lineTo(p.x,p.y); ctx.strokeStyle = 'var(--accent-color)'; ctx.lineWidth=10; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.stroke(); }
-            function stop() { if(isDrawing){ctx.closePath(); isDrawing=false;} }
-            ['mousedown', 'touchstart'].forEach(evt => canvas.addEventListener(evt, start, { passive: false }));
-            ['mousemove', 'touchmove'].forEach(evt => canvas.addEventListener(evt, draw, { passive: false }));
-            ['mouseup', 'mouseout', 'touchend'].forEach(evt => canvas.addEventListener(evt, stop));
+
+            function getPos(e) {
+                const rect = canvas.getBoundingClientRect();
+                const touch = e.touches ? e.touches[0] : e;
+                return {
+                    x: (touch.clientX - rect.left) * (canvas.width / rect.width),
+                    y: (touch.clientY - rect.top) * (canvas.height / rect.height)
+                };
+            }
+            function start(e) { isDrawing = true; const pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); }
+            function draw(e) { if (!isDrawing) return; e.preventDefault(); const pos = getPos(e); ctx.lineTo(pos.x, pos.y); ctx.strokeStyle = 'var(--accent-color)'; ctx.lineWidth = 10; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(); }
+            function stop() { if(isDrawing){ ctx.closePath(); isDrawing = false; } }
+            
+            canvas.addEventListener('mousedown', start, { passive: false });
+            canvas.addEventListener('mousemove', draw, { passive: false });
+            canvas.addEventListener('mouseup', stop);
+            canvas.addEventListener('mouseout', stop);
+            canvas.addEventListener('touchstart', start, { passive: false });
+            canvas.addEventListener('touchmove', draw, { passive: false });
+            canvas.addEventListener('touchend', stop);
         }
 
-        function clearCanvas() { ctx.clearRect(0,0,canvas.width,canvas.height); drawNumberGuide(currentCount); }
+        function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); drawNumberGuide(currentCount); }
 
         function drawNumberGuide(num) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.font = '150px ' + getComputedStyle(document.body).fontFamily;
-            ctx.fillStyle = '#e0e0e0'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#e0e0e0';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
             let guideChar = num.toString();
-            if (num === 1) guideChar = 'l';
+            if (num === 1) guideChar = 'l'; // Special tracing rule for '1'
             ctx.fillText(guideChar, canvas.width / 2, canvas.height / 2);
         }
         
@@ -643,10 +703,21 @@
 
         function startPhonePractice() {
             resetPhonePractice();
-            showScreen('phone-practice-screen'); currentTypedNumber = '';
+            showScreen('phone-practice-screen');
+            currentTypedNumber = '';
             const keypadContainer = document.getElementById('keypad');
             const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, '', 0, ''];
-            numbers.forEach(num => { if (num === '') { keypadContainer.appendChild(document.createElement('div')); } else { const btn = document.createElement('button'); btn.className='btn keypad-btn'; btn.textContent=num; btn.addEventListener('click',()=>handleKeypadPress(num)); keypadContainer.appendChild(btn); } });
+            numbers.forEach(num => {
+                if (num === '') {
+                    keypadContainer.appendChild(document.createElement('div'));
+                } else {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn keypad-btn';
+                    btn.textContent = num;
+                    btn.addEventListener('click', () => handleKeypadPress(num));
+                    keypadContainer.appendChild(btn);
+                }
+            });
             updatePhoneDisplay();
             speak("Let's practice your special number. Tap the numbers in order.");
         }
@@ -654,18 +725,27 @@
         function handleKeypadPress(num) {
             const nextDigit = parentPhoneNumber[currentTypedNumber.length];
             if (num.toString() === nextDigit) {
-                currentTypedNumber += num; updatePhoneDisplay();
-                if (currentTypedNumber.length === parentPhoneNumber.length) { document.getElementById('phone-feedback').textContent='You did it! Amazing!'; speak('You did it! Amazing memory!'); setTimeout(startPhonePractice, 3000); }
+                currentTypedNumber += num;
+                updatePhoneDisplay();
+                if (currentTypedNumber.length === parentPhoneNumber.length) {
+                    document.getElementById('phone-feedback').textContent = 'You did it! Amazing!';
+                    speak('You did it! Amazing memory!');
+                    setTimeout(startPhonePractice, 3000);
+                }
             } else {
                 const keypad = document.getElementById('keypad');
-                keypad.classList.add('incorrect-animation'); setTimeout(() => keypad.classList.remove('incorrect-animation'), 300);
+                keypad.classList.add('incorrect-animation');
+                setTimeout(() => keypad.classList.remove('incorrect-animation'), 300);
                 speak('Oops, try the next number.');
             }
         }
         
         function updatePhoneDisplay() {
-            const display = document.getElementById('phone-display'); let html = '';
-            for (let i=0; i<parentPhoneNumber.length; i++) { html += (i<currentTypedNumber.length) ? `<span class="typed">${parentPhoneNumber[i]}</span>` : `<span>_</span>`; }
+            const display = document.getElementById('phone-display');
+            let html = '';
+            for (let i = 0; i < parentPhoneNumber.length; i++) {
+                html += (i < currentTypedNumber.length) ? `<span class="typed">${parentPhoneNumber[i]}</span>` : `<span>_</span>`;
+            }
             display.innerHTML = html;
         }
     </script>
