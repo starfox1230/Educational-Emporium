@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Rosie's Number Practice</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+        :root {
+            --bg-color: #f0f8f0;
+            --main-green: #4CAF50;
+            --dark-green: #388E3C;
+            --light-green: #C8E6C9;
+            --orange: #FF9800;
+            --brown: #795548;
+            --text-color: #333;
+            --border-color: #a5d6a7;
+        }
+
+        /* Kid-Proof UX Rules */
+        body {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        html, body, button, a, .tap, .btn, .keypad-btn, .drop-zone, .draggable, canvas, svg {
+            touch-action: manipulation;
+            -ms-touch-action: manipulation;
+        }
+
+        input, select, textarea { font-size: 16px; }
+
+        #game-container {
+            width: 100%;
+            max-width: 900px;
+            height: 100vh;
+            max-height: 600px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .screen {
+            flex-grow: 1;
+            padding: 20px;
+            box-sizing: border-box;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .screen.active {
+            display: flex;
+        }
+        
+        #start-screen {
+            text-align: center;
+        }
+
+        .header {
+            width: 100%;
+            text-align: center;
+            padding-bottom: 15px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            color: var(--dark-green);
+            margin: 0;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            margin: 5px 0 0;
+            color: var(--text-color);
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            background-color: var(--main-green);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 var(--dark-green);
+            transition: all 0.1s ease-in-out;
+            margin-top: 20px;
+        }
+
+        .btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 var(--dark-green);
+        }
+
+        /* Part 1: Lesson Screen */
+        #lesson-screen {
+            flex-direction: row;
+            justify-content: space-around;
+            gap: 20px;
+        }
+
+        #house-area {
+            width: 55%;
+            height: 90%;
+            position: relative;
+            border: 2px dashed var(--border-color);
+            border-radius: 15px;
+            padding: 10px;
+        }
+        
+        #house-area svg {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .house-item {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .house-item:hover {
+            transform: scale(1.1);
+        }
+        
+        .house-item.found {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        #tracing-area {
+            width: 40%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        #tracing-canvas {
+            background-color: #fdfdfd;
+            border: 2px solid var(--border-color);
+            border-radius: 15px;
+            cursor: crosshair;
+        }
+
+        .tracing-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .small-btn {
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            background-color: var(--orange);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #c67600;
+        }
+
+        .small-btn:active {
+             transform: translateY(2px);
+             box-shadow: 0 2px 0 #c67600;
+        }
+        
+        #next-lesson-btn {
+            display: none;
+            background-color: var(--main-green);
+            box-shadow: 0 4px 0 var(--dark-green);
+        }
+
+        #instruction-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgba(76, 175, 80, 0.9);
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 1.2rem;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .speaker-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        /* Part 2: Game Screen */
+        #game-screen .header {
+            margin-bottom: 20px;
+        }
+        
+        #activity-area {
+            flex-grow: 1;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Ten Frame Game */
+        .ten-frame-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            width: 80%;
+            max-width: 500px;
+            padding: 10px;
+            background: var(--light-green);
+            border: 2px solid var(--main-green);
+            border-radius: 10px;
+        }
+
+        .ten-frame-slot {
+            width: 100%;
+            padding-bottom: 100%; /* Aspect ratio 1:1 */
+            background-color: white;
+            border-radius: 10px;
+            border: 2px dashed var(--border-color);
+            position: relative;
+        }
+        
+        .ten-frame-slot svg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 80%;
+        }
+
+        #carrot-source {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            cursor: grab;
+        }
+        
+        #carrot-source svg {
+            width: 80px;
+            height: 80px;
+        }
+
+        .draggable {
+            position: absolute;
+            z-index: 100;
+            cursor: grabbing;
+            pointer-events: none;
+        }
+
+        /* Item Selection Game */
+        #item-selection-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .selectable-item {
+            position: absolute;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .selectable-item svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.2));
+        }
+
+        .selectable-item.selected {
+            transform: scale(1.1);
+            outline: 4px solid var(--orange);
+            border-radius: 50%;
+        }
+        
+        #check-answer-btn {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        /* Feedback */
+        #feedback-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+
+        #feedback-box {
+            font-size: 8rem;
+            animation: pop-in 0.5s;
+        }
+
+        @keyframes pop-in {
+            0% { transform: scale(0); }
+            70% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen active">
+            <div class="header">
+                <h1>Rosie's Number Practice</h1>
+                <p>Learn to count, trace numbers, and feed the rabbit!</p>
+            </div>
+            <button id="start-btn" class="btn">Start Learning</button>
+        </div>
+
+        <!-- Lesson Screen -->
+        <div id="lesson-screen" class="screen">
+            <div id="house-area"></div>
+            <div id="tracing-area">
+                <canvas id="tracing-canvas" width="300" height="300"></canvas>
+                <div class="tracing-controls">
+                    <button id="clear-canvas-btn" class="small-btn">Clear</button>
+                    <button id="next-lesson-btn" class="small-btn">Next</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen">
+             <div class="header">
+                <h1>Feed the Rabbit!</h1>
+             </div>
+             <div id="activity-area"></div>
+             <button id="next-game-btn" class="btn" style="display: none; position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10;">Next Round</button>
+        </div>
+        
+        <div id="instruction-bar" style="display:none;">
+            <div id="speaker-icon" class="speaker-icon">
+                <svg viewBox="0 0 24 24" fill="white"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path></svg>
+            </div>
+            <span id="instruction-text"></span>
+        </div>
+        
+        <div id="feedback-overlay">
+            <div id="feedback-box"></div>
+        </div>
+
+    </div>
+
+    <script>
+        const startBtn = document.getElementById('start-btn');
+        const lessonScreen = document.getElementById('lesson-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const startScreen = document.getElementById('start-screen');
+        const instructionBar = document.getElementById('instruction-bar');
+        const instructionText = document.getElementById('instruction-text');
+        const speakerIcon = document.getElementById('speaker-icon');
+        const feedbackOverlay = document.getElementById('feedback-overlay');
+        const feedbackBox = document.getElementById('feedback-box');
+        
+        // TTS setup
+        const synth = window.speechSynthesis;
+        let currentUtterance = null;
+
+        function speak(text, callback) {
+            if (synth.speaking) {
+                synth.cancel();
+            }
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.9;
+            utterance.pitch = 1.2;
+            utterance.onend = callback;
+            currentUtterance = utterance;
+            synth.speak(utterance);
+        }
+        
+        speakerIcon.addEventListener('click', () => {
+            if (currentUtterance) {
+                 speak(currentUtterance.text);
+            }
+        });
+
+        function showFeedback(isCorrect, onEnd) {
+            feedbackBox.innerHTML = isCorrect ? '&#x2705;' : '&#x274C;';
+            feedbackOverlay.style.display = 'flex';
+            setTimeout(() => {
+                feedbackOverlay.style.display = 'none';
+                if (onEnd) onEnd();
+            }, 1200);
+        }
+        
+        function setInstruction(text, shouldSpeak = true) {
+            instructionText.textContent = text;
+            instructionBar.style.display = 'flex';
+            if (shouldSpeak) {
+                speak(text);
+            }
+        }
+
+        startBtn.addEventListener('click', () => {
+            startScreen.classList.remove('active');
+            lessonScreen.classList.add('active');
+            startLesson();
+        });
+        
+        // --- ASSET GENERATION ---
+        function createHouseSVG() {
+            return `
+            <svg viewBox="0 0 400 400">
+                <!-- Sky -->
+                <rect width="400" height="400" fill="#e3f2fd"/>
+                <!-- Ground -->
+                <rect y="350" width="400" height="50" fill="#a5d6a7"/>
+                
+                <!-- House Body -->
+                <rect x="100" y="150" width="200" height="200" fill="#f5e1c8"/>
+                <rect x="100" y="150" width="200" height="100" fill="#fafafa"/>
+                
+                <!-- Roof -->
+                <polygon points="80,150 320,150 200,80" fill="#a1887f"/>
+                
+                <!-- Door -->
+                <rect x="175" y="280" width="50" height="70" fill="#8d6e63"/>
+                <circle cx="215" cy="315" r="3" fill="#ffeb3b"/>
+                
+                <!-- Windows -->
+                <rect x="120" y="170" width="60" height="50" fill="#bbdefb"/><line x1="150" y1="170" x2="150" y2="220" stroke="white" stroke-width="2"/><line x1="120" y1="195" x2="180" y2="195" stroke="white" stroke-width="2"/>
+                <rect x="220" y="170" width="60" height="50" fill="#bbdefb"/><line x1="250" y1="170" x2="250" y2="220" stroke="white" stroke-width="2"/><line x1="220" y1="195" x2="280" y2="195" stroke="white" stroke-width="2"/>
+                <rect x="120" y="250" width="40" height="40" fill="#bbdefb"/><line x1="140" y1="250" x2="140" y2="290" stroke="white" stroke-width="2"/><line x1="120" y1="270" x2="160" y2="270" stroke="white" stroke-width="2"/>
+                <rect x="240" y="250" width="40" height="40" fill="#bbdefb"/><line x1="260" y1="250" x2="260" y2="290" stroke="white" stroke-width="2"/><line x1="240" y1="270" x2="280" y2="270" stroke="white" stroke-width="2"/>
+                
+                <!-- Items to count -->
+                <g id="mailbox-1" class="house-item" data-id="mailbox"><rect x="30" y="300" width="30" height="50" fill="#795548"/><rect x="25" y="350" width="40" height="5" fill="#5d4037"/></g>
+                
+                <g id="bird-1" class="house-item" data-id="bird"><path d="M100 130 C 105 120, 115 120, 120 130 L 110 145 Z" fill="#c62828"/><circle cx="116" cy="128" r="2" fill="black"/></g>
+                <g id="bird-2" class="house-item" data-id="bird"><path d="M130 115 C 135 105, 145 105, 150 115 L 140 130 Z" fill="#c62828"/><circle cx="146" cy="113" r="2" fill="black"/></g>
+                <g id="bird-3" class="house-item" data-id="bird"><path d="M250 115 C 255 105, 265 105, 270 115 L 260 130 Z" fill="#c62828"/><circle cx="266" cy="113" r="2" fill="black"/></g>
+                <g id="bird-4" class="house-item" data-id="bird"><path d="M280 130 C 285 120, 295 120, 300 130 L 290 145 Z" fill="#c62828"/><circle cx="296" cy="128" r="2" fill="black"/></g>
+                <g id="bird-5" class="house-item" data-id="bird"><path d="M200 80 C 205 70, 215 70, 220 80 L 210 95 Z" fill="#c62828"/><circle cx="216" cy="78" r="2" fill="black"/></g>
+                
+                <g id="basket-1" class="house-item" data-id="basket"><rect x="90" y="225" width="25" height="15" fill="#8d6e63"/><circle cx="95" cy="235" r="5" fill="#f48fb1"/><circle cx="103" cy="232" r="6" fill="#ba68c8"/><circle cx="110" cy="235" r="5" fill="#81c784"/></g>
+                <g id="basket-2" class="house-item" data-id="basket"><rect x="285" y="225" width="25" height="15" fill="#8d6e63"/><circle cx="290" cy="235" r="5" fill="#f48fb1"/><circle cx="298" cy="232" r="6" fill="#ba68c8"/><circle cx="305" cy="235" r="5" fill="#81c784"/></g>
+                
+                <g id="box-1" class="house-item" data-id="box"><rect x="115" y="290" width="50" height="15" fill="#a1887f"/><rect x="120" y="285" width="5" height="10" fill="green"/><rect x="135" y="282" width="5" height="13" fill="green"/><rect x="150" y="285" width="5" height="10" fill="green"/></g>
+                <g id="box-2" class="house-item" data-id="box"><rect x="235" y="290" width="50" height="15" fill="#a1887f"/><rect x="240" y="285" width="5" height="10" fill="green"/><rect x="255" y="282" width="5" height="13" fill="green"/><rect x="270" y="285" width="5" height="10" fill="green"/></g>
+                <g id="box-3" class="house-item" data-id="box"><rect x="105" y="350" width="50" height="15" fill="#a1887f"/><rect x="110" y="345" width="5" height="10" fill="green"/><rect x="125" y="342" width="5" height="13" fill="green"/><rect x="140" y="345" width="5" height="10" fill="green"/></g>
+            </svg>
+            `;
+        }
+        
+        function createCarrotSVG() {
+            return `
+                <svg viewBox="0 0 100 100">
+                    <path d="M 50,95 C 20,70 40,30 50,10 C 60,30 80,70 50,95 Z" fill="#ff9800" stroke="#f57c00" stroke-width="2"/>
+                    <path d="M 50,15 L 40,2 L 45,15 L 50,5 L 55,15 L 60,2 Z" fill="#4caf50" stroke="#388e3c" stroke-width="1"/>
+                </svg>
+            `;
+        }
+        
+        function createSpinachSVG() {
+             return `
+                <svg viewBox="0 0 100 100">
+                    <path d="M50 90 C 20 90, 10 50, 40 30 C 50 50, 50 50, 50 90 Z" fill="#66bb6a"/>
+                    <path d="M50 90 C 80 90, 90 50, 60 30 C 50 50, 50 50, 50 90 Z" fill="#4caf50"/>
+                    <path d="M45 90 C 40 70, 45 50, 50 30 C 55 50, 60 70, 55 90 Z" fill="#388e3c"/>
+                </svg>
+             `;
+        }
+        
+        // --- PART 1: LESSON ---
+        const houseArea = document.getElementById('house-area');
+        const canvas = document.getElementById('tracing-canvas');
+        const ctx = canvas.getContext('2d');
+        const clearCanvasBtn = document.getElementById('clear-canvas-btn');
+        const nextLessonBtn = document.getElementById('next-lesson-btn');
+
+        let lessonSteps = [
+            { item: 'mailbox', count: 1, number: '1', found: 0 },
+            { item: 'bird', count: 5, number: '5', found: 0 },
+            { item: 'basket', count: 2, number: '2', found: 0 },
+            { item: 'box', count: 3, number: '3', found: 0 }
+        ];
+        let currentLessonStep = 0;
+        let isDrawing = false;
+        
+        function startLesson() {
+            houseArea.innerHTML = createHouseSVG();
+            setupLessonStep();
+            addHouseListeners();
+            setupCanvas();
+        }
+
+        function setupLessonStep() {
+            const step = lessonSteps[currentLessonStep];
+            setInstruction(`Let's find the ${step.item}s. How many are there? Tap them all.`);
+            resetCanvas(step.number);
+            nextLessonBtn.style.display = 'none';
+        }
+
+        function addHouseListeners() {
+            const items = houseArea.querySelectorAll('.house-item');
+            items.forEach(item => {
+                item.addEventListener('click', handleItemClick);
+            });
+        }
+        
+        function handleItemClick(e) {
+            const clickedItem = e.currentTarget;
+            if(clickedItem.classList.contains('found')) return;
+
+            const step = lessonSteps[currentLessonStep];
+            if (clickedItem.dataset.id === step.item) {
+                clickedItem.classList.add('found');
+                step.found++;
+                if (step.found === step.count) {
+                    speak(`Great job! You found all ${step.count} ${step.item}s.`);
+                    setTimeout(() => {
+                        setInstruction(`This is the number ${step.number}. Let's trace it!`);
+                    }, 2000);
+                }
+            } else {
+                speak("Oops, that's not what we're looking for right now.");
+            }
+        }
+        
+        function setupCanvas() {
+            let rect = canvas.getBoundingClientRect();
+
+            function getPos(e) {
+                const event = e.touches ? e.touches[0] : e;
+                return {
+                    x: event.clientX - rect.left,
+                    y: event.clientY - rect.top
+                };
+            }
+
+            function start(e) {
+                e.preventDefault();
+                isDrawing = true;
+                const pos = getPos(e);
+                ctx.beginPath();
+                ctx.moveTo(pos.x, pos.y);
+            }
+
+            function draw(e) {
+                e.preventDefault();
+                if (!isDrawing) return;
+                const pos = getPos(e);
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+            }
+
+            function stop() {
+                if (!isDrawing) return;
+                isDrawing = false;
+                ctx.closePath();
+                checkIfLessonComplete();
+            }
+            
+            canvas.addEventListener('mousedown', start);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stop);
+            canvas.addEventListener('mouseleave', stop);
+
+            canvas.addEventListener('touchstart', start);
+            canvas.addEventListener('touchmove', draw);
+            canvas.addEventListener('touchend', stop);
+
+            clearCanvasBtn.addEventListener('click', () => {
+                const step = lessonSteps[currentLessonStep];
+                resetCanvas(step.number);
+            });
+
+            nextLessonBtn.addEventListener('click', () => {
+                currentLessonStep++;
+                if (currentLessonStep < lessonSteps.length) {
+                    houseArea.querySelectorAll('.house-item').forEach(el => el.classList.remove('found'));
+                    setupLessonStep();
+                } else {
+                    // End of lesson
+                    lessonScreen.classList.remove('active');
+                    gameScreen.classList.add('active');
+                    startGame();
+                }
+            });
+        }
+
+        function resetCanvas(number) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#2c3e50';
+            ctx.lineWidth = 15;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            // Draw number guide
+            ctx.fillStyle = '#ecf0f1';
+            ctx.font = '250px Poppins, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Special rule for '1'
+            const guideChar = number === '1' ? 'l' : number;
+            ctx.fillText(guideChar, canvas.width / 2, canvas.height / 2);
+        }
+
+        function checkIfLessonComplete() {
+            const step = lessonSteps[currentLessonStep];
+            if (step.found === step.count) {
+                nextLessonBtn.style.display = 'block';
+            }
+        }
+
+        // --- PART 2: GAME ---
+        const activityArea = document.getElementById('activity-area');
+        const nextGameBtn = document.getElementById('next-game-btn');
+        
+        function startGame() {
+            setupNewRound();
+            nextGameBtn.addEventListener('click', setupNewRound);
+        }
+
+        function resetGame() {
+            activityArea.innerHTML = '';
+            nextGameBtn.style.display = 'none';
+             const existingBtn = document.getElementById('check-answer-btn');
+            if (existingBtn) existingBtn.remove();
+        }
+
+        function setupNewRound() {
+            resetGame();
+            const gameType = Math.random() < 0.5 ? 'tenFrame' : 'itemSelection';
+            if (gameType === 'tenFrame') {
+                setupTenFrameGame();
+            } else {
+                setupItemSelectionGame();
+            }
+        }
+        
+        // Ten Frame Game Logic
+        function setupTenFrameGame() {
+            setInstruction("Rosie's rabbit needs 3 carrots. Add carrots to the frame to make 3.");
+            const startCarrots = Math.floor(Math.random() * 3); // 0, 1, or 2
+            let currentCarrots = startCarrots;
+
+            let tenFrameHTML = '<div class="ten-frame-container">';
+            for(let i = 0; i < 10; i++) {
+                tenFrameHTML += `<div class="ten-frame-slot" data-index="${i}">${i < startCarrots ? createCarrotSVG() : ''}</div>`;
+            }
+            tenFrameHTML += '</div>';
+            activityArea.innerHTML = tenFrameHTML;
+            activityArea.insertAdjacentHTML('beforeend', `<div id="carrot-source">${createCarrotSVG()}</div>`);
+            
+            const carrotSource = document.getElementById('carrot-source');
+            const slots = document.querySelectorAll('.ten-frame-slot');
+
+            carrotSource.addEventListener('mousedown', startDrag);
+            carrotSource.addEventListener('touchstart', startDrag);
+
+            function startDrag(e) {
+                e.preventDefault();
+                if (currentCarrots >= 3) {
+                    speak("That's enough carrots!");
+                    return;
+                }
+                const draggable = document.createElement('div');
+                draggable.classList.add('draggable');
+                draggable.innerHTML = createCarrotSVG();
+                draggable.style.width = '80px';
+                draggable.style.height = '80px';
+                document.body.appendChild(draggable);
+                
+                const pos = e.touches ? e.touches[0] : e;
+                moveDraggable(draggable, pos.clientX, pos.clientY);
+
+                function move(e) {
+                    const pos = e.touches ? e.touches[0] : e;
+                    moveDraggable(draggable, pos.clientX, pos.clientY);
+                }
+
+                function end(e) {
+                    document.removeEventListener('mousemove', move);
+                    document.removeEventListener('mouseup', end);
+                    document.removeEventListener('touchmove', move);
+                    document.removeEventListener('touchend', end);
+                    
+                    let dropped = false;
+                    const dropTarget = document.elementFromPoint(
+                        (e.changedTouches ? e.changedTouches[0] : e).clientX,
+                        (e.changedTouches ? e.changedTouches[0] : e).clientY
+                    );
+                    
+                    if(dropTarget && dropTarget.classList.contains('ten-frame-slot') && !dropTarget.innerHTML) {
+                        dropTarget.innerHTML = createCarrotSVG();
+                        currentCarrots++;
+                        dropped = true;
+                        if (currentCarrots === 3) {
+                            speak("Yay! Three carrots! The rabbit will be happy.");
+                            showFeedback(true, () => nextGameBtn.style.display = 'block');
+                            carrotSource.style.display = 'none';
+                        }
+                    }
+
+                    document.body.removeChild(draggable);
+                }
+                
+                document.addEventListener('mousemove', move);
+                document.addEventListener('mouseup', end);
+                document.addEventListener('touchmove', move);
+                document.addEventListener('touchend', end);
+            }
+            
+            function moveDraggable(el, x, y) {
+                 el.style.left = `${x - 40}px`;
+                 el.style.top = `${y - 40}px`;
+            }
+        }
+        
+        // Item Selection Game Logic
+        function setupItemSelectionGame() {
+            setInstruction("The rabbit loves spinach! Tap on three bunches of spinach.");
+            activityArea.innerHTML = '<div id="item-selection-container"></div>';
+            const container = document.getElementById('item-selection-container');
+            const itemCount = 5 + Math.floor(Math.random() * 3); // 5 to 7 items
+            
+            for (let i = 0; i < itemCount; i++) {
+                const item = document.createElement('div');
+                item.classList.add('selectable-item');
+                item.innerHTML = createSpinachSVG();
+                
+                const size = 60 + Math.random() * 40; // 60px to 100px
+                item.style.width = `${size}px`;
+                item.style.height = `${size}px`;
+                item.style.left = `${Math.random() * (container.clientWidth - size)}px`;
+                item.style.top = `${Math.random() * (container.clientHeight - size - 60)}px`;
+                
+                item.addEventListener('click', () => {
+                    const isSelected = item.classList.toggle('selected');
+                    const selectedCount = container.querySelectorAll('.selected').length;
+
+                    if (selectedCount > 3) {
+                        item.classList.remove('selected');
+                        speak("Oops, we only need three!");
+                    }
+                     updateCheckButtonVisibility();
+                });
+                container.appendChild(item);
+            }
+
+            const checkBtn = document.createElement('button');
+            checkBtn.id = 'check-answer-btn';
+            checkBtn.className = 'btn';
+            checkBtn.textContent = 'Check';
+            checkBtn.style.display = 'none';
+            gameScreen.appendChild(checkBtn);
+            
+            checkBtn.addEventListener('click', () => {
+                const selectedCount = container.querySelectorAll('.selected').length;
+                if (selectedCount === 3) {
+                    speak("Perfect! Three bunches of spinach!");
+                    showFeedback(true, () => nextGameBtn.style.display = 'block');
+                    checkBtn.style.display = 'none';
+                    container.querySelectorAll('.selectable-item').forEach(it => it.style.pointerEvents = 'none');
+                }
+            });
+            
+            function updateCheckButtonVisibility() {
+                const selectedCount = container.querySelectorAll('.selected').length;
+                checkBtn.style.display = selectedCount === 3 ? 'block' : 'none';
+            }
+        }
+
+    </script>
+    
+    <!-- Kid-Proof UX Script -->
+    <script>
+      document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
+      document.addEventListener('touchstart', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+      document.addEventListener('dblclick', (e) => e.preventDefault(), { passive: false });
+      let lastTouch = 0;
+      document.addEventListener('touchend', (e) => { const now = Date.now(); if (now - lastTouch < 300) e.preventDefault(); lastTouch = now; }, { passive: false });
+    </script>
+</body>
+</html>
