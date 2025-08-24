@@ -306,9 +306,9 @@
             border-radius: 50%;
         }
         
-        #check-answer-btn {
+        #check-answer-btn, #next-game-btn {
             position: absolute;
-            bottom: 10px;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
@@ -370,8 +370,10 @@
              <div class="header">
                 <h1>Feed the Rabbit!</h1>
              </div>
-             <div id="activity-area"></div>
-             <button id="next-game-btn" class="btn" style="display: none; position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10;">Next Round</button>
+             <div id="activity-area">
+                 <!-- FIX: Next Game Button moved inside activity-area -->
+                 <button id="next-game-btn" class="btn" style="display: none;">Next Round</button>
+             </div>
         </div>
         
         <div id="instruction-bar" style="display:none;">
@@ -660,7 +662,10 @@
         }
 
         function resetGame() {
-            activityArea.innerHTML = '';
+            // Clear everything *except* the nextGameBtn which now lives here
+            while (activityArea.firstChild && activityArea.firstChild.id !== 'next-game-btn') {
+                activityArea.removeChild(activityArea.firstChild);
+            }
             nextGameBtn.style.display = 'none';
         }
 
@@ -679,14 +684,17 @@
             setInstruction("Rosie's rabbit needs 3 carrots. Add carrots to the frame to make 3.");
             const startCarrots = Math.floor(Math.random() * 3); // 0, 1, or 2
             let currentCarrots = startCarrots;
-
+            
+            const tenFrameWrapper = document.createElement('div');
             let tenFrameHTML = '<div class="ten-frame-container">';
             for(let i = 0; i < 10; i++) {
                 tenFrameHTML += `<div class="ten-frame-slot" data-index="${i}">${i < startCarrots ? createCarrotSVG() : ''}</div>`;
             }
             tenFrameHTML += '</div>';
-            activityArea.innerHTML = tenFrameHTML;
-            activityArea.insertAdjacentHTML('beforeend', `<div id="carrot-source">${createCarrotSVG()}</div>`);
+            tenFrameWrapper.innerHTML = tenFrameHTML;
+            tenFrameWrapper.insertAdjacentHTML('beforeend', `<div id="carrot-source">${createCarrotSVG()}</div>`);
+            
+            activityArea.prepend(tenFrameWrapper);
             
             const carrotSource = document.getElementById('carrot-source');
 
@@ -753,8 +761,11 @@
         // Item Selection Game Logic
         function setupItemSelectionGame() {
             setInstruction("The rabbit loves spinach! Tap on three bunches of spinach.");
-            activityArea.innerHTML = '<div id="item-selection-container"></div>';
-            const container = document.getElementById('item-selection-container');
+            
+            const container = document.createElement('div');
+            container.id = 'item-selection-container';
+            activityArea.prepend(container);
+
             const itemCount = 5 + Math.floor(Math.random() * 3); // 5 to 7 items
             
             for (let i = 0; i < itemCount; i++) {
@@ -766,7 +777,7 @@
                 item.style.width = `${size}px`;
                 item.style.height = `${size}px`;
                 item.style.left = `${Math.random() * (container.clientWidth - size)}px`;
-                item.style.top = `${Math.random() * (container.clientHeight - size - 80)}px`; // Adjusted top to avoid button
+                item.style.top = `${Math.random() * (container.clientHeight - size - 80)}px`;
                 
                 item.addEventListener('click', () => {
                     item.classList.toggle('selected');
@@ -786,7 +797,7 @@
             checkBtn.className = 'btn';
             checkBtn.textContent = 'Check';
             checkBtn.style.display = 'none';
-            activityArea.appendChild(checkBtn); // FIX: Appended to activityArea
+            activityArea.appendChild(checkBtn);
             
             checkBtn.addEventListener('click', () => {
                 const selectedCount = container.querySelectorAll('.selected').length;
