@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lesson 5: Position Words</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        :root {
+            --bg-color: #f0f8ff;
+            --main-green: #76c893;
+            --dark-green: #3a86ff;
+            --text-color: #333;
+            --button-bg: #ffbe0b;
+            --button-hover: #fb5607;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        body {
+            font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 900px;
+            height: 100%;
+            max-height: 700px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #visual-area {
+            flex-grow: 1;
+            position: relative;
+            background-color: #a2d2ff;
+            overflow: hidden;
+        }
+        
+        .scene {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease-in-out, visibility 0.5s;
+        }
+
+        .scene.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        #map-scene-svg, #tracing-scene-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Map specific styles */
+        .clickable-area {
+            cursor: pointer;
+            fill: rgba(255,255,255,0.01); /* Make it clickable but invisible */
+            stroke: none;
+        }
+
+        .clickable-area:hover, .clickable-area.highlight {
+            stroke: var(--button-hover);
+            stroke-width: 5;
+            stroke-dasharray: 10 5;
+            fill: rgba(251, 86, 7, 0.2);
+        }
+
+        #car {
+            position: absolute;
+            width: 60px;
+            height: 30px;
+            transition: all 1.5s ease-in-out;
+        }
+
+        /* Tracing specific styles */
+        .trace-target {
+            cursor: pointer;
+            fill: transparent;
+            stroke: none;
+        }
+        
+        .trace-target:hover {
+            fill: rgba(255, 190, 11, 0.3);
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        
+        #canvas-container.hidden {
+            display: none;
+        }
+
+        #drawing-canvas {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(255,255,255,0.5);
+        }
+
+        #canvas-controls {
+            margin-top: 15px;
+        }
+
+        /* UI Panel */
+        #ui-panel {
+            padding: 15px;
+            text-align: center;
+            background-color: #bde0fe;
+            border-top: 5px solid #a2d2ff;
+            height: 80px;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #message-area {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        button {
+            padding: 10px 25px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            font-family: inherit;
+            color: #333;
+            background-color: var(--button-bg);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 0px #e85d04;
+            transition: all 0.1s ease-in-out;
+            margin: 0 10px;
+        }
+
+        button:hover, button:focus {
+            background-color: var(--button-hover);
+            color: white;
+            box-shadow: 0 4px 0px #d00000;
+            outline: none;
+        }
+
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0px #d00000;
+        }
+
+        .correct {
+            animation: pop 0.5s ease;
+        }
+
+        .incorrect {
+            animation: shake 0.5s ease;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="visual-area">
+            
+            <div id="map-scene" class="scene">
+                <svg id="map-scene-svg" viewBox="0 0 900 620" preserveAspectRatio="xMidYMid meet">
+                    <!-- Background -->
+                    <rect width="100%" height="100%" fill="#a7c957"/>
+                    <!-- Path -->
+                    <path d="M 50 150 C 150 100, 250 200, 350 150 S 450 100, 550 150 S 650 250, 750 200 L 850 200" stroke="#f2e8cf" stroke-width="60" fill="none" stroke-linecap="round"/>
+                    <!-- River -->
+                    <path d="M 450 0 C 350 100, 500 250, 450 350 C 400 450, 250 500, 200 620" stroke="#48cae4" stroke-width="50" fill="none" stroke-linecap="round"/>
+                    <path d="M 650 620 C 750 500, 600 400, 650 300 C 700 200, 850 150, 900 100" stroke="#48cae4" stroke-width="50" fill="none" stroke-linecap="round"/>
+                    <!-- Pond -->
+                    <ellipse cx="150" cy="400" rx="100" ry="60" fill="#00b4d8"/>
+                    <g id="pond-clickable"><rect x="50" y="340" width="200" height="120" class="clickable-area"/></g>
+                    <!-- Trees -->
+                    <g id="tree1-clickable">
+                        <rect x="250" y="480" width="80" height="120" class="clickable-area"/>
+                        <rect x="280" y="550" width="20" height="50" fill="#7f5539"/>
+                        <circle cx="290" cy="520" r="40" fill="#386641"/>
+                    </g>
+                    <!-- Bridges -->
+                    <g id="bridge2-clickable"><rect x="425" y="10" width="50" height="130" transform="rotate(30 450 75)" class="clickable-area"/><rect x="425" y="10" width="50" height="130" fill="#c27721" stroke="#874f10" stroke-width="4" transform="rotate(30 450 75)"/><text x="450" y="85" font-size="40" fill="white" text-anchor="middle" dominant-baseline="middle" style="pointer-events: none;">2</text></g>
+                    <g id="bridge3-clickable"><rect x="625" y="400" width="130" height="50" transform="rotate(-20 690 425)" class="clickable-area"/><rect x="625" y="400" width="130" height="50" fill="#c27721" stroke="#874f10" stroke-width="4" transform="rotate(-20 690 425)"/><text x="690" y="430" font-size="40" fill="white" text-anchor="middle" dominant-baseline="middle" style="pointer-events: none;">3</text></g>
+                    <g id="bridge4-clickable"><rect x="730" y="200" width="130" height="50" transform="rotate(45 795 225)" class="clickable-area"/><rect x="730" y="200" width="130" height="50" fill="#c27721" stroke="#874f10" stroke-width="4" transform="rotate(45 795 225)"/><text x="795" y="230" font-size="40" fill="white" text-anchor="middle" dominant-baseline="middle" style="pointer-events: none;">4</text></g>
+                    <g id="bridge5-clickable"><rect x="200" y="250" width="50" height="130" transform="rotate(-25 225 315)" class="clickable-area"/><rect x="200" y="250" width="50" height="130" fill="#c27721" stroke="#874f10" stroke-width="4" transform="rotate(-25 225 315)"/><text x="225" y="320" font-size="40" fill="white" text-anchor="middle" dominant-baseline="middle" style="pointer-events: none;">5</text></g>
+                    <!-- Start Sign -->
+                    <g id="start-clickable"><rect x="30" y="100" width="80" height="100" class="clickable-area"/><rect x="65" y="130" width="10" height="50" fill="#6c757d"/><polygon points="40,110 100,110 120,130 100,150 40,150 20,130" fill="#fca311"/><text x="70" y="133" font-size="20" fill="black" text-anchor="middle" font-weight="bold" style="pointer-events: none;">Start</text></g>
+                </svg>
+                <div id="car">
+                    <svg viewBox="0 0 100 50">
+                        <path d="M 10 30 C 0 30, 0 40, 10 40 L 90 40 C 100 40, 100 30, 90 30 L 70 30 L 60 10 L 30 10 L 20 30 Z" fill="#d00000" stroke="black" stroke-width="2"/>
+                        <rect x="30" y="15" width="30" height="15" fill="#ade8f4" stroke="black" stroke-width="2"/>
+                        <circle cx="25" cy="40" r="8" fill="#343a40" stroke="black" stroke-width="1"/>
+                        <circle cx="75" cy="40" r="8" fill="#343a40" stroke="black" stroke-width="1"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div id="tracing-scene" class="scene">
+                <svg id="tracing-scene-svg" viewBox="0 0 900 620" preserveAspectRatio="xMidYMid meet">
+                    <!-- Background -->
+                    <rect width="100%" height="100%" fill="#ade8f4"/>
+                    <!-- Frog -->
+                    <ellipse cx="650" cy="450" rx="150" ry="70" fill="#4c956c"/>
+                    <path d="M 650 380 C 600 350, 700 350, 700 380 C 720 420, 680 440, 650 430 C 620 440, 580 420, 600 380 Z" fill="#52b788"/>
+                    <circle cx="620" cy="370" r="20" fill="white"/><circle cx="620" cy="370" r="10" fill="black"/>
+                    <circle cx="680" cy="370" r="20" fill="white"/><circle cx="680" cy="370" r="10" fill="black"/>
+                    <!-- Butterfly on Flower -->
+                    <line x1="250" y1="620" x2="250" y2="350" stroke="#55a630" stroke-width="10" />
+                    <circle cx="250" cy="350" r="30" fill="#ffc300"/>
+                    <path d="M250,350 L200,300 A50,50 0 0,1 250,350Z" fill="#ffc300"/><path d="M250,350 L300,300 A50,50 0 0,0 250,350Z" fill="#ffc300"/><path d="M250,350 L200,400 A50,50 0 0,0 250,350Z" fill="#ffc300"/><path d="M250,350 L300,400 A50,50 0 0,1 250,350Z" fill="#ffc300"/>
+                    <path d="M 250 200 C 150 150, 150 300, 250 250" fill="#fb5607" stroke="#333" stroke-width="3"/><path d="M 250 200 C 350 150, 350 300, 250 250" fill="#fb5607" stroke="#333" stroke-width="3"/>
+                    <circle cx="250" cy="250" r="15" fill="#333"/>
+                    
+                    <!-- Number text & clickable trace targets -->
+                    <g id="trace-2-above-butterfly"><text x="250" y="150" font-size="80" text-anchor="middle" fill="#3a86ff" font-weight="bold">2</text><rect x="210" y="80" width="80" height="100" class="trace-target" data-number="2"/></g>
+                    <g id="trace-3-between"><text x="450" y="320" font-size="80" text-anchor="middle" fill="#3a86ff" font-weight="bold">3</text><rect x="410" y="250" width="80" height="100" class="trace-target" data-number="3"/></g>
+                    <g id="trace-4-beside-frog"><text x="820" y="450" font-size="80" text-anchor="middle" fill="#3a86ff" font-weight="bold">4</text><rect x="780" y="380" width="80" height="100" class="trace-target" data-number="4"/></g>
+                    <g id="trace-5-below-butterfly"><text x="250" y="550" font-size="80" text-anchor="middle" fill="#3a86ff" font-weight="bold">5</text><rect x="210" y="480" width="80" height="100" class="trace-target" data-number="5"/></g>
+                    <g id="trace-1-beside-butterfly"><text x="70" y="250" font-size="80" text-anchor="middle" fill="#3a86ff" font-weight="bold">1</text><rect x="30" y="180" width="80" height="100" class="trace-target" data-number="1"/></g>
+                </svg>
+            </div>
+
+            <div id="canvas-container" class="hidden">
+                <canvas id="drawing-canvas" width="400" height="400"></canvas>
+                <div id="canvas-controls">
+                    <button id="clear-canvas-btn">Clear</button>
+                    <button id="done-tracing-btn">Done</button>
+                </div>
+            </div>
+
+        </div>
+        <div id="ui-panel">
+            <div id="message-area">
+                <button id="start-btn">Start Lesson</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const gameContainer = document.getElementById('game-container');
+        const visualArea = document.getElementById('visual-area');
+        const uiPanel = document.getElementById('ui-panel');
+        const messageArea = document.getElementById('message-area');
+        const startBtn = document.getElementById('start-btn');
+        
+        const mapScene = document.getElementById('map-scene');
+        const tracingScene = document.getElementById('tracing-scene');
+
+        const car = document.getElementById('car');
+        const clickableMapAreas = {
+            start: document.getElementById('start-clickable'),
+            pond: document.getElementById('pond-clickable'),
+            tree1: document.getElementById('tree1-clickable'),
+            bridge2: document.getElementById('bridge2-clickable'),
+            bridge3: document.getElementById('bridge3-clickable'),
+            bridge4: document.getElementById('bridge4-clickable'),
+            bridge5: document.getElementById('bridge5-clickable'),
+        };
+
+        const traceTargets = document.querySelectorAll('.trace-target');
+        const canvasContainer = document.getElementById('canvas-container');
+        const canvas = document.getElementById('drawing-canvas');
+        const ctx = canvas.getContext('2d');
+        const clearCanvasBtn = document.getElementById('clear-canvas-btn');
+        const doneTracingBtn = document.getElementById('done-tracing-btn');
+
+        // --- TTS ---
+        const synth = window.speechSynthesis;
+        function speak(text, rate = 0.9, pitch = 1.1) {
+            if (synth.speaking) {
+                synth.cancel();
+            }
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = rate;
+            utterance.pitch = pitch;
+            synth.speak(utterance);
+        }
+
+        // --- State ---
+        let gameState = 'intro'; // intro, lesson, game
+        let lessonStep = 0;
+        let currentGameQuestion = null;
+        let currentTraceNumber = null;
+
+        // --- Lesson Content ---
+        const lessonPlan = [
+            { type: 'scene', scene: 'map', message: "Let's learn position words! First, place the car ON the Start sign.", target: 'start', carPos: { top: '20%', left: '5%' } },
+            { type: 'map', message: 'Great! Now, drive the car OVER bridge number 2.', target: 'bridge2', carPos: { top: '10%', left: '48%' } },
+            { type: 'map', message: 'Good job! Drive AROUND the pond.', target: 'pond', carPos: { top: '60%', left: '20%' } },
+            { type: 'map', message: 'Excellent! Park NEXT TO the tall tree.', target: 'tree1', carPos: { top: '80%', left: '35%' } },
+            { type: 'scene', scene: 'tracing', message: "Fantastic! Now let's trace numbers using position words.", target: null },
+            { type: 'trace', message: 'Find and trace the number 2 that is ABOVE the butterfly.', target: '2' },
+            { type: 'trace', message: 'Awesome! Now trace the number 3 BETWEEN the butterfly and the frog.', target: '3' },
+            { type: 'trace', message: 'You are doing so well! Trace the number 5 BELOW the butterfly.', target: '5' },
+            { type: 'end', message: "You've learned so much! Let's play a game." },
+        ];
+        
+        // --- Game Content ---
+        const gameQuestions = [
+            { instruction: "Drive the car OVER bridge number 2.", targetId: 'bridge2', carPos: { top: '10%', left: '48%' } },
+            { instruction: "Drive the car OVER bridge number 3.", targetId: 'bridge3', carPos: { top: '65%', left: '75%' } },
+            { instruction: "Drive the car OVER bridge number 4.", targetId: 'bridge4', carPos: { top: '35%', left: '85%' } },
+            { instruction: "Drive the car OVER bridge number 5.", targetId: 'bridge5', carPos: { top: '45%', left: '20%' } },
+            { instruction: "Drive AROUND the pond.", targetId: 'pond', carPos: { top: '60%', left: '20%' } },
+            { instruction: "Park NEXT TO the tall tree.", targetId: 'tree1', carPos: { top: '80%', left: '35%' } }
+        ];
+
+        // --- Canvas Drawing Logic ---
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        
+        function getMousePos(canvas, evt) {
+            const rect = canvas.getBoundingClientRect();
+            const touch = evt.touches ? evt.touches[0] : evt;
+            return {
+                x: (touch.clientX - rect.left) * (canvas.width / rect.width),
+                y: (touch.clientY - rect.top) * (canvas.height / rect.height)
+            };
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const pos = getMousePos(canvas, e);
+            [lastX, lastY] = [pos.x, pos.y];
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+            const pos = getMousePos(canvas, e);
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+            [lastX, lastY] = [pos.x, pos.y];
+        }
+
+        function stopDrawing() { isDrawing = false; }
+        
+        function drawNumberGuide(num) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.font = '250px "Arial Rounded MT Bold", sans-serif';
+            ctx.fillStyle = '#ddd';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            // Special rule for tracing '1' - use a lowercase 'l' for a simple vertical line guide
+            const visualGuideChar = num === '1' ? 'l' : num;
+            ctx.fillText(visualGuideChar, canvas.width / 2, canvas.height / 2);
+
+            ctx.strokeStyle = '#3a86ff';
+            ctx.lineWidth = 15;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+        }
+
+        function setupCanvasForNumber(num) {
+            currentTraceNumber = num;
+            drawNumberGuide(num);
+            canvasContainer.classList.remove('hidden');
+        }
+
+        // --- Game Flow & Logic ---
+
+        function showMessage(text, showButton = false, buttonText = "Next", onClick = null) {
+            messageArea.innerHTML = '';
+            const p = document.createElement('p');
+            p.textContent = text;
+            messageArea.appendChild(p);
+
+            if (showButton) {
+                const btn = document.createElement('button');
+                btn.textContent = buttonText;
+                btn.onclick = onClick;
+                messageArea.appendChild(btn);
+            }
+            speak(text);
+        }
+        
+        function switchScene(sceneName) {
+            mapScene.classList.remove('active');
+            tracingScene.classList.remove('active');
+            if(sceneName === 'map') mapScene.classList.add('active');
+            if(sceneName === 'tracing') tracingScene.classList.add('active');
+        }
+        
+        function handleLessonStep() {
+            if (lessonStep >= lessonPlan.length) return;
+            
+            const step = lessonPlan[lessonStep];
+            showMessage(step.message);
+            
+            // Remove previous listeners
+            Object.values(clickableMapAreas).forEach(area => area.onclick = null);
+            traceTargets.forEach(target => target.onclick = null);
+
+            switch(step.type) {
+                case 'scene':
+                    switchScene(step.scene);
+                    if (step.target) { // Initial map step
+                       clickableMapAreas[step.target].onclick = () => {
+                           car.style.top = step.carPos.top;
+                           car.style.left = step.carPos.left;
+                           lessonStep++;
+                           setTimeout(handleLessonStep, 1600);
+                       };
+                    } else { // Switch to tracing
+                        setTimeout(() => {
+                           lessonStep++;
+                           handleLessonStep();
+                        }, 2500);
+                    }
+                    break;
+                case 'map':
+                     clickableMapAreas[step.target].onclick = () => {
+                        car.style.top = step.carPos.top;
+                        car.style.left = step.carPos.left;
+                        lessonStep++;
+                        setTimeout(handleLessonStep, 1600);
+                    };
+                    break;
+                case 'trace':
+                    traceTargets.forEach(target => {
+                        if (target.dataset.number === step.target) {
+                            target.onclick = () => {
+                                setupCanvasForNumber(step.target);
+                            };
+                        }
+                    });
+                    break;
+                case 'end':
+                    gameState = 'game';
+                    messageArea.innerHTML = '';
+                    const p = document.createElement('p');
+                    p.textContent = step.message;
+                    messageArea.appendChild(p);
+                    const gameBtn = document.createElement('button');
+                    gameBtn.textContent = 'Play Game!';
+                    gameBtn.onclick = startGame;
+                    messageArea.appendChild(gameBtn);
+                    speak(step.message + " Press the Play Game button.");
+                    break;
+            }
+        }
+        
+        function startLesson() {
+            startBtn.classList.add('hidden');
+            gameState = 'lesson';
+            lessonStep = 0;
+            handleLessonStep();
+        }
+
+        // --- Replayable Game Functions ---
+        
+        function resetGameState() {
+            // Remove all dynamic classes from clickable areas
+            Object.values(clickableMapAreas).forEach(area => {
+                area.classList.remove('correct', 'incorrect');
+                const rect = area.querySelector('.clickable-area');
+                if (rect) rect.classList.remove('highlight');
+            });
+            // Reset car position
+            car.style.top = '20%';
+            car.style.left = '5%';
+        }
+        
+        function nextQuestion() {
+            resetGameState();
+            
+            const lastQuestion = currentGameQuestion;
+            // Ensure the next question is different
+            do {
+                currentGameQuestion = gameQuestions[Math.floor(Math.random() * gameQuestions.length)];
+            } while (gameQuestions.length > 1 && currentGameQuestion === lastQuestion);
+
+            showMessage(currentGameQuestion.instruction);
+            setupGameListeners();
+        }
+        
+        function checkAnswer(e) {
+            const clickedId = e.currentTarget.id.replace('-clickable', '');
+            
+            Object.values(clickableMapAreas).forEach(area => area.classList.remove('incorrect'));
+
+            if (clickedId === currentGameQuestion.targetId) {
+                e.currentTarget.classList.add('correct');
+                speak("That's right!");
+                car.style.top = currentGameQuestion.carPos.top;
+                car.style.left = currentGameQuestion.carPos.left;
+                
+                // Remove listeners to prevent multiple clicks
+                Object.values(clickableMapAreas).forEach(area => area.onclick = null);
+
+                setTimeout(nextQuestion, 2000);
+            } else {
+                e.currentTarget.classList.add('incorrect');
+                speak("Oops, try again.");
+            }
+        }
+        
+        function setupGameListeners() {
+            for (const key in clickableMapAreas) {
+                clickableMapAreas[key].onclick = checkAnswer;
+            }
+        }
+
+        function startGame() {
+            gameState = 'game';
+            switchScene('map');
+            nextQuestion();
+        }
+
+        // --- Event Listeners ---
+        startBtn.addEventListener('click', startLesson);
+        
+        // Canvas Listeners
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseleave', stopDrawing);
+        canvas.addEventListener('touchstart', startDrawing, { passive: false });
+        canvas.addEventListener('touchmove', draw, { passive: false });
+        canvas.addEventListener('touchend', stopDrawing);
+
+        clearCanvasBtn.addEventListener('click', () => drawNumberGuide(currentTraceNumber));
+        doneTracingBtn.addEventListener('click', () => {
+            canvasContainer.classList.add('hidden');
+            lessonStep++;
+            handleLessonStep();
+        });
+
+        // --- Initial Setup ---
+        function init() {
+            car.style.top = '20%';
+            car.style.left = '5%';
+            switchScene('map');
+            speak("Welcome to Lesson 5: Position Words! Press the Start Lesson button to begin.");
+        }
+
+        init();
+
+    </script>
+    <script>
+      // Kid-Proofing: Anti-zoom and multi-touch protection
+      document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
+      document.addEventListener('touchstart', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+    </script>
+</body>
+</html>
