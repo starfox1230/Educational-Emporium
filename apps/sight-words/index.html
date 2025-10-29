@@ -198,8 +198,29 @@
         font-size: 0.9rem;
         background-color: #fff;
         flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        flex-wrap: wrap;
     }
-    .word-list-summary p { margin: 0.25rem 0; color: #555;}
+    .word-list-summary-text { display: flex; flex-direction: column; gap: 0.25rem; }
+    .word-list-summary-text p { margin: 0; color: #555; }
+    #word-list-upload-btn {
+        background-color: var(--brand);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 0.45rem 0.9rem;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        transition: background-color 0.2s ease, transform 0.2s ease;
+        white-space: nowrap;
+    }
+    #word-list-upload-btn:hover { background-color: var(--brand-dark); transform: translateY(-1px); }
+    #word-list-upload-btn:active { transform: translateY(0); }
 
     .word-list-tree {
         flex-grow: 1;
@@ -660,8 +681,11 @@
         <button id="word-list-close-btn" class="word-list-modal-close-btn">&times;</button>
       </div>
       <div class="word-list-summary">
-        <p id="word-list-summary-text">You've selected: ...</p>
-        <p>Total Active Words: <strong id="word-list-total-count">0</strong></p>
+        <div class="word-list-summary-text">
+          <p id="word-list-summary-text">You've selected: ...</p>
+          <p>Total Active Words: <strong id="word-list-total-count">0</strong></p>
+        </div>
+        <button id="word-list-upload-btn" type="button">Upload Data</button>
       </div>
       <div class="word-list-tree" id="word-list-tree-container">
         <!-- Dynamically populated by JS -->
@@ -1002,6 +1026,7 @@
     const wordListModal = document.getElementById('word-list-modal');
     const wordListCloseBtn = document.getElementById('word-list-close-btn');
     const wordListSummaryText = document.getElementById('word-list-summary-text');
+    const wordListUploadBtn = document.getElementById('word-list-upload-btn');
     const wordListTotalCount = document.getElementById('word-list-total-count');
     const wordListTreeContainer = document.getElementById('word-list-tree-container');
     const bankDisplayNames = {  custom: "My Custom Words", dolch: "Dolch Sight Words", fry: "Fry Sight Words", readingcom: "Reading.com Vocabulary" };
@@ -1171,6 +1196,9 @@
       modalAddCustomWordBtn.addEventListener('click', handleAddCustomWordFromModal);
       modalDownloadBtn.addEventListener('click', downloadWordData);
       
+      if (wordListUploadBtn) {
+          wordListUploadBtn.addEventListener('click', () => uploadChoiceModal.classList.add('visible'));
+      }
       modalUploadBtn.addEventListener('click', () => uploadChoiceModal.classList.add('visible'));
       uploadFileInput.addEventListener('change', handleFileUpload);
       
@@ -1774,6 +1802,8 @@
         const label = document.createElement('label');
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
+        checkbox.dataset.listKey = listKey;
+        checkbox.dataset.levelKey = levelKey;
         checkbox.checked = selectionState[listKey]?.[levelKey] || false;
         checkbox.addEventListener('change', () => {
             // Directly modify the main state
@@ -1935,10 +1965,42 @@
     function handleAddCustomWordFromModal() {
         const newWord = modalSearchInput.value.trim(); if (newWord === '') return;
         if (!WORD_BANK.custom.includes(newWord)) {
-            WORD_BANK.custom.push(newWord); WORD_BANK.custom.sort();
+            WORD_BANK.custom.push(newWord);
+            WORD_BANK.custom.sort((a, b) => a.localeCompare(b));
             localStorage.setItem('customBank', JSON.stringify(WORD_BANK.custom));
+
+            const customSelectionsKey = 'custom___ALL__userSelections';
+            let customSelections = null;
+            try {
+                const storedSelections = localStorage.getItem(customSelectionsKey);
+                if (storedSelections) {
+                    const parsedSelections = JSON.parse(storedSelections);
+                    if (Array.isArray(parsedSelections)) { customSelections = parsedSelections; }
+                }
+            } catch (e) {
+                console.error('Could not parse custom selections from storage:', e);
+            }
+            if (Array.isArray(customSelections) && !customSelections.includes(newWord)) {
+                customSelections.push(newWord);
+                customSelections.sort((a, b) => a.localeCompare(b));
+                localStorage.setItem(customSelectionsKey, JSON.stringify(customSelections));
+            }
+
+            let selectionStateChanged = false;
+            if (!selectionState.custom) { selectionState.custom = {}; selectionStateChanged = true; }
+            if (selectionState.custom.all !== true) {
+                selectionState.custom.all = true;
+                selectionStateChanged = true;
+            }
+            if (selectionStateChanged) {
+                localStorage.setItem('wordSelectionState', JSON.stringify(selectionState));
+            }
+            const customCheckbox = wordListTreeContainer.querySelector('input[type="checkbox"][data-list-key="custom"][data-level-key="all"]');
+            if (customCheckbox) { customCheckbox.checked = true; }
+
             showFloatingMessage(`"${newWord}" added to Custom list.`, "var(--correct-bg)");
             populateModalWordList();
+            updateQuizWordsFromSelectionState();
             if (wordListModal.classList.contains('visible')) updateWordListModalUI();
         } else { showFloatingMessage(`"${newWord}" is already in Custom list.`, "var(--brand-light)", "var(--fg)"); }
         modalSearchInput.value = ''; modalAddCustomWordBtn.classList.add('hidden');
