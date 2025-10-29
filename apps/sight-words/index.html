@@ -440,6 +440,80 @@
     .generic-modal-content p {
         margin-bottom: 1.5rem;
     }
+
+    /* Mini-game configuration modal */
+    .minigame-config-content {
+        text-align: left;
+    }
+    .minigame-config-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        max-height: 320px;
+        overflow-y: auto;
+        margin: 1rem 0;
+    }
+    .minigame-config-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.6rem 0.8rem;
+        background-color: var(--btn-bg);
+        border: 2px solid var(--btn-border);
+        border-radius: var(--btn-radius);
+        box-shadow: 0 2px 4px var(--shadow-color);
+    }
+    .minigame-config-label {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex: 1;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .minigame-config-label input[type="checkbox"] {
+        width: 1.1rem;
+        height: 1.1rem;
+    }
+    .minigame-config-order {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--brand-dark);
+        min-width: 3.5rem;
+        text-align: center;
+    }
+    .minigame-config-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    .minigame-config-controls button {
+        border: 1px solid var(--btn-border);
+        background: var(--btn-bg);
+        color: var(--fg);
+        border-radius: 8px;
+        padding: 0.2rem 0.4rem;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: background-color var(--transition);
+    }
+    .minigame-config-controls button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+    .minigame-config-controls button:not(:disabled):hover {
+        background-color: var(--brand-light);
+    }
+    .minigame-config-empty {
+        display: none;
+        margin-top: 0.5rem;
+        font-weight: 600;
+        color: var(--brand-dark);
+        text-align: center;
+    }
+    .minigame-config-empty.visible {
+        display: block;
+    }
     .generic-modal-actions {
         display: flex;
         justify-content: center;
@@ -622,6 +696,19 @@
         <button id="upload-conflict-merge-btn">Merge</button>
         <button id="upload-conflict-replace-btn">Replace</button>
         <button id="upload-conflict-cancel-btn" class="cancel-btn">Cancel Upload</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="minigame-config-modal" class="generic-modal-overlay">
+    <div class="generic-modal-content minigame-config-content" role="dialog" aria-modal="true" aria-labelledby="minigame-config-title">
+      <h3 id="minigame-config-title">Mini-Game Lineup</h3>
+      <p>Choose which mini-games are available and arrange the order they'll appear.</p>
+      <div id="minigame-config-list" class="minigame-config-list"></div>
+      <p id="minigame-config-empty-state" class="minigame-config-empty">No mini-games selected. Toggle a few to enable them!</p>
+      <div class="generic-modal-actions">
+        <button id="minigame-config-reset-btn" type="button">Reset to Default</button>
+        <button id="minigame-config-close-btn" type="button" class="cancel-btn">Done</button>
       </div>
     </div>
   </div>
@@ -901,6 +988,11 @@
     const miniGameArea = document.getElementById('minigame-area');
     const toggleMiniGamesBtn = document.getElementById('toggle-minigames-btn');
     const toggleBackgroundBtn = document.getElementById('toggle-background-btn');
+    const miniGameConfigModal = document.getElementById('minigame-config-modal');
+    const miniGameConfigList = document.getElementById('minigame-config-list');
+    const miniGameConfigCloseBtn = document.getElementById('minigame-config-close-btn');
+    const miniGameConfigResetBtn = document.getElementById('minigame-config-reset-btn');
+    const miniGameConfigEmptyState = document.getElementById('minigame-config-empty-state');
 
     // --- GAME STATE ---
     let circleTimerInstance;
@@ -917,8 +1009,12 @@
     let currentModalLevelContext = 'A';    
     let miniGamesEnabled = localStorage.getItem('miniGamesEnabled') === 'true';
     let isMiniGameActive = false;
-    let availableMiniGames = []; 
+    let availableMiniGames = [];
     let currentMiniGameIdx = 0;
+    let miniGameOrder = [];
+    let miniGameHoldTimeout = null;
+    let miniGameHoldTriggered = false;
+    let ignoreNextMiniGameToggle = false;
     let animatedBackgroundsEnabled = localStorage.getItem('animatedBackgroundsEnabled') !== 'true';
     let PREFERS_REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -1088,8 +1184,239 @@
 
   const CatRescueGame = { name: "Cat Rescue", score: 0, duration: 20000, critters: [], container: null, onCompleteCallback: null, elements: {}, gameTimerId: null, timerIntervalId: null, animationFrameId: null, boundGameLoop: null, boundTapHandler: null, numCats: 8, numFires: 4, minSpeed: 1, maxSpeed: 2.5, start: function(containerElement, onComplete) { this.container = containerElement; this.onCompleteCallback = onComplete; this.score = 0; this.critters = []; this.container.innerHTML = ''; this.container.style.cursor = 'pointer'; speak("Save the cats, but don't touch the fire!"); const infoBar = document.createElement('div'); infoBar.className = 'minigame-info-bar'; this.elements.scoreDisplay = document.createElement('div'); this.elements.scoreDisplay.className = 'minigame-score'; infoBar.appendChild(this.elements.scoreDisplay); this.updateScoreDisplay(); const timerContainer = document.createElement('div'); timerContainer.className = 'minigame-timer-bar-container'; this.elements.timerBar = document.createElement('div'); this.elements.timerBar.className = 'minigame-timer-bar'; timerContainer.appendChild(this.elements.timerBar); infoBar.appendChild(timerContainer); this.container.appendChild(infoBar); for (let i = 0; i < this.numCats; i++) { this.spawnCritter('cat'); } for (let i = 0; i < this.numFires; i++) { this.spawnCritter('fire'); } let timeLeft = this.duration; this.elements.timerBar.style.width = '100%'; this.timerIntervalId = setInterval(() => { timeLeft -= 100; const progress = Math.max(0, (timeLeft / this.duration) * 100); this.elements.timerBar.style.width = `${progress}%`; if (timeLeft <= 0) clearInterval(this.timerIntervalId); }, 100); this.gameTimerId = setTimeout(() => this.endGame(), this.duration); this.boundTapHandler = this.handleTap.bind(this); this.container.addEventListener('pointerdown', this.boundTapHandler); this.boundGameLoop = this.gameLoop.bind(this); this.animationFrameId = requestAnimationFrame(this.boundGameLoop); }, spawnCritter: function(type) { if (!this.container) return; const containerRect = this.container.getBoundingClientRect(); const size = (type === 'cat') ? 40 : 45; const critter = { element: document.createElement('div'), type: type, size: size, x: Math.random() * (containerRect.width - size), y: Math.random() * (containerRect.height - size), vx: (Math.random() - 0.5) * 2 * (this.maxSpeed - this.minSpeed) + Math.sign(Math.random() - 0.5) * this.minSpeed, vy: (Math.random() - 0.5) * 2 * (this.maxSpeed - this.minSpeed) + Math.sign(Math.random() - 0.5) * this.minSpeed, }; critter.element.textContent = (type === 'cat') ? '🐈' : '🔥'; critter.element.style.cssText = `position: absolute; font-size: ${size}px; user-select: none; left: 0; top: 0; will-change: transform;`; critter.element.dataset.critterType = type; this.critters.push(critter); this.container.appendChild(critter.element); }, handleTap: function(event) { const targetElement = event.target; const critterType = targetElement.dataset.critterType; if (!critterType) return; const critterIndex = this.critters.findIndex(c => c.element === targetElement); if (critterIndex === -1) return; const critter = this.critters[critterIndex]; if (critter.type === 'cat') { this.score++; playBell(); const rect = critter.element.getBoundingClientRect(); const confettiX = (rect.left + rect.right) / 2 / window.innerWidth; const confettiY = (rect.top + rect.bottom) / 2 / window.innerHeight; myConfetti({ particleCount: 30, spread: 50, origin: { x: confettiX, y: confettiY }, scalar: 0.8 }); critter.element.remove(); this.critters.splice(critterIndex, 1); this.spawnCritter('cat'); } else if (critter.type === 'fire') { this.score--; playBuzz(); this.container.classList.add('red-flash-effect'); setTimeout(() => this.container.classList.remove('red-flash-effect'), 300); } this.updateScoreDisplay(); }, gameLoop: function() { if (!this.container) return; const containerRect = this.container.getBoundingClientRect(); this.critters.forEach(critter => { critter.x += critter.vx; critter.y += critter.vy; if (critter.x <= 0 || critter.x >= containerRect.width - critter.size) { critter.vx *= -1; critter.x = Math.max(0, Math.min(critter.x, containerRect.width - critter.size)); } if (critter.y <= 0 || critter.y >= containerRect.height - critter.size) { critter.vy *= -1; critter.y = Math.max(0, Math.min(critter.y, containerRect.height - critter.size)); } critter.element.style.transform = `translate(${critter.x}px, ${critter.y}px)`; }); this.animationFrameId = requestAnimationFrame(this.boundGameLoop); }, updateScoreDisplay: function() { if (this.elements.scoreDisplay) { this.elements.scoreDisplay.textContent = `Score: ${this.score}`; } }, endGame: function() { const canCallPrimaryCallback = !!this.onCompleteCallback; cancelAnimationFrame(this.animationFrameId); clearInterval(this.timerIntervalId); clearTimeout(this.gameTimerId); this.animationFrameId = null; this.timerIntervalId = null; this.gameTimerId = null; if (this.container && this.boundTapHandler) { this.container.removeEventListener('pointerdown', this.boundTapHandler); this.container.style.cursor = 'default'; this.container.classList.remove('red-flash-effect'); } this.critters.forEach(c => c.element.remove()); this.critters = []; if (canCallPrimaryCallback) { speak(`Great job! You rescued ${Math.max(0, this.score)} cats!`); const callbackToExecute = this.onCompleteCallback; this.onCompleteCallback = null; if (callbackToExecute) { callbackToExecute(this.score); } } }, destroy: function() { this.endGame(); if (this.container) { this.container.innerHTML = ''; } this.container = null; this.elements = {}; this.onCompleteCallback = null; } };
 
-    // --- MINI-GAME SYSTEM (UNCHANGED) ---
-    function initMiniGameSystem() { availableMiniGames.push(CatRescueGame, HoopBounceGame, UnicornDragonDash, HoopBounceGame, PuppyLaserDefenderGame, HoopBounceGame, PuppyPatrolGame, HoopBounceGame, BalloonPopGame, HoopBounceGame, CatchTheStarGame); toggleMiniGamesBtn.textContent = `Mini-Games: ${miniGamesEnabled ? 'On' : 'Off'}`; toggleMiniGamesBtn.classList.toggle('active-minigame-toggle', miniGamesEnabled); toggleMiniGamesBtn.addEventListener('click', () => { miniGamesEnabled = !miniGamesEnabled; localStorage.setItem('miniGamesEnabled', miniGamesEnabled.toString()); toggleMiniGamesBtn.textContent = `Mini-Games: ${miniGamesEnabled ? 'On' : 'Off'}`; toggleMiniGamesBtn.classList.toggle('active-minigame-toggle', miniGamesEnabled); }); }
+    const MINI_GAME_LIBRARY = [
+        { id: 'catRescue', label: CatRescueGame.name, game: CatRescueGame },
+        { id: 'hoopBounce', label: HoopBounceGame.name, game: HoopBounceGame },
+        { id: 'unicornDragonDash', label: UnicornDragonDash.name, game: UnicornDragonDash },
+        { id: 'puppyLaserDefender', label: PuppyLaserDefenderGame.name, game: PuppyLaserDefenderGame },
+        { id: 'puppyPatrol', label: PuppyPatrolGame.name, game: PuppyPatrolGame },
+        { id: 'balloonPop', label: BalloonPopGame.name, game: BalloonPopGame },
+        { id: 'catchTheStar', label: CatchTheStarGame.name, game: CatchTheStarGame },
+    ];
+    const MINI_GAME_CONFIG_KEY = 'miniGameOrder';
+
+    function loadMiniGameOrder() {
+        const fallback = MINI_GAME_LIBRARY.map(game => game.id);
+        const stored = localStorage.getItem(MINI_GAME_CONFIG_KEY);
+        if (!stored) { return fallback; }
+        try {
+            const parsed = JSON.parse(stored);
+            const ids = Array.isArray(parsed) ? parsed : (parsed && Array.isArray(parsed.order) ? parsed.order : []);
+            const filtered = ids.filter(id => MINI_GAME_LIBRARY.some(game => game.id === id));
+            const unique = [...new Set(filtered)];
+            return unique.length ? unique : fallback;
+        } catch (error) {
+            console.warn('Failed to parse mini-game order from storage', error);
+            return fallback;
+        }
+    }
+
+    function saveMiniGameOrder(order) {
+        localStorage.setItem(MINI_GAME_CONFIG_KEY, JSON.stringify(order));
+    }
+
+    function rebuildAvailableMiniGames() {
+        availableMiniGames = miniGameOrder.map(id => {
+            const entry = MINI_GAME_LIBRARY.find(game => game.id === id);
+            return entry ? entry.game : null;
+        }).filter(Boolean);
+        currentMiniGameIdx = 0;
+        if (miniGamesEnabled && availableMiniGames.length === 0) {
+            miniGamesEnabled = false;
+            localStorage.setItem('miniGamesEnabled', 'false');
+        }
+    }
+
+    function updateMiniGameToggleUI() {
+        if (!toggleMiniGamesBtn) { return; }
+        const selectedCount = availableMiniGames.length;
+        if (selectedCount === 0) {
+            toggleMiniGamesBtn.textContent = 'Mini-Games: Off (Select)';
+        } else {
+            toggleMiniGamesBtn.textContent = `Mini-Games: ${miniGamesEnabled ? 'On' : 'Off'} (${selectedCount})`;
+        }
+        toggleMiniGamesBtn.classList.toggle('active-minigame-toggle', miniGamesEnabled && selectedCount > 0);
+        toggleMiniGamesBtn.title = 'Tap to toggle mini-games. Press and hold to choose and reorder them.';
+    }
+
+    function populateMiniGameConfigList() {
+        if (!miniGameConfigList) { return; }
+        miniGameConfigList.innerHTML = '';
+        MINI_GAME_LIBRARY.forEach(game => {
+            const isSelected = miniGameOrder.includes(game.id);
+            const item = document.createElement('div');
+            item.className = 'minigame-config-item';
+
+            const label = document.createElement('label');
+            label.className = 'minigame-config-label';
+            label.setAttribute('for', `minigame-config-${game.id}`);
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = `minigame-config-${game.id}`;
+            checkbox.checked = isSelected;
+            checkbox.addEventListener('change', () => {
+                if (checkbox.checked) {
+                    if (!miniGameOrder.includes(game.id)) {
+                        miniGameOrder.push(game.id);
+                    }
+                } else {
+                    miniGameOrder = miniGameOrder.filter(id => id !== game.id);
+                }
+                saveMiniGameOrder(miniGameOrder);
+                rebuildAvailableMiniGames();
+                updateMiniGameToggleUI();
+                populateMiniGameConfigList();
+            });
+
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = game.label;
+            label.appendChild(checkbox);
+            label.appendChild(nameSpan);
+
+            const orderIndicator = document.createElement('span');
+            orderIndicator.className = 'minigame-config-order';
+            orderIndicator.textContent = isSelected ? `#${miniGameOrder.indexOf(game.id) + 1}` : 'Off';
+
+            const controls = document.createElement('div');
+            controls.className = 'minigame-config-controls';
+
+            const upBtn = document.createElement('button');
+            upBtn.type = 'button';
+            upBtn.textContent = '▲';
+            upBtn.disabled = !isSelected || miniGameOrder.indexOf(game.id) <= 0;
+            upBtn.addEventListener('click', () => moveMiniGameInOrder(game.id, -1));
+
+            const downBtn = document.createElement('button');
+            downBtn.type = 'button';
+            downBtn.textContent = '▼';
+            downBtn.disabled = !isSelected || miniGameOrder.indexOf(game.id) === miniGameOrder.length - 1;
+            downBtn.addEventListener('click', () => moveMiniGameInOrder(game.id, 1));
+
+            controls.appendChild(upBtn);
+            controls.appendChild(downBtn);
+
+            item.appendChild(label);
+            item.appendChild(orderIndicator);
+            item.appendChild(controls);
+            miniGameConfigList.appendChild(item);
+        });
+
+        if (miniGameConfigEmptyState) {
+            miniGameConfigEmptyState.classList.toggle('visible', miniGameOrder.length === 0);
+        }
+    }
+
+    function openMiniGameConfigModal() {
+        if (!miniGameConfigModal) { return; }
+        populateMiniGameConfigList();
+        miniGameConfigModal.classList.add('visible');
+        requestAnimationFrame(() => {
+            if (miniGameConfigCloseBtn) { miniGameConfigCloseBtn.focus(); }
+        });
+    }
+
+    function closeMiniGameConfigModal() {
+        if (!miniGameConfigModal) { return; }
+        miniGameConfigModal.classList.remove('visible');
+    }
+
+    function moveMiniGameInOrder(id, delta) {
+        const currentIndex = miniGameOrder.indexOf(id);
+        if (currentIndex === -1) { return; }
+        const newIndex = currentIndex + delta;
+        if (newIndex < 0 || newIndex >= miniGameOrder.length) { return; }
+        const [entry] = miniGameOrder.splice(currentIndex, 1);
+        miniGameOrder.splice(newIndex, 0, entry);
+        saveMiniGameOrder(miniGameOrder);
+        rebuildAvailableMiniGames();
+        updateMiniGameToggleUI();
+        populateMiniGameConfigList();
+    }
+
+    function setupMiniGameHoldInteraction() {
+        if (!toggleMiniGamesBtn) { return; }
+        const startHold = () => {
+            clearTimeout(miniGameHoldTimeout);
+            miniGameHoldTriggered = false;
+            miniGameHoldTimeout = setTimeout(() => {
+                miniGameHoldTriggered = true;
+                openMiniGameConfigModal();
+            }, 550);
+        };
+        const cancelHold = () => {
+            clearTimeout(miniGameHoldTimeout);
+            if (miniGameHoldTriggered) {
+                ignoreNextMiniGameToggle = true;
+            }
+            miniGameHoldTriggered = false;
+        };
+        ['mousedown', 'touchstart'].forEach(evt => {
+            toggleMiniGamesBtn.addEventListener(evt, startHold);
+        });
+        ['mouseup', 'mouseleave', 'touchend', 'touchcancel', 'touchmove'].forEach(evt => {
+            toggleMiniGamesBtn.addEventListener(evt, cancelHold);
+        });
+    }
+
+    // --- MINI-GAME SYSTEM ---
+    function initMiniGameSystem() {
+        miniGameOrder = loadMiniGameOrder();
+        saveMiniGameOrder(miniGameOrder);
+        rebuildAvailableMiniGames();
+        updateMiniGameToggleUI();
+
+        if (!toggleMiniGamesBtn) { return; }
+
+        toggleMiniGamesBtn.addEventListener('click', () => {
+            if (ignoreNextMiniGameToggle) {
+                ignoreNextMiniGameToggle = false;
+                return;
+            }
+            if (!availableMiniGames.length) {
+                miniGamesEnabled = false;
+                localStorage.setItem('miniGamesEnabled', 'false');
+                showFloatingMessage("No mini-games selected. Press and hold the button to choose!", "var(--brand-dark)");
+                updateMiniGameToggleUI();
+                return;
+            }
+            miniGamesEnabled = !miniGamesEnabled;
+            localStorage.setItem('miniGamesEnabled', miniGamesEnabled.toString());
+            updateMiniGameToggleUI();
+        });
+
+        setupMiniGameHoldInteraction();
+
+        if (miniGameConfigCloseBtn) {
+            miniGameConfigCloseBtn.addEventListener('click', () => {
+                closeMiniGameConfigModal();
+            });
+        }
+
+        if (miniGameConfigResetBtn) {
+            miniGameConfigResetBtn.addEventListener('click', () => {
+                miniGameOrder = MINI_GAME_LIBRARY.map(game => game.id);
+                saveMiniGameOrder(miniGameOrder);
+                rebuildAvailableMiniGames();
+                updateMiniGameToggleUI();
+                populateMiniGameConfigList();
+            });
+        }
+
+        if (miniGameConfigModal) {
+            miniGameConfigModal.addEventListener('click', event => {
+                if (event.target === miniGameConfigModal) {
+                    closeMiniGameConfigModal();
+                }
+            });
+        }
+
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && miniGameConfigModal && miniGameConfigModal.classList.contains('visible')) {
+                closeMiniGameConfigModal();
+            }
+        });
+    }
     function triggerMiniGame() { if (availableMiniGames.length === 0) { console.warn("No mini-games available!"); resumeQuizAfterMiniGame(undefined); return; } isMiniGameActive = true; if (animatedBackgroundsEnabled && !PREFERS_REDUCED_MOTION && vantaEffect) { applyVantaEffect(null); } miniGameArea.classList.add('active'); miniGameArea.setAttribute('tabindex', '-1'); miniGameArea.focus(); const gameToPlay = availableMiniGames[currentMiniGameIdx]; currentMiniGameIdx = (currentMiniGameIdx + 1) % availableMiniGames.length; gameToPlay.start(miniGameArea, (miniGameScore) => { gameToPlay.destroy(); miniGameArea.classList.remove('active'); resumeQuizAfterMiniGame(miniGameScore); }); }
     function resumeQuizAfterMiniGame(miniGameScore) { setTimeout(() => { isMiniGameActive = false; updateBackgroundState(); quizCont.style.display = 'flex'; controlsBar.style.display = 'flex'; if (typeof gsap === 'undefined') { quizCont.style.opacity = '0'; controlsBar.style.opacity = '0'; } quizCont.classList.add('animate__animated', 'animate__fadeInCustom'); controlsBar.classList.add('animate__animated', 'animate__fadeInCustom'); let animationHandled = false; const animationEndHandler = () => { if (animationHandled) return; animationHandled = true; quizCont.classList.remove('animate__animated', 'animate__fadeInCustom'); controlsBar.classList.remove('animate__animated', 'animate__fadeInCustom'); if (typeof gsap === 'undefined') { quizCont.style.opacity = '1'; controlsBar.style.opacity = '1'; } if (miniGameScore !== undefined && miniGameScore !== null) { showFloatingMessage(`Mini-Game: ${miniGameScore} points!`, 'var(--brand-light)', 'var(--fg)'); } setTimeout(nextQ, 300); }; if (typeof gsap !== 'undefined') { gsap.fromTo([quizCont, controlsBar], {opacity: 0}, {opacity: 1, duration: 0.3, onComplete: animationEndHandler}); } else { quizCont.style.transition = 'opacity 0.3s ease-in-out'; controlsBar.style.transition = 'opacity 0.3s ease-in-out'; void quizCont.offsetWidth; quizCont.style.opacity = '1'; controlsBar.style.opacity = '1'; quizCont.addEventListener('transitionend', function onTransitionEnd(event) { if (event.propertyName === 'opacity') { animationEndHandler(); quizCont.removeEventListener('transitionend', onTransitionEnd); quizCont.style.transition = ''; controlsBar.style.transition = ''; } }, { once: false }); setTimeout(() => { if (!animationHandled) { animationEndHandler(); } }, 350); } }, 4000); }
 
