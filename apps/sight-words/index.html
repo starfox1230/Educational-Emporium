@@ -455,13 +455,18 @@
     }
     .minigame-config-item {
         display: flex;
-        align-items: center;
-        gap: 0.75rem;
+        flex-direction: column;
+        gap: 0.6rem;
         padding: 0.6rem 0.8rem;
         background-color: var(--btn-bg);
         border: 2px solid var(--btn-border);
         border-radius: var(--btn-radius);
         box-shadow: 0 2px 4px var(--shadow-color);
+    }
+    .minigame-config-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
     }
     .minigame-config-label {
         display: flex;
@@ -479,30 +484,64 @@
         font-size: 0.85rem;
         font-weight: 600;
         color: var(--brand-dark);
-        min-width: 3.5rem;
-        text-align: center;
+        min-width: 4.5rem;
+        text-align: right;
     }
-    .minigame-config-controls {
+    .minigame-config-instances {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        padding-left: 2.2rem;
+    }
+    .minigame-config-instance {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        background-color: rgba(255,255,255,0.65);
+        border: 1px solid var(--btn-border);
+        border-radius: 12px;
+        padding: 0.35rem 0.5rem;
+    }
+    .minigame-config-instance-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--fg);
+    }
+    .minigame-config-instance-placeholder {
+        font-style: italic;
+        color: #777;
+    }
+    .minigame-config-instance-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .minigame-config-move-controls {
         display: flex;
         flex-direction: column;
         gap: 0.25rem;
     }
-    .minigame-config-controls button {
+    .minigame-config-instance-controls button {
         border: 1px solid var(--btn-border);
         background: var(--btn-bg);
         color: var(--fg);
         border-radius: 8px;
-        padding: 0.2rem 0.4rem;
+        padding: 0.2rem 0.45rem;
         font-size: 0.8rem;
         cursor: pointer;
         transition: background-color var(--transition);
+        min-width: 2rem;
     }
-    .minigame-config-controls button:disabled {
+    .minigame-config-instance-controls button:disabled {
         opacity: 0.4;
         cursor: not-allowed;
     }
-    .minigame-config-controls button:not(:disabled):hover {
+    .minigame-config-instance-controls button:not(:disabled):hover {
         background-color: var(--brand-light);
+    }
+    .minigame-config-instance-controls button.hidden {
+        display: none;
     }
     .minigame-config-empty {
         display: none;
@@ -1203,8 +1242,7 @@
             const parsed = JSON.parse(stored);
             const ids = Array.isArray(parsed) ? parsed : (parsed && Array.isArray(parsed.order) ? parsed.order : []);
             const filtered = ids.filter(id => MINI_GAME_LIBRARY.some(game => game.id === id));
-            const unique = [...new Set(filtered)];
-            return unique.length ? unique : fallback;
+            return filtered.length ? filtered : fallback;
         } catch (error) {
             console.warn('Failed to parse mini-game order from storage', error);
             return fallback;
@@ -1243,9 +1281,14 @@
         if (!miniGameConfigList) { return; }
         miniGameConfigList.innerHTML = '';
         MINI_GAME_LIBRARY.forEach(game => {
-            const isSelected = miniGameOrder.includes(game.id);
+            const positions = getMiniGamePositions(game.id);
+            const isSelected = positions.length > 0;
+
             const item = document.createElement('div');
             item.className = 'minigame-config-item';
+
+            const header = document.createElement('div');
+            header.className = 'minigame-config-header';
 
             const label = document.createElement('label');
             label.className = 'minigame-config-label';
@@ -1257,7 +1300,7 @@
             checkbox.checked = isSelected;
             checkbox.addEventListener('change', () => {
                 if (checkbox.checked) {
-                    if (!miniGameOrder.includes(game.id)) {
+                    if (!isSelected) {
                         miniGameOrder.push(game.id);
                     }
                 } else {
@@ -1276,29 +1319,117 @@
 
             const orderIndicator = document.createElement('span');
             orderIndicator.className = 'minigame-config-order';
-            orderIndicator.textContent = isSelected ? `#${miniGameOrder.indexOf(game.id) + 1}` : 'Off';
+            orderIndicator.textContent = isSelected
+                ? positions.map(pos => `#${pos + 1}`).join(', ')
+                : 'Off';
 
-            const controls = document.createElement('div');
-            controls.className = 'minigame-config-controls';
+            header.appendChild(label);
+            header.appendChild(orderIndicator);
+            item.appendChild(header);
 
-            const upBtn = document.createElement('button');
-            upBtn.type = 'button';
-            upBtn.textContent = '▲';
-            upBtn.disabled = !isSelected || miniGameOrder.indexOf(game.id) <= 0;
-            upBtn.addEventListener('click', () => moveMiniGameInOrder(game.id, -1));
+            const instancesContainer = document.createElement('div');
+            instancesContainer.className = 'minigame-config-instances';
 
-            const downBtn = document.createElement('button');
-            downBtn.type = 'button';
-            downBtn.textContent = '▼';
-            downBtn.disabled = !isSelected || miniGameOrder.indexOf(game.id) === miniGameOrder.length - 1;
-            downBtn.addEventListener('click', () => moveMiniGameInOrder(game.id, 1));
+            if (positions.length > 0) {
+                positions.forEach((positionIndex, instanceIdx) => {
+                    const instanceRow = document.createElement('div');
+                    instanceRow.className = 'minigame-config-instance';
 
-            controls.appendChild(upBtn);
-            controls.appendChild(downBtn);
+                    const instanceLabel = document.createElement('span');
+                    instanceLabel.className = 'minigame-config-instance-label';
+                    const baseName = positions.length > 1 ? `${game.label} (${instanceIdx + 1})` : game.label;
+                    instanceLabel.textContent = `${baseName} — Slot #${positionIndex + 1}`;
 
-            item.appendChild(label);
-            item.appendChild(orderIndicator);
-            item.appendChild(controls);
+                    const controls = document.createElement('div');
+                    controls.className = 'minigame-config-instance-controls';
+
+                    const minusBtn = document.createElement('button');
+                    minusBtn.type = 'button';
+                    minusBtn.textContent = '−';
+                    if (positions.length <= 1) {
+                        minusBtn.classList.add('hidden');
+                    } else {
+                        minusBtn.addEventListener('click', () => removeMiniGameInstance(positionIndex, game.id));
+                    }
+
+                    const moveControls = document.createElement('div');
+                    moveControls.className = 'minigame-config-move-controls';
+
+                    const upBtn = document.createElement('button');
+                    upBtn.type = 'button';
+                    upBtn.textContent = '▲';
+                    upBtn.disabled = positionIndex === 0;
+                    upBtn.addEventListener('click', () => moveMiniGameInstance(positionIndex, -1));
+
+                    const downBtn = document.createElement('button');
+                    downBtn.type = 'button';
+                    downBtn.textContent = '▼';
+                    downBtn.disabled = positionIndex === miniGameOrder.length - 1;
+                    downBtn.addEventListener('click', () => moveMiniGameInstance(positionIndex, 1));
+
+                    moveControls.appendChild(upBtn);
+                    moveControls.appendChild(downBtn);
+
+                    const plusBtn = document.createElement('button');
+                    plusBtn.type = 'button';
+                    plusBtn.textContent = '+';
+                    plusBtn.addEventListener('click', () => addMiniGameInstance(game.id, positionIndex + 1));
+
+                    controls.appendChild(minusBtn);
+                    controls.appendChild(moveControls);
+                    controls.appendChild(plusBtn);
+
+                    instanceRow.appendChild(instanceLabel);
+                    instanceRow.appendChild(controls);
+                    instancesContainer.appendChild(instanceRow);
+                });
+            } else {
+                const emptyRow = document.createElement('div');
+                emptyRow.className = 'minigame-config-instance';
+
+                const placeholderLabel = document.createElement('span');
+                placeholderLabel.className = 'minigame-config-instance-label minigame-config-instance-placeholder';
+                placeholderLabel.textContent = 'Not in lineup';
+
+                const controls = document.createElement('div');
+                controls.className = 'minigame-config-instance-controls';
+
+                const minusBtn = document.createElement('button');
+                minusBtn.type = 'button';
+                minusBtn.textContent = '−';
+                minusBtn.classList.add('hidden');
+
+                const moveControls = document.createElement('div');
+                moveControls.className = 'minigame-config-move-controls';
+
+                const upBtn = document.createElement('button');
+                upBtn.type = 'button';
+                upBtn.textContent = '▲';
+                upBtn.disabled = true;
+
+                const downBtn = document.createElement('button');
+                downBtn.type = 'button';
+                downBtn.textContent = '▼';
+                downBtn.disabled = true;
+
+                moveControls.appendChild(upBtn);
+                moveControls.appendChild(downBtn);
+
+                const plusBtn = document.createElement('button');
+                plusBtn.type = 'button';
+                plusBtn.textContent = '+';
+                plusBtn.addEventListener('click', () => addMiniGameInstance(game.id, miniGameOrder.length));
+
+                controls.appendChild(minusBtn);
+                controls.appendChild(moveControls);
+                controls.appendChild(plusBtn);
+
+                emptyRow.appendChild(placeholderLabel);
+                emptyRow.appendChild(controls);
+                instancesContainer.appendChild(emptyRow);
+            }
+
+            item.appendChild(instancesContainer);
             miniGameConfigList.appendChild(item);
         });
 
@@ -1321,12 +1452,41 @@
         miniGameConfigModal.classList.remove('visible');
     }
 
-    function moveMiniGameInOrder(id, delta) {
-        const currentIndex = miniGameOrder.indexOf(id);
-        if (currentIndex === -1) { return; }
-        const newIndex = currentIndex + delta;
+    function getMiniGamePositions(id) {
+        const positions = [];
+        miniGameOrder.forEach((entry, index) => {
+            if (entry === id) {
+                positions.push(index);
+            }
+        });
+        return positions;
+    }
+
+    function addMiniGameInstance(id, insertIndex) {
+        const index = Math.min(Math.max(insertIndex, 0), miniGameOrder.length);
+        miniGameOrder.splice(index, 0, id);
+        saveMiniGameOrder(miniGameOrder);
+        rebuildAvailableMiniGames();
+        updateMiniGameToggleUI();
+        populateMiniGameConfigList();
+    }
+
+    function removeMiniGameInstance(positionIndex, id) {
+        if (positionIndex < 0 || positionIndex >= miniGameOrder.length) { return; }
+        const occurrences = getMiniGamePositions(id);
+        if (occurrences.length <= 1) { return; }
+        miniGameOrder.splice(positionIndex, 1);
+        saveMiniGameOrder(miniGameOrder);
+        rebuildAvailableMiniGames();
+        updateMiniGameToggleUI();
+        populateMiniGameConfigList();
+    }
+
+    function moveMiniGameInstance(positionIndex, delta) {
+        const newIndex = positionIndex + delta;
+        if (positionIndex < 0 || positionIndex >= miniGameOrder.length) { return; }
         if (newIndex < 0 || newIndex >= miniGameOrder.length) { return; }
-        const [entry] = miniGameOrder.splice(currentIndex, 1);
+        const [entry] = miniGameOrder.splice(positionIndex, 1);
         miniGameOrder.splice(newIndex, 0, entry);
         saveMiniGameOrder(miniGameOrder);
         rebuildAvailableMiniGames();
