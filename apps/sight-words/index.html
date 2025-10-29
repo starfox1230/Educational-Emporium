@@ -1251,13 +1251,697 @@
 
   const CatRescueGame = { name: "Cat Rescue", score: 0, duration: 20000, critters: [], container: null, onCompleteCallback: null, elements: {}, gameTimerId: null, timerIntervalId: null, animationFrameId: null, boundGameLoop: null, boundTapHandler: null, numCats: 8, numFires: 4, minSpeed: 1, maxSpeed: 2.5, start: function(containerElement, onComplete) { this.container = containerElement; this.onCompleteCallback = onComplete; this.score = 0; this.critters = []; this.container.innerHTML = ''; this.container.style.cursor = 'pointer'; speak("Save the cats, but don't touch the fire!"); const infoBar = document.createElement('div'); infoBar.className = 'minigame-info-bar'; this.elements.scoreDisplay = document.createElement('div'); this.elements.scoreDisplay.className = 'minigame-score'; infoBar.appendChild(this.elements.scoreDisplay); this.updateScoreDisplay(); const timerContainer = document.createElement('div'); timerContainer.className = 'minigame-timer-bar-container'; this.elements.timerBar = document.createElement('div'); this.elements.timerBar.className = 'minigame-timer-bar'; timerContainer.appendChild(this.elements.timerBar); infoBar.appendChild(timerContainer); this.container.appendChild(infoBar); for (let i = 0; i < this.numCats; i++) { this.spawnCritter('cat'); } for (let i = 0; i < this.numFires; i++) { this.spawnCritter('fire'); } let timeLeft = this.duration; this.elements.timerBar.style.width = '100%'; this.timerIntervalId = setInterval(() => { timeLeft -= 100; const progress = Math.max(0, (timeLeft / this.duration) * 100); this.elements.timerBar.style.width = `${progress}%`; if (timeLeft <= 0) clearInterval(this.timerIntervalId); }, 100); this.gameTimerId = setTimeout(() => this.endGame(), this.duration); this.boundTapHandler = this.handleTap.bind(this); this.container.addEventListener('pointerdown', this.boundTapHandler); this.boundGameLoop = this.gameLoop.bind(this); this.animationFrameId = requestAnimationFrame(this.boundGameLoop); }, spawnCritter: function(type) { if (!this.container) return; const containerRect = this.container.getBoundingClientRect(); const size = (type === 'cat') ? 40 : 45; const critter = { element: document.createElement('div'), type: type, size: size, x: Math.random() * (containerRect.width - size), y: Math.random() * (containerRect.height - size), vx: (Math.random() - 0.5) * 2 * (this.maxSpeed - this.minSpeed) + Math.sign(Math.random() - 0.5) * this.minSpeed, vy: (Math.random() - 0.5) * 2 * (this.maxSpeed - this.minSpeed) + Math.sign(Math.random() - 0.5) * this.minSpeed, }; critter.element.textContent = (type === 'cat') ? '🐈' : '🔥'; critter.element.style.cssText = `position: absolute; font-size: ${size}px; user-select: none; left: 0; top: 0; will-change: transform;`; critter.element.dataset.critterType = type; this.critters.push(critter); this.container.appendChild(critter.element); }, handleTap: function(event) { const targetElement = event.target; const critterType = targetElement.dataset.critterType; if (!critterType) return; const critterIndex = this.critters.findIndex(c => c.element === targetElement); if (critterIndex === -1) return; const critter = this.critters[critterIndex]; if (critter.type === 'cat') { this.score++; playBell(); const rect = critter.element.getBoundingClientRect(); const confettiX = (rect.left + rect.right) / 2 / window.innerWidth; const confettiY = (rect.top + rect.bottom) / 2 / window.innerHeight; myConfetti({ particleCount: 30, spread: 50, origin: { x: confettiX, y: confettiY }, scalar: 0.8 }); critter.element.remove(); this.critters.splice(critterIndex, 1); this.spawnCritter('cat'); } else if (critter.type === 'fire') { this.score--; playBuzz(); this.container.classList.add('red-flash-effect'); setTimeout(() => this.container.classList.remove('red-flash-effect'), 300); } this.updateScoreDisplay(); }, gameLoop: function() { if (!this.container) return; const containerRect = this.container.getBoundingClientRect(); this.critters.forEach(critter => { critter.x += critter.vx; critter.y += critter.vy; if (critter.x <= 0 || critter.x >= containerRect.width - critter.size) { critter.vx *= -1; critter.x = Math.max(0, Math.min(critter.x, containerRect.width - critter.size)); } if (critter.y <= 0 || critter.y >= containerRect.height - critter.size) { critter.vy *= -1; critter.y = Math.max(0, Math.min(critter.y, containerRect.height - critter.size)); } critter.element.style.transform = `translate(${critter.x}px, ${critter.y}px)`; }); this.animationFrameId = requestAnimationFrame(this.boundGameLoop); }, updateScoreDisplay: function() { if (this.elements.scoreDisplay) { this.elements.scoreDisplay.textContent = `Score: ${this.score}`; } }, endGame: function() { const canCallPrimaryCallback = !!this.onCompleteCallback; cancelAnimationFrame(this.animationFrameId); clearInterval(this.timerIntervalId); clearTimeout(this.gameTimerId); this.animationFrameId = null; this.timerIntervalId = null; this.gameTimerId = null; if (this.container && this.boundTapHandler) { this.container.removeEventListener('pointerdown', this.boundTapHandler); this.container.style.cursor = 'default'; this.container.classList.remove('red-flash-effect'); } this.critters.forEach(c => c.element.remove()); this.critters = []; if (canCallPrimaryCallback) { speak(`Great job! You rescued ${Math.max(0, this.score)} cats!`); const callbackToExecute = this.onCompleteCallback; this.onCompleteCallback = null; if (callbackToExecute) { callbackToExecute(this.score); } } }, destroy: function() { this.endGame(); if (this.container) { this.container.innerHTML = ''; } this.container = null; this.elements = {}; this.onCompleteCallback = null; } };
 
-    const MINI_GAME_LIBRARY = [
+        const PuppyZoomiesGame = {
+        name: "Puppy Zoomies",
+        duration: 30000,
+        ROUND_SECONDS: 30,
+        THETA_CAP_DEG: 15,
+        PERFECT_DEG: 0.20,
+        MIN_ZOOMIES: 4,
+        WALL_RESTITUTION_NORMAL: 0.94,
+        WALL_RESTITUTION_ZOOMIES_SIDE: 1.02,
+        LINEAR_DAMPING_NORMAL: 0.010,
+        LINEAR_DAMPING_ZOOMIES: 0.002,
+        ANGULAR_DAMPING_NORMAL: 0.008,
+        ANGULAR_DAMPING_ZOOMIES: 0.001,
+        VY_CLAMP_FACTOR_ON_SIDE_WALL: 0.5,
+        SPAWN_RATE_MIN: 16,
+        SPAWN_RATE_MAX: 24,
+        CANDY_CAP: 100,
+        CANDY_SIZE_MIN: 26,
+        CANDY_SIZE_MAX: 36,
+        FALL_SPEED_MIN: 240,
+        FALL_SPEED_MAX: 320,
+        LAUNCH_COOLDOWN_MS: 500,
+        AIM_PREVIEW_SECONDS: 0.55,
+        MAX_DRAG_DISTANCE: 180,
+        MIN_LAUNCH_SPEED: 260,
+        MAX_LAUNCH_SPEED: 950,
+        PUPPY_RADIUS: 32,
+        CANDY_EMOJIS: ["🍰","🎂","🍬","🍭","🍫","🍪","🧁","🥧","🍩"],
+        container: null,
+        onCompleteCallback: null,
+        elements: {},
+        candies: [],
+        candySpawnCounter: 0,
+        score: 0,
+        timeLeft: 0,
+        zoomiesLeft: 0,
+        zoomiesActive: false,
+        spawnTimer: 0,
+        spawnRateMultiplier: 1,
+        slowFrameCount: 0,
+        fastFrameCount: 0,
+        lastFrameTime: null,
+        lastBounceSfx: 0,
+        nextAllowedLaunchMs: 0,
+        pointerId: null,
+        pendingLaunchVelocity: null,
+        aimDots: [],
+        isGameOver: false,
+        puppy: { element: null, x: 0, y: 0, radius: 32, vx: 0, vy: 0, rotation: 0, angularVelocity: 0 },
+        gameTimerId: null,
+        timerIntervalId: null,
+        animationFrameId: null,
+        boundGameLoop: null,
+        boundPointerDown: null,
+        boundPointerMove: null,
+        boundPointerUp: null,
+        start: function(containerElement, onComplete) {
+            this.container = containerElement;
+            this.onCompleteCallback = onComplete;
+            this.score = 0;
+            this.candies = [];
+            this.candySpawnCounter = 0;
+            this.elements = {};
+            this.aimDots = [];
+            this.timeLeft = this.ROUND_SECONDS;
+            this.zoomiesLeft = 0;
+            this.zoomiesActive = false;
+            this.spawnRateMultiplier = 1;
+            this.slowFrameCount = 0;
+            this.fastFrameCount = 0;
+            this.lastFrameTime = null;
+            this.lastBounceSfx = 0;
+            this.spawnTimer = 0;
+            this.nextAllowedLaunchMs = performance.now();
+            this.pointerId = null;
+            this.pendingLaunchVelocity = null;
+            this.isGameOver = false;
+            this.puppy.radius = this.PUPPY_RADIUS;
+            this.puppy.vx = 0;
+            this.puppy.vy = 0;
+            this.puppy.rotation = 0;
+            this.puppy.angularVelocity = 0;
+            this.container.innerHTML = '';
+            this.container.style.cursor = 'default';
+            this.container.style.touchAction = 'none';
+            speak("Puppy Zoomies! Launch and gobble the sweets!");
+
+            const infoBar = document.createElement('div');
+            infoBar.className = 'minigame-info-bar';
+            this.elements.scoreDisplay = document.createElement('div');
+            this.elements.scoreDisplay.className = 'minigame-score';
+            infoBar.appendChild(this.elements.scoreDisplay);
+            const timerContainer = document.createElement('div');
+            timerContainer.className = 'minigame-timer-bar-container';
+            this.elements.timerBar = document.createElement('div');
+            this.elements.timerBar.className = 'minigame-timer-bar';
+            timerContainer.appendChild(this.elements.timerBar);
+            infoBar.appendChild(timerContainer);
+            this.elements.timerText = document.createElement('div');
+            this.elements.timerText.className = 'minigame-timer-text';
+            infoBar.appendChild(this.elements.timerText);
+            this.container.appendChild(infoBar);
+
+            const arena = document.createElement('div');
+            arena.style.position = 'relative';
+            arena.style.width = 'min(90vw, 680px)';
+            arena.style.height = 'min(70vh, 520px)';
+            arena.style.maxWidth = '680px';
+            arena.style.maxHeight = '520px';
+            arena.style.border = '3px solid rgba(255,255,255,0.25)';
+            arena.style.borderRadius = '24px';
+            arena.style.boxSizing = 'border-box';
+            arena.style.background = 'rgba(10, 35, 70, 0.25)';
+            arena.style.boxShadow = 'inset 0 12px 28px rgba(0,0,0,0.45)';
+            arena.style.overflow = 'hidden';
+            arena.style.touchAction = 'none';
+            arena.style.marginTop = '120px';
+            arena.style.marginBottom = '30px';
+            this.container.appendChild(arena);
+            this.elements.arena = arena;
+
+            const puppyEl = document.createElement('div');
+            puppyEl.textContent = '🐶';
+            puppyEl.style.position = 'absolute';
+            puppyEl.style.width = `${this.PUPPY_RADIUS * 2}px`;
+            puppyEl.style.height = `${this.PUPPY_RADIUS * 2}px`;
+            puppyEl.style.fontSize = `${this.PUPPY_RADIUS * 1.9}px`;
+            puppyEl.style.display = 'flex';
+            puppyEl.style.alignItems = 'center';
+            puppyEl.style.justifyContent = 'center';
+            puppyEl.style.transformOrigin = '50% 50%';
+            puppyEl.style.pointerEvents = 'auto';
+            puppyEl.style.userSelect = 'none';
+            puppyEl.style.cursor = 'grab';
+            puppyEl.style.filter = 'drop-shadow(0 10px 16px rgba(0,0,0,0.35))';
+            puppyEl.style.transition = 'box-shadow 0.25s ease';
+            puppyEl.style.zIndex = '20';
+            arena.appendChild(puppyEl);
+            this.puppy.element = puppyEl;
+            this.puppy.x = arena.clientWidth / 2;
+            this.puppy.y = arena.clientHeight * 0.65;
+            this.updatePuppyElement();
+
+            const leftPost = document.createElement('div');
+            leftPost.style.position = 'absolute';
+            leftPost.style.width = '12px';
+            leftPost.style.height = '44px';
+            leftPost.style.background = 'rgba(210,210,210,0.85)';
+            leftPost.style.borderRadius = '6px';
+            leftPost.style.opacity = '0';
+            leftPost.style.pointerEvents = 'none';
+            leftPost.style.transform = 'translate(-50%, -50%)';
+            leftPost.style.zIndex = '18';
+            const rightPost = leftPost.cloneNode();
+            arena.appendChild(leftPost);
+            arena.appendChild(rightPost);
+            this.elements.leftPost = leftPost;
+            this.elements.rightPost = rightPost;
+
+            const bandLeft = document.createElement('div');
+            bandLeft.style.position = 'absolute';
+            bandLeft.style.height = '6px';
+            bandLeft.style.background = 'rgba(255,80,80,0.85)';
+            bandLeft.style.borderRadius = '4px';
+            bandLeft.style.opacity = '0';
+            bandLeft.style.transformOrigin = '0% 50%';
+            bandLeft.style.pointerEvents = 'none';
+            bandLeft.style.zIndex = '19';
+            const bandRight = bandLeft.cloneNode();
+            arena.appendChild(bandLeft);
+            arena.appendChild(bandRight);
+            this.elements.bandLeft = bandLeft;
+            this.elements.bandRight = bandRight;
+
+            const aimDotCount = 14;
+            for (let i = 0; i < aimDotCount; i++) {
+                const dot = document.createElement('div');
+                dot.style.position = 'absolute';
+                dot.style.width = '8px';
+                dot.style.height = '8px';
+                dot.style.borderRadius = '50%';
+                dot.style.background = 'rgba(255,255,255,0.9)';
+                dot.style.opacity = '0';
+                dot.style.pointerEvents = 'none';
+                dot.style.transform = 'translate(-50%, -50%)';
+                dot.style.transition = 'opacity 0.12s';
+                dot.style.zIndex = '17';
+                arena.appendChild(dot);
+                this.aimDots.push(dot);
+            }
+
+            this.setPhysicsZoomies(false);
+            this.clearAimAssist();
+            this.updateScoreDisplay();
+            this.elements.timerBar.style.width = '100%';
+            this.elements.timerText.textContent = `${this.ROUND_SECONDS.toFixed(1)}s`;
+            this.updateTimerBar();
+
+            this.boundGameLoop = this.gameLoop.bind(this);
+            this.boundPointerDown = this.onPointerDown.bind(this);
+            this.boundPointerMove = this.onPointerMove.bind(this);
+            this.boundPointerUp = this.onPointerUp.bind(this);
+
+            this.puppy.element.addEventListener('pointerdown', this.boundPointerDown);
+
+            this.timerIntervalId = setInterval(() => this.updateTimerBar(), 100);
+            this.gameTimerId = setTimeout(() => this.endGame(), this.duration);
+            this.animationFrameId = requestAnimationFrame(this.boundGameLoop);
+        },
+        updateScoreDisplay: function() {
+            if (this.elements.scoreDisplay) {
+                this.elements.scoreDisplay.textContent = `Score: ${this.score}`;
+            }
+        },
+        updateTimerBar: function() {
+            if (!this.elements.timerBar || !this.elements.timerText) { return; }
+            const progress = Math.max(0, Math.min(1, this.timeLeft / this.ROUND_SECONDS));
+            this.elements.timerBar.style.width = `${progress * 100}%`;
+            this.elements.timerText.textContent = `${Math.max(0, this.timeLeft).toFixed(1)}s`;
+        },
+        setPhysicsZoomies: function(on) {
+            this.zoomiesActive = on;
+            this.currentLinearDamping = on ? this.LINEAR_DAMPING_ZOOMIES : this.LINEAR_DAMPING_NORMAL;
+            this.currentAngularDamping = on ? this.ANGULAR_DAMPING_ZOOMIES : this.ANGULAR_DAMPING_NORMAL;
+            this.currentSideRestitution = on ? this.WALL_RESTITUTION_ZOOMIES_SIDE : this.WALL_RESTITUTION_NORMAL;
+            if (this.puppy.element) {
+                this.puppy.element.style.boxShadow = on ? '0 0 24px rgba(255,255,255,0.9)' : '0 10px 16px rgba(0,0,0,0.35)';
+            }
+        },
+        computeZoomiesSeconds: function(angleDeg) {
+            if (angleDeg < this.PERFECT_DEG) { return this.ROUND_SECONDS; }
+            if (angleDeg >= this.THETA_CAP_DEG) { return 0; }
+            const t = 1 - Math.pow(angleDeg / this.THETA_CAP_DEG, 2);
+            return this.MIN_ZOOMIES + t * (this.ROUND_SECONDS - this.MIN_ZOOMIES);
+        },
+        computeLaunchVelocityFromDrag: function(dx, dy) {
+            const magnitude = Math.sqrt(dx * dx + dy * dy);
+            if (magnitude === 0) { return { vx: 0, vy: 0 }; }
+            const clamped = Math.min(this.MAX_DRAG_DISTANCE, magnitude);
+            const ratio = clamped / magnitude;
+            const ndx = dx * ratio;
+            const ndy = dy * ratio;
+            const t = clamped / this.MAX_DRAG_DISTANCE;
+            const speed = this.MIN_LAUNCH_SPEED + t * (this.MAX_LAUNCH_SPEED - this.MIN_LAUNCH_SPEED);
+            const unitX = clamped === 0 ? 0 : ndx / clamped;
+            const unitY = clamped === 0 ? 0 : ndy / clamped;
+            return { vx: unitX * speed, vy: unitY * speed };
+        },
+        applyImpulseToPuppy: function(vx, vy) {
+            let speed = Math.sqrt(vx * vx + vy * vy);
+            if (speed < this.MIN_LAUNCH_SPEED) {
+                if (speed === 0) {
+                    vx = this.MIN_LAUNCH_SPEED;
+                    vy = 0;
+                    speed = this.MIN_LAUNCH_SPEED;
+                } else {
+                    const factor = this.MIN_LAUNCH_SPEED / speed;
+                    vx *= factor;
+                    vy *= factor;
+                    speed = this.MIN_LAUNCH_SPEED;
+                }
+            }
+            if (speed > this.MAX_LAUNCH_SPEED) {
+                const factor = this.MAX_LAUNCH_SPEED / speed;
+                vx *= factor;
+                vy *= factor;
+            }
+            this.puppy.vx = vx;
+            this.puppy.vy = vy;
+            this.puppy.angularVelocity = (Math.random() * 2 - 1) * 220;
+        },
+        onPointerDown: function(event) {
+            if (this.pointerId !== null || this.isGameOver || !this.elements.arena) { return; }
+            event.preventDefault();
+            this.pointerId = event.pointerId;
+            if (this.puppy.element && this.puppy.element.setPointerCapture) {
+                try { this.puppy.element.setPointerCapture(event.pointerId); } catch (e) {}
+            }
+            if (this.puppy.element) {
+                this.puppy.element.style.cursor = 'grabbing';
+            }
+            const rect = this.elements.arena.getBoundingClientRect();
+            this.updateAimAssist(event.clientX - rect.left, event.clientY - rect.top);
+            window.addEventListener('pointermove', this.boundPointerMove);
+            window.addEventListener('pointerup', this.boundPointerUp);
+            window.addEventListener('pointercancel', this.boundPointerUp);
+        },
+        onPointerMove: function(event) {
+            if (event.pointerId !== this.pointerId || !this.elements.arena || this.isGameOver) { return; }
+            event.preventDefault();
+            const rect = this.elements.arena.getBoundingClientRect();
+            this.updateAimAssist(event.clientX - rect.left, event.clientY - rect.top);
+        },
+        onPointerUp: function(event) {
+            if (event.pointerId !== this.pointerId) { return; }
+            if (this.puppy.element && this.puppy.element.releasePointerCapture) {
+                try { this.puppy.element.releasePointerCapture(event.pointerId); } catch (e) {}
+                this.puppy.element.style.cursor = 'grab';
+            }
+            const rect = this.elements.arena ? this.elements.arena.getBoundingClientRect() : null;
+            if (rect) {
+                this.updateAimAssist(event.clientX - rect.left, event.clientY - rect.top);
+            }
+            const launch = this.pendingLaunchVelocity ? { vx: this.pendingLaunchVelocity.vx, vy: this.pendingLaunchVelocity.vy } : null;
+            this.pointerId = null;
+            this.clearAimAssist();
+            window.removeEventListener('pointermove', this.boundPointerMove);
+            window.removeEventListener('pointerup', this.boundPointerUp);
+            window.removeEventListener('pointercancel', this.boundPointerUp);
+            if (!launch || this.isGameOver) { return; }
+            const now = performance.now();
+            if (now < this.nextAllowedLaunchMs) { return; }
+            const speed = Math.sqrt(launch.vx * launch.vx + launch.vy * launch.vy);
+            if (speed < 1) { return; }
+            this.applyImpulseToPuppy(launch.vx, launch.vy);
+            const angleDeg = Math.abs(Math.atan2(launch.vy, launch.vx) * 180 / Math.PI);
+            this.zoomiesLeft = this.computeZoomiesSeconds(angleDeg);
+            this.setPhysicsZoomies(this.zoomiesLeft > 0);
+            this.nextAllowedLaunchMs = now + this.LAUNCH_COOLDOWN_MS;
+        },
+        updateAimAssist: function(pointerX, pointerY) {
+            if (!this.elements.arena || !this.elements.leftPost || !this.elements.rightPost || !this.elements.bandLeft || !this.elements.bandRight) { return; }
+            const centerX = this.puppy.x;
+            const centerY = this.puppy.y;
+            let dx = centerX - pointerX;
+            let dy = centerY - pointerY;
+            const magnitude = Math.sqrt(dx * dx + dy * dy);
+            let clampedPointerX = pointerX;
+            let clampedPointerY = pointerY;
+            if (magnitude > this.MAX_DRAG_DISTANCE) {
+                const scale = this.MAX_DRAG_DISTANCE / magnitude;
+                clampedPointerX = centerX - dx * scale;
+                clampedPointerY = centerY - dy * scale;
+                dx *= scale;
+                dy *= scale;
+            }
+            const launch = this.computeLaunchVelocityFromDrag(centerX - clampedPointerX, centerY - clampedPointerY);
+            const launchSpeed = Math.sqrt(launch.vx * launch.vx + launch.vy * launch.vy);
+            this.pendingLaunchVelocity = launchSpeed > 4 ? launch : null;
+
+            const postOffset = this.puppy.radius + 26;
+            const postY = centerY + this.puppy.radius * 0.65;
+            this.positionSlingshotPost(this.elements.leftPost, centerX - postOffset, postY);
+            this.positionSlingshotPost(this.elements.rightPost, centerX + postOffset, postY);
+            this.positionBand(this.elements.bandLeft, centerX - postOffset, postY, clampedPointerX, clampedPointerY);
+            this.positionBand(this.elements.bandRight, centerX + postOffset, postY, clampedPointerX, clampedPointerY);
+            this.updateAimPreview(launch.vx, launch.vy);
+        },
+        positionSlingshotPost: function(post, x, y) {
+            if (!post) { return; }
+            post.style.left = `${x}px`;
+            post.style.top = `${y}px`;
+            post.style.opacity = '1';
+        },
+        positionBand: function(band, x1, y1, x2, y2) {
+            if (!band) { return; }
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            band.style.width = `${length}px`;
+            band.style.left = `${x1}px`;
+            band.style.top = `${y1}px`;
+            band.style.transform = `translate(0, -50%) rotate(${angle}deg)`;
+            band.style.opacity = '1';
+        },
+        updateAimPreview: function(vx, vy) {
+            if (!this.aimDots.length) { return; }
+            const speed = Math.sqrt(vx * vx + vy * vy);
+            if (speed < 1) {
+                this.aimDots.forEach(dot => { dot.style.opacity = '0'; });
+                return;
+            }
+            const positions = this.simulateTrajectory(vx, vy, this.AIM_PREVIEW_SECONDS, this.aimDots.length);
+            for (let i = 0; i < this.aimDots.length; i++) {
+                const dot = this.aimDots[i];
+                if (!dot) { continue; }
+                if (i < positions.length) {
+                    const pos = positions[i];
+                    dot.style.left = `${pos.x}px`;
+                    dot.style.top = `${pos.y}px`;
+                    dot.style.opacity = `${0.2 + 0.6 * (1 - i / this.aimDots.length)}`;
+                } else {
+                    dot.style.opacity = '0';
+                }
+            }
+        },
+        simulateTrajectory: function(vx, vy, maxTime, maxPoints) {
+            const positions = [];
+            if (!this.elements.arena || maxPoints <= 0) { return positions; }
+            const width = this.elements.arena.clientWidth;
+            const height = this.elements.arena.clientHeight;
+            const radius = this.puppy.radius;
+            let x = this.puppy.x;
+            let y = this.puppy.y;
+            let tempVx = vx;
+            let tempVy = vy;
+            const steps = Math.max(1, maxPoints);
+            const dt = Math.max(0.016, maxTime / steps);
+            const damping = Math.max(0, 1 - this.LINEAR_DAMPING_NORMAL * dt * 60);
+            for (let i = 0; i < steps; i++) {
+                x += tempVx * dt;
+                y += tempVy * dt;
+                if (x < radius) {
+                    x = radius + (radius - x);
+                    tempVx = Math.abs(tempVx) * this.WALL_RESTITUTION_NORMAL;
+                } else if (x > width - radius) {
+                    x = (width - radius) - (x - (width - radius));
+                    tempVx = -Math.abs(tempVx) * this.WALL_RESTITUTION_NORMAL;
+                }
+                if (y < radius) {
+                    y = radius + (radius - y);
+                    tempVy = Math.abs(tempVy) * this.WALL_RESTITUTION_NORMAL;
+                } else if (y > height - radius) {
+                    y = (height - radius) - (y - (height - radius));
+                    tempVy = -Math.abs(tempVy) * this.WALL_RESTITUTION_NORMAL;
+                }
+                tempVx *= damping;
+                tempVy *= damping;
+                positions.push({ x, y });
+            }
+            return positions;
+        },
+        clearAimAssist: function() {
+            if (this.elements.leftPost) { this.elements.leftPost.style.opacity = '0'; }
+            if (this.elements.rightPost) { this.elements.rightPost.style.opacity = '0'; }
+            if (this.elements.bandLeft) { this.elements.bandLeft.style.opacity = '0'; }
+            if (this.elements.bandRight) { this.elements.bandRight.style.opacity = '0'; }
+            this.aimDots.forEach(dot => { dot.style.opacity = '0'; });
+            this.pendingLaunchVelocity = null;
+        },
+        spawnCandy: function() {
+            if (this.isGameOver || !this.elements.arena) { return; }
+            const width = this.elements.arena.clientWidth;
+            const size = this.randomBetween(this.CANDY_SIZE_MIN, this.CANDY_SIZE_MAX);
+            const x = this.randomBetween(size / 2, width - size / 2);
+            const emoji = this.CANDY_EMOJIS[Math.floor(Math.random() * this.CANDY_EMOJIS.length)];
+            const element = document.createElement('div');
+            element.textContent = emoji;
+            element.style.position = 'absolute';
+            element.style.fontSize = `${size}px`;
+            element.style.left = `${x}px`;
+            element.style.top = `${-size}px`;
+            element.style.transform = 'translate(-50%, -50%)';
+            element.style.pointerEvents = 'none';
+            element.style.transition = 'transform 0.1s ease-out, opacity 0.12s ease-out';
+            element.style.zIndex = '12';
+            element.style.filter = 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))';
+            this.elements.arena.appendChild(element);
+            const candy = {
+                id: this.candySpawnCounter++,
+                element,
+                x,
+                y: -size,
+                size,
+                baseSpeed: this.randomBetween(this.FALL_SPEED_MIN, this.FALL_SPEED_MAX)
+            };
+            this.candies.push(candy);
+            this.enforceCandyCap();
+        },
+        enforceCandyCap: function() {
+            if (!this.elements.arena) { return; }
+            const height = this.elements.arena.clientHeight;
+            while (this.candies.length > this.CANDY_CAP) {
+                let removed = false;
+                for (let i = 0; i < this.candies.length; i++) {
+                    const candy = this.candies[i];
+                    if (candy.y - candy.size / 2 > height + 40) {
+                        this.removeCandyAtIndex(i);
+                        removed = true;
+                        break;
+                    }
+                }
+                if (!removed && this.candies.length) {
+                    this.removeCandyAtIndex(0);
+                } else if (!this.candies.length) {
+                    break;
+                }
+            }
+        },
+        removeCandyAtIndex: function(index) {
+            if (index < 0 || index >= this.candies.length) { return; }
+            const candy = this.candies[index];
+            if (candy && candy.element && candy.element.parentNode) {
+                candy.element.parentNode.removeChild(candy.element);
+            }
+            this.candies.splice(index, 1);
+        },
+        updateCandies: function(dt) {
+            if (!this.elements.arena) { return; }
+            const height = this.elements.arena.clientHeight;
+            const ramp = 1 + 0.1 * Math.min(1, (this.ROUND_SECONDS - this.timeLeft) / 20);
+            const zoomiesPadding = this.zoomiesActive ? 2 : 0;
+            for (let i = this.candies.length - 1; i >= 0; i--) {
+                const candy = this.candies[i];
+                candy.y += candy.baseSpeed * ramp * dt;
+                if (candy.element) {
+                    candy.element.style.top = `${candy.y}px`;
+                    candy.element.style.left = `${candy.x}px`;
+                }
+                const dx = candy.x - this.puppy.x;
+                const dy = candy.y - this.puppy.y;
+                const combinedRadius = this.puppy.radius + candy.size / 2 + zoomiesPadding;
+                if (dx * dx + dy * dy <= combinedRadius * combinedRadius) {
+                    this.handleCandyCollision(i);
+                    continue;
+                }
+                if (candy.y - candy.size / 2 > height + 80) {
+                    this.removeCandyAtIndex(i);
+                }
+            }
+        },
+        handleCandyCollision: function(index) {
+            if (index < 0 || index >= this.candies.length) { return; }
+            const candy = this.candies[index];
+            this.candies.splice(index, 1);
+            if (candy && candy.element) {
+                candy.element.style.transform = 'translate(-50%, -50%) scale(1.3)';
+                candy.element.style.opacity = '0.4';
+                setTimeout(() => {
+                    if (candy.element && candy.element.parentNode) {
+                        candy.element.parentNode.removeChild(candy.element);
+                    }
+                }, 90);
+            }
+            this.score += 1;
+            this.updateScoreDisplay();
+            if (typeof playBell === 'function') { playBell(); }
+        },
+        handleWallCollision: function(side) {
+            const now = performance.now();
+            if (now - this.lastBounceSfx > 120 && typeof playBuzz === 'function') {
+                this.lastBounceSfx = now;
+                playBuzz();
+            }
+            if (this.zoomiesActive && (side === 'left' || side === 'right')) {
+                this.puppy.vy *= this.VY_CLAMP_FACTOR_ON_SIDE_WALL;
+            }
+        },
+        gameLoop: function(timestamp) {
+            if (this.isGameOver) { return; }
+            if (this.lastFrameTime === null) {
+                this.lastFrameTime = timestamp;
+            }
+            const dt = Math.max(0.001, (timestamp - this.lastFrameTime) / 1000);
+            this.lastFrameTime = timestamp;
+            this.timeLeft -= dt;
+            if (this.zoomiesLeft > 0) {
+                this.zoomiesLeft = Math.max(0, this.zoomiesLeft - dt);
+                if (this.zoomiesLeft === 0) {
+                    this.setPhysicsZoomies(false);
+                }
+            }
+            if (this.timeLeft <= 0) {
+                this.timeLeft = 0;
+                this.updateTimerBar();
+                this.endGame();
+                return;
+            }
+            if (dt > 0.05) {
+                this.slowFrameCount = Math.min(60, this.slowFrameCount + 1);
+            } else {
+                this.slowFrameCount = Math.max(0, this.slowFrameCount - 1);
+            }
+            if (dt < 0.03) {
+                this.fastFrameCount = Math.min(60, this.fastFrameCount + 1);
+            } else {
+                this.fastFrameCount = Math.max(0, this.fastFrameCount - 2);
+            }
+            if (this.slowFrameCount >= 4) {
+                this.spawnRateMultiplier = 0.75;
+                this.fastFrameCount = 0;
+            }
+            if (this.spawnRateMultiplier < 1 && this.fastFrameCount >= 20) {
+                this.spawnRateMultiplier = 1;
+                this.slowFrameCount = 0;
+            }
+            this.spawnTimer -= dt;
+            while (this.spawnTimer <= 0) {
+                this.spawnCandy();
+                this.spawnTimer += this.getSpawnInterval();
+            }
+            this.updatePuppyPhysics(dt);
+            this.updateCandies(dt);
+            this.updateTimerBar();
+            if (!this.isGameOver) {
+                this.animationFrameId = requestAnimationFrame(this.boundGameLoop);
+            }
+        },
+        updatePuppyPhysics: function(dt) {
+            if (!this.elements.arena) { return; }
+            const width = this.elements.arena.clientWidth;
+            const height = this.elements.arena.clientHeight;
+            this.puppy.x += this.puppy.vx * dt;
+            this.puppy.y += this.puppy.vy * dt;
+            const damping = Math.max(0, 1 - this.currentLinearDamping * dt * 60);
+            this.puppy.vx *= damping;
+            this.puppy.vy *= damping;
+            const angularDamp = Math.max(0, 1 - this.currentAngularDamping * dt * 60);
+            this.puppy.angularVelocity *= angularDamp;
+            this.puppy.rotation += this.puppy.angularVelocity * dt;
+            const radius = this.puppy.radius;
+            let horizontalCollision = null;
+            let verticalCollision = null;
+            if (this.puppy.x < radius) {
+                this.puppy.x = radius;
+                this.puppy.vx = Math.abs(this.puppy.vx) * this.currentSideRestitution;
+                horizontalCollision = 'left';
+            } else if (this.puppy.x > width - radius) {
+                this.puppy.x = width - radius;
+                this.puppy.vx = -Math.abs(this.puppy.vx) * this.currentSideRestitution;
+                horizontalCollision = 'right';
+            }
+            if (this.puppy.y < radius) {
+                this.puppy.y = radius;
+                this.puppy.vy = Math.abs(this.puppy.vy) * this.WALL_RESTITUTION_NORMAL;
+                verticalCollision = 'top';
+            } else if (this.puppy.y > height - radius) {
+                this.puppy.y = height - radius;
+                this.puppy.vy = -Math.abs(this.puppy.vy) * this.WALL_RESTITUTION_NORMAL;
+                verticalCollision = 'bottom';
+            }
+            if (horizontalCollision) { this.handleWallCollision(horizontalCollision); }
+            if (verticalCollision) { this.handleWallCollision(verticalCollision); }
+            this.updatePuppyElement();
+        },
+        getSpawnInterval: function() {
+            const rate = Math.max(1, this.randomBetween(this.SPAWN_RATE_MIN, this.SPAWN_RATE_MAX) * this.spawnRateMultiplier);
+            return 1 / rate;
+        },
+        randomBetween: function(min, max) {
+            return Math.random() * (max - min) + min;
+        },
+        updatePuppyElement: function() {
+            if (!this.puppy.element) { return; }
+            this.puppy.element.style.left = `${this.puppy.x - this.puppy.radius}px`;
+            this.puppy.element.style.top = `${this.puppy.y - this.puppy.radius}px`;
+            this.puppy.element.style.transform = `rotate(${this.puppy.rotation}deg)`;
+        },
+        endGame: function() {
+            if (this.isGameOver) { return; }
+            this.isGameOver = true;
+            clearTimeout(this.gameTimerId);
+            clearInterval(this.timerIntervalId);
+            if (this.animationFrameId) { cancelAnimationFrame(this.animationFrameId); }
+            this.gameTimerId = null;
+            this.timerIntervalId = null;
+            this.animationFrameId = null;
+            this.setPhysicsZoomies(false);
+            this.clearAimAssist();
+            window.removeEventListener('pointermove', this.boundPointerMove);
+            window.removeEventListener('pointerup', this.boundPointerUp);
+            window.removeEventListener('pointercancel', this.boundPointerUp);
+            if (this.puppy.element) { this.puppy.element.style.cursor = 'grab'; }
+            if (this.onCompleteCallback) {
+                const cb = this.onCompleteCallback;
+                this.onCompleteCallback = null;
+                cb(this.score);
+            }
+        },
+        destroy: function() {
+            this.endGame();
+            if (this.puppy.element && this.boundPointerDown) {
+                this.puppy.element.removeEventListener('pointerdown', this.boundPointerDown);
+            }
+            this.candies.forEach(candy => {
+                if (candy.element && candy.element.parentNode) {
+                    candy.element.parentNode.removeChild(candy.element);
+                }
+            });
+            this.candies = [];
+            if (this.container) {
+                this.container.innerHTML = '';
+                this.container.style.touchAction = '';
+                this.container.style.cursor = 'default';
+            }
+            this.elements = {};
+            this.aimDots = [];
+            this.container = null;
+            this.puppy.element = null;
+        }
+    };
+
+const MINI_GAME_LIBRARY = [
         { id: 'catRescue', label: CatRescueGame.name, game: CatRescueGame },
         { id: 'hoopBounce', label: HoopBounceGame.name, game: HoopBounceGame },
         { id: 'unicornDragonDash', label: UnicornDragonDash.name, game: UnicornDragonDash },
         { id: 'puppyLaserDefender', label: PuppyLaserDefenderGame.name, game: PuppyLaserDefenderGame },
         { id: 'puppyPatrol', label: PuppyPatrolGame.name, game: PuppyPatrolGame },
         { id: 'balloonPop', label: BalloonPopGame.name, game: BalloonPopGame },
+        { id: 'puppyZoomies', label: PuppyZoomiesGame.name, game: PuppyZoomiesGame },
         { id: 'catchTheStar', label: CatchTheStarGame.name, game: CatchTheStarGame },
     ];
     const MINI_GAME_CONFIG_KEY = 'miniGameOrder';
