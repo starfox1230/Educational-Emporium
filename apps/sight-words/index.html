@@ -466,6 +466,50 @@
     .minigame-config-content {
         text-align: left;
     }
+    .minigame-interval-control {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        background: rgba(255,255,255,0.85);
+        border: 1px solid var(--btn-border);
+        border-radius: var(--btn-radius);
+        padding: 0.75rem 1rem;
+        margin-top: 0.75rem;
+    }
+    .minigame-interval-label {
+        font-weight: 600;
+        color: var(--brand-dark);
+    }
+    .minigame-interval-input-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    #minigame-interval-input {
+        width: 80px;
+        padding: 0.45rem 0.6rem;
+        border: 2px solid var(--btn-border);
+        border-radius: 10px;
+        font-size: 1rem;
+        text-align: center;
+        background-color: #fff;
+        transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    #minigame-interval-input:focus {
+        outline: none;
+        border-color: var(--brand);
+        box-shadow: 0 0 0 3px rgba(38,198,218,0.25);
+    }
+    .minigame-interval-units {
+        font-size: 0.95rem;
+        color: #555;
+        font-weight: 500;
+    }
+    .minigame-interval-hint {
+        font-size: 0.8rem;
+        color: #666;
+    }
     .minigame-config-list {
         display: flex;
         flex-direction: column;
@@ -823,6 +867,14 @@
     <div class="generic-modal-content minigame-config-content" role="dialog" aria-modal="true" aria-labelledby="minigame-config-title">
       <h3 id="minigame-config-title">Mini-Game Lineup</h3>
       <p>Choose which mini-games are available and arrange the order they'll appear.</p>
+      <div class="minigame-interval-control">
+        <label class="minigame-interval-label" for="minigame-interval-input">Mini-Game Interval</label>
+        <div class="minigame-interval-input-row">
+          <input id="minigame-interval-input" type="number" min="1" inputmode="numeric" pattern="\\d*" placeholder="5">
+          <span class="minigame-interval-units">correct answers</span>
+        </div>
+        <p class="minigame-interval-hint">Defaults to 5 if left blank or invalid.</p>
+      </div>
       <div id="minigame-config-list" class="minigame-config-list"></div>
       <p id="minigame-config-empty-state" class="minigame-config-empty">No mini-games selected. Add some from the library below!</p>
       <div class="generic-modal-actions">
@@ -1113,6 +1165,7 @@
     const miniGameConfigCloseBtn = document.getElementById('minigame-config-close-btn');
     const miniGameConfigResetBtn = document.getElementById('minigame-config-reset-btn');
     const miniGameConfigEmptyState = document.getElementById('minigame-config-empty-state');
+    const miniGameIntervalInput = document.getElementById('minigame-interval-input');
 
     // --- GAME STATE ---
     let circleTimerInstance;
@@ -1132,6 +1185,7 @@
     let availableMiniGames = [];
     let currentMiniGameIdx = 0;
     let miniGameOrder = [];
+    let miniGameInterval = DEFAULT_MINI_GAME_INTERVAL;
     let miniGameHoldTimeout = null;
     let miniGameHoldTriggered = false;
     let ignoreNextMiniGameToggle = false;
@@ -1178,9 +1232,10 @@
     
         // Persist the now-complete state back to localStorage
         localStorage.setItem('wordSelectionState', JSON.stringify(selectionState));
-        
+
 
         miniGamesEnabled = localStorage.getItem('miniGamesEnabled') === 'true';
+        miniGameInterval = loadMiniGameInterval();
         const raw = localStorage.getItem('animatedBackgroundsEnabled');
         animatedBackgroundsEnabled = (raw === 'true');
         currentGameMode = localStorage.getItem('sightWordsGameMode') || 'listenAndPickWord';
@@ -2001,6 +2056,8 @@ const MINI_GAME_LIBRARY = [
         { id: 'catchTheStar', label: CatchTheStarGame.name, game: CatchTheStarGame },
     ];
     const MINI_GAME_CONFIG_KEY = 'miniGameOrder';
+    const MINI_GAME_INTERVAL_KEY = 'miniGameInterval';
+    const DEFAULT_MINI_GAME_INTERVAL = 5;
 
     function loadMiniGameOrder() {
         const fallback = MINI_GAME_LIBRARY.map(game => game.id);
@@ -2019,6 +2076,37 @@ const MINI_GAME_LIBRARY = [
 
     function saveMiniGameOrder(order) {
         localStorage.setItem(MINI_GAME_CONFIG_KEY, JSON.stringify(order));
+    }
+
+    function loadMiniGameInterval() {
+        const stored = localStorage.getItem(MINI_GAME_INTERVAL_KEY);
+        if (!stored) { return DEFAULT_MINI_GAME_INTERVAL; }
+        const parsed = parseInt(stored, 10);
+        if (!Number.isNaN(parsed) && parsed > 0) {
+            return parsed;
+        }
+        return DEFAULT_MINI_GAME_INTERVAL;
+    }
+
+    function persistMiniGameInterval(value) {
+        localStorage.setItem(MINI_GAME_INTERVAL_KEY, value.toString());
+    }
+
+    function commitMiniGameIntervalFromInput() {
+        if (!miniGameIntervalInput) { return; }
+        const rawValue = miniGameIntervalInput.value.trim();
+        if (rawValue === '') {
+            miniGameInterval = DEFAULT_MINI_GAME_INTERVAL;
+        } else {
+            const parsed = parseInt(rawValue, 10);
+            if (!Number.isNaN(parsed) && parsed > 0) {
+                miniGameInterval = parsed;
+            } else {
+                miniGameInterval = DEFAULT_MINI_GAME_INTERVAL;
+            }
+        }
+        miniGameIntervalInput.value = miniGameInterval.toString();
+        persistMiniGameInterval(miniGameInterval);
     }
 
     function rebuildAvailableMiniGames() {
@@ -2223,6 +2311,9 @@ const MINI_GAME_LIBRARY = [
     function openMiniGameConfigModal() {
         if (!miniGameConfigModal) { return; }
         populateMiniGameConfigList();
+        if (miniGameIntervalInput) {
+            miniGameIntervalInput.value = miniGameInterval.toString();
+        }
         miniGameConfigModal.classList.add('visible');
         requestAnimationFrame(() => {
             if (miniGameConfigCloseBtn) { miniGameConfigCloseBtn.focus(); }
@@ -2231,6 +2322,7 @@ const MINI_GAME_LIBRARY = [
 
     function closeMiniGameConfigModal() {
         if (!miniGameConfigModal) { return; }
+        commitMiniGameIntervalFromInput();
         miniGameConfigModal.classList.remove('visible');
     }
 
@@ -2306,6 +2398,20 @@ const MINI_GAME_LIBRARY = [
         rebuildAvailableMiniGames();
         updateMiniGameToggleUI();
 
+        if (miniGameIntervalInput) {
+            miniGameIntervalInput.value = miniGameInterval.toString();
+            miniGameIntervalInput.placeholder = DEFAULT_MINI_GAME_INTERVAL.toString();
+            miniGameIntervalInput.addEventListener('blur', commitMiniGameIntervalFromInput);
+            miniGameIntervalInput.addEventListener('change', commitMiniGameIntervalFromInput);
+            miniGameIntervalInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    commitMiniGameIntervalFromInput();
+                    miniGameIntervalInput.blur();
+                }
+            });
+        }
+
         if (!toggleMiniGamesBtn) { return; }
 
         toggleMiniGamesBtn.addEventListener('click', () => {
@@ -2340,6 +2446,11 @@ const MINI_GAME_LIBRARY = [
                 rebuildAvailableMiniGames();
                 updateMiniGameToggleUI();
                 populateMiniGameConfigList();
+                miniGameInterval = DEFAULT_MINI_GAME_INTERVAL;
+                persistMiniGameInterval(miniGameInterval);
+                if (miniGameIntervalInput) {
+                    miniGameIntervalInput.value = miniGameInterval.toString();
+                }
             });
         }
 
@@ -2465,7 +2576,8 @@ const MINI_GAME_LIBRARY = [
           currentStreak = 0;
         }
         targetButtonElement.classList.add('animate__animated', isCorrect ? 'animate__pulse' : 'animate__shakeX');
-        const isMiniGameDue = isCorrect && miniGamesEnabled && score > 0 && score % 5 === 0;
+        const intervalForTrigger = Math.max(1, miniGameInterval || DEFAULT_MINI_GAME_INTERVAL);
+        const isMiniGameDue = isCorrect && miniGamesEnabled && score > 0 && score % intervalForTrigger === 0;
         targetButtonElement.addEventListener('animationend', () => {
             targetButtonElement.classList.remove('animate__animated', 'animate__pulse', 'animate__shakeX');
             if (targetButtonElement.classList.contains('sound-btn')) { targetButtonElement.classList.remove('sound-btn-selected'); }
