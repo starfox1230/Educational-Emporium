@@ -1166,6 +1166,7 @@
     const miniGameConfigResetBtn = document.getElementById('minigame-config-reset-btn');
     const miniGameConfigEmptyState = document.getElementById('minigame-config-empty-state');
     const miniGameIntervalInput = document.getElementById('minigame-interval-input');
+    const DEFAULT_MINI_GAME_INTERVAL = 5;
 
     // --- GAME STATE ---
     let circleTimerInstance;
@@ -2057,7 +2058,6 @@ const MINI_GAME_LIBRARY = [
     ];
     const MINI_GAME_CONFIG_KEY = 'miniGameOrder';
     const MINI_GAME_INTERVAL_KEY = 'miniGameInterval';
-    const DEFAULT_MINI_GAME_INTERVAL = 5;
 
     function loadMiniGameOrder() {
         const fallback = MINI_GAME_LIBRARY.map(game => game.id);
