@@ -69,7 +69,12 @@
       padding: 10px 20px;
       gap: 15px;
       list-style: none;
-      justify-content: center;
+      justify-content: flex-start;
+      align-items: stretch;
+      scroll-snap-type: x proximity;
+      scroll-padding: 0 20px;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-x: contain;
     }
 
     .view-toggle {
@@ -116,6 +121,8 @@
 
     .app-item {
       position: relative;
+      flex: 0 0 auto;
+      scroll-snap-align: start;
     }
 
     .app-item .app-link {
@@ -628,7 +635,7 @@
       if (storedView === 'favorites' || storedView === 'all') {
         return storedView;
       }
-      return 'favorites';
+      return 'all';
     }
 
     function updateFullPageButton() {
