@@ -57,6 +57,10 @@
       position: sticky;
       top: 0;
       z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
     }
 
     .app-list {
@@ -66,6 +70,98 @@
       gap: 15px;
       list-style: none;
       justify-content: center;
+    }
+
+    .view-toggle {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      width: 90%;
+      max-width: 800px;
+    }
+
+    .view-button {
+      border: none;
+      background: #FFE0F0;
+      color: #555555;
+      padding: 8px 18px;
+      border-radius: 999px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s, color 0.3s, transform 0.3s;
+    }
+
+    .view-button:hover,
+    .view-button:focus-visible {
+      background: #FFC1CC;
+      color: #333333;
+      transform: translateY(-1px);
+      outline: none;
+    }
+
+    .view-button.active {
+      background: #FF9A9E;
+      color: #ffffff;
+      box-shadow: 0 4px 10px rgba(255, 154, 158, 0.4);
+    }
+
+    .favorites-empty-message {
+      display: none;
+      color: #666666;
+      font-size: 0.95em;
+      text-align: center;
+      padding: 0 20px;
+    }
+
+    .app-item {
+      position: relative;
+    }
+
+    .app-item .app-link {
+      padding-top: 28px;
+    }
+
+    .app-item.is-selected .app-link {
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+      transform: translateY(-5px);
+      border: 2px solid #FF9A9E;
+    }
+
+    .favorite-toggle {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2em;
+      cursor: pointer;
+      color: #D1C4E9;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s, box-shadow 0.3s, color 0.3s;
+      z-index: 2;
+    }
+
+    .favorite-toggle:hover,
+    .favorite-toggle:focus-visible {
+      transform: scale(1.1);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      outline: none;
+    }
+
+    .favorite-toggle.favorited {
+      color: #FFC107;
+    }
+
+    .favorite-toggle:focus-visible {
+      outline: 2px solid #FF9A9E;
+      outline-offset: 2px;
     }
 
     .app-link {
@@ -242,6 +338,15 @@
         padding: 8px 12px;
         font-size: 0.9em;
       }
+
+      .view-toggle {
+        width: 100%;
+      }
+
+      .view-button {
+        flex: 1 1 120px;
+        font-size: 0.9em;
+      }
     }
 
     .app-list::-webkit-scrollbar {
@@ -261,170 +366,203 @@
   </header>
 
   <nav>
+    <div class="view-toggle" role="group" aria-label="App views">
+      <button class="view-button" type="button" data-view="favorites">⭐ Favorites</button>
+      <button class="view-button" type="button" data-view="all">🌐 All Apps</button>
+    </div>
+    <p class="favorites-empty-message">Tap the star on any app to add it to your favorites!</p>
     <ul class="app-list">
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/job-chart/index.html" class="app-link">
           <span class="emoji">📈</span>
           <span class="text">Job Chart</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/k-math/index.html" class="app-link">
           <span class="emoji">💻</span>
           <span class="text">K-Math</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/Phonics-Game/index.html" class="app-link app-phonics-game">
           <span class="emoji">🧚</span>
           <span class="text">Phonics Game</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/Words/index.html" class="app-link app-words">
           <span class="emoji">📚</span>
           <span class="text">Words</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/Number-Game/index.html" class="app-link number-words">
           <span class="emoji">🧠</span>
           <span class="text">Number Game</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/progress-bar/index.html" class="app-link">
           <span class="emoji">🦄</span>
           <span class="text">Progress Bar</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/Matching-Game/index.html" class="app-link app-matchinggame">
           <span class="emoji">🦄</span>
           <span class="text">Matching Game</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/WordGlow_1.0_EarlyReader/index.html" class="app-link app-wordglow">
           <span class="emoji">📖</span>
           <span class="text">WordGlow 1.0</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/Letter-Hunt/index.html" class="app-link app-letterhunt">
           <span class="emoji">🔍</span>
           <span class="text">Letter Hunt</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/Color-Game/index.html" class="app-link app-colorgame">
           <span class="emoji">🎨</span>
           <span class="text">Color Game</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/Matiloise-Competition/index.html" class="app-link app-matiloise">
           <span class="emoji">🏆</span>
           <span class="text">Matiloise Competition</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/Clock/index.html" class="app-link clock">
           <span class="emoji">⏰</span>
           <span class="text">Clock</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/Phone-Number/index.html" class="app-link app-phonenumber">
           <span class="emoji">📞</span>
           <span class="text">Phone Number</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/Greater-Than-Less-Than/index.html" class="app-link app-gtlt">
           <span class="emoji">🔢</span>
           <span class="text">Greater/Less Than</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/Plus-1/index.html" class="app-link app-plus1">
           <span class="emoji">➕1</span>
           <span class="text">+1</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/Demo/index.html" class="app-link app-plus1">
           <span class="emoji">🎊</span>
           <span class="text">Effects Demo</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/TYCTR_Sounds/index.html" class="app-link app-tyctr-sounds">
           <span class="emoji">🔊</span>
           <span class="text">TYCTR Sounds</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/full-paint/index.html" class="app-link">
           <span class="emoji">🎨🖼️</span>
           <span class="text">Full Paint</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/Coloring_16_bit/index.html" class="app-link app-coloring-16-bit">
           <span class="emoji">🎨</span>
           <span class="text">Coloring 16 Bit</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/Tic-Tac-Toe/index.html" class="app-link app-radionuclides">
           <span class="emoji">#️⃣</span>
           <span class="text">Tic-Tac-Toe</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/Countries/index.html" class="app-link app-countries">
           <span class="emoji">🌎</span>
           <span class="text">Countries</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/b-vs-d/index.html" class="app-link">
           <span class="emoji">⚽️ 🐕</span>
           <span class="text">b vs d</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/teens/index.html" class="app-link app-countries">
           <span class="emoji">🧮</span>
           <span class="text">Teens</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/sight-words/index.html" class="app-link">
           <span class="emoji">👁️</span>
           <span class="text">Sight Words</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/b-vs-d-v20/index.html" class="app-link">
           <span class="emoji">🍉</span>
           <span class="text">b vs d v2.0</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/minedigger/index.html" class="app-link">
           <span class="emoji">⛏️</span>
           <span class="text">MineDigger</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/numbers-1-30/index.html" class="app-link">
           <span class="emoji">3️⃣0️⃣</span>
           <span class="text">Numbers 1-30</span>
         </a>
       </li>
-      <li>
+      <li class="app-item">
+        <button class="favorite-toggle" type="button" aria-label="Add to favorites" title="Add to favorites">☆</button>
         <a href="apps/gb-math-k/index.html" class="app-link">
           <span class="emoji">👩‍🏫</span>
           <span class="text">GB Math K</span>
@@ -447,27 +585,172 @@
   </footer>
 
   <script>
+    const FAVORITES_KEY = 'educationalEmporiumFavorites';
+    const VIEW_KEY = 'educationalEmporiumLastView';
+
     let currentApp = '';
     const iframeContainer = document.querySelector('.iframe-container');
     const overlay = document.querySelector('.iframe-overlay');
     const homeButton = document.querySelector('.home-button');
     const iframe = document.getElementById('app-frame');
+    const appItems = Array.from(document.querySelectorAll('.app-item'));
+    const favoriteButtons = Array.from(document.querySelectorAll('.favorite-toggle'));
+    const viewButtons = Array.from(document.querySelectorAll('.view-button'));
+    const favoritesEmptyMessage = document.querySelector('.favorites-empty-message');
+    const fullPageButton = document.getElementById('open-full-page');
 
-    function loadApp(appPath) {
-      iframe.src = appPath;
-      currentApp = appPath;
-      updateFullPageButton();
+    const favorites = loadFavorites();
+    let currentView = loadInitialView();
+    let selectedAppId = '';
+
+    function loadFavorites() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]');
+        if (Array.isArray(stored)) {
+          return new Set(stored);
+        }
+      } catch (error) {
+        console.warn('Unable to parse favorites from storage.', error);
+      }
+      return new Set();
+    }
+
+    function saveFavorites() {
+      try {
+        localStorage.setItem(FAVORITES_KEY, JSON.stringify(Array.from(favorites)));
+      } catch (error) {
+        console.warn('Unable to save favorites to storage.', error);
+      }
+    }
+
+    function loadInitialView() {
+      const storedView = localStorage.getItem(VIEW_KEY);
+      if (storedView === 'favorites' || storedView === 'all') {
+        return storedView;
+      }
+      return 'favorites';
     }
 
     function updateFullPageButton() {
-      const button = document.getElementById('open-full-page');
-      button.disabled = !currentApp;
+      fullPageButton.disabled = !currentApp;
     }
+
+    function updateSelection(linkElement, appPath) {
+      appItems.forEach(item => item.classList.remove('is-selected'));
+      if (linkElement) {
+        const item = linkElement.closest('.app-item');
+        if (item) {
+          item.classList.add('is-selected');
+        }
+      }
+      selectedAppId = appPath;
+    }
+
+    function clearSelection() {
+      appItems.forEach(item => item.classList.remove('is-selected'));
+      selectedAppId = '';
+    }
+
+    function loadApp(appPath, linkElement) {
+      iframe.src = appPath;
+      currentApp = appPath;
+      updateFullPageButton();
+      updateSelection(linkElement, appPath);
+    }
+
+    function setActiveViewButton(view) {
+      viewButtons.forEach(button => {
+        const isActive = button.dataset.view === view;
+        button.classList.toggle('active', isActive);
+        button.setAttribute('aria-pressed', isActive);
+      });
+    }
+
+    function updateFavoritesUI() {
+      appItems.forEach(item => {
+        const link = item.querySelector('.app-link');
+        const toggle = item.querySelector('.favorite-toggle');
+        const appId = link.getAttribute('href');
+        const isFavorite = favorites.has(appId);
+        toggle.classList.toggle('favorited', isFavorite);
+        toggle.textContent = isFavorite ? '★' : '☆';
+        toggle.setAttribute('aria-label', isFavorite ? 'Remove from favorites' : 'Add to favorites');
+        toggle.setAttribute('title', isFavorite ? 'Remove from favorites' : 'Add to favorites');
+        item.classList.toggle('is-favorite', isFavorite);
+      });
+    }
+
+    function applyView(view, { preserveSelection = true } = {}) {
+      currentView = view;
+      try {
+        localStorage.setItem(VIEW_KEY, view);
+      } catch (error) {
+        console.warn('Unable to persist view selection.', error);
+      }
+      setActiveViewButton(view);
+
+      const visibleItems = [];
+
+      appItems.forEach(item => {
+        const link = item.querySelector('.app-link');
+        const appId = link.getAttribute('href');
+        const isFavorite = favorites.has(appId);
+        const shouldShow = view === 'all' || isFavorite;
+        item.style.display = shouldShow ? '' : 'none';
+        if (shouldShow) {
+          visibleItems.push({ item, link, appId });
+        }
+      });
+
+      if (favoritesEmptyMessage) {
+        favoritesEmptyMessage.style.display = view === 'favorites' && visibleItems.length === 0 ? 'block' : 'none';
+      }
+
+      const selectedStillVisible = visibleItems.some(entry => entry.appId === selectedAppId);
+
+      if (!preserveSelection || !selectedStillVisible) {
+        if (visibleItems.length > 0) {
+          loadApp(visibleItems[0].link.getAttribute('href'), visibleItems[0].link);
+        } else {
+          iframe.src = '';
+          currentApp = '';
+          updateFullPageButton();
+          clearSelection();
+        }
+      }
+    }
+
+    favoriteButtons.forEach(button => {
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const item = button.closest('.app-item');
+        const link = item.querySelector('.app-link');
+        const appId = link.getAttribute('href');
+
+        if (favorites.has(appId)) {
+          favorites.delete(appId);
+        } else {
+          favorites.add(appId);
+        }
+
+        saveFavorites();
+        updateFavoritesUI();
+        applyView(currentView, { preserveSelection: true });
+      });
+    });
 
     document.querySelectorAll('.app-link').forEach(link => {
       link.addEventListener('click', function(e) {
         e.preventDefault();
-        loadApp(this.href);
+        loadApp(this.getAttribute('href'), this);
+      });
+    });
+
+    viewButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const view = button.dataset.view === 'all' ? 'all' : 'favorites';
+        applyView(view, { preserveSelection: true });
       });
     });
 
@@ -498,9 +781,8 @@
       }
     });
 
-    if (document.querySelectorAll('.app-link').length > 0) {
-      loadApp(document.querySelector('.app-link').href);
-    }
+    updateFavoritesUI();
+    applyView(currentView, { preserveSelection: false });
   </script>
 </body>
 </html>
