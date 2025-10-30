@@ -15,7 +15,6 @@
 
     html, body {
       max-width: 100%;
-      overflow-x: hidden;
     }
 
     body {
@@ -24,7 +23,7 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      align-items: stretch;
+      align-items: center;
       color: #333333;
       position: relative;
     }
@@ -71,8 +70,9 @@
     .app-list {
       display: flex;
       overflow-x: auto;
-      padding: 10px 20px;
+      overflow-y: hidden;
       gap: 15px;
+      padding: 10px 20px;
       list-style: none;
       justify-content: flex-start;
       align-items: stretch;
@@ -80,7 +80,10 @@
       scroll-padding: 0 20px;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior-x: contain;
-      touch-action: pan-x;
+      touch-action: pan-x !important;
+      white-space: nowrap;
+      width: 100%;
+      max-width: 1200px;
     }
 
     .view-toggle {
@@ -235,7 +238,7 @@
       max-width: 1200px;
       height: 80vh;
       border: none;
-      margin: 20px 0;
+      margin: 20px auto;
       border-radius: 15px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       overflow: hidden;
@@ -796,6 +799,40 @@
 
     updateFavoritesUI();
     applyView(currentView, { preserveSelection: false });
+
+    const appList = document.querySelector('.app-list');
+    if (appList) {
+      let isDown = false;
+      let startX = 0;
+      let scrollLeft = 0;
+
+      appList.addEventListener('pointerdown', (e) => {
+        isDown = true;
+        startX = e.clientX;
+        scrollLeft = appList.scrollLeft;
+        appList.setPointerCapture(e.pointerId);
+        appList.style.scrollBehavior = 'auto';
+      });
+
+      appList.addEventListener('pointermove', (e) => {
+        if (!isDown) return;
+        const dx = e.clientX - startX;
+        appList.scrollLeft = scrollLeft - dx;
+      });
+
+      appList.addEventListener('pointerup', (e) => {
+        isDown = false;
+        appList.releasePointerCapture(e.pointerId);
+        appList.style.scrollBehavior = '';
+      });
+
+      appList.addEventListener('pointerleave', (e) => {
+        if (!isDown) return;
+        isDown = false;
+        try { appList.releasePointerCapture(e.pointerId); } catch (_) {}
+        appList.style.scrollBehavior = '';
+      });
+    }
   </script>
 </body>
 </html>
