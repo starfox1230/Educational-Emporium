@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Midnight Dial Memory</title>
+  <title>Midnight Dial</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Shrikhand&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <style>
     :root {
@@ -104,19 +104,12 @@
       gap: 24px;
     }
 
-    .app-header {
+    .top-bar {
       display: flex;
       justify-content: space-between;
-      align-items: center;
       gap: 16px;
-    }
-
-    .app-title {
-      font-family: 'Shrikhand', cursive;
-      font-size: clamp(1.8rem, 4vw, 2.4rem);
-      letter-spacing: 1px;
-      color: var(--highlight);
-      text-shadow: 0 0 12px rgba(255, 138, 209, 0.4);
+      align-items: center;
+      flex-wrap: wrap;
     }
 
     .settings-button {
@@ -146,42 +139,29 @@
       box-shadow: 0 0 0 3px rgba(255, 168, 224, 0.35);
     }
 
-    .profile-card {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 168, 224, 0.25);
-      border-radius: 20px;
-      padding: 20px 22px;
+    .active-contact {
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      position: relative;
+      gap: 4px;
+      flex: 1;
+      min-width: 0;
     }
 
-    .profile-card::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      background: linear-gradient(135deg, rgba(255, 168, 224, 0.1), rgba(113, 86, 207, 0.05));
-      mix-blend-mode: screen;
-      pointer-events: none;
+    .active-contact__name {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .active-contact__details {
+      font-size: 0.95rem;
+      color: var(--text-muted);
     }
 
     .profile-label {
       font-size: 0.95rem;
       text-transform: uppercase;
       letter-spacing: 0.12em;
-      color: var(--text-muted);
-    }
-
-    .profile-name {
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: var(--text-primary);
-    }
-
-    .profile-info {
-      font-size: 0.95rem;
       color: var(--text-muted);
     }
 
@@ -192,7 +172,7 @@
       padding: 28px;
       text-align: center;
       font-size: 2rem;
-      letter-spacing: 0.4rem;
+      letter-spacing: 0.35rem;
       min-height: 72px;
       display: flex;
       justify-content: center;
@@ -245,6 +225,7 @@
       transition: background var(--transition), transform var(--transition), border-color var(--transition), box-shadow var(--transition);
       box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
       backdrop-filter: blur(6px);
+      touch-action: manipulation;
     }
 
     .key-button:hover {
@@ -254,7 +235,8 @@
       box-shadow: 0 12px 24px rgba(255, 138, 209, 0.18);
     }
 
-    .key-button:active {
+    .key-button:active,
+    .key-button.is-pressed {
       background: var(--button-active);
       transform: translateY(2px) scale(0.98);
     }
@@ -270,8 +252,7 @@
       background: linear-gradient(135deg, rgba(255, 138, 209, 0.45), rgba(129, 100, 255, 0.45));
       border: 1px solid rgba(255, 168, 224, 0.6);
       font-size: 1.3rem;
-      text-transform: uppercase;
-      letter-spacing: 0.3rem;
+      letter-spacing: 0.2rem;
       color: var(--text-primary);
       box-shadow: 0 20px 35px rgba(129, 100, 255, 0.35);
     }
@@ -315,7 +296,7 @@
     }
 
     .modal h2 {
-      font-family: 'Shrikhand', cursive;
+      font-family: 'Quicksand', 'Segoe UI', sans-serif;
       color: var(--highlight);
       font-size: 1.8rem;
       text-align: center;
@@ -432,11 +413,6 @@
         gap: 20px;
       }
 
-      .display-panel {
-        font-size: 1.6rem;
-        letter-spacing: 0.25rem;
-      }
-
       .keypad {
         gap: 12px;
       }
@@ -451,18 +427,15 @@
 <body>
   <canvas id="confetti-canvas"></canvas>
   <div class="app-shell">
-    <header class="app-header">
-      <h1 class="app-title">Midnight Dial</h1>
+    <div class="top-bar">
+      <div class="active-contact">
+        <span class="active-contact__name" id="activeContactName">No number selected</span>
+        <span class="active-contact__details" id="activeContactDetails">Add a number to get started.</span>
+      </div>
       <button class="settings-button" id="settingsButton" aria-label="Open number settings">⚙</button>
-    </header>
+    </div>
 
-    <section class="profile-card">
-      <span class="profile-label">Current Memory</span>
-      <span class="profile-name" id="profileName">No number yet</span>
-      <span class="profile-info" id="profileHint">Add a number to start playing.</span>
-    </section>
-
-    <div class="display-panel" id="display">••••</div>
+    <div class="display-panel" id="display"></div>
     <div class="message-banner" id="message"></div>
 
     <div class="keypad">
@@ -478,7 +451,7 @@
       <button class="key-button accent" data-action="clear">Clear</button>
       <button class="key-button" data-digit="0">0</button>
       <button class="key-button accent" data-action="backspace">⌫</button>
-      <button class="key-button call" data-action="call">Call Memory</button>
+      <button class="key-button call" data-action="call">Call</button>
     </div>
   </div>
 
@@ -541,9 +514,9 @@
 
     const displayEl = document.getElementById('display');
     const messageEl = document.getElementById('message');
-    const profileNameEl = document.getElementById('profileName');
-    const profileHintEl = document.getElementById('profileHint');
-    const keypadButtons = document.querySelectorAll('.key-button');
+    const activeContactNameEl = document.getElementById('activeContactName');
+    const activeContactDetailsEl = document.getElementById('activeContactDetails');
+    const keypadEl = document.querySelector('.keypad');
     const settingsButton = document.getElementById('settingsButton');
     const modalBackdrop = document.getElementById('modalBackdrop');
     const closeModalButton = document.getElementById('closeModal');
@@ -570,11 +543,7 @@
     }
 
     function updateDisplay() {
-      if (!typedDigits) {
-        displayEl.textContent = '••••';
-      } else {
-        displayEl.textContent = typedDigits.split('').join(' ');
-      }
+      displayEl.textContent = formatNumber(typedDigits);
     }
 
     function setMessage(text, tone = '') {
@@ -604,11 +573,11 @@
     function updateActiveContactUI() {
       const active = ensureActiveContact();
       if (!active) {
-        profileNameEl.textContent = 'No number yet';
-        profileHintEl.textContent = 'Add a number to start playing.';
+        activeContactNameEl.textContent = 'No number selected';
+        activeContactDetailsEl.textContent = 'Add a number to get started.';
       } else {
-        profileNameEl.textContent = active.name;
-        profileHintEl.textContent = `Memorize ${active.number.length} digits`;
+        activeContactNameEl.textContent = active.name;
+        activeContactDetailsEl.textContent = formatNumber(active.number);
       }
       typedDigits = '';
       updateDisplay();
@@ -685,39 +654,68 @@
     function handleCall() {
       const active = getActiveContact();
       if (!active) {
-        setMessage('Add a number to play!', 'error');
+        setMessage('Add a number to call first.', 'error');
         return;
       }
       if (!typedDigits) {
-        setMessage('Type the full number to dial.', 'error');
+        setMessage(`Type ${active.name}'s number to call.`, 'error');
         return;
       }
 
       if (typedDigits === active.number) {
-        setMessage(`You dialed ${active.name} perfectly! ✨`, 'success');
+        setMessage(`Calling ${active.name}! ✨`, 'success');
         launchConfetti();
         state.activeId = active.id;
         saveState(state);
         typedDigits = '';
         updateDisplay();
       } else {
-        setMessage('Not quite. Try again!', 'error');
+        setMessage('That number did not connect. Try again!', 'error');
       }
     }
 
-    keypadButtons.forEach(button => {
+    function performButtonAction(button) {
+      if (!button) return;
       const digit = button.dataset.digit;
       const action = button.dataset.action;
 
       if (digit) {
-        button.addEventListener('click', () => handleDigitInput(digit));
+        handleDigitInput(digit);
       } else if (action === 'backspace') {
-        button.addEventListener('click', handleBackspace);
+        handleBackspace();
       } else if (action === 'clear') {
-        button.addEventListener('click', handleClear);
+        handleClear();
       } else if (action === 'call') {
-        button.addEventListener('click', handleCall);
+        handleCall();
       }
+    }
+
+    keypadEl.addEventListener('pointerdown', (event) => {
+      const button = event.target.closest('button');
+      if (!button || !keypadEl.contains(button)) return;
+      button.classList.add('is-pressed');
+      performButtonAction(button);
+
+      const blockClick = (evt) => {
+        evt.preventDefault();
+        evt.stopImmediatePropagation();
+      };
+      button.addEventListener('click', blockClick, { once: true });
+
+      const release = () => {
+        button.classList.remove('is-pressed');
+        document.removeEventListener('pointerup', release);
+        document.removeEventListener('pointercancel', release);
+      };
+
+      document.addEventListener('pointerup', release);
+      document.addEventListener('pointercancel', release);
+    });
+
+    keypadEl.addEventListener('click', (event) => {
+      const button = event.target.closest('button');
+      if (!button || !keypadEl.contains(button)) return;
+      performButtonAction(button);
     });
 
     settingsButton.addEventListener('click', () => {
@@ -756,7 +754,7 @@
       saveState(state);
       updateActiveContactUI();
       hideModal();
-      setMessage(`Added ${name}! Dial it to win.`, 'success');
+      setMessage(`Added ${name}! Ready when you are.`, 'success');
     });
 
     document.addEventListener('keydown', (event) => {
