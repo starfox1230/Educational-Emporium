@@ -2787,19 +2787,23 @@ const MINI_GAME_LIBRARY = [
   
     function populateModalWordList() {
         modalWordList.innerHTML = '';
-        const searchTerm = modalSearchInput.value.toLowerCase().trim();
+        const rawSearchTerm = modalSearchInput.value.trim();
+        const normalizedSearchTerm = rawSearchTerm.toLowerCase();
         const userSelectionsKey = `${currentModalListContext}_${(currentModalListContext === 'custom') ? '__ALL__' : currentModalLevelContext}_userSelections`;
         let userSelectedSubset = null;
         const storedUserSelections = localStorage.getItem(userSelectionsKey);
         if (storedUserSelections) { try { userSelectedSubset = JSON.parse(storedUserSelections); } catch (e) { console.error("Could not parse user selections for key:", userSelectionsKey, e); } }
         const baseWordsForContext = (currentModalListContext === 'custom') ? (WORD_BANK.custom || []) : (WORD_BANK[currentModalListContext]?.[currentModalLevelContext] || []);
         let wordsToDisplay = new Map();
-        let foundResultsInCurrentList = false;
+        let foundExactMatchInContext = false;
         baseWordsForContext.forEach(word => {
-            if (searchTerm === '' || word.toLowerCase().includes(searchTerm)) {
+            const normalizedWord = word.toLowerCase();
+            if (normalizedWord === normalizedSearchTerm && normalizedSearchTerm !== '') {
+                foundExactMatchInContext = true;
+            }
+            if (normalizedSearchTerm === '' || normalizedWord.includes(normalizedSearchTerm)) {
                 const isSelected = !Array.isArray(userSelectedSubset) || userSelectedSubset.includes(word);
                 wordsToDisplay.set(word, { isCustomGlobal: WORD_BANK.custom.includes(word), isSelectedForBaseLevel: isSelected });
-                foundResultsInCurrentList = true;
             }
         });
         const sortedWords = Array.from(wordsToDisplay.keys()).sort((a, b) => a.localeCompare(b));
@@ -2821,8 +2825,9 @@ const MINI_GAME_LIBRARY = [
             itemDiv.appendChild(label);
             modalWordList.appendChild(itemDiv);
         });
-        if (searchTerm !== '' && !foundResultsInCurrentList && !WORD_BANK.custom.includes(searchTerm)) {
-            modalAddCustomWordTerm.textContent = searchTerm;
+        const customHasExactMatch = WORD_BANK.custom.some(word => word.toLowerCase() === normalizedSearchTerm);
+        if (rawSearchTerm !== '' && !customHasExactMatch && !foundExactMatchInContext) {
+            modalAddCustomWordTerm.textContent = rawSearchTerm;
             modalAddCustomWordBtn.classList.remove('hidden');
         } else {
             modalAddCustomWordBtn.classList.add('hidden');
@@ -2831,7 +2836,8 @@ const MINI_GAME_LIBRARY = [
   
     function handleAddCustomWordFromModal() {
         const newWord = modalSearchInput.value.trim(); if (newWord === '') return;
-        if (!WORD_BANK.custom.includes(newWord)) {
+        const normalizedNewWord = newWord.toLowerCase();
+        if (!WORD_BANK.custom.some(word => word.toLowerCase() === normalizedNewWord)) {
             WORD_BANK.custom.push(newWord);
             WORD_BANK.custom.sort((a, b) => a.localeCompare(b));
             localStorage.setItem('customBank', JSON.stringify(WORD_BANK.custom));
