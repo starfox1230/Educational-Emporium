@@ -2018,6 +2018,9 @@
             window.removeEventListener('pointercancel', this.boundPointerUp);
             if (this.puppy.element) { this.puppy.element.style.cursor = 'grab'; }
             if (this.onCompleteCallback) {
+                if (typeof speak === 'function') {
+                    speak(`Awesome zoomies! Your score is ${this.score}!`);
+                }
                 const cb = this.onCompleteCallback;
                 this.onCompleteCallback = null;
                 cb(this.score);
