@@ -1036,6 +1036,10 @@
     };
 
     let selectionState = {}; // The single source of truth for word selections
+
+    function isPlainObject(value) {
+        return typeof value === 'object' && value !== null && !Array.isArray(value);
+    }
     let words = []; // Current words for the quiz
 
     // --- IMPORT/EXPORT & DATA HELPERS (UNCHANGED) ---
@@ -1204,8 +1208,15 @@
         const storedSelectionState = localStorage.getItem('wordSelectionState');
         if (storedSelectionState) {
             try {
-                selectionState = JSON.parse(storedSelectionState);
+                const parsedSelectionState = JSON.parse(storedSelectionState);
+                if (isPlainObject(parsedSelectionState)) {
+                    selectionState = parsedSelectionState;
+                } else {
+                    console.warn('Invalid wordSelectionState in storage. Resetting to defaults.');
+                    createDefaultSelectionState();
+                }
             } catch {
+                console.warn('Could not parse wordSelectionState from storage. Resetting to defaults.');
                 createDefaultSelectionState();
             }
         } else {
@@ -1215,7 +1226,11 @@
         // — MERGE IN ANY NEW BANKS/LEVELS (e.g. readingcom) SO OLD SAVED STATES
         //   DON’T “LOSE” THEM WHEN YOU ADD NEW LISTS OR LESSONS —
         Object.keys(WORD_BANK).forEach(listKey => {
-            if (!selectionState[listKey]) {
+            if (!isPlainObject(selectionState)) {
+                selectionState = {};
+            }
+
+            if (!isPlainObject(selectionState[listKey])) {
                 selectionState[listKey] = {};
             }
             if (listKey === 'custom') {
