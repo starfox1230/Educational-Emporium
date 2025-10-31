@@ -2880,14 +2880,39 @@ const MINI_GAME_LIBRARY = [
     }
     
     function persistModalWordSelections() {
-        const selectedWords = Array.from(modalWordList.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+        const checkboxes = Array.from(modalWordList.querySelectorAll('input[type="checkbox"]'));
+        const displayedWords = checkboxes.map(cb => cb.value);
+        const selectedDisplayedWords = checkboxes.filter(cb => cb.checked).map(cb => cb.value);
         const allPossibleWordsForContext = (currentModalListContext === 'custom') ? WORD_BANK.custom : (WORD_BANK[currentModalListContext]?.[currentModalLevelContext] || []);
         const userSelectionsKey = `${currentModalListContext}_${currentModalListContext === 'custom' ? '__ALL__' : currentModalLevelContext}_userSelections`;
-        const isSelectionIdenticalToDefault = selectedWords.length === allPossibleWordsForContext.length && allPossibleWordsForContext.every(word => selectedWords.includes(word));
+
+        const allWordsSet = new Set(allPossibleWordsForContext);
+        let existingSelectionSet = new Set(allPossibleWordsForContext);
+
+        const storedSelections = localStorage.getItem(userSelectionsKey);
+        if (storedSelections) {
+            try {
+                const parsed = JSON.parse(storedSelections);
+                if (Array.isArray(parsed)) {
+                    existingSelectionSet = new Set(parsed.filter(word => allWordsSet.has(word)));
+                }
+            } catch (e) {
+                console.error('Could not parse stored selections for key:', userSelectionsKey, e);
+            }
+        }
+
+        displayedWords.forEach(word => existingSelectionSet.delete(word));
+        selectedDisplayedWords.forEach(word => {
+            if (allWordsSet.has(word)) { existingSelectionSet.add(word); }
+        });
+
+        const finalSelection = Array.from(existingSelectionSet).filter(word => allWordsSet.has(word));
+        const isSelectionIdenticalToDefault = finalSelection.length === allPossibleWordsForContext.length && allPossibleWordsForContext.every(word => existingSelectionSet.has(word));
+
         if (isSelectionIdenticalToDefault) {
             localStorage.removeItem(userSelectionsKey);
         } else {
-            localStorage.setItem(userSelectionsKey, JSON.stringify(selectedWords.sort()));
+            localStorage.setItem(userSelectionsKey, JSON.stringify(finalSelection.sort()));
         }
         if (wordListModal.classList.contains('visible')) {
             updateWordListModalUI();
