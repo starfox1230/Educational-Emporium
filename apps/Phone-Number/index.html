@@ -1,28 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <!-- Updated viewport meta tag to disable user scaling and prevent double-tap zoom -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Phone Keypad Simulator</title>
-  <!-- Canvas Confetti Library -->
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Midnight Dial Memory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Shrikhand&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <style>
-    /* CSS Variables for Easy Customization */
     :root {
-      --primary-color: #4A90E2;
-      --secondary-color: #50E3C2;
-      --button-color: #FFFFFF;
-      --button-active-color: #FFC0CB; /* Pink for active state */
-      --button-hover-color: #E8F0FE;
-      --text-color: #333333;
-      --display-bg: rgba(245, 247, 250, 0.8);
-      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      --transition-speed: 0.2s;
-      --restart-green: #28a745;
-      --restart-green-hover: #218838;
-      --restart-red: #FF5C5C;
-      --restart-red-hover: #E04848;
+      --bg-gradient: radial-gradient(circle at top, #3c0c4f 0%, #1c0829 40%, #0e0518 100%);
+      --panel-color: rgba(34, 16, 48, 0.75);
+      --panel-border: rgba(255, 168, 224, 0.4);
+      --panel-shadow: 0 25px 45px rgba(0, 0, 0, 0.45);
+      --highlight: #ff8bd1;
+      --highlight-strong: #ffa7df;
+      --text-primary: #f9e9ff;
+      --text-muted: rgba(249, 233, 255, 0.75);
+      --success: #7df5c2;
+      --error: #ff6f8d;
+      --button-bg: rgba(255, 138, 209, 0.12);
+      --button-border: rgba(255, 138, 209, 0.35);
+      --button-hover: rgba(255, 168, 224, 0.25);
+      --button-active: rgba(255, 168, 224, 0.4);
+      --glass-blur: blur(18px);
+      --transition: 180ms ease;
     }
 
     * {
@@ -32,333 +35,746 @@
     }
 
     body {
+      min-height: 100vh;
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
-      height: 100vh;
-      background: linear-gradient(270deg, #B19CD9, #77DD77, #FFD1DC, #FFB347);
-      background-size: 1200% 1200%;
-      animation: swirlingBackground 60s ease infinite;
-      font-family: var(--font-family);
+      align-items: center;
+      background: var(--bg-gradient);
+      color: var(--text-primary);
+      font-family: 'Quicksand', 'Segoe UI', sans-serif;
+      padding: 24px;
+      position: relative;
       overflow: hidden;
-      padding: 20px;
-      position: relative;
-      /* Prevent double-tap zoom by disabling user scaling */
-      touch-action: manipulation;
     }
 
-    @keyframes swirlingBackground {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-
-    @keyframes rainbowBackground {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-
-    #display {
-      background-color: var(--display-bg);
-      border: 2px solid var(--primary-color);
-      border-radius: 10px;
-      padding: 20px 30px;
-      font-size: 32px;
-      color: var(--text-color);
-      width: 100%;
-      max-width: 400px;
-      text-align: right;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      margin-bottom: 30px;
-      word-wrap: break-word;
-      backdrop-filter: blur(10px);
-    }
-
-    #keypad {
-      display: grid;
-      grid-template-columns: repeat(3, 100px);
-      grid-gap: 15px;
-      margin-bottom: 30px;
-    }
-
-    .button {
-      width: 100px;
-      height: 100px;
-      border: none;
-      border-radius: 20px;
-      background-color: var(--button-color);
-      color: #000000; /* Changed font color to black */
-      font-size: 42px; /* Increased font size to 1.5 times (from 28px to 42px) */
-      cursor: pointer;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      transition: background-color var(--transition-speed), transform var(--transition-speed), box-shadow var(--transition-speed);
-      position: relative;
-      user-select: none;
-      /* Prevent double-tap zoom on buttons */
-      touch-action: manipulation;
-    }
-
-    .button:hover {
-      background-color: var(--button-hover-color);
-    }
-
-    .button:active,
-    .button.active {
-      background-color: var(--button-active-color);
-      transform: scale(0.95);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-
-    .button:focus {
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.5);
-    }
-
-    #control-panel {
-      display: flex;
-      gap: 20px;
-      flex-wrap: wrap;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .control-button {
-      padding: 15px 30px;
-      font-size: 24px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: background-color var(--transition-speed), transform var(--transition-speed);
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      color: #fff;
-    }
-
-    #call {
-      background-color: var(--primary-color);
-    }
-
-    #call:hover {
-      background-color: #357ABD;
-    }
-
-    #restart-red {
-      background-color: var(--restart-red); /* Red for incorrect restart */
-      display: none; /* Hidden by default */
-      padding: 15px 30px;
-      font-size: 24px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      transition: background-color var(--transition-speed), transform var(--transition-speed);
-    }
-
-    #restart-red:hover {
-      background-color: var(--restart-red-hover);
-    }
-
-    #restart-green {
-      background-color: var(--restart-green); /* Green for correct restart */
-      display: none; /* Hidden by default */
-      padding: 15px 30px;
-      font-size: 24px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      transition: background-color var(--transition-speed), transform var(--transition-speed);
-      margin-left: 10px; /* Space between Call and Restart buttons */
-    }
-
-    #restart-green:hover {
-      background-color: var(--restart-green-hover);
-    }
-
-    /* Confetti Canvas */
-    #confetti-canvas {
+    body::before,
+    body::after {
+      content: "";
       position: absolute;
+      width: 45vmax;
+      height: 45vmax;
+      background: radial-gradient(circle, rgba(255, 104, 188, 0.35) 0%, rgba(255, 104, 188, 0) 70%);
+      filter: blur(12px);
+      z-index: 0;
+      animation: float 16s ease-in-out infinite;
+    }
+
+    body::before {
+      top: -20vmax;
+      left: -15vmax;
+    }
+
+    body::after {
+      bottom: -25vmax;
+      right: -10vmax;
+      animation-delay: -8s;
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translate3d(0, 0, 0) scale(1);
+      }
+      50% {
+        transform: translate3d(2vmax, -2vmax, 0) scale(1.05);
+      }
+    }
+
+    #confetti-canvas {
+      position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
       pointer-events: none;
-      z-index: 101;
+      z-index: 5;
     }
 
-    /* Responsive Design */
-    @media (max-width: 500px) {
-      #keypad {
-        grid-template-columns: repeat(3, 80px);
-        grid-gap: 10px;
+    .app-shell {
+      position: relative;
+      z-index: 2;
+      width: min(480px, 100%);
+      background: var(--panel-color);
+      border: 1px solid var(--panel-border);
+      box-shadow: var(--panel-shadow);
+      border-radius: 28px;
+      padding: 28px;
+      backdrop-filter: var(--glass-blur);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .app-title {
+      font-family: 'Shrikhand', cursive;
+      font-size: clamp(1.8rem, 4vw, 2.4rem);
+      letter-spacing: 1px;
+      color: var(--highlight);
+      text-shadow: 0 0 12px rgba(255, 138, 209, 0.4);
+    }
+
+    .settings-button {
+      appearance: none;
+      border: 1px solid var(--button-border);
+      background: var(--button-bg);
+      color: var(--highlight);
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 1.4rem;
+      cursor: pointer;
+      transition: transform var(--transition), background var(--transition), border-color var(--transition);
+      backdrop-filter: blur(8px);
+    }
+
+    .settings-button:hover {
+      background: var(--button-hover);
+      transform: rotate(12deg) scale(1.05);
+      border-color: var(--highlight);
+    }
+
+    .settings-button:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(255, 168, 224, 0.35);
+    }
+
+    .profile-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 168, 224, 0.25);
+      border-radius: 20px;
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+    }
+
+    .profile-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(135deg, rgba(255, 168, 224, 0.1), rgba(113, 86, 207, 0.05));
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+
+    .profile-label {
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+    }
+
+    .profile-name {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .profile-info {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    .display-panel {
+      background: rgba(12, 6, 20, 0.75);
+      border: 1px solid rgba(255, 168, 224, 0.35);
+      border-radius: 24px;
+      padding: 28px;
+      text-align: center;
+      font-size: 2rem;
+      letter-spacing: 0.4rem;
+      min-height: 72px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 600;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .display-panel::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(255, 168, 224, 0.14), transparent 65%);
+      mix-blend-mode: screen;
+    }
+
+    .message-banner {
+      min-height: 28px;
+      text-align: center;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      transition: color var(--transition);
+    }
+
+    .message-banner.success {
+      color: var(--success);
+    }
+
+    .message-banner.error {
+      color: var(--error);
+    }
+
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .key-button {
+      appearance: none;
+      background: var(--button-bg);
+      border: 1px solid var(--button-border);
+      border-radius: 18px;
+      padding: 18px 0;
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: background var(--transition), transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(6px);
+    }
+
+    .key-button:hover {
+      background: var(--button-hover);
+      transform: translateY(-2px);
+      border-color: var(--highlight);
+      box-shadow: 0 12px 24px rgba(255, 138, 209, 0.18);
+    }
+
+    .key-button:active {
+      background: var(--button-active);
+      transform: translateY(2px) scale(0.98);
+    }
+
+    .key-button.accent {
+      color: var(--highlight-strong);
+      font-size: 1.2rem;
+      letter-spacing: 0.2rem;
+    }
+
+    .key-button.call {
+      grid-column: span 3;
+      background: linear-gradient(135deg, rgba(255, 138, 209, 0.45), rgba(129, 100, 255, 0.45));
+      border: 1px solid rgba(255, 168, 224, 0.6);
+      font-size: 1.3rem;
+      text-transform: uppercase;
+      letter-spacing: 0.3rem;
+      color: var(--text-primary);
+      box-shadow: 0 20px 35px rgba(129, 100, 255, 0.35);
+    }
+
+    .key-button.call:hover {
+      background: linear-gradient(135deg, rgba(255, 168, 224, 0.65), rgba(149, 120, 255, 0.6));
+      border-color: #ffd5f3;
+    }
+
+    .key-button.call:active {
+      transform: translateY(3px) scale(0.99);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 0, 10, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      padding: 24px;
+    }
+
+    .modal-backdrop.visible {
+      display: flex;
+    }
+
+    .modal {
+      width: min(520px, 100%);
+      background: rgba(28, 12, 46, 0.9);
+      border: 1px solid rgba(255, 168, 224, 0.35);
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      color: var(--text-primary);
+      backdrop-filter: blur(16px);
+    }
+
+    .modal h2 {
+      font-family: 'Shrikhand', cursive;
+      color: var(--highlight);
+      font-size: 1.8rem;
+      text-align: center;
+    }
+
+    .modal form {
+      display: grid;
+      gap: 16px;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    input {
+      background: rgba(12, 6, 20, 0.6);
+      border: 1px solid rgba(255, 168, 224, 0.3);
+      border-radius: 14px;
+      padding: 12px 14px;
+      color: var(--text-primary);
+      font-size: 1rem;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--highlight);
+      box-shadow: 0 0 0 3px rgba(255, 168, 224, 0.25);
+    }
+
+    .modal-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    .pill-button {
+      appearance: none;
+      border: 1px solid rgba(255, 168, 224, 0.35);
+      border-radius: 999px;
+      padding: 10px 24px;
+      background: rgba(255, 138, 209, 0.2);
+      color: var(--text-primary);
+      font-weight: 600;
+      cursor: pointer;
+      transition: background var(--transition), border-color var(--transition), transform var(--transition);
+    }
+
+    .pill-button:hover {
+      background: rgba(255, 168, 224, 0.3);
+      border-color: var(--highlight);
+      transform: translateY(-1px);
+    }
+
+    .pill-button.secondary {
+      background: transparent;
+      color: var(--text-muted);
+    }
+
+    .contacts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 220px;
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+
+    .contact-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: rgba(12, 6, 20, 0.45);
+      border-radius: 14px;
+      border: 1px solid transparent;
+      transition: border-color var(--transition), transform var(--transition);
+    }
+
+    .contact-item.active {
+      border-color: var(--highlight);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(255, 138, 209, 0.18);
+    }
+
+    .contact-item button {
+      appearance: none;
+      border: none;
+      background: none;
+      color: var(--highlight);
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 520px) {
+      body {
+        padding: 18px;
       }
 
-      .button {
-        width: 80px;
-        height: 80px;
-        font-size: 36px; /* 1.5 times smaller button, 1.5 times smaller font would still be proportional */
+      .app-shell {
+        padding: 22px;
+        border-radius: 24px;
+        gap: 20px;
       }
 
-      #display {
-        font-size: 28px;
-        padding: 15px 20px;
+      .display-panel {
+        font-size: 1.6rem;
+        letter-spacing: 0.25rem;
       }
 
-      .control-button {
-        padding: 10px 20px;
-        font-size: 20px;
+      .keypad {
+        gap: 12px;
       }
 
-      #restart-red, #restart-green {
-        padding: 10px 20px;
-        font-size: 20px;
+      .key-button {
+        padding: 16px 0;
+        border-radius: 16px;
       }
     }
   </style>
 </head>
 <body>
-  <!-- Confetti Canvas -->
   <canvas id="confetti-canvas"></canvas>
+  <div class="app-shell">
+    <header class="app-header">
+      <h1 class="app-title">Midnight Dial</h1>
+      <button class="settings-button" id="settingsButton" aria-label="Open number settings">⚙</button>
+    </header>
 
-  <div id="display" aria-live="polite"></div>
-  <div id="keypad">
-    <button class="button" aria-label="1">1</button>
-    <button class="button" aria-label="2">2</button>
-    <button class="button" aria-label="3">3</button>
-    <button class="button" aria-label="4">4</button>
-    <button class="button" aria-label="5">5</button>
-    <button class="button" aria-label="6">6</button>
-    <button class="button" aria-label="7">7</button>
-    <button class="button" aria-label="8">8</button>
-    <button class="button" aria-label="9">9</button>
-    <button class="button" aria-label="Empty" disabled style="background: transparent; box-shadow: none; cursor: default;"></button>
-    <button class="button" aria-label="0">0</button>
-    <button class="button" aria-label="Backspace">⌫</button>
-  </div>
-  <div id="control-panel">
-    <button id="call" class="control-button">Call</button>
-    <button id="restart-green" class="control-button" aria-label="Restart">&#8635;</button> <!-- Circular arrow symbol -->
+    <section class="profile-card">
+      <span class="profile-label">Current Memory</span>
+      <span class="profile-name" id="profileName">No number yet</span>
+      <span class="profile-info" id="profileHint">Add a number to start playing.</span>
+    </section>
+
+    <div class="display-panel" id="display">••••</div>
+    <div class="message-banner" id="message"></div>
+
+    <div class="keypad">
+      <button class="key-button" data-digit="1">1</button>
+      <button class="key-button" data-digit="2">2</button>
+      <button class="key-button" data-digit="3">3</button>
+      <button class="key-button" data-digit="4">4</button>
+      <button class="key-button" data-digit="5">5</button>
+      <button class="key-button" data-digit="6">6</button>
+      <button class="key-button" data-digit="7">7</button>
+      <button class="key-button" data-digit="8">8</button>
+      <button class="key-button" data-digit="9">9</button>
+      <button class="key-button accent" data-action="clear">Clear</button>
+      <button class="key-button" data-digit="0">0</button>
+      <button class="key-button accent" data-action="backspace">⌫</button>
+      <button class="key-button call" data-action="call">Call Memory</button>
+    </div>
   </div>
 
-  <button id="restart-red" aria-label="Restart">Restart</button>
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal">
+      <h2>Number Library</h2>
+      <form id="addContactForm">
+        <label>
+          Name
+          <input type="text" id="contactName" placeholder="e.g. Starry BFF" maxlength="40" required />
+        </label>
+        <label>
+          Phone Number
+          <input type="tel" id="contactNumber" placeholder="Digits only" pattern="[0-9]+" inputmode="numeric" required />
+        </label>
+        <div class="modal-actions">
+          <button type="button" class="pill-button secondary" id="closeModal">Cancel</button>
+          <button type="submit" class="pill-button">Add Number</button>
+        </div>
+      </form>
+      <div>
+        <span class="profile-label">Saved Numbers</span>
+        <div class="contacts-list" id="contactsList"></div>
+      </div>
+    </div>
+  </div>
 
   <script>
-    const display = document.getElementById('display');
-    const buttons = document.querySelectorAll('.button');
-    const callButton = document.getElementById('call');
-    const restartRedButton = document.getElementById('restart-red');
-    const restartGreenButton = document.getElementById('restart-green');
+    const STORAGE_KEY = 'midnight-dial-contacts-v1';
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return { activeId: null, contacts: [] };
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed.contacts)) return { activeId: null, contacts: [] };
+        return {
+          activeId: parsed.activeId ?? null,
+          contacts: parsed.contacts.map(contact => ({
+            id: contact.id,
+            name: contact.name ?? 'Unnamed',
+            number: (contact.number || '').replace(/\D+/g, '')
+          })).filter(contact => contact.id && contact.number)
+        };
+      } catch (error) {
+        console.warn('Failed to load contacts, resetting storage.', error);
+        return { activeId: null, contacts: [] };
+      }
+    }
+
+    function saveState(state) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function createId() {
+      return 'id-' + Math.random().toString(36).slice(2, 10);
+    }
+
+    const state = loadState();
+
+    const displayEl = document.getElementById('display');
+    const messageEl = document.getElementById('message');
+    const profileNameEl = document.getElementById('profileName');
+    const profileHintEl = document.getElementById('profileHint');
+    const keypadButtons = document.querySelectorAll('.key-button');
+    const settingsButton = document.getElementById('settingsButton');
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const closeModalButton = document.getElementById('closeModal');
+    const addContactForm = document.getElementById('addContactForm');
+    const contactNameInput = document.getElementById('contactName');
+    const contactNumberInput = document.getElementById('contactNumber');
+    const contactsList = document.getElementById('contactsList');
     const confettiCanvas = document.getElementById('confetti-canvas');
 
-    let phoneNumber = '';
-    const correctNumber = '9544640593'; // Replace with desired correct number
+    let typedDigits = '';
 
-    // Initialize confetti
-    const confettiInstance = window.confetti.create(confettiCanvas, {
+    const confettiInstance = confetti.create(confettiCanvas, {
       resize: true,
       useWorker: true
     });
 
-    // Function to update display
+    function launchConfetti() {
+      confettiInstance({
+        particleCount: 160,
+        spread: 70,
+        origin: { y: 0.7 },
+        colors: ['#ff8bd1', '#ffd2f4', '#caa6ff', '#7df5c2']
+      });
+    }
+
     function updateDisplay() {
-      display.textContent = phoneNumber;
-    }
-
-    // Function to reset the simulator
-    function resetSimulator() {
-      phoneNumber = '';
-      updateDisplay();
-      // Reset background animation
-      document.body.style.animation = 'swirlingBackground 60s ease infinite';
-      document.body.style.background = 'linear-gradient(270deg, #B19CD9, #77DD77, #FFD1DC, #FFB347)';
-      document.body.style.backgroundSize = '1200% 1200%';
-      // Hide Restart Buttons
-      restartRedButton.style.display = 'none';
-      restartGreenButton.style.display = 'none';
-      // Reset display style
-      display.style.color = '#333333';
-      // Stop confetti if any
-      confettiInstance.reset();
-    }
-
-    // Function to handle button press
-    function handleButtonPress(e) {
-      e.preventDefault();
-      const button = e.currentTarget;
-      const value = button.textContent;
-
-      // Add active class for visual feedback
-      button.classList.add('active');
-
-      if (value === '⌫') {
-        phoneNumber = phoneNumber.slice(0, -1);
-      } else if (!button.disabled) {
-        phoneNumber += value;
-      }
-
-      updateDisplay();
-
-      // Remove active class after short delay
-      setTimeout(() => {
-        button.classList.remove('active');
-      }, 100);
-    }
-
-    // Attach pointerup event listeners to buttons
-    buttons.forEach(button => {
-      button.addEventListener('pointerup', handleButtonPress);
-    });
-
-    // Handle Call Button Click
-    callButton.addEventListener('click', () => {
-      if (phoneNumber === correctNumber) {
-        // Trigger confetti
-        confettiInstance({
-          particleCount: 200,
-          spread: 70,
-          origin: { y: 0.6 }
-        });
-
-        // Change background to vibrant rainbow
-        document.body.style.animation = 'none'; // Stop swirling background
-        document.body.style.background = 'linear-gradient(270deg, #B19CD9, #77DD77, #FFD1DC, #FFB347)';
-        document.body.style.backgroundSize = '1200% 1200%';
-        document.body.style.animation = 'rainbowBackground 10s ease infinite';
-
-        // Update display message
-        display.textContent = 'Calling... 🎉';
-
-        // Show green restart button
-        restartGreenButton.style.display = 'inline-block';
+      if (!typedDigits) {
+        displayEl.textContent = '••••';
       } else {
-        // Invalid number: Show red Restart Button
-        display.textContent = 'Invalid Number!';
-        restartRedButton.style.display = 'inline-block';
+        displayEl.textContent = typedDigits.split('').join(' ');
+      }
+    }
+
+    function setMessage(text, tone = '') {
+      messageEl.textContent = text;
+      messageEl.classList.remove('success', 'error');
+      if (tone) messageEl.classList.add(tone);
+    }
+
+    function getActiveContact() {
+      if (!state.activeId) return null;
+      return state.contacts.find(contact => contact.id === state.activeId) || null;
+    }
+
+    function ensureActiveContact() {
+      if (state.contacts.length === 0) {
+        state.activeId = null;
+        saveState(state);
+        return null;
+      }
+      if (!state.activeId || !state.contacts.some(contact => contact.id === state.activeId)) {
+        state.activeId = state.contacts[state.contacts.length - 1].id;
+        saveState(state);
+      }
+      return getActiveContact();
+    }
+
+    function updateActiveContactUI() {
+      const active = ensureActiveContact();
+      if (!active) {
+        profileNameEl.textContent = 'No number yet';
+        profileHintEl.textContent = 'Add a number to start playing.';
+      } else {
+        profileNameEl.textContent = active.name;
+        profileHintEl.textContent = `Memorize ${active.number.length} digits`;
+      }
+      typedDigits = '';
+      updateDisplay();
+      setMessage('');
+      renderContacts();
+    }
+
+    function renderContacts() {
+      contactsList.innerHTML = '';
+      if (state.contacts.length === 0) {
+        const empty = document.createElement('p');
+        empty.className = 'empty-state';
+        empty.textContent = 'No saved numbers yet. Add one to begin!';
+        contactsList.appendChild(empty);
+        return;
+      }
+
+      state.contacts.forEach(contact => {
+        const item = document.createElement('div');
+        item.className = 'contact-item' + (contact.id === state.activeId ? ' active' : '');
+
+        const info = document.createElement('div');
+        info.innerHTML = `<strong>${contact.name}</strong><br><small>${formatNumber(contact.number)}</small>`;
+        item.appendChild(info);
+
+        const chooseButton = document.createElement('button');
+        chooseButton.type = 'button';
+        chooseButton.textContent = contact.id === state.activeId ? 'Selected' : 'Use';
+        chooseButton.disabled = contact.id === state.activeId;
+        chooseButton.addEventListener('click', () => {
+          state.activeId = contact.id;
+          saveState(state);
+          updateActiveContactUI();
+          hideModal();
+        });
+        item.appendChild(chooseButton);
+
+        contactsList.appendChild(item);
+      });
+    }
+
+    function formatNumber(digits) {
+      return digits.replace(/\D+/g, '').replace(/(\d{3})(?=\d)/g, '$1 ').trim();
+    }
+
+    function showModal() {
+      modalBackdrop.classList.add('visible');
+      modalBackdrop.setAttribute('aria-hidden', 'false');
+      contactNameInput.focus();
+    }
+
+    function hideModal() {
+      modalBackdrop.classList.remove('visible');
+      modalBackdrop.setAttribute('aria-hidden', 'true');
+      addContactForm.reset();
+    }
+
+    function handleDigitInput(digit) {
+      if (typedDigits.length >= 20) return;
+      typedDigits += digit;
+      updateDisplay();
+    }
+
+    function handleBackspace() {
+      typedDigits = typedDigits.slice(0, -1);
+      updateDisplay();
+    }
+
+    function handleClear() {
+      typedDigits = '';
+      updateDisplay();
+    }
+
+    function handleCall() {
+      const active = getActiveContact();
+      if (!active) {
+        setMessage('Add a number to play!', 'error');
+        return;
+      }
+      if (!typedDigits) {
+        setMessage('Type the full number to dial.', 'error');
+        return;
+      }
+
+      if (typedDigits === active.number) {
+        setMessage(`You dialed ${active.name} perfectly! ✨`, 'success');
+        launchConfetti();
+        state.activeId = active.id;
+        saveState(state);
+        typedDigits = '';
+        updateDisplay();
+      } else {
+        setMessage('Not quite. Try again!', 'error');
+      }
+    }
+
+    keypadButtons.forEach(button => {
+      const digit = button.dataset.digit;
+      const action = button.dataset.action;
+
+      if (digit) {
+        button.addEventListener('click', () => handleDigitInput(digit));
+      } else if (action === 'backspace') {
+        button.addEventListener('click', handleBackspace);
+      } else if (action === 'clear') {
+        button.addEventListener('click', handleClear);
+      } else if (action === 'call') {
+        button.addEventListener('click', handleCall);
       }
     });
 
-    // Handle Restart Red Button Click
-    restartRedButton.addEventListener('click', () => {
-      resetSimulator();
+    settingsButton.addEventListener('click', () => {
+      renderContacts();
+      showModal();
     });
 
-    // Handle Restart Green Button Click
-    restartGreenButton.addEventListener('click', () => {
-      resetSimulator();
+    closeModalButton.addEventListener('click', () => {
+      hideModal();
     });
 
-    // Prevent double-tap zoom on the entire page
-    // This is already handled by the viewport meta tag and touch-action CSS properties
-    // However, to ensure maximum prevention, add a touchstart listener to prevent default double-tap behavior
-    let lastTouchEnd = 0;
-    document.addEventListener('touchend', function (event) {
-      const now = (new Date()).getTime();
-      if (now - lastTouchEnd <= 300) {
-        event.preventDefault();
+    modalBackdrop.addEventListener('click', (event) => {
+      if (event.target === modalBackdrop) {
+        hideModal();
       }
-      lastTouchEnd = now;
-    }, false);
+    });
+
+    addContactForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const name = contactNameInput.value.trim();
+      const digits = contactNumberInput.value.replace(/\D+/g, '');
+
+      if (!name || !digits) {
+        setMessage('Please provide both a name and a number.', 'error');
+        return;
+      }
+
+      const newContact = {
+        id: createId(),
+        name,
+        number: digits
+      };
+
+      state.contacts.push(newContact);
+      state.activeId = newContact.id;
+      saveState(state);
+      updateActiveContactUI();
+      hideModal();
+      setMessage(`Added ${name}! Dial it to win.`, 'success');
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (modalBackdrop.classList.contains('visible')) return;
+      if (/^\d$/.test(event.key)) {
+        handleDigitInput(event.key);
+      } else if (event.key === 'Backspace') {
+        handleBackspace();
+      } else if (event.key === 'Enter') {
+        handleCall();
+      }
+    });
+
+    updateActiveContactUI();
+
+    if (state.contacts.length === 0) {
+      showModal();
+    }
   </script>
 </body>
 </html>
