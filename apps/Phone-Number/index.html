@@ -7,13 +7,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <style>
     :root {
       --bg-gradient: radial-gradient(circle at top, #3c0c4f 0%, #1c0829 40%, #0e0518 100%);
-      --panel-color: rgba(34, 16, 48, 0.75);
       --panel-border: rgba(255, 168, 224, 0.4);
-      --panel-shadow: 0 25px 45px rgba(0, 0, 0, 0.45);
       --highlight: #ff8bd1;
       --highlight-strong: #ffa7df;
       --text-primary: #f9e9ff;
@@ -24,8 +21,7 @@
       --button-border: rgba(255, 138, 209, 0.35);
       --button-hover: rgba(255, 168, 224, 0.25);
       --button-active: rgba(255, 168, 224, 0.4);
-      --glass-blur: blur(18px);
-      --transition: 180ms ease;
+      --transition: 120ms ease-out;
     }
 
     * {
@@ -47,58 +43,14 @@
       overflow: hidden;
     }
 
-    body::before,
-    body::after {
-      content: "";
-      position: absolute;
-      width: 45vmax;
-      height: 45vmax;
-      background: radial-gradient(circle, rgba(255, 104, 188, 0.35) 0%, rgba(255, 104, 188, 0) 70%);
-      filter: blur(12px);
-      z-index: 0;
-      animation: float 16s ease-in-out infinite;
-    }
-
-    body::before {
-      top: -20vmax;
-      left: -15vmax;
-    }
-
-    body::after {
-      bottom: -25vmax;
-      right: -10vmax;
-      animation-delay: -8s;
-    }
-
-    @keyframes float {
-      0%, 100% {
-        transform: translate3d(0, 0, 0) scale(1);
-      }
-      50% {
-        transform: translate3d(2vmax, -2vmax, 0) scale(1.05);
-      }
-    }
-
-    #confetti-canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 5;
-    }
-
     .app-shell {
       position: relative;
       z-index: 2;
       width: min(480px, 100%);
-      background: var(--panel-color);
+      background: rgba(34, 16, 48, 0.85);
       border: 1px solid var(--panel-border);
-      box-shadow: var(--panel-shadow);
       border-radius: 28px;
       padding: 28px;
-      backdrop-filter: var(--glass-blur);
       display: flex;
       flex-direction: column;
       gap: 24px;
@@ -125,7 +77,6 @@
       font-size: 1.4rem;
       cursor: pointer;
       transition: transform var(--transition), background var(--transition), border-color var(--transition);
-      backdrop-filter: blur(8px);
     }
 
     .settings-button:hover {
@@ -172,7 +123,7 @@
       padding: 28px;
       text-align: center;
       font-size: 2rem;
-      letter-spacing: 0.35rem;
+      letter-spacing: 0.12rem;
       min-height: 72px;
       display: flex;
       justify-content: center;
@@ -222,9 +173,8 @@
       font-weight: 600;
       color: var(--text-primary);
       cursor: pointer;
-      transition: background var(--transition), transform var(--transition), border-color var(--transition), box-shadow var(--transition);
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
-      backdrop-filter: blur(6px);
+      transition: background var(--transition), transform var(--transition), border-color var(--transition);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.18);
       touch-action: manipulation;
     }
 
@@ -287,12 +237,11 @@
       border: 1px solid rgba(255, 168, 224, 0.35);
       border-radius: 24px;
       padding: 28px;
-      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
+      box-shadow: 0 22px 40px rgba(0, 0, 0, 0.32);
       display: flex;
       flex-direction: column;
       gap: 24px;
       color: var(--text-primary);
-      backdrop-filter: blur(16px);
     }
 
     .modal h2 {
@@ -425,7 +374,6 @@
   </style>
 </head>
 <body>
-  <canvas id="confetti-canvas"></canvas>
   <div class="app-shell">
     <div class="top-bar">
       <div class="active-contact">
@@ -524,23 +472,8 @@
     const contactNameInput = document.getElementById('contactName');
     const contactNumberInput = document.getElementById('contactNumber');
     const contactsList = document.getElementById('contactsList');
-    const confettiCanvas = document.getElementById('confetti-canvas');
 
     let typedDigits = '';
-
-    const confettiInstance = confetti.create(confettiCanvas, {
-      resize: true,
-      useWorker: true
-    });
-
-    function launchConfetti() {
-      confettiInstance({
-        particleCount: 160,
-        spread: 70,
-        origin: { y: 0.7 },
-        colors: ['#ff8bd1', '#ffd2f4', '#caa6ff', '#7df5c2']
-      });
-    }
 
     function updateDisplay() {
       displayEl.textContent = formatNumber(typedDigits);
@@ -577,7 +510,7 @@
         activeContactDetailsEl.textContent = 'Add a number to get started.';
       } else {
         activeContactNameEl.textContent = active.name;
-        activeContactDetailsEl.textContent = formatNumber(active.number);
+        activeContactDetailsEl.textContent = 'Dial from memory to connect.';
       }
       typedDigits = '';
       updateDisplay();
@@ -600,7 +533,7 @@
         item.className = 'contact-item' + (contact.id === state.activeId ? ' active' : '');
 
         const info = document.createElement('div');
-        info.innerHTML = `<strong>${contact.name}</strong><br><small>${formatNumber(contact.number)}</small>`;
+        info.innerHTML = `<strong>${contact.name}</strong><br><small>Dial from memory</small>`;
         item.appendChild(info);
 
         const chooseButton = document.createElement('button');
@@ -620,7 +553,18 @@
     }
 
     function formatNumber(digits) {
-      return digits.replace(/\D+/g, '').replace(/(\d{3})(?=\d)/g, '$1 ').trim();
+      const cleaned = (digits || '').replace(/\D+/g, '');
+      const length = cleaned.length;
+      if (length === 0) return '';
+      if (length <= 3) return cleaned;
+      if (length <= 6) {
+        return `${cleaned.slice(0, 3)}-${cleaned.slice(3)}`;
+      }
+      const core = `${cleaned.slice(0, 3)}-${cleaned.slice(3, 6)}-${cleaned.slice(6, Math.min(10, length))}`;
+      if (length <= 10) {
+        return core;
+      }
+      return `${core} ${cleaned.slice(10)}`;
     }
 
     function showModal() {
@@ -663,8 +607,7 @@
       }
 
       if (typedDigits === active.number) {
-        setMessage(`Calling ${active.name}! ✨`, 'success');
-        launchConfetti();
+        setMessage(`Calling ${active.name}!`, 'success');
         state.activeId = active.id;
         saveState(state);
         typedDigits = '';
