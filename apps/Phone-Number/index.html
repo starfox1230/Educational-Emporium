@@ -56,6 +56,37 @@
       gap: 24px;
     }
 
+    .confetti-container {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 3;
+      overflow: visible;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      top: -10%;
+      width: 8px;
+      height: 14px;
+      border-radius: 2px;
+      opacity: 0;
+      transform: translate3d(0, -120%, 0);
+      animation: confetti-fall var(--duration, 3s) var(--delay, 0s) ease-out forwards;
+    }
+
+    @keyframes confetti-fall {
+      0% {
+        opacity: 1;
+        transform: translate3d(var(--x-start, 0px), -120%, 0) rotate(0deg);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translate3d(calc(var(--x-start, 0px) + var(--x-drift, 0px)), 120vh, 0) rotate(720deg);
+      }
+    }
+
     .top-bar {
       display: flex;
       justify-content: space-between;
@@ -403,6 +434,8 @@
     </div>
   </div>
 
+  <div class="confetti-container" id="confettiContainer" aria-hidden="true"></div>
+
   <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal">
       <h2>Number Library</h2>
@@ -472,6 +505,9 @@
     const contactNameInput = document.getElementById('contactName');
     const contactNumberInput = document.getElementById('contactNumber');
     const contactsList = document.getElementById('contactsList');
+    const confettiContainer = document.getElementById('confettiContainer');
+
+    const CONFETTI_COLORS = ['#ff8bd1', '#ffa7df', '#a08cff', '#7df5c2', '#ffd66b'];
 
     let typedDigits = '';
 
@@ -510,7 +546,7 @@
         activeContactDetailsEl.textContent = 'Add a number to get started.';
       } else {
         activeContactNameEl.textContent = active.name;
-        activeContactDetailsEl.textContent = 'Dial from memory to connect.';
+        activeContactDetailsEl.textContent = '';
       }
       typedDigits = '';
       updateDisplay();
@@ -533,7 +569,7 @@
         item.className = 'contact-item' + (contact.id === state.activeId ? ' active' : '');
 
         const info = document.createElement('div');
-        info.innerHTML = `<strong>${contact.name}</strong><br><small>Dial from memory</small>`;
+        info.innerHTML = `<strong>${contact.name}</strong>`;
         item.appendChild(info);
 
         const chooseButton = document.createElement('button');
@@ -608,6 +644,7 @@
 
       if (typedDigits === active.number) {
         setMessage(`Calling ${active.name}!`, 'success');
+        launchConfetti();
         state.activeId = active.id;
         saveState(state);
         typedDigits = '';
@@ -615,6 +652,40 @@
       } else {
         setMessage('That number did not connect. Try again!', 'error');
       }
+    }
+
+    function launchConfetti() {
+      if (!confettiContainer) return;
+
+      confettiContainer.innerHTML = '';
+      const pieceCount = 80;
+      const fragment = document.createDocumentFragment();
+
+      for (let i = 0; i < pieceCount; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        const color = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+        const left = Math.random() * 100;
+        const delay = Math.random() * 0.5;
+        const duration = 2.4 + Math.random() * 1.4;
+        const xStart = (Math.random() - 0.5) * 40;
+        const xDrift = (Math.random() - 0.5) * 160;
+
+        piece.style.backgroundColor = color;
+        piece.style.left = `${left}%`;
+        piece.style.setProperty('--delay', `${delay}s`);
+        piece.style.setProperty('--duration', `${duration}s`);
+        piece.style.setProperty('--x-start', `${xStart}px`);
+        piece.style.setProperty('--x-drift', `${xDrift}px`);
+
+        piece.addEventListener('animationend', () => {
+          piece.remove();
+        });
+
+        fragment.appendChild(piece);
+      }
+
+      confettiContainer.appendChild(fragment);
     }
 
     function performButtonAction(button) {
