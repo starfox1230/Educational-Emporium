@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Scripture Globe – Bible vs Book of Mormon</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <style>
     :root {
       --bg: #02040a;
@@ -24,7 +24,8 @@
       background: #02040a;
       color: var(--text);
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      height: 100vh;
+      min-height: 100dvh;
+      height: 100%;
       overflow: hidden;
     }
 
@@ -33,7 +34,7 @@
       position: fixed;
       inset: 0;
       width: 100vw;
-      height: 100vh;
+      height: 100dvh;
       z-index: 1;
       background: radial-gradient(circle at top, #19253a 0%, #02040a 65%, #02040a 100%);
     }
@@ -43,7 +44,7 @@
       position: fixed;
       left: 10px;
       right: 10px;
-      bottom: 140px; /* sits above mobile book bar */
+      bottom: calc(120px + env(safe-area-inset-bottom, 0px)); /* sits above mobile book bar */
       background: var(--glass);
       border: 1px solid rgba(255,255,255,0.06);
       border-radius: 14px;
@@ -54,6 +55,9 @@
       align-items: flex-start;
       padding: 10px 14px;
       z-index: 20;
+    }
+    body.touch #info-bar {
+      gap: 6px;
     }
     #info-title {
       font-weight: 600;
@@ -85,13 +89,15 @@
       backdrop-filter: blur(16px);
       display: flex;
       gap: 12px;
-      padding: 12px 14px 18px;
+      padding: 12px 14px calc(18px + env(safe-area-inset-bottom, 0px));
       overflow-x: auto;
       z-index: 30;
       align-items: stretch;
+      scroll-snap-type: x proximity;
+      -webkit-overflow-scrolling: touch;
     }
     .book-card {
-      flex: 0 0 180px;
+      flex: 0 0 clamp(150px, 45vw, 200px);
       border-radius: 14px;
       padding: 14px 12px 12px;
       border: 1px solid rgba(243, 200, 107, 0.13);
@@ -101,6 +107,7 @@
       user-select: none;
       touch-action: manipulation;
       transition: transform .12s ease, border .12s ease;
+      scroll-snap-align: center;
     }
     .book-card:active {
       transform: scale(.985);
@@ -145,6 +152,40 @@
         bottom: 10px;
         left: 10px;
         right: 290px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      #info-bar {
+        flex-direction: column;
+        align-items: stretch;
+        bottom: calc(150px + env(safe-area-inset-bottom, 0px));
+      }
+      #info-title {
+        font-size: .95rem;
+      }
+      #info-text {
+        font-size: .82rem;
+      }
+      #focus-hint {
+        display: none;
+      }
+    }
+
+    @media (max-width: 420px) {
+      #book-panel {
+        gap: 10px;
+        padding-left: calc(12px + env(safe-area-inset-left, 0px));
+        padding-right: calc(12px + env(safe-area-inset-right, 0px));
+      }
+      .book-card {
+        padding: 12px 12px 10px;
+      }
+      .book-title {
+        font-size: .95rem;
+      }
+      .book-sub {
+        font-size: .68rem;
       }
     }
 
@@ -225,18 +266,27 @@
     const sceneHost = document.getElementById("scene-container");
     const infoTitle = document.getElementById("info-title");
     const infoText  = document.getElementById("info-text");
+    const focusHint = document.getElementById("focus-hint");
     const bookPanel = document.getElementById("book-panel");
     const fallback  = document.getElementById("fallback");
 
+    let renderLoopActive = true;
+
+    function showFallback(message) {
+      if (message) {
+        const p = fallback.querySelector("p");
+        if (p) {
+          p.innerHTML = message;
+        }
+      }
+      fallback.style.display = "flex";
+      sceneHost.style.display = "none";
+      renderLoopActive = false;
+    }
+
     // 1. GUARD: if THREE did not load for some reason, show fallback immediately.
     if (typeof THREE === "undefined") {
-      fallback.style.display = "flex";
-      return;
-    }
-    // 2. GUARD: if no WebGL context, also fallback.
-    const testCanvas = document.createElement("canvas");
-    if (!testCanvas.getContext("webgl") && !testCanvas.getContext("experimental-webgl")) {
-      fallback.style.display = "flex";
+      showFallback("<strong>3D engine not loaded.</strong><br>Please check your connection and try again.");
       return;
     }
 
@@ -254,10 +304,45 @@
     );
     camera.position.set(0, 1.6, 3.6);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        powerPreference: "high-performance",
+        precision: "mediump"
+      });
+    } catch (error) {
+      showFallback("<strong>3D view could not start.</strong><br>Your device may need hardware acceleration enabled.");
+      return;
+    }
+
+    if (!renderer || !renderer.getContext()) {
+      showFallback("<strong>WebGL unavailable.</strong><br>Try a newer browser or enable WebGL in your settings.");
+      return;
+    }
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.domElement.style.touchAction = "none";
+    renderer.domElement.style.width = "100%";
+    renderer.domElement.style.height = "100%";
+    renderer.domElement.style.display = "block";
     sceneHost.appendChild(renderer.domElement);
+
+    renderer.domElement.addEventListener("webglcontextlost", function(event) {
+      if (event && typeof event.preventDefault === "function") {
+        event.preventDefault();
+      }
+      showFallback("<strong>The 3D view was interrupted.</strong><br>Reload the page to try again.");
+    });
+
+    if ("maxTouchPoints" in navigator && navigator.maxTouchPoints > 0) {
+      document.body.classList.add("touch");
+      if (focusHint) {
+        focusHint.textContent = "Drag with one finger · Pinch to zoom";
+      }
+    }
 
     // LIGHTING
     const hemi = new THREE.HemisphereLight(0xffffff, 0x080820, 1.15);
@@ -356,6 +441,11 @@
     controls.maxDistance = 5.5;
     controls.autoRotate = true;
     controls.autoRotateSpeed = 0.6;
+    controls.enableZoom = true;
+    controls.zoomSpeed = 0.65;
+    controls.rotateSpeed = 0.45;
+    controls.minPolarAngle = Math.PI / 4;
+    controls.maxPolarAngle = Math.PI - Math.PI / 6;
 
     /* ----------------------------------------------------------
        CAMERA / GLOBE ROTATION
@@ -419,7 +509,9 @@
     function onBookTap(evt) {
       const card = evt.target.closest(".book-card");
       if (!card) return;
-      evt.preventDefault();
+      if (typeof evt.preventDefault === "function") {
+        evt.preventDefault();
+      }
       const tag = card.dataset.target;
       if (tag === "bible") {
         flyTo(
@@ -435,7 +527,8 @@
         );
       }
     }
-    bookPanel.addEventListener("pointerdown", onBookTap, { passive: false });
+    bookPanel.addEventListener("pointerup", onBookTap, { passive: false });
+    bookPanel.addEventListener("click", onBookTap);
 
     /* ----------------------------------------------------------
        POINTER INTERACTION – MARKERS (tap vs drag fix)
@@ -472,10 +565,20 @@
         }
     });
 
+    renderer.domElement.addEventListener("touchend", function(event) {
+      if (event.changedTouches && event.changedTouches.length === 1) {
+        const touch = event.changedTouches[0];
+        handleMarkerTap({ clientX: touch.clientX, clientY: touch.clientY });
+      }
+    }, { passive: true });
+
     /* ----------------------------------------------------------
        ANIMATE LOOP
     ---------------------------------------------------------- */
     function animate() {
+      if (!renderLoopActive) {
+        return;
+      }
       requestAnimationFrame(animate);
       // Only update controls if not in a programmatic animation
       if (!isAnimating) {
@@ -494,6 +597,7 @@
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     });
 
     /* ----------------------------------------------------------
@@ -504,6 +608,7 @@
       "Bible",
       "Events in and around Jerusalem, Israel, Egypt, Assyria/Babylon, and later the Mediterranean world."
     );
+
   })();
   </script>
 </body>
