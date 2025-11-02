@@ -7,18 +7,12 @@
   <style>
     :root {
       --bg: #0b1020;
-      --panel: rgba(8, 10, 16, 0.7);
       --accent: #ffd27f;
-      --accent2: #39d0ff;
-      --accent3: #42ffb6;
       --text: #f4f5f6;
       --book-gold: #f3c86b;
-      --book-blue: #0f2751;
-      --book-black: #000000;
     }
     * {
       box-sizing: border-box;
-      touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
     }
     body {
@@ -28,100 +22,27 @@
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       height: 100vh;
       overflow: hidden;
-      display: flex;
-      flex-direction: column;
     }
     #app {
       position: relative;
-      flex: 1;
-      display: flex;
-      gap: 0;
+      width: 100%;
       height: 100%;
     }
-    /* 3D area */
+
+    /* Scene */
     #scene-container {
-      flex: 1;
-      position: relative;
-      min-height: 50vh;
-    }
-    canvas {
-      display: block;
-    }
-
-    /* Right panel – books */
-    #book-panel {
-      width: 250px;
-      background: radial-gradient(circle at top, rgba(8,10,16,0.1), rgba(8,10,16,0.7));
-      border-left: 1px solid rgba(255,255,255,0.04);
-      backdrop-filter: blur(16px);
-      padding: 14px 14px 70px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .panel-title {
-      font-size: 0.8rem;
-      letter-spacing: .04em;
-      opacity: .8;
-      text-transform: uppercase;
-      margin-bottom: .3rem;
-    }
-    .book-card {
-      border-radius: 14px;
-      padding: 14px 12px 12px;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-      border: 1px solid rgba(243, 200, 107, 0.1);
-      transition: transform .2s ease, box-shadow .2s ease, border .2s ease;
-    }
-    .book-card::after {
-      content: "";
       position: absolute;
-      inset: -30% -10%;
-      background: radial-gradient(circle, rgba(255,255,255,0.15), transparent 55%);
-      transform: rotate(14deg);
-      pointer-events: none;
+      inset: 0;
     }
-    .book-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 30px rgba(0,0,0,.25);
-      border: 1px solid rgba(243, 200, 107, 0.4);
-    }
-    .book-title {
-      font-family: "Georgia", "Times New Roman", serif;
-      font-size: 1.05rem;
-      line-height: 1.1;
-      margin-bottom: .3rem;
-      letter-spacing: .03em;
-    }
-    .book-sub {
-      font-size: .7rem;
-      opacity: .75;
-    }
-    .book-card.bom {
-      background: radial-gradient(circle at 10% 25%, #123b6e, #091d3a 60%, #030712 100%);
-      color: var(--book-gold);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-    }
-    .book-card.bible {
-      background: radial-gradient(circle at 25% 10%, #09121c, #000000 70%, #000000 100%);
-      color: var(--book-gold);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-    }
-    .book-label-line {
-      display: block;
-    }
+    canvas { display: block; }
 
-    /* Info ribbon / bottom */
+    /* Info bar */
     #info-bar {
-      position: absolute;
-      bottom: 10px;
+      position: fixed;
       left: 10px;
       right: 10px;
-      background: rgba(5, 6, 10, 0.55);
+      bottom: 140px; /* on mobile, above book bar */
+      background: rgba(5, 6, 10, 0.65);
       border: 1px solid rgba(255,255,255,0.045);
       border-radius: 14px;
       backdrop-filter: blur(14px);
@@ -129,6 +50,7 @@
       gap: 10px;
       align-items: center;
       padding: 10px 14px;
+      z-index: 20;
       pointer-events: auto;
       flex-wrap: wrap;
     }
@@ -146,31 +68,103 @@
     #focus-hint {
       font-size: .65rem;
       opacity: .45;
+      white-space: nowrap;
     }
 
-    /* Mobile */
-    @media (max-width: 920px) {
-      #app {
-        flex-direction: column;
-      }
+    /* Book bar (mobile-first) */
+    #book-panel {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      min-height: 120px;
+      background: radial-gradient(circle at top, rgba(8,10,16,0.15), rgba(8,10,16,0.95));
+      backdrop-filter: blur(16px);
+      border-top: 1px solid rgba(255,255,255,0.04);
+      display: flex;
+      gap: 12px;
+      padding: 12px 14px 16px;
+      overflow-x: auto;
+      z-index: 30;
+      align-items: stretch;
+    }
+    .panel-title {
+      display: none; /* mobile: no label */
+    }
+    .book-card {
+      flex: 0 0 170px;
+      border-radius: 14px;
+      padding: 14px 12px 12px;
+      border: 1px solid rgba(243, 200, 107, 0.15);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform .15s ease;
+      user-select: none;
+      touch-action: manipulation;
+    }
+    .book-card:active {
+      transform: scale(.985);
+    }
+    .book-card::after {
+      content: "";
+      position: absolute;
+      inset: -30% -10%;
+      background: radial-gradient(circle, rgba(255,255,255,0.15), transparent 55%);
+      transform: rotate(14deg);
+      pointer-events: none;
+    }
+    .book-title {
+      font-family: "Georgia", "Times New Roman", serif;
+      font-size: 1rem;
+      line-height: 1.05;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+      margin-bottom: .35rem;
+    }
+    .book-sub {
+      font-size: .7rem;
+      opacity: .8;
+    }
+    .book-card.bible {
+      background: radial-gradient(circle at 25% 10%, #09121c, #000000 70%, #000000 100%);
+      color: var(--book-gold);
+    }
+    .book-card.bom {
+      background: radial-gradient(circle at 10% 25%, #123b6e, #091d3a 60%, #030712 100%);
+      color: var(--book-gold);
+    }
+
+    /* Larger screens */
+    @media (min-width: 900px) {
       #book-panel {
-        width: 100%;
-        flex-direction: row;
-        overflow-x: auto;
-        gap: 10px;
-        padding-bottom: 14px;
-        min-height: 110px;
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 260px;
+        flex-direction: column;
+        overflow-y: auto;
+        overflow-x: hidden;
+        border-top: none;
+        border-left: 1px solid rgba(255,255,255,0.04);
+        min-height: 100vh;
+      }
+      .panel-title {
+        display: block;
+        font-size: 0.75rem;
+        letter-spacing: .04em;
+        opacity: .8;
+        text-transform: uppercase;
+        margin-bottom: .35rem;
       }
       .book-card {
-        min-width: 170px;
+        flex: 0 0 auto;
       }
       #info-bar {
-        bottom: 120px;
-        left: 12px;
-        right: 12px;
-      }
-      #scene-container {
-        height: 56vh;
+        bottom: 10px;
+        left: 10px;
+        right: 280px;
       }
     }
   </style>
@@ -178,24 +172,7 @@
 <body>
 <div id="app">
   <div id="scene-container"></div>
-  <div id="book-panel">
-    <div class="panel-title">Tap a volume</div>
-    <div class="book-card bible" data-target="bible">
-      <div class="book-title">
-        <span class="book-label-line">THE</span>
-        <span class="book-label-line">HOLY BIBLE</span>
-      </div>
-      <div class="book-sub">Ancient Near East & surrounding regions</div>
-    </div>
-    <div class="book-card bom" data-target="bom">
-      <div class="book-title">
-        <span class="book-label-line">THE</span>
-        <span class="book-label-line">BOOK OF</span>
-        <span class="book-label-line">MORMON</span>
-      </div>
-      <div class="book-sub">Ancient Americas, ~600 BC & later</div>
-    </div>
-  </div>
+
   <div id="info-bar">
     <div id="info-title">Bible</div>
     <div id="info-text">
@@ -203,17 +180,36 @@
     </div>
     <div id="focus-hint">Drag to rotate. Pinch/scroll to zoom.</div>
   </div>
+
+  <div id="book-panel">
+    <div class="panel-title">Tap a volume</div>
+    <div class="book-card bible" data-target="bible">
+      <div class="book-title">
+        <div>THE</div>
+        <div>HOLY BIBLE</div>
+      </div>
+      <div class="book-sub">Near East, Mediterranean</div>
+    </div>
+    <div class="book-card bom" data-target="bom">
+      <div class="book-title">
+        <div>THE</div>
+        <div>BOOK OF</div>
+        <div>MORMON</div>
+      </div>
+      <div class="book-sub">Ancient Americas (~600 BC+)</div>
+    </div>
+  </div>
 </div>
 
-<!-- Three.js + OrbitControls (CDN) -->
+<!-- Three.js -->
 <script src="https://unpkg.com/three@0.162.0/build/three.min.js"></script>
 <script src="https://unpkg.com/three@0.162.0/examples/js/controls/OrbitControls.js"></script>
-
 <script>
 (function() {
   const container = document.getElementById("scene-container");
   const infoTitle = document.getElementById("info-title");
   const infoText = document.getElementById("info-text");
+  const bookPanel = document.getElementById("book-panel");
 
   // Scene
   const scene = new THREE.Scene();
@@ -230,71 +226,28 @@
 
   // Renderer
   const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(container.clientWidth, container.clientHeight);
+  resizeRenderer();
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   container.appendChild(renderer.domElement);
 
   // Lights
-  const hemi = new THREE.HemisphereLight(0xffffff, 0x080820, 1.1);
-  scene.add(hemi);
-  const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
-  dirLight.position.set(5, 2, 5);
-  scene.add(dirLight);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x080820, 1.1));
+  const dl = new THREE.DirectionalLight(0xffffff, 0.9);
+  dl.position.set(5, 2, 5);
+  scene.add(dl);
 
   // Globe
   const RADIUS = 1;
   const globeGeo = new THREE.SphereGeometry(RADIUS, 64, 64);
-  // Basic material: we'll fake land vs water using a gradient
-  // but to make it clearer, let's add a subtle emissive.
   const globeMat = new THREE.MeshStandardMaterial({
-    color: 0x0b4b78,         // ocean-ish
+    color: 0x0b4b78,
     roughness: 0.45,
-    metalness: 0.12,
-    emissive: 0x000000,
-    flatShading: false
+    metalness: 0.12
   });
   const globe = new THREE.Mesh(globeGeo, globeMat);
   scene.add(globe);
 
-  // Add simple latitude/longitude lines
-  const linesGroup = new THREE.Group();
-  const createLat = (latDeg) => {
-    const lat = THREE.MathUtils.degToRad(latDeg);
-    const latRadius = Math.cos(lat) * RADIUS * 1.001;
-    const y = Math.sin(lat) * RADIUS * 1.001;
-    const latGeo = new THREE.TorusGeometry(latRadius, 0.0014, 6, 96);
-    const latMat = new THREE.MeshBasicMaterial({ color: 0x2aa7ff, opacity: 0.2, transparent: true });
-    const latMesh = new THREE.Mesh(latGeo, latMat);
-    latMesh.rotation.x = Math.PI / 2;
-    latMesh.position.y = y;
-    linesGroup.add(latMesh);
-  };
-  const createLon = (lonDeg) => {
-    const pts = new THREE.BufferGeometry();
-    const segments = 96;
-    const positions = [];
-    for (let i = 0; i <= segments; i++) {
-      const theta = (i / segments) * Math.PI - Math.PI / 2;
-      const r = RADIUS * 1.001;
-      const x = r * Math.cos(theta) * Math.cos(THREE.MathUtils.degToRad(lonDeg));
-      const y = r * Math.sin(theta);
-      const z = r * Math.cos(theta) * Math.sin(THREE.MathUtils.degToRad(lonDeg));
-      positions.push(x, y, z);
-    }
-    pts.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-    const lonMat = new THREE.LineBasicMaterial({ color: 0x2aa7ff, opacity: 0.12, transparent: true });
-    const line = new THREE.Line(pts, lonMat);
-    linesGroup.add(line);
-  };
-  for (let lat = -60; lat <= 60; lat += 30) createLat(lat);
-  for (let lon = -150; lon <= 180; lon += 30) createLon(lon);
-  globe.add(linesGroup);
-
-  // Markers
-  const markersGroup = new THREE.Group();
-  scene.add(markersGroup);
-
-  // helper: lat/lon to position on sphere
+  // lat/lon helper
   function latLonToVector3(lat, lon, radius) {
     const phi = THREE.MathUtils.degToRad(90 - lat);
     const theta = THREE.MathUtils.degToRad(lon + 180);
@@ -304,22 +257,55 @@
     return new THREE.Vector3(x, y, z);
   }
 
-  function createMarker(lat, lon, color, label) {
-    const markerGeo = new THREE.SphereGeometry(0.025, 12, 12);
-    const markerMat = new THREE.MeshBasicMaterial({ color });
-    const marker = new THREE.Mesh(markerGeo, markerMat);
-    marker.position.copy(latLonToVector3(lat, lon, RADIUS * 1.01));
-    marker.userData.label = label;
-    markersGroup.add(marker);
-    return marker;
+  // lines
+  const linesGroup = new THREE.Group();
+  globe.add(linesGroup);
+  function createLat(latDeg) {
+    const lat = THREE.MathUtils.degToRad(latDeg);
+    const latRadius = Math.cos(lat) * RADIUS * 1.001;
+    const y = Math.sin(lat) * RADIUS * 1.001;
+    const latGeo = new THREE.TorusGeometry(latRadius, 0.0014, 6, 96);
+    const latMat = new THREE.MeshBasicMaterial({ color: 0x2aa7ff, opacity: 0.2, transparent: true });
+    const mesh = new THREE.Mesh(latGeo, latMat);
+    mesh.rotation.x = Math.PI / 2;
+    mesh.position.y = y;
+    linesGroup.add(mesh);
   }
+  function createLon(lonDeg) {
+    const seg = 96;
+    const pos = [];
+    for (let i = 0; i <= seg; i++) {
+      const theta = (i / seg) * Math.PI - Math.PI / 2;
+      const r = RADIUS * 1.001;
+      const x = r * Math.cos(theta) * Math.cos(THREE.MathUtils.degToRad(lonDeg));
+      const y = r * Math.sin(theta);
+      const z = r * Math.cos(theta) * Math.sin(THREE.MathUtils.degToRad(lonDeg));
+      pos.push(x,y,z);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+    const mat = new THREE.LineBasicMaterial({ color: 0x2aa7ff, opacity: 0.12, transparent: true });
+    linesGroup.add(new THREE.Line(geo, mat));
+  }
+  for (let lat = -60; lat <= 60; lat += 30) createLat(lat);
+  for (let lon = -150; lon <= 180; lon += 30) createLon(lon);
 
-  // Bible focal marker – Jerusalem (approx 31.78N, 35.23E)
+  // markers
+  const markersGroup = new THREE.Group();
+  scene.add(markersGroup);
+  function createMarker(lat, lon, color, label) {
+    const mGeo = new THREE.SphereGeometry(0.025, 12, 12);
+    const mMat = new THREE.MeshBasicMaterial({ color });
+    const m = new THREE.Mesh(mGeo, mMat);
+    m.position.copy(latLonToVector3(lat, lon, RADIUS * 1.01));
+    m.userData.label = label;
+    markersGroup.add(m);
+    return m;
+  }
   const bibleMarker = createMarker(31.78, 35.23, 0xffeb99, "Jerusalem (Bible core)");
-  // Book of Mormon focal marker – Guatemala area / Mesoamerica (approx 15N, -90W)
-  const bomMarker = createMarker(15, -90, 0xff8ba1, "Ancient Americas (Book of Mormon)");
+  const bomMarker   = createMarker(15, -90, 0xff8ba1, "Ancient Americas (Book of Mormon)");
 
-  // Controls
+  // controls
   const controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.05;
@@ -329,7 +315,7 @@
   controls.autoRotate = true;
   controls.autoRotateSpeed = 0.6;
 
-  // Animation
+  // animate
   function animate() {
     requestAnimationFrame(animate);
     controls.update();
@@ -337,67 +323,60 @@
   }
   animate();
 
-  // Smooth camera to target (lat, lon)
-  function flyToLatLon(lat, lon, targetTitle, targetText) {
+  function flyToLatLon(lat, lon, title, text) {
     const targetVec = latLonToVector3(lat, lon, RADIUS);
-    // we want the chosen spot to come to front. Best is to rotate globe, not camera.
-    // We'll tween rotation manually (simple).
     const target = targetVec.clone().normalize();
-    // convert to spherical to get azimuthal angles
     const targetPhi = Math.acos(target.y);
     const targetTheta = Math.atan2(target.x, target.z);
-    // we rotate the GLOBE so that point comes to front (0,0,1)
-    const startRot = globe.rotation.y;
-    const desiredRotY = targetTheta;  // adjust if sign mismatch
-    // We'll do a tiny simple lerp over ~0.5s
+
+    const startRotY = globe.rotation.y;
+    const startRotX = globe.rotation.x;
+    const desiredRotY = targetTheta;
+    const desiredRotX = targetPhi - Math.PI / 2;
+
     const start = performance.now();
     const duration = 580;
-
-    const startX = globe.rotation.x;
-    const desiredX = targetPhi - Math.PI / 2; // bring latitude to center
     function step(now) {
       const t = Math.min(1, (now - start) / duration);
       const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-      globe.rotation.y = THREE.MathUtils.lerp(startRot, desiredRotY, ease);
-      globe.rotation.x = THREE.MathUtils.lerp(startX, desiredX, ease * 0.9);
-      if (t < 1) {
-        requestAnimationFrame(step);
-      }
+      globe.rotation.y = THREE.MathUtils.lerp(startRotY, desiredRotY, ease);
+      globe.rotation.x = THREE.MathUtils.lerp(startRotX, desiredRotX, ease * 0.9);
+      if (t < 1) requestAnimationFrame(step);
     }
     requestAnimationFrame(step);
 
-    infoTitle.textContent = targetTitle;
-    infoText.textContent = targetText;
+    infoTitle.textContent = title;
+    infoText.textContent = text;
   }
 
-  // Book clicks
-  const bookPanel = document.getElementById("book-panel");
-  bookPanel.addEventListener("click", (e) => {
-    const card = e.target.closest(".book-card");
-    if (!card) return;
-    const target = card.dataset.target;
+  // tap/click handler (mobile-safe)
+  function handleBookTap(target) {
     if (target === "bible") {
-      // Jerusalem
-      flyToLatLon(31.78, 35.23, "Bible",
-        "Written over many centuries in the Near East. Old Testament in Israel and surrounding empires; New Testament in and around Judea, Galilee, and the Mediterranean.");
+      flyToLatLon(
+        31.78, 35.23,
+        "Bible",
+        "Written over many centuries in the Near East. Old Testament in Israel and surrounding empires; New Testament in and around Judea, Galilee, and the Mediterranean."
+      );
     } else if (target === "bom") {
-      // Ancient Americas
-      flyToLatLon(15, -90, "Book of Mormon",
-        "A record of peoples in the ancient Americas, starting with a family from Jerusalem around 600 BC, later gathered, translated, and published by Joseph Smith in the 1800s.");
+      flyToLatLon(
+        15, -90,
+        "Book of Mormon",
+        "A record of peoples in the ancient Americas, beginning with a family leaving Jerusalem around 600 BC and later compiled and translated in the 1800s."
+      );
     }
-  });
-
-  // Handle resize
-  window.addEventListener("resize", onWindowResize, false);
-  function onWindowResize() {
-    const w = container.clientWidth;
-    const h = container.clientHeight;
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
   }
 
-  // Optional: tap marker to show quick label
+  // Support both click and touchstart
+  function bookPanelListener(evt) {
+    const card = evt.target.closest(".book-card");
+    if (!card) return;
+    evt.preventDefault();
+    handleBookTap(card.dataset.target);
+  }
+  bookPanel.addEventListener("click", bookPanelListener, { passive: false });
+  bookPanel.addEventListener("touchstart", bookPanelListener, { passive: false });
+
+  // raycast tap on markers
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
   renderer.domElement.addEventListener("pointerdown", (event) => {
@@ -413,10 +392,19 @@
     }
   });
 
-  // Initial focus
+  // initial focus
   flyToLatLon(31.78, 35.23, "Bible",
     "Events in and around Jerusalem, Israel, Egypt, Mesopotamia, and the Mediterranean world.");
 
+  // resize
+  window.addEventListener("resize", resizeRenderer);
+  function resizeRenderer() {
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
 })();
 </script>
 </body>
