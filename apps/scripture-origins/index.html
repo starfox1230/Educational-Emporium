@@ -268,8 +268,8 @@
 
     // GLOBE
     const RADIUS = 1;
-    const globeGeo = new THREE.SphereGeometry(RADIUS, 64, 64);
-    // simple water-like material
+    // --- OPTIMIZATION: Reduced segments from 64x64 to 32x32. Visually identical but much faster.
+    const globeGeo = new THREE.SphereGeometry(RADIUS, 32, 32);
     const globeMat = new THREE.MeshStandardMaterial({
       color: 0x0b4b78,
       roughness: 0.45,
@@ -278,26 +278,35 @@
     const globe = new THREE.Mesh(globeGeo, globeMat);
     scene.add(globe);
 
-    // Decorative lat/lon lines to prove the globe is there
+    // Decorative lat/lon lines
     const latLonGroup = new THREE.Group();
     globe.add(latLonGroup);
 
+    // --- OPTIMIZATION: Replaced inefficient TorusGeometry with efficient Lines for latitude.
     function addLatitude(latDeg) {
-      const rad = THREE.MathUtils.degToRad(latDeg);
-      const ringRadius = Math.cos(rad) * RADIUS * 1.002;
-      const y = Math.sin(rad) * RADIUS * 1.002;
-      const ringGeo = new THREE.TorusGeometry(ringRadius, 0.0015, 6, 96);
-      const ringMat = new THREE.MeshBasicMaterial({ color: 0x2aa7ff, opacity: 0.2, transparent: true });
-      const ring = new THREE.Mesh(ringGeo, ringMat);
-      ring.rotation.x = Math.PI / 2;
-      ring.position.y = y;
-      latLonGroup.add(ring);
+        const SEGMENTS = 128;
+        const positions = [];
+        const rad = THREE.MathUtils.degToRad(latDeg);
+        const ringRadius = Math.cos(rad) * RADIUS * 1.002;
+        const y = Math.sin(rad) * RADIUS * 1.002;
+
+        for (let i = 0; i <= SEGMENTS; i++) {
+            const theta = (i / SEGMENTS) * Math.PI * 2;
+            const x = ringRadius * Math.cos(theta);
+            const z = ringRadius * Math.sin(theta);
+            positions.push(x, y, z);
+        }
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+        const mat = new THREE.LineBasicMaterial({ color: 0x2aa7ff, opacity: 0.2, transparent: true });
+        const line = new THREE.Line(geo, mat);
+        latLonGroup.add(line);
     }
     function addLongitude(lonDeg) {
-      const SEG = 90;
+      const SEGMENTS = 90;
       const positions = [];
-      for (let i = 0; i <= SEG; i++) {
-        const theta = (i / SEG) * Math.PI - Math.PI/2;
+      for (let i = 0; i <= SEGMENTS; i++) {
+        const theta = (i / SEGMENTS) * Math.PI - Math.PI/2;
         const r = RADIUS * 1.002;
         const x = r * Math.cos(theta) * Math.cos(THREE.MathUtils.degToRad(lonDeg));
         const y = r * Math.sin(theta);
@@ -318,7 +327,6 @@
     scene.add(markers);
 
     function latLonToVec3(lat, lon, radius) {
-      // convert to THREE coords
       const phi = THREE.MathUtils.degToRad(90 - lat);
       const theta = THREE.MathUtils.degToRad(lon + 180);
       const x = -(radius) * Math.sin(phi) * Math.cos(theta);
@@ -336,9 +344,7 @@
       return mesh;
     }
 
-    // BIBLE marker – Jerusalem
     addMarker(31.78, 35.23, 0xffeb99, "Jerusalem – central to Bible narrative");
-    // BoM marker – Mesoamerica (teaching point, not official geography)
     addMarker(15, -90, 0xff8ba1, "Ancient Americas – teaching location for Book of Mormon peoples");
 
     // CONTROLS
@@ -354,7 +360,18 @@
     /* ----------------------------------------------------------
        CAMERA / GLOBE ROTATION
     ---------------------------------------------------------- */
+    // --- FIX: Added animation state tracking to prevent conflicts with user input.
+    let isAnimating = false;
+    let animationFrameId = null;
+
     function flyTo(lat, lon, title, text) {
+      if (isAnimating) {
+        cancelAnimationFrame(animationFrameId);
+      }
+      isAnimating = true;
+      controls.enabled = false; // Disable controls during animation
+      controls.autoRotate = false;
+
       const target = latLonToVec3(lat, lon, RADIUS);
       const n = target.clone().normalize();
       const targetPhi   = Math.acos(n.y);
@@ -362,30 +379,42 @@
 
       const startRotY = globe.rotation.y;
       const startRotX = globe.rotation.x;
+      // We need to handle rotation wrapping (e.g., from -170deg to +170deg)
       const endRotY   = targetTheta;
       const endRotX   = targetPhi - Math.PI / 2;
 
+      // Find the shortest path for rotation
+      const twoPi = Math.PI * 2;
+      const deltaY = (endRotY - startRotY + Math.PI) % twoPi - Math.PI;
+      const finalEndRotY = startRotY + deltaY;
+
       const start = performance.now();
-      const dur   = 580;
+      const dur   = 700; // slightly longer for a smoother feel
 
       function animateRot(now) {
         const t = Math.min(1, (now - start) / dur);
-        // ease in-out
-        const e = t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2;
-        globe.rotation.y = THREE.MathUtils.lerp(startRotY, endRotY, e);
-        globe.rotation.x = THREE.MathUtils.lerp(startRotX, endRotX, e * 0.9);
-        if (t < 1) requestAnimationFrame(animateRot);
-      }
-      requestAnimationFrame(animateRot);
+        const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; // ease in-out cubic
 
-      // Update text
+        globe.rotation.y = THREE.MathUtils.lerp(startRotY, finalEndRotY, e);
+        globe.rotation.x = THREE.MathUtils.lerp(startRotX, endRotX, e);
+
+        if (t < 1) {
+          animationFrameId = requestAnimationFrame(animateRot);
+        } else {
+          isAnimating = false;
+          controls.enabled = true; // Re-enable controls
+          controls.autoRotate = true;
+          animationFrameId = null;
+        }
+      }
+      animationFrameId = requestAnimationFrame(animateRot);
+
       infoTitle.textContent = title;
       infoText.textContent  = text;
     }
 
     /* ----------------------------------------------------------
        POINTER INTERACTION – BOOK CARDS
-       (pointerdown works well on mobile + desktop)
     ---------------------------------------------------------- */
     function onBookTap(evt) {
       const card = evt.target.closest(".book-card");
@@ -409,22 +438,38 @@
     bookPanel.addEventListener("pointerdown", onBookTap, { passive: false });
 
     /* ----------------------------------------------------------
-       POINTER INTERACTION – MARKERS (optional)
+       POINTER INTERACTION – MARKERS (tap vs drag fix)
     ---------------------------------------------------------- */
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
+    let pointerDownPos = new THREE.Vector2();
+    let pointerDownTime = 0;
+
+    function handleMarkerTap(event) {
+        const rect = renderer.domElement.getBoundingClientRect();
+        pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        raycaster.setFromCamera(pointer, camera);
+        const hits = raycaster.intersectObjects(markers.children);
+        if (hits.length > 0) {
+            const obj = hits[0].object;
+            infoTitle.textContent = "Location";
+            infoText.textContent  = obj.userData.label || "Marker";
+        }
+    }
 
     renderer.domElement.addEventListener("pointerdown", function(event) {
-      const rect = renderer.domElement.getBoundingClientRect();
-      pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-      raycaster.setFromCamera(pointer, camera);
-      const hits = raycaster.intersectObjects(markers.children);
-      if (hits.length > 0) {
-        const obj = hits[0].object;
-        infoTitle.textContent = "Location";
-        infoText.textContent  = obj.userData.label || "Marker";
-      }
+        pointerDownPos.set(event.clientX, event.clientY);
+        pointerDownTime = performance.now();
+    });
+
+    renderer.domElement.addEventListener("pointerup", function(event) {
+        const dist = pointerDownPos.distanceTo(new THREE.Vector2(event.clientX, event.clientY));
+        const time = performance.now() - pointerDownTime;
+        // Consider it a tap if pointer moved less than 10px and held for less than 200ms
+        if (dist < 10 && time < 200) {
+            handleMarkerTap(event);
+        }
     });
 
     /* ----------------------------------------------------------
@@ -432,7 +477,10 @@
     ---------------------------------------------------------- */
     function animate() {
       requestAnimationFrame(animate);
-      controls.update();
+      // Only update controls if not in a programmatic animation
+      if (!isAnimating) {
+        controls.update();
+      }
       renderer.render(scene, camera);
     }
     animate();
