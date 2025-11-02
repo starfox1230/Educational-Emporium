@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bible vs Book of Mormon Globe</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: rgba(8, 10, 16, 0.7);
+      --accent: #ffd27f;
+      --accent2: #39d0ff;
+      --accent3: #42ffb6;
+      --text: #f4f5f6;
+      --book-gold: #f3c86b;
+      --book-blue: #0f2751;
+      --book-black: #000000;
+    }
+    * {
+      box-sizing: border-box;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #18243a 0%, #080a10 48%, #03040a 100%);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    #app {
+      position: relative;
+      flex: 1;
+      display: flex;
+      gap: 0;
+      height: 100%;
+    }
+    /* 3D area */
+    #scene-container {
+      flex: 1;
+      position: relative;
+      min-height: 50vh;
+    }
+    canvas {
+      display: block;
+    }
+
+    /* Right panel – books */
+    #book-panel {
+      width: 250px;
+      background: radial-gradient(circle at top, rgba(8,10,16,0.1), rgba(8,10,16,0.7));
+      border-left: 1px solid rgba(255,255,255,0.04);
+      backdrop-filter: blur(16px);
+      padding: 14px 14px 70px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .panel-title {
+      font-size: 0.8rem;
+      letter-spacing: .04em;
+      opacity: .8;
+      text-transform: uppercase;
+      margin-bottom: .3rem;
+    }
+    .book-card {
+      border-radius: 14px;
+      padding: 14px 12px 12px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(243, 200, 107, 0.1);
+      transition: transform .2s ease, box-shadow .2s ease, border .2s ease;
+    }
+    .book-card::after {
+      content: "";
+      position: absolute;
+      inset: -30% -10%;
+      background: radial-gradient(circle, rgba(255,255,255,0.15), transparent 55%);
+      transform: rotate(14deg);
+      pointer-events: none;
+    }
+    .book-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+      border: 1px solid rgba(243, 200, 107, 0.4);
+    }
+    .book-title {
+      font-family: "Georgia", "Times New Roman", serif;
+      font-size: 1.05rem;
+      line-height: 1.1;
+      margin-bottom: .3rem;
+      letter-spacing: .03em;
+    }
+    .book-sub {
+      font-size: .7rem;
+      opacity: .75;
+    }
+    .book-card.bom {
+      background: radial-gradient(circle at 10% 25%, #123b6e, #091d3a 60%, #030712 100%);
+      color: var(--book-gold);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .book-card.bible {
+      background: radial-gradient(circle at 25% 10%, #09121c, #000000 70%, #000000 100%);
+      color: var(--book-gold);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .book-label-line {
+      display: block;
+    }
+
+    /* Info ribbon / bottom */
+    #info-bar {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      right: 10px;
+      background: rgba(5, 6, 10, 0.55);
+      border: 1px solid rgba(255,255,255,0.045);
+      border-radius: 14px;
+      backdrop-filter: blur(14px);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 14px;
+      pointer-events: auto;
+      flex-wrap: wrap;
+    }
+    #info-title {
+      font-weight: 600;
+      font-size: .85rem;
+    }
+    #info-text {
+      font-size: .78rem;
+      opacity: .9;
+      line-height: 1.2;
+      flex: 1;
+      min-width: 240px;
+    }
+    #focus-hint {
+      font-size: .65rem;
+      opacity: .45;
+    }
+
+    /* Mobile */
+    @media (max-width: 920px) {
+      #app {
+        flex-direction: column;
+      }
+      #book-panel {
+        width: 100%;
+        flex-direction: row;
+        overflow-x: auto;
+        gap: 10px;
+        padding-bottom: 14px;
+        min-height: 110px;
+      }
+      .book-card {
+        min-width: 170px;
+      }
+      #info-bar {
+        bottom: 120px;
+        left: 12px;
+        right: 12px;
+      }
+      #scene-container {
+        height: 56vh;
+      }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div id="scene-container"></div>
+  <div id="book-panel">
+    <div class="panel-title">Tap a volume</div>
+    <div class="book-card bible" data-target="bible">
+      <div class="book-title">
+        <span class="book-label-line">THE</span>
+        <span class="book-label-line">HOLY BIBLE</span>
+      </div>
+      <div class="book-sub">Ancient Near East & surrounding regions</div>
+    </div>
+    <div class="book-card bom" data-target="bom">
+      <div class="book-title">
+        <span class="book-label-line">THE</span>
+        <span class="book-label-line">BOOK OF</span>
+        <span class="book-label-line">MORMON</span>
+      </div>
+      <div class="book-sub">Ancient Americas, ~600 BC & later</div>
+    </div>
+  </div>
+  <div id="info-bar">
+    <div id="info-title">Bible</div>
+    <div id="info-text">
+      Events in and around Jerusalem, Israel, Egypt, Mesopotamia, and the Mediterranean world.
+    </div>
+    <div id="focus-hint">Drag to rotate. Pinch/scroll to zoom.</div>
+  </div>
+</div>
+
+<!-- Three.js + OrbitControls (CDN) -->
+<script src="https://unpkg.com/three@0.162.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.162.0/examples/js/controls/OrbitControls.js"></script>
+
+<script>
+(function() {
+  const container = document.getElementById("scene-container");
+  const infoTitle = document.getElementById("info-title");
+  const infoText = document.getElementById("info-text");
+
+  // Scene
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x030509);
+
+  // Camera
+  const camera = new THREE.PerspectiveCamera(
+    45,
+    container.clientWidth / container.clientHeight,
+    0.1,
+    1000
+  );
+  camera.position.set(0, 1.6, 3.6);
+
+  // Renderer
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.appendChild(renderer.domElement);
+
+  // Lights
+  const hemi = new THREE.HemisphereLight(0xffffff, 0x080820, 1.1);
+  scene.add(hemi);
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+  dirLight.position.set(5, 2, 5);
+  scene.add(dirLight);
+
+  // Globe
+  const RADIUS = 1;
+  const globeGeo = new THREE.SphereGeometry(RADIUS, 64, 64);
+  // Basic material: we'll fake land vs water using a gradient
+  // but to make it clearer, let's add a subtle emissive.
+  const globeMat = new THREE.MeshStandardMaterial({
+    color: 0x0b4b78,         // ocean-ish
+    roughness: 0.45,
+    metalness: 0.12,
+    emissive: 0x000000,
+    flatShading: false
+  });
+  const globe = new THREE.Mesh(globeGeo, globeMat);
+  scene.add(globe);
+
+  // Add simple latitude/longitude lines
+  const linesGroup = new THREE.Group();
+  const createLat = (latDeg) => {
+    const lat = THREE.MathUtils.degToRad(latDeg);
+    const latRadius = Math.cos(lat) * RADIUS * 1.001;
+    const y = Math.sin(lat) * RADIUS * 1.001;
+    const latGeo = new THREE.TorusGeometry(latRadius, 0.0014, 6, 96);
+    const latMat = new THREE.MeshBasicMaterial({ color: 0x2aa7ff, opacity: 0.2, transparent: true });
+    const latMesh = new THREE.Mesh(latGeo, latMat);
+    latMesh.rotation.x = Math.PI / 2;
+    latMesh.position.y = y;
+    linesGroup.add(latMesh);
+  };
+  const createLon = (lonDeg) => {
+    const pts = new THREE.BufferGeometry();
+    const segments = 96;
+    const positions = [];
+    for (let i = 0; i <= segments; i++) {
+      const theta = (i / segments) * Math.PI - Math.PI / 2;
+      const r = RADIUS * 1.001;
+      const x = r * Math.cos(theta) * Math.cos(THREE.MathUtils.degToRad(lonDeg));
+      const y = r * Math.sin(theta);
+      const z = r * Math.cos(theta) * Math.sin(THREE.MathUtils.degToRad(lonDeg));
+      positions.push(x, y, z);
+    }
+    pts.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    const lonMat = new THREE.LineBasicMaterial({ color: 0x2aa7ff, opacity: 0.12, transparent: true });
+    const line = new THREE.Line(pts, lonMat);
+    linesGroup.add(line);
+  };
+  for (let lat = -60; lat <= 60; lat += 30) createLat(lat);
+  for (let lon = -150; lon <= 180; lon += 30) createLon(lon);
+  globe.add(linesGroup);
+
+  // Markers
+  const markersGroup = new THREE.Group();
+  scene.add(markersGroup);
+
+  // helper: lat/lon to position on sphere
+  function latLonToVector3(lat, lon, radius) {
+    const phi = THREE.MathUtils.degToRad(90 - lat);
+    const theta = THREE.MathUtils.degToRad(lon + 180);
+    const x = -(radius) * Math.sin(phi) * Math.cos(theta);
+    const z = (radius) * Math.sin(phi) * Math.sin(theta);
+    const y = (radius) * Math.cos(phi);
+    return new THREE.Vector3(x, y, z);
+  }
+
+  function createMarker(lat, lon, color, label) {
+    const markerGeo = new THREE.SphereGeometry(0.025, 12, 12);
+    const markerMat = new THREE.MeshBasicMaterial({ color });
+    const marker = new THREE.Mesh(markerGeo, markerMat);
+    marker.position.copy(latLonToVector3(lat, lon, RADIUS * 1.01));
+    marker.userData.label = label;
+    markersGroup.add(marker);
+    return marker;
+  }
+
+  // Bible focal marker – Jerusalem (approx 31.78N, 35.23E)
+  const bibleMarker = createMarker(31.78, 35.23, 0xffeb99, "Jerusalem (Bible core)");
+  // Book of Mormon focal marker – Guatemala area / Mesoamerica (approx 15N, -90W)
+  const bomMarker = createMarker(15, -90, 0xff8ba1, "Ancient Americas (Book of Mormon)");
+
+  // Controls
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+  controls.enablePan = false;
+  controls.minDistance = 1.5;
+  controls.maxDistance = 5.5;
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 0.6;
+
+  // Animation
+  function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  // Smooth camera to target (lat, lon)
+  function flyToLatLon(lat, lon, targetTitle, targetText) {
+    const targetVec = latLonToVector3(lat, lon, RADIUS);
+    // we want the chosen spot to come to front. Best is to rotate globe, not camera.
+    // We'll tween rotation manually (simple).
+    const target = targetVec.clone().normalize();
+    // convert to spherical to get azimuthal angles
+    const targetPhi = Math.acos(target.y);
+    const targetTheta = Math.atan2(target.x, target.z);
+    // we rotate the GLOBE so that point comes to front (0,0,1)
+    const startRot = globe.rotation.y;
+    const desiredRotY = targetTheta;  // adjust if sign mismatch
+    // We'll do a tiny simple lerp over ~0.5s
+    const start = performance.now();
+    const duration = 580;
+
+    const startX = globe.rotation.x;
+    const desiredX = targetPhi - Math.PI / 2; // bring latitude to center
+    function step(now) {
+      const t = Math.min(1, (now - start) / duration);
+      const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+      globe.rotation.y = THREE.MathUtils.lerp(startRot, desiredRotY, ease);
+      globe.rotation.x = THREE.MathUtils.lerp(startX, desiredX, ease * 0.9);
+      if (t < 1) {
+        requestAnimationFrame(step);
+      }
+    }
+    requestAnimationFrame(step);
+
+    infoTitle.textContent = targetTitle;
+    infoText.textContent = targetText;
+  }
+
+  // Book clicks
+  const bookPanel = document.getElementById("book-panel");
+  bookPanel.addEventListener("click", (e) => {
+    const card = e.target.closest(".book-card");
+    if (!card) return;
+    const target = card.dataset.target;
+    if (target === "bible") {
+      // Jerusalem
+      flyToLatLon(31.78, 35.23, "Bible",
+        "Written over many centuries in the Near East. Old Testament in Israel and surrounding empires; New Testament in and around Judea, Galilee, and the Mediterranean.");
+    } else if (target === "bom") {
+      // Ancient Americas
+      flyToLatLon(15, -90, "Book of Mormon",
+        "A record of peoples in the ancient Americas, starting with a family from Jerusalem around 600 BC, later gathered, translated, and published by Joseph Smith in the 1800s.");
+    }
+  });
+
+  // Handle resize
+  window.addEventListener("resize", onWindowResize, false);
+  function onWindowResize() {
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  }
+
+  // Optional: tap marker to show quick label
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+  renderer.domElement.addEventListener("pointerdown", (event) => {
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(markersGroup.children);
+    if (intersects.length > 0) {
+      const obj = intersects[0].object;
+      infoTitle.textContent = "Location";
+      infoText.textContent = obj.userData.label || "Marker";
+    }
+  });
+
+  // Initial focus
+  flyToLatLon(31.78, 35.23, "Bible",
+    "Events in and around Jerusalem, Israel, Egypt, Mesopotamia, and the Mediterranean world.");
+
+})();
+</script>
+</body>
+</html>
