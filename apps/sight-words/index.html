@@ -1137,7 +1137,39 @@
       }
     }
     const pastelBackgroundColors = [ "#c9e4c5", "#f9e6cf", "#d4e9f7", "#fde8f2", "#e6e6fa", "#fffacd", ]; let currentPastelBgIndex = 0; let nextBackgroundChangeScore = 10;
-    function updateBackgroundState() { const shouldAnimate = animatedBackgroundsEnabled && !PREFERS_REDUCED_MOTION; if (toggleBackgroundBtn) { toggleBackgroundBtn.textContent = `Background: ${animatedBackgroundsEnabled ? 'Animated' : 'Static'}`; toggleBackgroundBtn.classList.toggle('active-animated-bg', animatedBackgroundsEnabled); } if (shouldAnimate) { document.body.style.backgroundColor = ''; let keyToApply = currentBackgroundKey; if (!keyToApply || !effectConfigurations[keyToApply]) { if (vantaBackgroundKeys && vantaBackgroundKeys.length > 0) { keyToApply = vantaBackgroundKeys[0]; } else { keyToApply = null; } } if (keyToApply) { applyVantaEffect(keyToApply); } else { if (vantaEffect) applyVantaEffect(null); document.body.style.backgroundColor = pastelBackgroundColors[currentPastelBgIndex % pastelBackgroundColors.length]; } } else { if (vantaEffect) { applyVantaEffect(null); } const staticBgColor = pastelBackgroundColors[currentPastelBgIndex % pastelBackgroundColors.length]; document.body.style.backgroundColor = staticBgColor; } }
+    function updateBackgroundState() {
+      const shouldAnimate = animatedBackgroundsEnabled && !PREFERS_REDUCED_MOTION;
+      if (toggleBackgroundBtn) {
+        toggleBackgroundBtn.textContent = `Background: ${animatedBackgroundsEnabled ? 'Animated' : 'Static'}`;
+        toggleBackgroundBtn.classList.toggle('active-animated-bg', animatedBackgroundsEnabled);
+      }
+
+      if (isMiniGameActive) {
+        if (vantaEffect) { applyVantaEffect(null, { preserveCurrentKey: true }); }
+        const staticBgColorDuringMiniGame = pastelBackgroundColors[currentPastelBgIndex % pastelBackgroundColors.length];
+        document.body.style.backgroundColor = staticBgColorDuringMiniGame;
+        return;
+      }
+
+      if (shouldAnimate) {
+        document.body.style.backgroundColor = '';
+        let keyToApply = currentBackgroundKey;
+        if (!keyToApply || !effectConfigurations[keyToApply]) {
+          if (vantaBackgroundKeys && vantaBackgroundKeys.length > 0) { keyToApply = vantaBackgroundKeys[0]; }
+          else { keyToApply = null; }
+        }
+        if (keyToApply) {
+          applyVantaEffect(keyToApply);
+        } else {
+          if (vantaEffect) applyVantaEffect(null);
+          document.body.style.backgroundColor = pastelBackgroundColors[currentPastelBgIndex % pastelBackgroundColors.length];
+        }
+      } else {
+        if (vantaEffect) { applyVantaEffect(null); }
+        const staticBgColor = pastelBackgroundColors[currentPastelBgIndex % pastelBackgroundColors.length];
+        document.body.style.backgroundColor = staticBgColor;
+      }
+    }
     function advanceBackgroundIfNeeded() { let backgroundUpdated = false; while (score >= nextBackgroundChangeScore) { const tierIndex = Math.floor(nextBackgroundChangeScore / 10); if (vantaBackgroundKeys.length > 0) { const keyIndex = tierIndex % vantaBackgroundKeys.length; currentBackgroundKey = vantaBackgroundKeys[keyIndex]; } else { currentBackgroundKey = null; } currentPastelBgIndex = tierIndex % pastelBackgroundColors.length; nextBackgroundChangeScore += 10; backgroundUpdated = true; } if (backgroundUpdated) { updateBackgroundState(); } }
 
     // --- Timer Globals (UNCHANGED) ---
