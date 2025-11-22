@@ -1196,6 +1196,7 @@
     // --- UI REFERENCES ---
     const wordChoiceBtns = [document.getElementById('choice0'), document.getElementById('choice1')];
     const scoreVal   = document.getElementById('score-val');
+    const scoreDisplay = document.getElementById('score');
     const timerDisp  = document.getElementById('timer-display');
     const timerSel   = document.getElementById('timer-select');
     const listenBtn  = document.getElementById('listen-btn');
@@ -1354,16 +1355,62 @@
         });
     }
 
+    function setScore(newScore, { recalculateBackgrounds = false } = {}) {
+        const sanitizedScore = Math.max(0, Math.floor(Number(newScore) || 0));
+        score = sanitizedScore;
+        scoreVal.textContent = score;
+
+        if (recalculateBackgrounds) {
+            const scoreTier = Math.floor(score / 10);
+            currentBackgroundKey = vantaBackgroundKeys.length > 0
+                ? vantaBackgroundKeys[scoreTier % vantaBackgroundKeys.length]
+                : null;
+            currentPastelBgIndex = scoreTier % pastelBackgroundColors.length;
+            nextBackgroundChangeScore = Math.max(10, (scoreTier + 1) * 10);
+            updateBackgroundState();
+        }
+    }
+
+    function initScoreEditing() {
+        if (!scoreDisplay) return;
+
+        const LONG_PRESS_DURATION_MS = 600;
+        let scorePressTimer = null;
+
+        const clearScoreTimer = () => {
+            if (scorePressTimer) {
+                clearTimeout(scorePressTimer);
+                scorePressTimer = null;
+            }
+        };
+
+        const beginScorePress = () => {
+            clearScoreTimer();
+            scorePressTimer = setTimeout(() => {
+                scorePressTimer = null;
+                const input = prompt('Enter a new score:', score.toString());
+                if (input === null) return;
+                const parsed = parseInt(input, 10);
+                if (Number.isNaN(parsed)) {
+                    alert('Please enter a valid number.');
+                    return;
+                }
+                setScore(parsed, { recalculateBackgrounds: true });
+            }, LONG_PRESS_DURATION_MS);
+        };
+
+        const endScorePress = () => clearScoreTimer();
+
+        ['mousedown', 'touchstart'].forEach(evt => scoreDisplay.addEventListener(evt, beginScorePress));
+        ['mouseup', 'mouseleave', 'mouseout', 'touchend', 'touchcancel'].forEach(evt => scoreDisplay.addEventListener(evt, endScorePress));
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       vantaBackgroundKeys = Object.keys(effectConfigurations);
       hydrateFromStorage();
 
-      const initialScoreTier = Math.floor(score / 10);
-      if (vantaBackgroundKeys.length > 0) { currentBackgroundKey = vantaBackgroundKeys[initialScoreTier % vantaBackgroundKeys.length]; }
-      else { currentBackgroundKey = null; }
-      currentPastelBgIndex = initialScoreTier % pastelBackgroundColors.length;
-      nextBackgroundChangeScore = Math.max(10, (initialScoreTier + 1) * 10);
-      updateBackgroundState();
+      setScore(score, { recalculateBackgrounds: true });
+      initScoreEditing();
 
       if (toggleBackgroundBtn) {
           toggleBackgroundBtn.addEventListener('click', () => {
@@ -2651,7 +2698,7 @@ const MINI_GAME_LIBRARY = [
 
         if(isCorrect){
           playBell();
-          scoreVal.textContent = ++score;
+          setScore(score + 1);
           advanceBackgroundIfNeeded();
           targetButtonElement.classList.add('correct');
           myConfetti({ particleCount:80, spread:100, origin: { y: 0.6 } });
