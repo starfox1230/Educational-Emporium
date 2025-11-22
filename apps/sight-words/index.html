@@ -297,11 +297,28 @@
         background: #fff;
         text-align: center;
         flex-shrink: 0;
+        position: relative;
     }
     .word-list-modal-footer p {
         font-size: 0.8rem;
         color: #888;
     }
+    .word-list-done-btn {
+        position: absolute;
+        right: 1rem;
+        bottom: calc(1rem + var(--safe-bottom));
+        padding: 0.5rem 1rem;
+        background-color: var(--brand);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 8px var(--shadow-color);
+        transition: transform var(--transition), box-shadow var(--transition);
+    }
+    .word-list-done-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 12px var(--shadow-color); }
+    .word-list-done-btn:active { transform: translateY(0); box-shadow: 0 3px 6px var(--shadow-color); }
 
     #quiz-container{ display:flex;justify-content:center;align-items:center; min-height: 30vh; padding:1rem; margin-top: 80px; /* Increased to clear taller top-bar */ height: calc(100vh - 80px - 70px); }
     #listen-pick-word-area { display: flex; justify-content: center; align-items: center; width: 100%; }
@@ -791,6 +808,7 @@
         <!-- Dynamically populated by JS -->
       </div>
       <div class="word-list-modal-footer">
+        <button id="word-list-done-btn" class="word-list-done-btn" type="button">Done</button>
         <p>Your selections are saved automatically.</p>
       </div>
     </div>
@@ -1197,6 +1215,7 @@
     const wordCountBadge = document.getElementById('word-count-badge');
     const wordListModal = document.getElementById('word-list-modal');
     const wordListCloseBtn = document.getElementById('word-list-close-btn');
+    const wordListDoneBtn = document.getElementById('word-list-done-btn');
     const wordListSummaryText = document.getElementById('word-list-summary-text');
     const wordListUploadBtn = document.getElementById('word-list-upload-btn');
     const wordListTotalCount = document.getElementById('word-list-total-count');
@@ -2682,6 +2701,7 @@ const MINI_GAME_LIBRARY = [
     function initWordListModal() {
         wordListOpenBtn.addEventListener('click', openWordListModal);
         wordListCloseBtn.addEventListener('click', closeWordListModal);
+        wordListDoneBtn.addEventListener('click', closeWordListModal);
         // "Save" button listener is removed, as changes are now instant.
     }
     
