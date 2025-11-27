@@ -41,6 +41,7 @@
     }
 
     .hud-top { width: 100%; display: flex; justify-content: space-between; align-items: flex-start; }
+    .hud-left { display: flex; gap: 10px; align-items: center; }
     #score-container { text-align: center; position: absolute; top: 1.5vh; left: 50%; transform: translateX(-50%); }
     #score { font-size: clamp(3rem, 10vw, 5rem); font-weight: bold; text-shadow: var(--text-glow); }
     #level-display { font-size: clamp(1rem, 4vw, 1.5rem); margin-top: -10px; opacity: 0.8; }
@@ -54,6 +55,15 @@
       text-shadow: var(--text-glow); transition: transform 0.2s ease;
     }
     #replay-btn:active { transform: scale(0.9); }
+
+    #settings-btn {
+      font-size: clamp(1.5rem, 6vw, 2.4rem); background: none; border: 2px solid var(--accent);
+      color: var(--accent); cursor: pointer; pointer-events: auto; padding: 6px 10px; border-radius: 8px;
+      display: inline-flex; align-items: center; gap: 6px; text-shadow: var(--text-glow);
+      transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    }
+    #settings-btn:active { transform: scale(0.95); }
+    #settings-btn:hover { background: var(--accent); color: var(--bg); text-shadow: none; }
 
     .hud-bottom { position: fixed; bottom: 0; left: 0; width: 100%; height: auto; pointer-events: none; }
     #combo-progress-bar { width: 100%; height: 10px; background-color: rgba(255, 255, 255, 0.1); }
@@ -92,13 +102,43 @@
     .overlay button:disabled { cursor: wait; opacity: 0.5; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes countdown-pop { 0% { transform: scale(0.5); opacity: 0; } 70% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+
+    /*
+      ============================================
+      SETTINGS PANEL STYLES
+      ============================================
+    */
+    #settings-modal {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(13, 13, 26, 0.7); backdrop-filter: blur(4px);
+      display: none; align-items: center; justify-content: center;
+      z-index: 20; pointer-events: auto;
+    }
+    #settings-modal.visible { display: flex; }
+    #settings-content {
+      background: #0f0f1f; border: 2px solid var(--accent); border-radius: 12px;
+      padding: 20px; width: min(420px, 90vw); box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      color: var(--accent); text-align: left; font-size: 0.95rem;
+    }
+    #settings-content h3 { margin-top: 0; text-align: center; }
+    .settings-row { display: flex; align-items: center; justify-content: space-between; margin: 10px 0; gap: 10px; }
+    .settings-row label { flex: 1; }
+    .settings-row input[type="number"] { width: 90px; padding: 6px; border-radius: 6px; border: 1px solid var(--accent); background: #111126; color: var(--accent); }
+    .settings-row .checkboxes { display: flex; gap: 12px; }
+    .settings-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
+    .settings-actions button { pointer-events: auto; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--accent); background: transparent; color: var(--accent); cursor: pointer; }
+    .settings-actions button.apply { background: var(--accent); color: var(--bg); text-shadow: none; }
+    #settings-error { color: #ff8ba7; min-height: 1.2em; text-align: center; }
   </style>
 </head>
 <body>
   <canvas id="game"></canvas>
   <div id="ui">
     <div class="hud-top">
-      <button id="replay-btn" title="Replay Sound">🔊</button>
+      <div class="hud-left">
+        <button id="replay-btn" title="Replay Sound">🔊</button>
+        <button id="settings-btn" title="Game Settings">⚙️</button>
+      </div>
       <div id="score-container">
         <div id="score">0</div>
         <div id="level-display"></div>
@@ -117,6 +157,48 @@
     </div>
   </div>
 
+  <div id="settings-modal">
+    <div id="settings-content">
+      <h3>Game Settings</h3>
+      <div class="settings-row">
+        <label>Letter Cases</label>
+        <div class="checkboxes">
+          <label><input type="checkbox" id="case-upper" checked> Uppercase</label>
+          <label><input type="checkbox" id="case-lower" checked> Lowercase</label>
+        </div>
+      </div>
+      <div class="settings-row">
+        <label for="targets-base">Starting targets</label>
+        <input type="number" id="targets-base" min="1" step="1">
+      </div>
+      <div class="settings-row">
+        <label for="targets-step">Targets added each level</label>
+        <input type="number" id="targets-step" min="0" step="1">
+      </div>
+      <div class="settings-row">
+        <label for="wrong-base">Starting wrong letters</label>
+        <input type="number" id="wrong-base" min="1" step="1">
+      </div>
+      <div class="settings-row">
+        <label for="wrong-step">Wrong letters added each level</label>
+        <input type="number" id="wrong-step" min="0" step="1">
+      </div>
+      <div class="settings-row">
+        <label for="bomb-base">Bomb spawn chance</label>
+        <input type="number" id="bomb-base" min="0" max="1" step="0.01">
+      </div>
+      <div class="settings-row">
+        <label for="bomb-step">Bomb chance added each level</label>
+        <input type="number" id="bomb-step" min="0" max="1" step="0.01">
+      </div>
+      <div id="settings-error"></div>
+      <div class="settings-actions">
+        <button id="settings-cancel">Close</button>
+        <button class="apply" id="settings-apply">Apply</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 (function() {
   'use strict';
@@ -130,6 +212,19 @@
   const comboProgressBarInner = document.getElementById('combo-progress-bar-inner');
   const fruitGoalContainer = document.getElementById('fruit-goal-container');
   const replayBtn = document.getElementById('replay-btn');
+  const settingsBtn = document.getElementById('settings-btn');
+  const settingsModal = document.getElementById('settings-modal');
+  const settingsError = document.getElementById('settings-error');
+  const applySettingsBtn = document.getElementById('settings-apply');
+  const closeSettingsBtn = document.getElementById('settings-cancel');
+  const caseUpperCheckbox = document.getElementById('case-upper');
+  const caseLowerCheckbox = document.getElementById('case-lower');
+  const targetsBaseInput = document.getElementById('targets-base');
+  const targetsStepInput = document.getElementById('targets-step');
+  const wrongBaseInput = document.getElementById('wrong-base');
+  const wrongStepInput = document.getElementById('wrong-step');
+  const bombBaseInput = document.getElementById('bomb-base');
+  const bombStepInput = document.getElementById('bomb-step');
   const overlay = document.getElementById('overlay');
   const overlayContent = document.getElementById('overlay-content');
   const heartElements = document.querySelectorAll('#lives-container .heart');
@@ -143,6 +238,18 @@
   let comboCounter = 0; const COMBO_GOAL = 4;
   let fruitsCollected = 0; const FRUITS_PER_LEVEL = 5;
   const levelFruits = ['🍓', '🍎', '🍉', '🍇', '🍊', '🍍', '🍑', '🍒', '🥝', '🥭'];
+
+  // Settings (defaults mirror original pacing)
+  const settings = {
+    includeUpper: true,
+    includeLower: true,
+    targetsBase: 4,
+    targetsStep: 1,
+    wrongBase: 3,
+    wrongStep: 1,
+    bombBase: 0.2,
+    bombStep: 0.04
+  };
 
   // Level State
   let targetLetter = '', targetCase = 'upper';
@@ -240,6 +347,16 @@
     clearInterval(targetSpawnerId);
     clearInterval(distractorSpawnerId);
     clearInterval(lifeSpawnerId);
+  }
+
+  function clamp01(value) { return Math.min(1, Math.max(0, value)); }
+
+  function pickTargetCase() {
+    if (!settings.includeUpper && !settings.includeLower) {
+      settings.includeUpper = true; settings.includeLower = true;
+    }
+    if (settings.includeUpper && settings.includeLower) return randChoice(['upper', 'lower']);
+    return settings.includeUpper ? 'upper' : 'lower';
   }
 
   /*
@@ -359,7 +476,7 @@
   function startLevel() {
     gameState = 'playing';
     targetLetter = randChoice(['B', 'D']);
-    targetCase = randChoice(['upper', 'lower']);
+    targetCase = pickTargetCase();
     
     comboCounter = 0;
     fruitsCollected = 0;
@@ -371,10 +488,11 @@
     if (targetLetter === 'B') playSound('b-correct');
     else playSound('d-correct');
 
-    const initialSpriteCount = 6 + level;
-    for(let i = 0; i < initialSpriteCount; i++) {
-        createSprite(Math.random() < 0.6 ? 'target' : 'wrong');
-    }
+    const targetsToSpawn = Math.max(1, Math.round(settings.targetsBase + (level - 1) * settings.targetsStep));
+    const wrongsToSpawn = Math.max(1, Math.round(settings.wrongBase + (level - 1) * settings.wrongStep));
+
+    for(let i = 0; i < targetsToSpawn; i++) { createSprite('target'); }
+    for(let i = 0; i < wrongsToSpawn; i++) { createSprite('wrong'); }
     
     clearSpawners();
     targetSpawnerId = setInterval(() => {
@@ -385,7 +503,8 @@
 
     distractorSpawnerId = setInterval(() => {
         if (gameState === 'playing' && sprites.length < 40) {
-            if (Math.random() < 0.2 + level * 0.04) {
+            const bombChance = clamp01(settings.bombBase + (level - 1) * settings.bombStep);
+            if (Math.random() < bombChance) {
                  createSprite('penalty');
             }
         }
@@ -542,6 +661,11 @@
             if (tappedSpriteType === 'penalty') {
                 screenShake = { duration: 10, magnitude: 8 };
             }
+            if (tappedSpriteType === 'wrong' && gameState === 'playing') {
+                setTimeout(() => {
+                  if (gameState === 'playing') createSprite('wrong');
+                }, 800);
+            }
         }
         
         updateScoreUI();
@@ -663,6 +787,47 @@
             else playSound('d-correct');
         }
     });
+
+    settingsBtn.addEventListener('click', () => {
+      settingsModal.classList.add('visible');
+      settingsError.textContent = '';
+    });
+
+    closeSettingsBtn.addEventListener('click', () => settingsModal.classList.remove('visible'));
+
+    applySettingsBtn.addEventListener('click', () => {
+      if (!caseUpperCheckbox.checked && !caseLowerCheckbox.checked) {
+        settingsError.textContent = 'Select at least one letter case.';
+        return;
+      }
+
+      settings.includeUpper = caseUpperCheckbox.checked;
+      settings.includeLower = caseLowerCheckbox.checked;
+      settings.targetsBase = Math.max(1, parseInt(targetsBaseInput.value, 10) || 1);
+      settings.targetsStep = Math.max(0, parseInt(targetsStepInput.value, 10) || 0);
+      settings.wrongBase = Math.max(1, parseInt(wrongBaseInput.value, 10) || 1);
+      settings.wrongStep = Math.max(0, parseInt(wrongStepInput.value, 10) || 0);
+      const bombBaseVal = parseFloat(bombBaseInput.value);
+      const bombStepVal = parseFloat(bombStepInput.value);
+      settings.bombBase = clamp01(isNaN(bombBaseVal) ? settings.bombBase : bombBaseVal);
+      settings.bombStep = clamp01(isNaN(bombStepVal) ? settings.bombStep : bombStepVal);
+
+      settingsModal.classList.remove('visible');
+      settingsError.textContent = '';
+
+      if (gameState === 'playing') {
+        sprites = []; effects = [];
+        clearSpawners();
+        startLevel();
+      }
+    });
+
+    targetsBaseInput.value = settings.targetsBase;
+    targetsStepInput.value = settings.targetsStep;
+    wrongBaseInput.value = settings.wrongBase;
+    wrongStepInput.value = settings.wrongStep;
+    bombBaseInput.value = settings.bombBase;
+    bombStepInput.value = settings.bombStep;
     startIntro();
     requestAnimationFrame(mainLoop);
   }
