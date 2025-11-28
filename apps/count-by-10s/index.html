@@ -169,22 +169,16 @@
       margin-top: 4px;
     }
 
-    .hint-text {
-      font-size: 0.78rem;
-      opacity: 0.75;
-    }
-
     .icon-btn {
       border-radius: 999px;
       border: none;
-      padding: 6px 10px;
+      padding: 8px 10px;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      font-size: 0.8rem;
+      justify-content: center;
+      font-size: 1rem;
       background: radial-gradient(circle at 30% 0%, #ffdbff, #f471ff);
       color: #2b103b;
-      font-weight: 600;
       box-shadow: 0 8px 16px rgba(255, 182, 255, 0.5);
     }
 
@@ -510,9 +504,8 @@
         </div>
         <div class="tts-row">
           <button class="icon-btn" id="speakBtn" aria-label="Hear the question again">
-            <span>🔊</span> Say it
+            <span aria-hidden="true">🔊</span>
           </button>
-          <div class="hint-text">Tip: Hand this to your child and let them tap the answer.</div>
         </div>
       </section>
 
@@ -528,7 +521,6 @@
       </div>
 
       <div class="footer-row">
-        <div class="pill">Next tens practice: 10, 20, 30, … 100</div>
         <div class="pill" id="questionCounter">0 questions</div>
       </div>
     </main>
@@ -830,7 +822,7 @@
           setTimeout(function () {
             isLocked = false;
             nextQuestion();
-          }, 1100);
+          }, 2500);
         } else {
           // Wrong
           btn.classList.add("wrong");
