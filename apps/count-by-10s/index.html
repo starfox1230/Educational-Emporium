@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Next Tens Number Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #ffb3f5 0%, #2b103b 55%, #0a0414 100%);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      touch-action: manipulation;
+      user-select: none;
+      overflow: hidden;
+    }
+
+    #app {
+      width: 100%;
+      max-width: 480px;
+      height: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      padding: 12px 10px 16px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(15, 5, 30, 0.9);
+      box-shadow: 0 0 14px rgba(255, 182, 255, 0.35);
+      flex-shrink: 0;
+    }
+
+    .title {
+      font-size: 0.96rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      opacity: 0.95;
+    }
+
+    .score-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.88rem;
+    }
+
+    .score-label {
+      opacity: 0.7;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .score-value {
+      font-weight: 700;
+      font-size: 1.05rem;
+      background: linear-gradient(135deg, #ffe7ff, #ffd0f7);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .streak-pill {
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .settings-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      background: radial-gradient(circle at 30% 0%, #ffb3f5, #8f3cff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 10px rgba(255, 182, 255, 0.5);
+      flex-shrink: 0;
+    }
+
+    .settings-btn span {
+      display: block;
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      border: 2px solid #1a0b2a;
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7);
+      position: relative;
+    }
+
+    .settings-btn span::before,
+    .settings-btn span::after {
+      content: "";
+      position: absolute;
+      background: #1a0b2a;
+      inset: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .settings-btn span::before {
+      width: 2px;
+      height: 12px;
+    }
+
+    .settings-btn span::after {
+      width: 12px;
+      height: 2px;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 18px 4px 0;
+      position: relative;
+    }
+
+    .question-bubble {
+      border-radius: 18px;
+      padding: 16px 16px 14px;
+      background: linear-gradient(145deg, rgba(35, 14, 60, 0.9), rgba(88, 33, 112, 0.95));
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .question-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      opacity: 0.65;
+      margin-bottom: 6px;
+    }
+
+    .question-text {
+      font-size: 1.6rem;
+      font-weight: 700;
+      line-height: 1.25;
+      margin-bottom: 10px;
+    }
+
+    .tts-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .hint-text {
+      font-size: 0.78rem;
+      opacity: 0.75;
+    }
+
+    .icon-btn {
+      border-radius: 999px;
+      border: none;
+      padding: 6px 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      background: radial-gradient(circle at 30% 0%, #ffdbff, #f471ff);
+      color: #2b103b;
+      font-weight: 600;
+      box-shadow: 0 8px 16px rgba(255, 182, 255, 0.5);
+    }
+
+    .icon-btn span {
+      font-size: 1rem;
+    }
+
+    .choices-grid {
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .choice-btn {
+      border-radius: 14px;
+      border: none;
+      padding: 14px 10px;
+      font-size: 2rem;
+      font-weight: 700;
+      background: radial-gradient(circle at top, #ffdfff, #f06aff);
+      color: #2b103b;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.45);
+      transform: translateY(0);
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease, opacity 0.1s ease;
+    }
+
+    .choice-btn:active {
+      transform: translateY(3px) scale(0.98);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.6);
+    }
+
+    .choice-btn.correct {
+      background: radial-gradient(circle at top, #c8ffde, #18ff92);
+      color: #081a0f;
+    }
+
+    .choice-btn.wrong {
+      background: radial-gradient(circle at top, #ffd1d1, #ff4b6e);
+      color: #22040c;
+      opacity: 0.7;
+    }
+
+    .feedback-row {
+      margin-top: 16px;
+      min-height: 28px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+    }
+
+    .feedback-text {
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .feedback-text.ok {
+      color: #9bffcf;
+    }
+
+    .feedback-text.no {
+      color: #ffc4d6;
+    }
+
+    .footer-row {
+      margin-top: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      opacity: 0.8;
+    }
+
+    .pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(0, 0, 0, 0.18);
+    }
+
+    /* Settings panel */
+
+    #settingsPanel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 100%;
+      max-width: 420px;
+      height: 100%;
+      background: radial-gradient(circle at top, #ffb3f5 0%, #1a0b2a 55%, #06010b 100%);
+      box-shadow: -10px 0 25px rgba(0, 0, 0, 0.6);
+      transform: translateX(100%);
+      transition: transform 0.22s ease-out;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      padding: 14px 14px 18px;
+    }
+
+    #settingsPanel.open {
+      transform: translateX(0);
+    }
+
+    .settings-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .settings-title {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .close-btn {
+      border-radius: 999px;
+      border: none;
+      width: 32px;
+      height: 32px;
+      background: rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      color: #fff;
+    }
+
+    .settings-section {
+      margin-top: 10px;
+    }
+
+    .settings-section h3 {
+      font-size: 0.86rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      opacity: 0.8;
+      margin-bottom: 6px;
+    }
+
+    .settings-help {
+      font-size: 0.78rem;
+      opacity: 0.8;
+      margin-bottom: 6px;
+    }
+
+    .number-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .number-toggle {
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      padding: 6px 0;
+      font-size: 0.9rem;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.35);
+      opacity: 0.6;
+      transition: background 0.13s ease, opacity 0.13s ease, box-shadow 0.13s ease, transform 0.1s ease;
+    }
+
+    .number-toggle.active {
+      background: radial-gradient(circle at top, #ffe0ff, #f471ff);
+      color: #260a3a;
+      box-shadow: 0 0 10px rgba(255, 182, 255, 0.7);
+      opacity: 1;
+      font-weight: 600;
+    }
+
+    .number-toggle:active {
+      transform: translateY(2px) scale(0.97);
+    }
+
+    .settings-actions {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .settings-actions button {
+      flex: 1 1 auto;
+      border-radius: 999px;
+      border: none;
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      color: #fff;
+    }
+
+    .btn-solid {
+      background: radial-gradient(circle at top, #ffd8ff, #f471ff);
+      color: #260a3a;
+      font-weight: 700;
+    }
+
+    .settings-footer {
+      margin-top: auto;
+      font-size: 0.72rem;
+      opacity: 0.75;
+    }
+
+    /* Backdrop overlay */
+
+    #backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease-out;
+      z-index: 40;
+    }
+
+    #backdrop.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Confetti */
+
+    #confetti {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 60;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      width: 8px;
+      height: 14px;
+      border-radius: 2px;
+      opacity: 0.9;
+      animation: confetti-fall linear forwards;
+    }
+
+    @keyframes confetti-fall {
+      0% {
+        transform: translate3d(0, -10vh, 0) rotateZ(0deg);
+      }
+      100% {
+        transform: translate3d(0, 110vh, 0) rotateZ(360deg);
+      }
+    }
+
+    /* Animations */
+
+    .pop-correct {
+      animation: pop-correct 0.4s ease-out;
+    }
+
+    @keyframes pop-correct {
+      0% {
+        transform: scale(1);
+      }
+      35% {
+        transform: scale(1.06);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    .wiggle {
+      animation: wiggle 0.28s ease-out;
+    }
+
+    @keyframes wiggle {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-3px); }
+      50% { transform: translateX(3px); }
+      75% { transform: translateX(-2px); }
+      100% { transform: translateX(0); }
+    }
+
+    /* Small phones tweaks */
+
+    @media (max-height: 640px) {
+      .question-text {
+        font-size: 1.4rem;
+      }
+      .choice-btn {
+        font-size: 1.7rem;
+        padding: 11px 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <div class="title">Next Tens Game</div>
+      <div class="score-box">
+        <div>
+          <div class="score-label">Score</div>
+          <div class="score-value" id="scoreValue">0</div>
+        </div>
+        <div class="streak-pill" id="streakPill">Streak: 0</div>
+      </div>
+      <button class="settings-btn" id="settingsBtn" aria-label="Open settings">
+        <span></span>
+      </button>
+    </header>
+
+    <main>
+      <section class="question-bubble">
+        <div class="question-label">Question</div>
+        <div class="question-text" id="questionText">
+          Tap a number to begin
+        </div>
+        <div class="tts-row">
+          <button class="icon-btn" id="speakBtn" aria-label="Hear the question again">
+            <span>🔊</span> Say it
+          </button>
+          <div class="hint-text">Tip: Hand this to your child and let them tap the answer.</div>
+        </div>
+      </section>
+
+      <section class="choices-grid" aria-label="Answer choices">
+        <button class="choice-btn" data-index="0"></button>
+        <button class="choice-btn" data-index="1"></button>
+        <button class="choice-btn" data-index="2"></button>
+        <button class="choice-btn" data-index="3"></button>
+      </section>
+
+      <div class="feedback-row">
+        <div id="feedbackText" class="feedback-text"></div>
+      </div>
+
+      <div class="footer-row">
+        <div class="pill">Next tens practice: 10, 20, 30, … 100</div>
+        <div class="pill" id="questionCounter">0 questions</div>
+      </div>
+    </main>
+  </div>
+
+  <div id="settingsPanel" aria-hidden="true">
+    <div class="settings-header">
+      <div class="settings-title">Parent Settings</div>
+      <button class="close-btn" id="closeSettingsBtn" aria-label="Close settings">✕</button>
+    </div>
+
+    <div class="settings-section">
+      <h3>Which questions?</h3>
+      <div class="settings-help">
+        Choose which “what comes after … ?” questions can appear. Start with just a few if your child is learning.
+      </div>
+      <div class="number-grid" id="numberGrid">
+        <!-- Buttons are created by JavaScript -->
+      </div>
+      <div class="settings-actions">
+        <button class="btn-outline" id="selectAllBtn">Select all</button>
+        <button class="btn-outline" id="clearAllBtn">Clear all</button>
+        <button class="btn-solid" id="closeAndSaveBtn">Done</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>Voice</h3>
+      <div class="settings-help">
+        This game uses your device’s text-to-speech. If you do not hear anything, try tapping “Say it” once and check your volume.
+      </div>
+    </div>
+
+    <div class="settings-footer">
+      Settings are saved on this device only.
+    </div>
+  </div>
+
+  <div id="backdrop"></div>
+  <div id="confetti"></div>
+
+  <script>
+    (function () {
+      // Prevent double-tap zoom and pinch zoom
+      document.addEventListener("dblclick", function (e) {
+        e.preventDefault();
+      }, { passive: false });
+
+      document.addEventListener("gesturestart", function (e) {
+        e.preventDefault();
+      });
+
+      const BASE_NUMBERS = [9, 19, 29, 39, 49, 59, 69, 79, 89, 99];
+      const ANSWER_CHOICES = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+      const STORAGE_KEY = "nextTensGameEnabledBaseNumbers_v1";
+
+      let enabledBaseNumbers = [];
+      let currentQuestion = null;
+      let isLocked = false;
+      let score = 0;
+      let streak = 0;
+      let totalQuestions = 0;
+
+      const questionTextEl = document.getElementById("questionText");
+      const feedbackTextEl = document.getElementById("feedbackText");
+      const scoreValueEl = document.getElementById("scoreValue");
+      const streakPillEl = document.getElementById("streakPill");
+      const questionCounterEl = document.getElementById("questionCounter");
+      const choiceButtons = Array.from(document.querySelectorAll(".choice-btn"));
+      const speakBtn = document.getElementById("speakBtn");
+
+      const settingsBtn = document.getElementById("settingsBtn");
+      const settingsPanel = document.getElementById("settingsPanel");
+      const closeSettingsBtn = document.getElementById("closeSettingsBtn");
+      const closeAndSaveBtn = document.getElementById("closeAndSaveBtn");
+      const selectAllBtn = document.getElementById("selectAllBtn");
+      const clearAllBtn = document.getElementById("clearAllBtn");
+      const numberGrid = document.getElementById("numberGrid");
+      const backdrop = document.getElementById("backdrop");
+      const confettiContainer = document.getElementById("confetti");
+
+      // TTS
+
+      function speak(text) {
+        if (!("speechSynthesis" in window)) {
+          return;
+        }
+        try {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.rate = 1;
+          utterance.pitch = 1.05;
+          utterance.volume = 1;
+          window.speechSynthesis.speak(utterance);
+        } catch (e) {
+          // Fail silently
+        }
+      }
+
+      // Confetti
+
+      function launchConfetti() {
+        const colors = ["#ff88ff", "#ffe066", "#9dffb5", "#84d0ff", "#ff7b9c"];
+        const pieces = 70;
+
+        for (let i = 0; i < pieces; i++) {
+          const piece = document.createElement("div");
+          piece.className = "confetti-piece";
+          piece.style.left = Math.random() * 100 + "vw";
+          piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+          piece.style.animationDuration = 0.8 + Math.random() * 0.9 + "s";
+          piece.style.animationDelay = Math.random() * 0.2 + "s";
+          piece.style.opacity = 0.7 + Math.random() * 0.3;
+          confettiContainer.appendChild(piece);
+
+          piece.addEventListener("animationend", function () {
+            piece.remove();
+          });
+        }
+      }
+
+      // Utility
+
+      function shuffleArray(arr) {
+        const a = arr.slice();
+        for (let i = a.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+      }
+
+      function loadSettings() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              enabledBaseNumbers = parsed.filter((n) => BASE_NUMBERS.includes(n));
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+
+        if (!enabledBaseNumbers || enabledBaseNumbers.length === 0) {
+          enabledBaseNumbers = BASE_NUMBERS.slice();
+        }
+      }
+
+      function saveSettings() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(enabledBaseNumbers));
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      function updateScoreUI() {
+        scoreValueEl.textContent = String(score);
+        streakPillEl.textContent = "Streak: " + streak;
+        questionCounterEl.textContent =
+          totalQuestions === 1 ? "1 question" : totalQuestions + " questions";
+      }
+
+      function buildSettingsNumberButtons() {
+        numberGrid.innerHTML = "";
+        BASE_NUMBERS.forEach(function (baseNumber) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "number-toggle";
+          btn.textContent = baseNumber + " → " + (baseNumber + 1);
+          if (enabledBaseNumbers.includes(baseNumber)) {
+            btn.classList.add("active");
+          }
+          btn.dataset.baseNumber = String(baseNumber);
+          btn.addEventListener("click", function () {
+            const value = parseInt(btn.dataset.baseNumber, 10);
+            if (enabledBaseNumbers.includes(value)) {
+              enabledBaseNumbers = enabledBaseNumbers.filter((n) => n !== value);
+              btn.classList.remove("active");
+            } else {
+              enabledBaseNumbers.push(value);
+              btn.classList.add("active");
+            }
+            if (
+              !enabledBaseNumbers ||
+              enabledBaseNumbers.length === 0
+            ) {
+              feedbackTextEl.textContent = "Turn on at least one question in settings.";
+              feedbackTextEl.className = "feedback-text no";
+            } else {
+              feedbackTextEl.textContent = "";
+              feedbackTextEl.className = "feedback-text";
+            }
+          });
+          numberGrid.appendChild(btn);
+        });
+      }
+
+      function openSettings() {
+        settingsPanel.classList.add("open");
+        backdrop.classList.add("visible");
+        settingsPanel.setAttribute("aria-hidden", "false");
+      }
+
+      function closeSettings() {
+        settingsPanel.classList.remove("open");
+        backdrop.classList.remove("visible");
+        settingsPanel.setAttribute("aria-hidden", "true");
+        saveSettings();
+        if (!currentQuestion) {
+          nextQuestion();
+        }
+      }
+
+      function selectAll() {
+        enabledBaseNumbers = BASE_NUMBERS.slice();
+        buildSettingsNumberButtons();
+      }
+
+      function clearAll() {
+        enabledBaseNumbers = [];
+        buildSettingsNumberButtons();
+      }
+
+      function generateQuestion() {
+        if (!enabledBaseNumbers || enabledBaseNumbers.length === 0) {
+          questionTextEl.textContent = "Turn on at least one question in settings.";
+          feedbackTextEl.textContent = "";
+          feedbackTextEl.className = "feedback-text";
+          choiceButtons.forEach(function (btn) {
+            btn.textContent = "—";
+            btn.disabled = true;
+          });
+          return null;
+        }
+
+        choiceButtons.forEach(function (btn) {
+          btn.disabled = false;
+          btn.classList.remove("correct", "wrong");
+        });
+
+        const base = enabledBaseNumbers[Math.floor(Math.random() * enabledBaseNumbers.length)];
+        const correct = base + 1;
+
+        const options = [];
+        options.push(correct);
+        const distractorsPool = ANSWER_CHOICES.filter((v) => v !== correct);
+        const shuffled = shuffleArray(distractorsPool);
+        while (options.length < 4 && shuffled.length > 0) {
+          options.push(shuffled.pop());
+        }
+        const finalOptions = shuffleArray(options);
+
+        currentQuestion = {
+          base: base,
+          correct: correct,
+          options: finalOptions
+        };
+
+        questionTextEl.textContent = "What number comes after " + base + "?";
+
+        choiceButtons.forEach(function (btn, index) {
+          const value = finalOptions[index];
+          btn.textContent = value;
+          btn.dataset.value = String(value);
+          btn.classList.remove("correct", "wrong");
+        });
+
+        feedbackTextEl.textContent = "";
+        feedbackTextEl.className = "feedback-text";
+
+        return currentQuestion;
+      }
+
+      function handleChoiceClick(event) {
+        const btn = event.currentTarget;
+        if (!currentQuestion || isLocked) {
+          return;
+        }
+        const value = parseInt(btn.dataset.value, 10);
+        const correctValue = currentQuestion.correct;
+
+        if (value === correctValue) {
+          // Correct
+          isLocked = true;
+          btn.classList.add("correct");
+          btn.classList.add("pop-correct");
+          score += 10;
+          streak += 1;
+          totalQuestions += 1;
+          updateScoreUI();
+          feedbackTextEl.textContent = "Great job!";
+          feedbackTextEl.className = "feedback-text ok";
+          speak("Yes, " + value + " comes after " + currentQuestion.base + ".");
+          launchConfetti();
+
+          setTimeout(function () {
+            isLocked = false;
+            nextQuestion();
+          }, 1100);
+        } else {
+          // Wrong
+          btn.classList.add("wrong");
+          btn.classList.add("wiggle");
+          setTimeout(function () {
+            btn.classList.remove("wiggle");
+          }, 300);
+          streak = 0;
+          updateScoreUI();
+          feedbackTextEl.textContent = "Try again.";
+          feedbackTextEl.className = "feedback-text no";
+          speak("That is " + value + ". Try again.");
+        }
+      }
+
+      function nextQuestion() {
+        isLocked = false;
+        const q = generateQuestion();
+        if (q) {
+          speak("What number comes after " + q.base + "?");
+        }
+      }
+
+      // Event wiring
+
+      choiceButtons.forEach(function (btn) {
+        btn.addEventListener("click", handleChoiceClick);
+      });
+
+      speakBtn.addEventListener("click", function () {
+        if (currentQuestion) {
+          speak("What number comes after " + currentQuestion.base + "?");
+        } else {
+          nextQuestion();
+        }
+      });
+
+      settingsBtn.addEventListener("click", openSettings);
+      closeSettingsBtn.addEventListener("click", closeSettings);
+      closeAndSaveBtn.addEventListener("click", closeSettings);
+
+      selectAllBtn.addEventListener("click", function () {
+        selectAll();
+      });
+
+      clearAllBtn.addEventListener("click", function () {
+        clearAll();
+      });
+
+      backdrop.addEventListener("click", function () {
+        closeSettings();
+      });
+
+      // Initialization
+
+      loadSettings();
+      updateScoreUI();
+      buildSettingsNumberButtons();
+      generateQuestion();
+    })();
+  </script>
+</body>
+</html>
