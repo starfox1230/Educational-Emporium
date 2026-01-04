@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { apiPostJson } from "../api.js";
+import React, { useEffect, useRef, useState } from "react";
+import { apiGetWithKey, apiPostJson } from "../api.js";
 
 export default function Studio() {
   const [parentKey, setParentKey] = useState("");
@@ -7,6 +7,31 @@ export default function Studio() {
   const [text, setText] = useState("");
   const [status, setStatus] = useState("");
   const [err, setErr] = useState("");
+  const [wordStatus, setWordStatus] = useState("");
+  const [wordErr, setWordErr] = useState("");
+  const [words, setWords] = useState([]);
+  const [loadingWords, setLoadingWords] = useState(false);
+  const [wordPreviews, setWordPreviews] = useState({});
+  const [wordBusy, setWordBusy] = useState("");
+
+  const audioRef = useRef(null);
+  const previewUrls = useRef(new Set());
+
+  useEffect(() => {
+    if (!parentKey) {
+      setWords([]);
+      setWordPreviews({});
+      setWordStatus("");
+      setWordErr("");
+    }
+  }, [parentKey]);
+
+  useEffect(() => {
+    return () => {
+      previewUrls.current.forEach(url => URL.revokeObjectURL(url));
+      previewUrls.current.clear();
+    };
+  }, []);
 
   async function onProcess() {
     setErr("");
@@ -18,6 +43,113 @@ export default function Studio() {
     } catch (e) {
       setStatus("");
       setErr(String(e));
+    }
+  }
+
+  async function loadWordLibrary() {
+    if (!parentKey) return;
+    setWordErr("");
+    setWordStatus("Loading word library…");
+    setLoadingWords(true);
+    try {
+      const r = await apiGetWithKey("/api/word-library", parentKey);
+      setWords(r.words || []);
+      setWordStatus(`Loaded ${r.words?.length || 0} words.`);
+    } catch (e) {
+      setWordStatus("");
+      setWordErr(String(e));
+    } finally {
+      setLoadingWords(false);
+    }
+  }
+
+  function base64ToObjectUrl(b64) {
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const blob = new Blob([bytes], { type: "audio/mpeg" });
+    return URL.createObjectURL(blob);
+  }
+
+  function setPreviewForWord(word, base64) {
+    setWordPreviews(prev => {
+      const next = { ...prev };
+      if (next[word]?.objectUrl) {
+        URL.revokeObjectURL(next[word].objectUrl);
+        previewUrls.current.delete(next[word].objectUrl);
+      }
+      const url = base64ToObjectUrl(base64);
+      previewUrls.current.add(url);
+      next[word] = { base64, objectUrl: url };
+      return next;
+    });
+  }
+
+  function clearPreview(word) {
+    setWordPreviews(prev => {
+      const next = { ...prev };
+      if (next[word]?.objectUrl) {
+        URL.revokeObjectURL(next[word].objectUrl);
+        previewUrls.current.delete(next[word].objectUrl);
+      }
+      delete next[word];
+      return next;
+    });
+  }
+
+  async function onPreview(word) {
+    if (!parentKey) return;
+    setWordErr("");
+    setWordStatus(`Generating preview for "${word}"…`);
+    setWordBusy(word);
+    try {
+      const r = await apiPostJson(`/api/word-library/${encodeURIComponent(word)}/preview`, {}, parentKey);
+      setPreviewForWord(word, r.audioBase64);
+      setWordStatus(`Preview ready for "${word}". Listen and replace if you like it.`);
+    } catch (e) {
+      setWordStatus("");
+      setWordErr(String(e));
+    } finally {
+      setWordBusy("");
+    }
+  }
+
+  async function onReplace(word) {
+    const preview = wordPreviews[word];
+    if (!preview || !parentKey) return;
+    setWordErr("");
+    setWordStatus(`Saving new audio for "${word}"…`);
+    setWordBusy(word);
+    try {
+      const r = await apiPostJson(
+        `/api/word-library/${encodeURIComponent(word)}/replace`,
+        { audioBase64: preview.base64 },
+        parentKey
+      );
+
+      setWords(prev => {
+        const exists = prev.some(w => w.normalizedWord === word);
+        if (!exists) return [...prev, r];
+        return prev.map(w => (w.normalizedWord === word ? { ...w, ...r } : w));
+      });
+      clearPreview(word);
+      setWordStatus(`Updated audio for "${word}".`);
+    } catch (e) {
+      setWordStatus("");
+      setWordErr(String(e));
+    } finally {
+      setWordBusy("");
+    }
+  }
+
+  async function playAudio(url) {
+    if (!url) return;
+    try {
+      if (!audioRef.current) audioRef.current = new Audio();
+      audioRef.current.src = url;
+      await audioRef.current.play();
+    } catch (e) {
+      setWordErr(String(e));
     }
   }
 
@@ -62,6 +194,65 @@ export default function Studio() {
         </button>
         {status ? <div className="status">{status}</div> : null}
         {err ? <div className="error">{err}</div> : null}
+      </div>
+
+      <div className="card">
+        <div className="subtitle">Word Library</div>
+        <div className="muted" style={{ marginBottom: 8 }}>
+          Load all generated word clips, regenerate previews, and replace the saved audio for any entry.
+          Studio key is required for these actions.
+        </div>
+        <div className="wordActions">
+          <button className="btn" onClick={loadWordLibrary} disabled={!parentKey || loadingWords}>
+            {loadingWords ? "Loading…" : "Load Word Library"}
+          </button>
+          <div className="muted">{words.length ? `${words.length} words loaded.` : ""}</div>
+        </div>
+        {wordStatus ? <div className="status">{wordStatus}</div> : null}
+        {wordErr ? <div className="error">{wordErr}</div> : null}
+
+        <div className="wordList">
+          {words.length === 0 ? <div className="muted">No words loaded yet.</div> : null}
+          {words.map(w => {
+            const preview = wordPreviews[w.normalizedWord];
+            return (
+              <div key={w.normalizedWord} className="wordRow">
+                <div className="wordHeader">
+                  <div className="rowTitle">{w.normalizedWord}</div>
+                  <div className="rowMeta">{w.ttsVoice || "voice"} · {w.ttsModel || "model"}</div>
+                </div>
+                <div className="wordActions">
+                  <button className="btn" onClick={() => playAudio(w.audioUrl)}>Play Current</button>
+                  <button
+                    className="btn"
+                    onClick={() => onPreview(w.normalizedWord)}
+                    disabled={!parentKey || wordBusy === w.normalizedWord}
+                  >
+                    {wordBusy === w.normalizedWord ? "Working…" : "Regenerate Preview"}
+                  </button>
+                  {w.updatedAt ? <span className="pill">Updated {new Date(w.updatedAt).toLocaleDateString()}</span> : null}
+                </div>
+
+                {preview ? (
+                  <div className="previewBox">
+                    <div className="rowMeta">Preview ready — listen and replace if it sounds better.</div>
+                    <div className="wordActions">
+                      <button className="btn" onClick={() => playAudio(preview.objectUrl)}>Play Preview</button>
+                      <button
+                        className="btnPrimary"
+                        onClick={() => onReplace(w.normalizedWord)}
+                        disabled={!parentKey || wordBusy === w.normalizedWord}
+                      >
+                        {wordBusy === w.normalizedWord ? "Saving…" : "Replace Current"}
+                      </button>
+                      <button className="btn" onClick={() => clearPreview(w.normalizedWord)}>Discard Preview</button>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
