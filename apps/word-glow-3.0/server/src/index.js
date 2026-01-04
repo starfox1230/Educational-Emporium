@@ -25,8 +25,7 @@ const BUCKET = process.env.FIREBASE_STORAGE_BUCKET || "";
 
 const TTS_MODEL = process.env.TTS_MODEL || "gpt-4o-mini-tts";
 const TTS_VOICE = process.env.TTS_VOICE || "coral";
-const TTS_INSTRUCTIONS =
-  process.env.TTS_INSTRUCTIONS || "Speak clearly and warmly for a young child.";
+const TTS_INSTRUCTIONS = process.env.TTS_INSTRUCTIONS || "";
 
 function base64ToBuffer(str) {
   try {
