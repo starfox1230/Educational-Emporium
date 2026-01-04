@@ -13,10 +13,10 @@ function buildSilenceFilter({ startSilenceSeconds, stopSilenceSeconds, threshold
   return [
     "silenceremove",
     "start_periods=1",
-    `start_silence=${startSilenceSeconds}`,
+    `start_duration=${startSilenceSeconds}`,
     `start_threshold=${threshold}`,
     "stop_periods=1",
-    `stop_silence=${stopSilenceSeconds}`,
+    `stop_duration=${stopSilenceSeconds}`,
     `stop_threshold=${threshold}`
   ].join(":");
 }
