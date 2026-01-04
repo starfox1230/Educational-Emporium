@@ -119,6 +119,37 @@ export default function Studio() {
     }
   }
 
+  async function onDownload(word) {
+    if (!parentKey) return;
+    setWordErr("");
+    setWordStatus(`Downloading audio for "${word}"…`);
+    setWordBusy(word);
+    try {
+      const entry = words.find(w => w.normalizedWord === word);
+      if (!entry?.audioUrl) throw new Error("Audio missing for this word.");
+
+      const response = await fetch(entry.audioUrl);
+      if (!response.ok) throw new Error(`Download failed (${response.status}).`);
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${word}.mp3`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+
+      setWordStatus(`Downloaded audio for "${word}".`);
+    } catch (e) {
+      setWordStatus("");
+      setWordErr(String(e));
+    } finally {
+      setWordBusy("");
+    }
+  }
+
   async function onPreview(word) {
     if (!parentKey) return;
     setWordErr("");
@@ -291,7 +322,15 @@ export default function Studio() {
                     onClick={() => onPreview(w.normalizedWord)}
                     disabled={!parentKey || wordBusy === w.normalizedWord}
                   >
-                    {wordBusy === w.normalizedWord ? "Working…" : "Regenerate Preview"}
+                    {wordBusy === w.normalizedWord ? "Working…" : "Regenerate"}
+                  </button>
+                  <button
+                    className="btn"
+                    onClick={() => onDownload(w.normalizedWord)}
+                    disabled={!parentKey || wordBusy === w.normalizedWord}
+                    aria-label={`Download ${w.normalizedWord}`}
+                  >
+                    ⬇️
                   </button>
                   <button
                     className="btn"
