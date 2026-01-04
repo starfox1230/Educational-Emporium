@@ -9,7 +9,7 @@ import pLimit from "p-limit";
 import { getFirestore } from "./firebaseAdmin.js";
 import { splitIntoSentences, extractWords, normalizeWord } from "./text.js";
 import { ttsMp3 } from "./openaiTts.js";
-import { uploadBufferAndGetDownloadUrl } from "./storage.js";
+import { deleteFileIfExists, getObjectPathFromDownloadUrl, uploadBufferAndGetDownloadUrl } from "./storage.js";
 
 const app = express();
 app.use(express.json({ limit: "2mb" }));
@@ -27,6 +27,14 @@ const TTS_MODEL = process.env.TTS_MODEL || "gpt-4o-mini-tts";
 const TTS_VOICE = process.env.TTS_VOICE || "coral";
 const TTS_INSTRUCTIONS =
   process.env.TTS_INSTRUCTIONS || "Speak clearly and warmly for a young child.";
+
+function base64ToBuffer(str) {
+  try {
+    return Buffer.from(str || "", "base64");
+  } catch {
+    return null;
+  }
+}
 
 function requireParentKey(req, res, next) {
   if (!PARENT_KEY) return res.status(500).json({ error: "Server missing SHARED_PARENT_KEY." });
@@ -71,6 +79,82 @@ app.get("/api/word-audio", async (req, res) => {
   if (!doc.exists) return res.status(404).json({ error: "Word not found." });
 
   res.json({ word: w, ...doc.data() });
+});
+
+// Parent-only: list all word audio entries
+app.get("/api/word-library", requireParentKey, async (req, res) => {
+  const db = getFirestore();
+  const snap = await db.collection("wordLibrary").orderBy("normalizedWord").get();
+  const words = snap.docs.map(d => ({
+    normalizedWord: d.id,
+    ...d.data()
+  }));
+  res.json({ words });
+});
+
+// Parent-only: generate a preview audio clip for a word
+app.post("/api/word-library/:word/preview", requireParentKey, async (req, res) => {
+  const raw = req.params.word || "";
+  const w = normalizeWord(raw);
+  if (!w) return res.status(400).json({ error: "Missing word." });
+
+  const buf = await ttsMp3({
+    text: w,
+    voice: TTS_VOICE,
+    model: TTS_MODEL,
+    instructions: TTS_INSTRUCTIONS
+  });
+
+  res.json({ audioBase64: buf.toString("base64"), ttsModel: TTS_MODEL, ttsVoice: TTS_VOICE });
+});
+
+// Parent-only: replace a word's stored audio with a provided preview
+app.post("/api/word-library/:word/replace", requireParentKey, async (req, res) => {
+  const raw = req.params.word || "";
+  const w = normalizeWord(raw);
+  if (!w) return res.status(400).json({ error: "Missing word." });
+  if (!BUCKET) return res.status(500).json({ error: "Missing FIREBASE_STORAGE_BUCKET." });
+
+  const buf = base64ToBuffer(req.body?.audioBase64);
+  if (!buf?.length) return res.status(400).json({ error: "Invalid or missing audioBase64." });
+
+  const db = getFirestore();
+  const ref = db.collection("wordLibrary").doc(w);
+  const existing = await ref.get();
+  const prevUrl = existing.exists ? existing.data().audioUrl : null;
+
+  const objectPath = `wordAudio/${TTS_MODEL}_${TTS_VOICE}/${w}.mp3`;
+  const url = await uploadBufferAndGetDownloadUrl({
+    bucketName: BUCKET,
+    objectPath,
+    buffer: buf,
+    contentType: "audio/mpeg"
+  });
+
+  const now = new Date().toISOString();
+  await ref.set({
+    normalizedWord: w,
+    audioUrl: url,
+    ttsModel: TTS_MODEL,
+    ttsVoice: TTS_VOICE,
+    updatedAt: now,
+    ...(existing.exists ? {} : { createdAt: now })
+  }, { merge: true });
+
+  if (prevUrl && prevUrl !== url) {
+    const prevPath = getObjectPathFromDownloadUrl({ url: prevUrl, bucketName: BUCKET });
+    if (prevPath && prevPath !== objectPath) {
+      await deleteFileIfExists({ bucketName: BUCKET, objectPath: prevPath });
+    }
+  }
+
+  res.json({
+    normalizedWord: w,
+    audioUrl: url,
+    ttsModel: TTS_MODEL,
+    ttsVoice: TTS_VOICE,
+    updatedAt: now
+  });
 });
 
 // Parent-only: create story (split + sentence audio + word-audio cache)

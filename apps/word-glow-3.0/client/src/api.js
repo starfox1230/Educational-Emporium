@@ -4,6 +4,16 @@ export async function apiGet(path) {
   return r.json();
 }
 
+export async function apiGetWithKey(path, parentKey) {
+  const r = await fetch(path, {
+    headers: {
+      ...(parentKey ? { "x-parent-key": parentKey } : {})
+    }
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
 export async function apiPostJson(path, body, parentKey) {
   const r = await fetch(path, {
     method: "POST",
