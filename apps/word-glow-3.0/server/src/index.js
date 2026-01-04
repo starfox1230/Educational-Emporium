@@ -23,9 +23,22 @@ const upload = multer({
 const PARENT_KEY = process.env.SHARED_PARENT_KEY || "";
 const BUCKET = process.env.FIREBASE_STORAGE_BUCKET || "";
 
-const TTS_MODEL = process.env.TTS_MODEL || "gpt-4o-mini-tts";
-const TTS_VOICE = process.env.TTS_VOICE || "coral";
-const TTS_INSTRUCTIONS = process.env.TTS_INSTRUCTIONS || "";
+// TTS settings for sentences vs. individual words. Keep together for easy edits.
+const TTS_CONFIG = {
+  sentence: {
+    model: "gpt-4o-mini-tts",
+    voice: "sage",
+    instructions: "Voice Affect: Warm, gentle, and inviting; sounds like a caring grown-up reading at bedtime.\\n\\nTone: Kind, playful, and reassuring; encourages curiosity and makes the listener feel safe.\\n\\nPacing: Unhurried and rhythmic; slightly slower than normal speech to support comprehension and keep a cozy flow.\\n\\nEmotion: Expressive but not over-the-top; soft wonder for discoveries, light excitement for fun moments, and tender empathy for worries.\\n\\nSpeech Mannerisms: Uses subtle “smiles in the voice,” friendly emphasis, and occasional conspiratorial softness for secrets (“and guess what…”). Keeps it simple and direct.\\n\\nPronunciation: Very clear and rounded; crisp consonants, warm vowels. Gently emphasizes character names, key action words, and repeated phrases.\\n\\nPauses: Short pauses before important moments and after punchlines; slightly longer pauses at scene changes and after a meaningful line to let it land.\\n\\nCharacter Voices: Light differentiation only—small shifts in pitch, speed, and energy."
+  },
+  word: {
+    model: "gpt-4o-mini-tts",
+    voice: "shimmer",
+    instructions: "Voice Affect: Calm, composed, and reassuring; project quiet authority and confidence.\\n\\nTone: Sincere, empathetic, and gently authoritative—express genuine apology while conveying competence.\\n\\nPacing: Steady and moderate; unhurried enough to communicate care, yet efficient enough to demonstrate professionalism.\\n\\nEmotion: Genuine empathy and understanding; speak with warmth, especially during apologies (\"I'm very sorry for any disruption...\").\\n\\nPronunciation: Clear and precise, emphasizing key reassurances (\"smoothly,\" \"quickly,\" \"promptly\") to reinforce confidence.\\n\\nPauses: Brief pauses after offering assistance or requesting details, highlighting willingness to listen and support."
+  }
+};
+
+const SENTENCE_TTS = TTS_CONFIG.sentence;
+const WORD_TTS = TTS_CONFIG.word;
 
 function base64ToBuffer(str) {
   try {
@@ -99,12 +112,12 @@ app.post("/api/word-library/:word/preview", requireParentKey, async (req, res) =
 
   const buf = await ttsMp3({
     text: w,
-    voice: TTS_VOICE,
-    model: TTS_MODEL,
-    instructions: TTS_INSTRUCTIONS
+    voice: WORD_TTS.voice,
+    model: WORD_TTS.model,
+    instructions: WORD_TTS.instructions
   });
 
-  res.json({ audioBase64: buf.toString("base64"), ttsModel: TTS_MODEL, ttsVoice: TTS_VOICE });
+  res.json({ audioBase64: buf.toString("base64"), ttsModel: WORD_TTS.model, ttsVoice: WORD_TTS.voice });
 });
 
 // Parent-only: replace a word's stored audio with a provided preview
@@ -122,7 +135,7 @@ app.post("/api/word-library/:word/replace", requireParentKey, async (req, res) =
   const existing = await ref.get();
   const prevUrl = existing.exists ? existing.data().audioUrl : null;
 
-  const objectPath = `wordAudio/${TTS_MODEL}_${TTS_VOICE}/${w}.mp3`;
+  const objectPath = `wordAudio/${WORD_TTS.model}_${WORD_TTS.voice}/${w}.mp3`;
   const url = await uploadBufferAndGetDownloadUrl({
     bucketName: BUCKET,
     objectPath,
@@ -134,8 +147,8 @@ app.post("/api/word-library/:word/replace", requireParentKey, async (req, res) =
   await ref.set({
     normalizedWord: w,
     audioUrl: url,
-    ttsModel: TTS_MODEL,
-    ttsVoice: TTS_VOICE,
+    ttsModel: WORD_TTS.model,
+    ttsVoice: WORD_TTS.voice,
     updatedAt: now,
     ...(existing.exists ? {} : { createdAt: now })
   }, { merge: true });
@@ -150,8 +163,8 @@ app.post("/api/word-library/:word/replace", requireParentKey, async (req, res) =
   res.json({
     normalizedWord: w,
     audioUrl: url,
-    ttsModel: TTS_MODEL,
-    ttsVoice: TTS_VOICE,
+    ttsModel: WORD_TTS.model,
+    ttsVoice: WORD_TTS.voice,
     updatedAt: now
   });
 });
@@ -176,8 +189,8 @@ app.post("/api/process-story", requireParentKey, async (req, res) => {
     createdAt: now,
     updatedAt: now,
     sentenceCount: sentences.length,
-    ttsModel: TTS_MODEL,
-    ttsVoice: TTS_VOICE,
+    ttsModel: SENTENCE_TTS.model,
+    ttsVoice: SENTENCE_TTS.voice,
     appName: "WordGlow 3.0"
   });
 
@@ -211,14 +224,14 @@ app.post("/api/process-story", requireParentKey, async (req, res) => {
     missing.map(w => limit(async () => {
       const buf = await ttsMp3({
         text: w,
-        voice: TTS_VOICE,
-        model: TTS_MODEL,
-        instructions: TTS_INSTRUCTIONS
+        voice: WORD_TTS.voice,
+        model: WORD_TTS.model,
+        instructions: WORD_TTS.instructions
       });
 
       const url = await uploadBufferAndGetDownloadUrl({
         bucketName: BUCKET,
-        objectPath: `wordAudio/${TTS_MODEL}_${TTS_VOICE}/${w}.mp3`,
+        objectPath: `wordAudio/${WORD_TTS.model}_${WORD_TTS.voice}/${w}.mp3`,
         buffer: buf,
         contentType: "audio/mpeg"
       });
@@ -227,8 +240,8 @@ app.post("/api/process-story", requireParentKey, async (req, res) => {
         normalizedWord: w,
         audioUrl: url,
         createdAt: new Date().toISOString(),
-        ttsModel: TTS_MODEL,
-        ttsVoice: TTS_VOICE
+        ttsModel: WORD_TTS.model,
+        ttsVoice: WORD_TTS.voice
       });
     }))
   );
@@ -238,9 +251,9 @@ app.post("/api/process-story", requireParentKey, async (req, res) => {
     sentences.map((s, idx) => limit(async () => {
       const buf = await ttsMp3({
         text: s,
-        voice: TTS_VOICE,
-        model: TTS_MODEL,
-        instructions: TTS_INSTRUCTIONS
+        voice: SENTENCE_TTS.voice,
+        model: SENTENCE_TTS.model,
+        instructions: SENTENCE_TTS.instructions
       });
 
       const url = await uploadBufferAndGetDownloadUrl({
