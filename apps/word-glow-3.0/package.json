@@ -1,0 +1,9 @@
+{
+  "name": "wordglow-3-0",
+  "private": true,
+  "workspaces": ["server", "client"],
+  "scripts": {
+    "build": "npm --workspace client run build",
+    "start": "npm --workspace server run start"
+  }
+}
