@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import lamejs from "lamejs";
+import AudioTrimmer from "./AudioTrimmer.jsx";
 import { apiDelete, apiGetWithKey, apiPostJson } from "../api.js";
 
 export default function Studio() {
@@ -16,13 +16,9 @@ export default function Studio() {
   const [wordBusy, setWordBusy] = useState("");
   const [purgeConfirm, setPurgeConfirm] = useState("");
   const [editDialog, setEditDialog] = useState(null);
-  const [trimStatus, setTrimStatus] = useState("");
-  const [trimPreview, setTrimPreview] = useState(null);
-  const [trimErr, setTrimErr] = useState("");
 
   const audioRef = useRef(null);
   const previewUrls = useRef(new Set());
-  const editBufferRef = useRef(null);
 
   useEffect(() => {
     if (!parentKey) {
@@ -41,12 +37,6 @@ export default function Studio() {
       previewUrls.current.clear();
     };
   }, []);
-
-  useEffect(() => {
-    return () => {
-      if (trimPreview?.url) URL.revokeObjectURL(trimPreview.url);
-    };
-  }, [trimPreview]);
 
   async function onProcess() {
     setErr("");
@@ -112,166 +102,20 @@ export default function Studio() {
     });
   }
 
-  function clearTrimPreview() {
-    setTrimPreview(prev => {
-      if (prev?.url) URL.revokeObjectURL(prev.url);
-      return null;
-    });
-  }
-
   function closeEditDialog() {
-    clearTrimPreview();
-    editBufferRef.current = null;
     setEditDialog(null);
-    setTrimStatus("");
-    setTrimErr("");
-  }
-
-  function blobToBase64(blob) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const res = reader.result;
-        if (typeof res === "string") {
-          const [, b64] = res.split(",");
-          resolve(b64 || "");
-        } else {
-          resolve("");
-        }
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  }
-
-  function floatTo16BitPCM(input) {
-    const output = new Int16Array(input.length);
-    for (let i = 0; i < input.length; i++) {
-      const s = Math.max(-1, Math.min(1, input[i]));
-      output[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
-    }
-    return output;
-  }
-
-  function encodeTrimToMp3({ buffer, start, end }) {
-    if (!buffer) throw new Error("Audio not loaded.");
-    const duration = buffer.duration || 0;
-    const safeStart = Math.max(0, Math.min(start, duration));
-    const safeEnd = Math.max(safeStart + 0.05, Math.min(end, duration));
-    const sampleRate = buffer.sampleRate;
-    const startSample = Math.floor(safeStart * sampleRate);
-    const endSample = Math.floor(safeEnd * sampleRate);
-    const left = buffer.getChannelData(0).slice(startSample, endSample);
-    const right = buffer.numberOfChannels > 1 ? buffer.getChannelData(1).slice(startSample, endSample) : left;
-
-    const encoder = new lamejs.Mp3Encoder(2, sampleRate, 128);
-    const maxSamples = 1152;
-    const mp3Data = [];
-
-    for (let i = 0; i < left.length; i += maxSamples) {
-      const leftChunk = floatTo16BitPCM(left.subarray(i, i + maxSamples));
-      const rightChunk = floatTo16BitPCM(right.subarray(i, i + maxSamples));
-      const buf = encoder.encodeBuffer(leftChunk, rightChunk);
-      if (buf.length) mp3Data.push(buf);
-    }
-
-    const endBuf = encoder.flush();
-    if (endBuf.length) mp3Data.push(endBuf);
-    return new Blob(mp3Data, { type: "audio/mpeg" });
-  }
-
-  function updateTrimStart(val) {
-    if (!editDialog) return;
-    const duration = editDialog.duration;
-    const parsed = Number(val);
-    const start = Math.max(0, Math.min(Number.isFinite(parsed) ? parsed : 0, duration));
-    const safeStart = Math.min(start, editDialog.end - 0.05);
-    setEditDialog({ ...editDialog, start: Math.max(0, safeStart) });
-    setTrimStatus("");
-  }
-
-  function updateTrimEnd(val) {
-    if (!editDialog) return;
-    const duration = editDialog.duration;
-    const parsed = Number(val);
-    const end = Math.max(0, Math.min(Number.isFinite(parsed) ? parsed : duration, duration));
-    const safeEnd = Math.max(end, editDialog.start + 0.05);
-    setEditDialog({ ...editDialog, end: Math.min(duration, safeEnd) });
-    setTrimStatus("");
-  }
-
-  async function createTrimPreview() {
-    if (!editDialog || !editBufferRef.current) throw new Error("No audio loaded.");
-    const blob = encodeTrimToMp3({ buffer: editBufferRef.current, start: editDialog.start, end: editDialog.end });
-    const base64 = await blobToBase64(blob);
-    const url = URL.createObjectURL(blob);
-    setTrimPreview(prev => {
-      if (prev?.url) URL.revokeObjectURL(prev.url);
-      return { url, base64 };
-    });
-    return { url, base64 };
-  }
-
-  async function onPreviewTrim() {
-    if (!editDialog) return;
-    setTrimErr("");
-    setTrimStatus("Rendering trim preview…");
-    setWordBusy(editDialog.word);
-    try {
-      const preview = await createTrimPreview();
-      setTrimStatus("Trim preview ready.");
-      await playAudio(preview.url);
-    } catch (e) {
-      setTrimStatus("");
-      setTrimErr(String(e));
-    } finally {
-      setWordBusy("");
-    }
-  }
-
-  async function onSaveTrimmed() {
-    if (!editDialog) return;
-    setTrimErr("");
-    setTrimStatus("Saving trimmed audio…");
-    try {
-      const preview = trimPreview || (await createTrimPreview());
-      await onReplace(editDialog.word, preview.base64);
-      closeEditDialog();
-    } catch (e) {
-      setTrimStatus("");
-      setTrimErr(String(e));
-    }
   }
 
   async function onEditWord(word) {
-    setTrimErr("");
-    setTrimStatus("");
-    clearTrimPreview();
-    setWordBusy(word);
+    setWordErr("");
     try {
       const entry = words.find(w => w.normalizedWord === word);
       const url = entry?.audioUrl;
       if (!url) throw new Error("Audio missing for this word.");
-
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Unable to download audio file.");
-      const arr = await res.arrayBuffer();
-
-      const Ctx = window.AudioContext || window.webkitAudioContext;
-      if (!Ctx) throw new Error("This browser cannot edit audio.");
-      const ctx = new Ctx();
-      const buffer = await ctx.decodeAudioData(arr.slice(0));
-      editBufferRef.current = buffer;
-
-      const dur = Math.max(buffer.duration || 0, 0.2);
-      setEditDialog({ word, duration: dur, start: 0, end: dur });
+      setEditDialog({ word, url });
     } catch (e) {
-      setTrimErr(String(e));
-      editBufferRef.current = null;
+      setWordErr(String(e));
       setEditDialog(null);
-    } finally {
-      setTrimStatus("");
-      setWordBusy("");
     }
   }
 
@@ -348,11 +192,7 @@ export default function Studio() {
         if (!exists) return [...prev, r];
         return prev.map(w => (w.normalizedWord === word ? { ...w, ...r } : w));
       });
-      if (overrideBase64) {
-        clearTrimPreview();
-      } else {
-        clearPreview(word);
-      }
+      clearPreview(word);
       setWordStatus(`Updated audio for "${word}".`);
       return r;
     } catch (e) {
@@ -374,8 +214,6 @@ export default function Studio() {
       setWordErr(String(e));
     }
   }
-
-  const editingWord = editDialog ? words.find(w => w.normalizedWord === editDialog.word) : null;
 
   return (
     <>
@@ -520,69 +358,15 @@ export default function Studio() {
       </div>
 
       {editDialog ? (
-        <div className="modalBackdrop">
-          <div className="modal">
-            <div className="modalHeader">
-              <div className="subtitle">Trim “{editDialog.word}”</div>
-              <button className="btn" onClick={closeEditDialog}>✕</button>
-            </div>
-
-            <div className="muted" style={{ marginBottom: 10 }}>
-              Drag the sliders to keep just the part you want, preview it, then save to replace the stored audio.
-            </div>
-
-            <div className="sliderRow">
-              <label className="sliderLabel">
-                Start: {editDialog.start.toFixed(2)}s
-                <input
-                  type="range"
-                  min={0}
-                  max={editDialog.duration}
-                  step={0.05}
-                  value={editDialog.start}
-                  onChange={e => updateTrimStart(e.target.value)}
-                />
-              </label>
-              <label className="sliderLabel">
-                End: {editDialog.end.toFixed(2)}s
-                <input
-                  type="range"
-                  min={0}
-                  max={editDialog.duration}
-                  step={0.05}
-                  value={editDialog.end}
-                  onChange={e => updateTrimEnd(e.target.value)}
-                />
-              </label>
-              <div className="muted">Clip length: {(editDialog.end - editDialog.start).toFixed(2)}s of {editDialog.duration.toFixed(2)}s</div>
-            </div>
-
-            <div className="wordActions" style={{ justifyContent: "space-between" }}>
-              <button className="btn" onClick={() => playAudio(editingWord?.audioUrl)}>Play Current</button>
-              <div className="wordActions">
-                <button className="btn" onClick={onPreviewTrim} disabled={wordBusy === editDialog.word}>
-                  {wordBusy === editDialog.word ? "Working…" : "Preview Trim"}
-                </button>
-                <button className="btnPrimary" onClick={onSaveTrimmed} disabled={wordBusy === editDialog.word || !parentKey}>
-                  {wordBusy === editDialog.word ? "Saving…" : "Save Trimmed Audio"}
-                </button>
-              </div>
-            </div>
-
-            {trimPreview ? (
-              <div className="previewBox" style={{ marginTop: 10 }}>
-                <div className="rowMeta">Trim preview ready. Listen before saving.</div>
-                <div className="wordActions">
-                  <button className="btn" onClick={() => playAudio(trimPreview.url)}>Play Trimmed</button>
-                  <button className="btn" onClick={clearTrimPreview}>Discard Trim Preview</button>
-                </div>
-              </div>
-            ) : null}
-
-            {trimStatus ? <div className="status">{trimStatus}</div> : null}
-            {trimErr ? <div className="error">{trimErr}</div> : null}
-          </div>
-        </div>
+        <AudioTrimmer
+          word={editDialog.word}
+          url={editDialog.url}
+          onClose={closeEditDialog}
+          onSave={async base64 => {
+            await onReplace(editDialog.word, base64);
+            closeEditDialog();
+          }}
+        />
       ) : null}
     </>
   );
