@@ -210,6 +210,32 @@ app.post("/api/word-library/:word/replace", requireParentKey, async (req, res) =
   });
 });
 
+// Parent-only: delete an entire story and its assets
+app.delete("/api/stories/:storyId", requireParentKey, async (req, res) => {
+  const { storyId } = req.params;
+  if (!BUCKET) return res.status(500).json({ error: "Missing FIREBASE_STORAGE_BUCKET." });
+
+  const db = getFirestore();
+  const storyRef = db.collection("stories").doc(storyId);
+  const storyDoc = await storyRef.get();
+  if (!storyDoc.exists) return res.status(404).json({ error: "Story not found." });
+
+  const sentSnap = await storyRef.collection("sentences").get();
+  const limit = pLimit(5);
+
+  await Promise.all(sentSnap.docs.map(doc => limit(async () => {
+    const data = doc.data();
+    const audioPath = getObjectPathFromDownloadUrl({ url: data?.sentenceAudioUrl, bucketName: BUCKET });
+    const imagePath = getObjectPathFromDownloadUrl({ url: data?.imageUrl, bucketName: BUCKET });
+    if (audioPath) await deleteFileIfExists({ bucketName: BUCKET, objectPath: audioPath });
+    if (imagePath) await deleteFileIfExists({ bucketName: BUCKET, objectPath: imagePath });
+    await doc.ref.delete();
+  })));
+
+  await storyRef.delete();
+  res.json({ ok: true, deletedSentences: sentSnap.size });
+});
+
 // Parent-only: create story (split + sentence audio + word-audio cache)
 app.post("/api/process-story", requireParentKey, async (req, res) => {
   const { title, text } = req.body || {};
