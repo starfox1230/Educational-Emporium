@@ -27,6 +27,19 @@ export async function apiPostJson(path, body, parentKey) {
   return r.json();
 }
 
+export async function apiDelete(path, body, parentKey) {
+  const r = await fetch(path, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      ...(parentKey ? { "x-parent-key": parentKey } : {})
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
 export async function apiUploadImage(path, file, parentKey) {
   const fd = new FormData();
   fd.append("image", file);
