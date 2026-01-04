@@ -65,6 +65,11 @@ body {
   border: none;
 }
 
+.btn.danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
 .btn:disabled, .btnPrimary:disabled { opacity: 0.45; }
 
 .error { color: var(--danger); white-space: pre-wrap; }
@@ -136,6 +141,29 @@ body {
 
 .controls { display: flex; gap: 10px; justify-content: space-between; margin-top: 10px; }
 
+.modeToggle { display: flex; gap: 8px; margin: 10px 0; }
+.modeBtn {
+  flex: 1;
+  border-radius: 12px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.05);
+  color: var(--text);
+  font-weight: 700;
+}
+.modeBtn.active {
+  border-color: var(--accent);
+  background: rgba(102,166,255,0.18);
+}
+
+.editActions {
+  margin-top: 14px;
+  padding: 10px;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.03);
+}
+
 .wordList { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
 .wordRow {
   border: 1px solid var(--border);
@@ -160,4 +188,12 @@ body {
   background: rgba(255,255,255,0.08);
   color: var(--muted);
   font-size: 12px;
+}
+
+.dangerZone {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,107,107,0.4);
+  background: rgba(255,107,107,0.05);
 }

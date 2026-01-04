@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { apiGetWithKey, apiPostJson } from "../api.js";
+import { apiDelete, apiGetWithKey, apiPostJson } from "../api.js";
 
 export default function Studio() {
   const [parentKey, setParentKey] = useState("");
@@ -13,6 +13,7 @@ export default function Studio() {
   const [loadingWords, setLoadingWords] = useState(false);
   const [wordPreviews, setWordPreviews] = useState({});
   const [wordBusy, setWordBusy] = useState("");
+  const [purgeConfirm, setPurgeConfirm] = useState("");
 
   const audioRef = useRef(null);
   const previewUrls = useRef(new Set());
@@ -23,6 +24,7 @@ export default function Studio() {
       setWordPreviews({});
       setWordStatus("");
       setWordErr("");
+      setPurgeConfirm("");
     }
   }, [parentKey]);
 
@@ -106,6 +108,43 @@ export default function Studio() {
       const r = await apiPostJson(`/api/word-library/${encodeURIComponent(word)}/preview`, {}, parentKey);
       setPreviewForWord(word, r.audioBase64);
       setWordStatus(`Preview ready for "${word}". Listen and replace if you like it.`);
+    } catch (e) {
+      setWordStatus("");
+      setWordErr(String(e));
+    } finally {
+      setWordBusy("");
+    }
+  }
+
+  async function onDeleteWord(word) {
+    if (!parentKey) return;
+    setWordErr("");
+    setWordStatus(`Deleting "${word}"…`);
+    setWordBusy(word);
+    try {
+      await apiDelete(`/api/word-library/${encodeURIComponent(word)}`, null, parentKey);
+      setWords(prev => prev.filter(w => w.normalizedWord !== word));
+      clearPreview(word);
+      setWordStatus(`Deleted "${word}" from library.`);
+    } catch (e) {
+      setWordStatus("");
+      setWordErr(String(e));
+    } finally {
+      setWordBusy("");
+    }
+  }
+
+  async function onPurgeAll() {
+    if (!parentKey || purgeConfirm !== parentKey) return;
+    setWordErr("");
+    setWordStatus("Deleting all word audio…");
+    setWordBusy("__purge__");
+    try {
+      await apiPostJson("/api/word-library/purge", { confirmKey: purgeConfirm }, parentKey);
+      setWords([]);
+      setWordPreviews({});
+      setPurgeConfirm("");
+      setWordStatus("All word entries removed.");
     } catch (e) {
       setWordStatus("");
       setWordErr(String(e));
@@ -230,6 +269,13 @@ export default function Studio() {
                   >
                     {wordBusy === w.normalizedWord ? "Working…" : "Regenerate Preview"}
                   </button>
+                  <button
+                    className="btn"
+                    onClick={() => onDeleteWord(w.normalizedWord)}
+                    disabled={!parentKey || wordBusy === w.normalizedWord}
+                  >
+                    {wordBusy === w.normalizedWord ? "Working…" : "Delete"}
+                  </button>
                   {w.updatedAt ? <span className="pill">Updated {new Date(w.updatedAt).toLocaleDateString()}</span> : null}
                 </div>
 
@@ -252,6 +298,29 @@ export default function Studio() {
               </div>
             );
           })}
+        </div>
+
+        <div className="dangerZone">
+          <div className="subtitle">Delete All Word Audio</div>
+          <div className="muted" style={{ marginBottom: 8 }}>
+            To confirm, re-type the studio key and click delete. This removes every generated word clip.
+          </div>
+          <input
+            className="input"
+            placeholder="Re-type studio key to confirm"
+            value={purgeConfirm}
+            onChange={e => setPurgeConfirm(e.target.value)}
+          />
+          <div className="wordActions" style={{ marginTop: 10 }}>
+            <button
+              className="btn danger"
+              onClick={onPurgeAll}
+              disabled={!parentKey || purgeConfirm !== parentKey || wordBusy === "__purge__"}
+            >
+              {wordBusy === "__purge__" ? "Deleting…" : "Delete All Words"}
+            </button>
+            {purgeConfirm && purgeConfirm !== parentKey ? <div className="pill">Key mismatch</div> : null}
+          </div>
         </div>
       </div>
     </div>

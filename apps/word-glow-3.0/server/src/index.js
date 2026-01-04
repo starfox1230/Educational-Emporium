@@ -104,6 +104,47 @@ app.get("/api/word-library", requireParentKey, async (req, res) => {
   res.json({ words });
 });
 
+// Parent-only: delete a single word entry and its audio
+app.delete("/api/word-library/:word", requireParentKey, async (req, res) => {
+  const raw = req.params.word || "";
+  const w = normalizeWord(raw);
+  if (!w) return res.status(400).json({ error: "Missing word." });
+  if (!BUCKET) return res.status(500).json({ error: "Missing FIREBASE_STORAGE_BUCKET." });
+
+  const db = getFirestore();
+  const ref = db.collection("wordLibrary").doc(w);
+  const doc = await ref.get();
+  if (!doc.exists) return res.status(404).json({ error: "Word not found." });
+
+  const data = doc.data();
+  const objectPath = getObjectPathFromDownloadUrl({ url: data?.audioUrl, bucketName: BUCKET });
+  if (objectPath) await deleteFileIfExists({ bucketName: BUCKET, objectPath });
+  await ref.delete();
+
+  res.json({ ok: true, deleted: w });
+});
+
+// Parent-only: purge the entire word library (requires confirm key)
+app.post("/api/word-library/purge", requireParentKey, async (req, res) => {
+  if (!BUCKET) return res.status(500).json({ error: "Missing FIREBASE_STORAGE_BUCKET." });
+  if ((req.body?.confirmKey || "") !== PARENT_KEY) {
+    return res.status(400).json({ error: "Confirmation key mismatch." });
+  }
+
+  const db = getFirestore();
+  const snap = await db.collection("wordLibrary").get();
+  const limit = pLimit(5);
+
+  await Promise.all(snap.docs.map(doc => limit(async () => {
+    const data = doc.data();
+    const objectPath = getObjectPathFromDownloadUrl({ url: data?.audioUrl, bucketName: BUCKET });
+    if (objectPath) await deleteFileIfExists({ bucketName: BUCKET, objectPath });
+    await doc.ref.delete();
+  })));
+
+  res.json({ ok: true, deletedCount: snap.size });
+});
+
 // Parent-only: generate a preview audio clip for a word
 app.post("/api/word-library/:word/preview", requireParentKey, async (req, res) => {
   const raw = req.params.word || "";
@@ -309,6 +350,51 @@ app.post("/api/stories/:storyId/sentences/:index/image",
 
     await storyRef.collection("sentences").doc(String(idx)).set({ imageUrl: url }, { merge: true });
     res.json({ ok: true, imageUrl: url });
+  }
+);
+
+// Parent-only: regenerate audio for a specific sentence
+app.post("/api/stories/:storyId/sentences/:index/regenerate-audio",
+  requireParentKey,
+  async (req, res) => {
+    const { storyId, index } = req.params;
+    if (!BUCKET) return res.status(500).json({ error: "Missing FIREBASE_STORAGE_BUCKET." });
+
+    const idx = Number(index);
+    if (!Number.isFinite(idx) || idx < 0) return res.status(400).json({ error: "Bad index." });
+
+    const db = getFirestore();
+    const storyRef = db.collection("stories").doc(storyId);
+    const storyDoc = await storyRef.get();
+    if (!storyDoc.exists) return res.status(404).json({ error: "Story not found." });
+
+    const sentenceRef = storyRef.collection("sentences").doc(String(idx));
+    const sentenceDoc = await sentenceRef.get();
+    if (!sentenceDoc.exists) return res.status(404).json({ error: "Sentence not found." });
+
+    const text = sentenceDoc.data().text;
+    if (!text) return res.status(400).json({ error: "Sentence is missing text." });
+
+    const buf = await ttsMp3({
+      text,
+      voice: SENTENCE_TTS.voice,
+      model: SENTENCE_TTS.model,
+      instructions: SENTENCE_TTS.instructions
+    });
+
+    const objectPath = `stories/${storyId}/sentences/${idx}.mp3`;
+    const url = await uploadBufferAndGetDownloadUrl({
+      bucketName: BUCKET,
+      objectPath,
+      buffer: buf,
+      contentType: "audio/mpeg"
+    });
+
+    const now = new Date().toISOString();
+    await sentenceRef.set({ sentenceAudioUrl: url, updatedAt: now }, { merge: true });
+    await storyRef.set({ updatedAt: now }, { merge: true });
+
+    res.json({ ok: true, sentenceAudioUrl: url });
   }
 );
 
