@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { apiGet, apiPostJson, apiUploadImage } from "../api.js";
+import { apiDelete, apiGet, apiPostJson, apiUploadImage } from "../api.js";
 
 function extractDisplayWords(sentence) {
   const parts = sentence.split(/(\s+)/);
@@ -18,6 +18,8 @@ export default function Reader({ storyId }) {
   const [parentKey, setParentKey] = useState(""); // paste key to enable uploads
   const [mode, setMode] = useState("view");
   const [actionStatus, setActionStatus] = useState("");
+  const [deleteStatus, setDeleteStatus] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   const audioRef = useRef(null);
   const wordCache = useRef(new Map());
@@ -34,6 +36,10 @@ export default function Reader({ storyId }) {
   useEffect(() => {
     setActionStatus("");
   }, [idx]);
+
+  useEffect(() => {
+    if (mode !== "edit") setDeleteStatus("");
+  }, [mode]);
 
   async function playSentence() {
     if (!sentence?.sentenceAudioUrl) return;
@@ -91,6 +97,25 @@ export default function Reader({ storyId }) {
     }
   }
 
+  async function onDeleteStory() {
+    if (!parentKey || mode !== "edit") return;
+    if (!window.confirm("Delete this story? This cannot be undone.")) return;
+
+    setErr("");
+    setDeleteStatus("Deleting story…");
+    setDeleting(true);
+    try {
+      await apiDelete(`/api/stories/${storyId}`, null, parentKey);
+      setDeleteStatus("Story deleted.");
+      window.location.hash = "#/";
+    } catch (e) {
+      setDeleteStatus("");
+      setErr(String(e));
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   function isEditEnabled() {
     return mode === "edit" && !!parentKey;
   }
@@ -104,33 +129,6 @@ export default function Reader({ storyId }) {
       <div className="topbar">
         <a className="btn" href="#/">‹ Stories</a>
         <div className="title">{data.title}</div>
-      </div>
-
-      <div className="card">
-        <div className="subtitle">Studio Key (optional)</div>
-        <input
-          className="input"
-          placeholder="Paste key to enable editing and uploads"
-          value={parentKey}
-          onChange={e => setParentKey(e.target.value)}
-        />
-        <div className="modeToggle">
-          <button
-            className={`modeBtn ${mode === "view" ? "active" : ""}`}
-            onClick={() => setMode("view")}
-          >
-            View Mode
-          </button>
-          <button
-            className={`modeBtn ${mode === "edit" ? "active" : ""}`}
-            onClick={() => setMode("edit")}
-          >
-            Edit Mode
-          </button>
-        </div>
-        <div className="muted">
-          View mode is read-only. Switch to edit to upload photos or regenerate sentence audio (key required).
-        </div>
       </div>
 
       <div className="page">
@@ -190,6 +188,48 @@ export default function Reader({ storyId }) {
         ) : null}
 
         <div className="muted center">Page {idx + 1} / {data.sentences.length}</div>
+      </div>
+
+      <div className="card storyMeta">
+        <div className="subtitle">Studio Key (optional)</div>
+        <input
+          className="input"
+          placeholder="Paste key to enable editing and uploads"
+          value={parentKey}
+          onChange={e => setParentKey(e.target.value)}
+        />
+        <div className="modeToggle">
+          <button
+            className={`modeBtn ${mode === "view" ? "active" : ""}`}
+            onClick={() => setMode("view")}
+          >
+            View Mode
+          </button>
+          <button
+            className={`modeBtn ${mode === "edit" ? "active" : ""}`}
+            onClick={() => setMode("edit")}
+          >
+            Edit Mode
+          </button>
+        </div>
+        <div className="muted">
+          View mode is read-only. Switch to edit to upload photos or regenerate sentence audio (key required).
+        </div>
+
+        {mode === "edit" ? (
+          <div className="storyDangerRow">
+            <div className="muted">Delete this story</div>
+            <button
+              className="btn trashBtn large"
+              onClick={onDeleteStory}
+              disabled={!parentKey || deleting}
+            >
+              {deleting ? "Deleting…" : "🗑 Delete Story"}
+            </button>
+          </div>
+        ) : null}
+
+        {deleteStatus ? <div className="status">{deleteStatus}</div> : null}
       </div>
     </div>
   );
