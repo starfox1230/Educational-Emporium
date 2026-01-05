@@ -174,6 +174,53 @@
       color: #ffc107;
     }
 
+    .status-card {
+      width: 90%;
+      max-width: 1100px;
+      margin: 18px auto 0 auto;
+      padding: 16px 20px;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      background: rgba(255, 245, 250, 0.9);
+      box-shadow: 0 4px 10px var(--shadow-color);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .status-card[data-state="ok"] {
+      border-color: #80c27a;
+      box-shadow: 0 6px 14px rgba(128, 194, 122, 0.35);
+    }
+
+    .status-card[data-state="warn"] {
+      border-color: #ffc107;
+      box-shadow: 0 6px 14px rgba(255, 193, 7, 0.35);
+    }
+
+    .status-card .status-emoji {
+      font-size: 1.8em;
+    }
+
+    .status-card .status-texts {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .status-card .status-title {
+      font-weight: 700;
+      color: var(--text-light);
+      font-size: 1.05em;
+    }
+
+    .status-card .status-message {
+      color: var(--text-medium);
+      line-height: 1.4;
+      font-size: 0.95em;
+    }
+
     #generator-details {
         width: 90%;
         max-width: 1200px;
@@ -572,6 +619,7 @@
       <li><a href="apps/numbers-1-30/index.html" class="app-link"><span class="emoji">3️⃣0️⃣</span><span class="text">Numbers 1-30</span></a></li>
       <li><a href="apps/gb-math-k/index.html" class="app-link"><span class="emoji">👩‍🏫</span><span class="text">GB Math K</span></a></li>
       <li><a href="apps/scripture-origins/index.html" class="app-link"><span class="emoji">📚</span><span class="text">Scripture Origins</span></a></li>
+      <li><a href="https://word-glow-3-0.onrender.com" class="app-link app-wordglow" data-wordglow="true"><span class="emoji">✨</span><span class="text">WordGlow 3.0</span></a></li>
       <li>
         <a href="apps/count-by-10s/index.html" class="app-link">
           <span class="emoji">🚀</span>
@@ -666,6 +714,14 @@
       </div>
   </details>
 
+  <div class="status-card" id="wordglow-status-card" aria-live="polite" data-state="warn">
+    <div class="status-emoji">✨</div>
+    <div class="status-texts">
+      <div class="status-title">WordGlow 3.0 (Render)</div>
+      <p class="status-message" id="wordglow-status-text">Preparing to ping WordGlow 3.0. Render cold starts can take ~30 seconds, so we'll keep it warm for you.</p>
+    </div>
+  </div>
+
   <div class="iframe-container">
     <div class="iframe-overlay"></div>
     <iframe id="app-frame" src="" title="Loaded Application Frame"></iframe>
@@ -688,6 +744,54 @@
     const iframe = document.getElementById('app-frame');
     const fullPageButton = document.getElementById('open-full-page');
     const appLinks = document.querySelectorAll('.app-list .app-link');
+    const wordGlowStatusCard = document.getElementById('wordglow-status-card');
+    const wordGlowStatusText = document.getElementById('wordglow-status-text');
+    const WORD_GLOW_APP_URL = 'https://word-glow-3-0.onrender.com';
+    const WORD_GLOW_HEALTH_URL = `${WORD_GLOW_APP_URL.replace(/\/$/, '')}/api/health`;
+    const WORD_GLOW_PING_INTERVAL_MS = 30000;
+
+    function setWordGlowStatus(message, state = 'info') {
+      if (!wordGlowStatusCard || !wordGlowStatusText) return;
+      wordGlowStatusText.textContent = message;
+      wordGlowStatusCard.dataset.state = state;
+    }
+
+    async function pingWordGlow(options = { announceWarmup: false }) {
+      if (!wordGlowStatusCard || !wordGlowStatusText) return;
+
+      if (options.announceWarmup) {
+        setWordGlowStatus('Starting warmup ping for WordGlow 3.0. Render may take around 30 seconds to wake up.', 'warn');
+      }
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      const start = performance.now();
+
+      try {
+        const response = await fetch(WORD_GLOW_HEALTH_URL, { method: 'GET', signal: controller.signal, cache: 'no-store' });
+        const elapsedSeconds = Math.max(1, Math.round((performance.now() - start) / 1000));
+
+        if (response.ok) {
+          setWordGlowStatus(`WordGlow 3.0 is awake! (Responded in ${elapsedSeconds}s)`, 'ok');
+          return true;
+        }
+
+        setWordGlowStatus('WordGlow 3.0 responded, but is still warming up. We will keep nudging it.', 'warn');
+        return false;
+      } catch (error) {
+        setWordGlowStatus('Still waking WordGlow 3.0. Keeping the Render app warm in the background.', 'warn');
+        return false;
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    }
+
+    function startWordGlowKeepAlive() {
+      pingWordGlow({ announceWarmup: true });
+      setInterval(() => {
+        pingWordGlow();
+      }, WORD_GLOW_PING_INTERVAL_MS);
+    }
 
     function loadApp(appPath, linkElement) {
       if (typeof appPath !== 'string' || appPath.trim() === '') {
@@ -945,6 +1049,7 @@
 
         initializeFavorites();
         setActiveView(initialView, { persist: false });
+        startWordGlowKeepAlive();
     });
   </script>
 </body>
