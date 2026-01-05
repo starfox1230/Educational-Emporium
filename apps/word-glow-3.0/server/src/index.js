@@ -501,6 +501,65 @@ app.post("/api/stories/:storyId/sentences/:index/update-text",
   }
 );
 
+// Parent-only: insert a blank sentence before or after the given index
+app.post("/api/stories/:storyId/sentences/:index/insert",
+  requireParentKey,
+  async (req, res) => {
+    const { storyId, index } = req.params;
+    const position = (req.body?.position || "").toString();
+
+    if (!BUCKET) return res.status(500).json({ error: "Missing FIREBASE_STORAGE_BUCKET." });
+    if (!["before", "after"].includes(position)) return res.status(400).json({ error: "Missing or invalid position." });
+
+    const idx = Number(index);
+    if (!Number.isFinite(idx) || idx < 0) return res.status(400).json({ error: "Bad index." });
+
+    const insertIndex = position === "before" ? idx : idx + 1;
+
+    const db = getFirestore();
+    const storyRef = db.collection("stories").doc(storyId);
+    const storyDoc = await storyRef.get();
+    if (!storyDoc.exists) return res.status(404).json({ error: "Story not found." });
+
+    const storyData = storyDoc.data() || {};
+    const sentenceCount = Number(storyData.sentenceCount) || 0;
+    if (insertIndex > sentenceCount) return res.status(400).json({ error: "Insert position out of range." });
+
+    const sentenceCollection = storyRef.collection("sentences");
+    const toShift = await sentenceCollection
+      .where("index", ">=", insertIndex)
+      .orderBy("index", "desc")
+      .get();
+
+    const shiftLimit = pLimit(3);
+    await Promise.all(
+      toShift.docs.map(doc => shiftLimit(async () => {
+        const data = doc.data();
+        const newIndex = (data.index ?? Number(doc.id)) + 1;
+        await sentenceCollection.doc(String(newIndex)).set({ ...data, index: newIndex });
+        await doc.ref.delete();
+      }))
+    );
+
+    const now = new Date().toISOString();
+
+    await sentenceCollection.doc(String(insertIndex)).set({
+      index: insertIndex,
+      text: "",
+      sentenceAudioUrl: null,
+      imageUrl: null,
+      imageWidth: null,
+      imageHeight: null,
+      createdAt: now,
+      updatedAt: now
+    });
+
+    await storyRef.set({ sentenceCount: sentenceCount + 1, updatedAt: now }, { merge: true });
+
+    res.json({ ok: true, insertIndex });
+  }
+);
+
 // Parent-only: regenerate audio for a specific sentence
 app.post("/api/stories/:storyId/sentences/:index/regenerate-audio",
   requireParentKey,
@@ -543,6 +602,58 @@ app.post("/api/stories/:storyId/sentences/:index/regenerate-audio",
     await storyRef.set({ updatedAt: now }, { merge: true });
 
     res.json({ ok: true, sentenceAudioUrl: url });
+  }
+);
+
+// Parent-only: delete a sentence and shift following indexes
+app.delete("/api/stories/:storyId/sentences/:index",
+  requireParentKey,
+  async (req, res) => {
+    const { storyId, index } = req.params;
+    const idx = Number(index);
+
+    if (!BUCKET) return res.status(500).json({ error: "Missing FIREBASE_STORAGE_BUCKET." });
+    if (!Number.isFinite(idx) || idx < 0) return res.status(400).json({ error: "Bad index." });
+
+    const db = getFirestore();
+    const storyRef = db.collection("stories").doc(storyId);
+    const storyDoc = await storyRef.get();
+    if (!storyDoc.exists) return res.status(404).json({ error: "Story not found." });
+
+    const sentenceRef = storyRef.collection("sentences").doc(String(idx));
+    const sentenceDoc = await sentenceRef.get();
+    if (!sentenceDoc.exists) return res.status(404).json({ error: "Sentence not found." });
+
+    const sentenceData = sentenceDoc.data() || {};
+    const audioPath = getObjectPathFromDownloadUrl({ url: sentenceData.sentenceAudioUrl, bucketName: BUCKET });
+    const imagePath = getObjectPathFromDownloadUrl({ url: sentenceData.imageUrl, bucketName: BUCKET });
+    if (audioPath) await deleteFileIfExists({ bucketName: BUCKET, objectPath: audioPath });
+    if (imagePath) await deleteFileIfExists({ bucketName: BUCKET, objectPath: imagePath });
+
+    await sentenceRef.delete();
+
+    const sentenceCollection = storyRef.collection("sentences");
+    const toShift = await sentenceCollection
+      .where("index", ">", idx)
+      .orderBy("index", "asc")
+      .get();
+
+    const shiftLimit = pLimit(3);
+    await Promise.all(
+      toShift.docs.map(doc => shiftLimit(async () => {
+        const data = doc.data();
+        const newIndex = (data.index ?? Number(doc.id)) - 1;
+        await sentenceCollection.doc(String(newIndex)).set({ ...data, index: newIndex });
+        await doc.ref.delete();
+      }))
+    );
+
+    const storyData = storyDoc.data() || {};
+    const now = new Date().toISOString();
+    const newCount = Math.max(0, (Number(storyData.sentenceCount) || 0) - 1);
+    await storyRef.set({ sentenceCount: newCount, updatedAt: now }, { merge: true });
+
+    res.json({ ok: true, deletedIndex: idx, sentenceCount: newCount });
   }
 );
 
