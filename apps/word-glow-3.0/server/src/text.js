@@ -13,8 +13,8 @@ export function splitIntoSentences(text) {
 }
 
 export function extractWords(text) {
-  // words with apostrophes
-  const matches = (text || "").match(/[A-Za-z'’]+/g);
+  // words with apostrophes or internal hyphens (but not em dashes)
+  const matches = (text || "").match(/[A-Za-z]+(?:[-'’][A-Za-z]+)*/g);
   return matches ? matches : [];
 }
 

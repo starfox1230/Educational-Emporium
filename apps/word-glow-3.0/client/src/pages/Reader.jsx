@@ -5,7 +5,7 @@ function extractDisplayWords(sentence) {
   const parts = sentence.split(/(\s+)/);
   return parts.map(p => {
     if (/^\s+$/.test(p)) return { kind: "space", text: p };
-    const m = p.match(/[A-Za-z'’]+/);
+    const m = p.match(/[A-Za-z]+(?:[-'’][A-Za-z]+)*/);
     if (!m) return { kind: "punct", text: p };
     return { kind: "word", text: p, wordOnly: m[0] };
   });
