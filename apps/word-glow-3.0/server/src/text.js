@@ -1,16 +1,13 @@
 export function splitIntoSentences(text) {
   const cleaned = (text || "").replace(/\s+/g, " ").trim();
   if (!cleaned) return [];
-  const withMarkers = cleaned
-    // Mark boundaries where punctuation is followed by optional closing quotes/parens and whitespace
-    .replace(/([.!?]["'”’\)\]]*)\s+/g, "$1|")
-    // Also handle text that ends without trailing whitespace
-    .replace(/([.!?]["'”’\)\]]*)$/g, "$1|");
 
-  return withMarkers
-    .split("|")
-    .map(s => s.trim())
-    .filter(Boolean);
+  // Match runs that end in sentence punctuation, optionally followed by
+  // closing quotes/brackets. This keeps quoted sentences intact and ensures
+  // punctuation like .” or ?' still signal the sentence boundary.
+  const matches = cleaned.match(/[^.!?]+[.!?]["'”’\)\]]*(?=\s+|$)/g);
+
+  return matches ? matches.map(s => s.trim()) : [cleaned];
 }
 
 export function extractWords(text) {
