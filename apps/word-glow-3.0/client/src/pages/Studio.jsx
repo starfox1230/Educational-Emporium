@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { apiDelete, apiGetWithKey, apiPostJson } from "../api.js";
+import { THEMES, applyThemeById, loadSavedTheme, saveTheme } from "../theme.js";
 
 export default function Studio() {
   const [parentKey, setParentKey] = useState("");
@@ -14,6 +15,7 @@ export default function Studio() {
   const [wordPreviews, setWordPreviews] = useState({});
   const [wordBusy, setWordBusy] = useState("");
   const [purgeConfirm, setPurgeConfirm] = useState("");
+  const [themeId, setThemeId] = useState(loadSavedTheme());
 
   const audioRef = useRef(null);
   const previewUrls = useRef(new Set());
@@ -34,6 +36,11 @@ export default function Studio() {
       previewUrls.current.clear();
     };
   }, []);
+
+  useEffect(() => {
+    const appliedId = applyThemeById(themeId);
+    saveTheme(appliedId);
+  }, [themeId]);
 
   async function onProcess() {
     setErr("");
@@ -342,6 +349,35 @@ export default function Studio() {
               </div>
             );
           })}
+        </div>
+
+        <div className="card" style={{ marginTop: 14 }}>
+          <div className="subtitle">Theme Personalization</div>
+          <div className="muted" style={{ marginBottom: 10 }}>
+            Pick a color story for WordGlow. Your choice saves to this device and updates the reader and studio instantly.
+          </div>
+          <div className="themeGrid">
+            {THEMES.map(theme => (
+              <button
+                key={theme.id}
+                className={`themeCard ${themeId === theme.id ? "themeActive" : ""}`}
+                onClick={() => setThemeId(theme.id)}
+              >
+                <div className="themeHeader">
+                  <div className="rowTitle">{theme.name}</div>
+                  {themeId === theme.id ? <div className="pill">Active</div> : null}
+                </div>
+                <div className="swatchRow">
+                  <div className="swatch" style={{ background: theme.vars["--bg"] }}></div>
+                  <div className="swatch" style={{ background: theme.vars["--accent"] }}></div>
+                  <div className="swatch" style={{ background: theme.vars["--accent2"] }}></div>
+                  <div className="swatch" style={{ background: theme.vars["--progress-story"] }}></div>
+                  <div className="swatch" style={{ background: theme.vars["--progress-sentence"] }}></div>
+                </div>
+                <div className="themeDescription">{theme.description}</div>
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="dangerZone">

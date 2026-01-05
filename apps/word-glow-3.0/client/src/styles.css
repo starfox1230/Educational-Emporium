@@ -7,6 +7,9 @@
   --accent2: #7ef0c3;
   --danger: #ff6b6b;
   --border: rgba(255,255,255,0.08);
+  --progress-story: #66a6ff;
+  --progress-sentence: #7ef0c3;
+  --progress-track: rgba(255,255,255,0.12);
 }
 
 * { box-sizing: border-box; }
@@ -324,3 +327,55 @@ body {
 .storyMeta { position: relative; }
 .storyDangerRow { margin-top: 14px; display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
 .storyDangerRow .muted { margin-right: auto; }
+
+.themeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.themeCard {
+  text-align: left;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04);
+  padding: 12px;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+}
+
+.themeCard:hover,
+.themeCard:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 8px 26px rgba(0,0,0,0.25);
+  transform: translateY(-1px);
+}
+
+.themeHeader { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.swatchRow { display: flex; gap: 6px; margin: 10px 0; }
+.swatch { flex: 1; height: 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12); }
+.themeDescription { color: var(--muted); font-size: 13px; }
+.themeActive { border-color: var(--accent); box-shadow: 0 8px 26px rgba(0,0,0,0.28); }
+
+.progressPanel { margin-bottom: 12px; }
+.progressLabel { display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 13px; }
+.progressTrack {
+  position: relative;
+  background: var(--progress-track);
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+  margin: 6px 0 12px;
+}
+.progressFill {
+  position: absolute;
+  inset: 0;
+  width: 0;
+  background: var(--accent);
+  border-radius: 999px;
+  transition: width 180ms ease;
+}
+.progressFill.story { background: var(--progress-story); }
+.progressFill.sentence { background: var(--progress-sentence); }
