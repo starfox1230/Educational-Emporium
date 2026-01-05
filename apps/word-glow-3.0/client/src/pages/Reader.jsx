@@ -5,13 +5,13 @@ function extractDisplayWords(sentence) {
   const parts = sentence.split(/(\s+)/);
   return parts.map(p => {
     if (/^\s+$/.test(p)) return { kind: "space", text: p };
-    const m = p.match(/[A-Za-z']+/);
+    const m = p.match(/[A-Za-z'’]+/);
     if (!m) return { kind: "punct", text: p };
     return { kind: "word", text: p, wordOnly: m[0] };
   });
 }
 
-function ScratchImageReveal({ src, locked = false }) {
+function ScratchImageReveal({ src, locked = false, onImageLoad }) {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -74,7 +74,14 @@ function ScratchImageReveal({ src, locked = false }) {
     paintOverlay();
     const onResize = () => paintOverlay();
     window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+
+    const resizeObserver = new ResizeObserver(() => paintOverlay());
+    resizeObserver.observe(container);
+
+    return () => {
+      window.removeEventListener("resize", onResize);
+      resizeObserver.disconnect();
+    };
   }, [src]);
 
   useEffect(() => {
@@ -104,7 +111,7 @@ function ScratchImageReveal({ src, locked = false }) {
 
   return (
     <div className={`revealShell ${locked ? "locked" : ""} ${unlockPulse ? "unlockPulse" : ""}`} ref={containerRef}>
-      <img className="img" src={src} alt="" draggable={false} />
+      <img className="img" src={src} alt="" draggable={false} onLoad={onImageLoad} />
       <canvas
         className={`revealCanvas ${locked ? "isLocked" : ""}`}
         ref={canvasRef}
@@ -139,6 +146,7 @@ export default function Reader({ storyId }) {
   const [deleting, setDeleting] = useState(false);
   const [tappedWordIndexes, setTappedWordIndexes] = useState(new Set());
   const [lastTappedWord, setLastTappedWord] = useState(null);
+  const [imageSize, setImageSize] = useState({ width: 16, height: 9 });
 
   const sentenceAudioRef = useRef(null);
   const htmlAudioFallbackRef = useRef(null);
@@ -154,7 +162,7 @@ export default function Reader({ storyId }) {
   }
 
   function normalizeWord(raw) {
-    return (raw || "").toLowerCase().replace(/^'+|'+$/g, "");
+    return (raw || "").toLowerCase().replace(/^[\'’]+|[\'’]+$/g, "");
   }
 
   useEffect(() => {
@@ -188,6 +196,10 @@ export default function Reader({ storyId }) {
     setTappedWordIndexes(new Set());
     setLastTappedWord(null);
   }, [sentence?.text]);
+
+  useEffect(() => {
+    setImageSize({ width: 16, height: 9 });
+  }, [sentence?.imageUrl]);
 
   async function playSentence() {
     if (!sentence?.sentenceAudioUrl) return;
@@ -284,6 +296,18 @@ export default function Reader({ storyId }) {
     });
   }, [tokens]);
 
+  function onImageLoad(e) {
+    const { naturalWidth, naturalHeight } = e.target || {};
+    if (naturalWidth && naturalHeight) {
+      setImageSize({ width: naturalWidth, height: naturalHeight });
+    }
+  }
+
+  const imageAspectStyle = useMemo(
+    () => ({ "--img-aspect-ratio": `${imageSize.width} / ${imageSize.height}` }),
+    [imageSize.height, imageSize.width]
+  );
+
   useEffect(() => {
     if (!sentence?.sentenceAudioUrl) return;
     if (!sentenceAudioRef.current) {
@@ -369,16 +393,17 @@ export default function Reader({ storyId }) {
           </div>
         </div>
 
-        <div className="imageBox">
+        <div className="imageBox" style={imageAspectStyle}>
           {sentence.imageUrl ? (
             mode === "view" ? (
               <ScratchImageReveal
                 key={`${idx}-${sentence.imageUrl}`}
                 src={sentence.imageUrl}
                 locked={!allWordsTapped}
+                onImageLoad={onImageLoad}
               />
             ) : (
-              <img className="img" src={sentence.imageUrl} alt="" draggable={false} />
+              <img className="img" src={sentence.imageUrl} alt="" draggable={false} onLoad={onImageLoad} />
             )
           ) : (
             <div className="imgPlaceholder">No image</div>
