@@ -360,19 +360,11 @@ export default function Reader({ storyId }) {
       </div>
 
       <div className="page">
-        <div className="progressPanel">
-          <div className="progressLabel">
-            <span>Story progress</span>
-            <span>{idx + 1} / {data.sentences.length}</span>
-          </div>
-          <div className="progressTrack" aria-hidden>
+        <div className="progressPanel" aria-label="Progress indicators">
+          <div className="progressTrack" aria-label="Story progress">
             <div className="progressFill story" style={{ width: `${storyProgressPct}%` }} />
           </div>
-          <div className="progressLabel">
-            <span>Sentence taps</span>
-            <span>{wordCount ? `${tappedWordIndexes.size}/${wordCount}` : "0/0"}</span>
-          </div>
-          <div className="progressTrack" aria-hidden>
+          <div className="progressTrack" aria-label="Sentence taps">
             <div className="progressFill sentence" style={{ width: `${sentenceProgressPct}%` }} />
           </div>
         </div>

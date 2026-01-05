@@ -341,15 +341,21 @@ body {
 .themeDescription { color: var(--muted); font-size: 13px; }
 .themeActive { border-color: var(--accent); box-shadow: 0 8px 26px rgba(0,0,0,0.28); }
 
-.progressPanel { margin-bottom: 12px; }
-.progressLabel { display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 13px; }
+.progressPanel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 0 2px;
+}
 .progressTrack {
   position: relative;
   background: var(--progress-track);
   border-radius: 999px;
-  height: 8px;
+  height: 10px;
   overflow: hidden;
-  margin: 6px 0 12px;
+  margin: 0;
+  flex: 1;
 }
 .progressFill {
   position: absolute;
