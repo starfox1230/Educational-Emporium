@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import AudioTrimmer from "./AudioTrimmer.jsx";
 import { apiDelete, apiGetWithKey, apiPostJson } from "../api.js";
 
 export default function Studio() {
@@ -15,7 +14,6 @@ export default function Studio() {
   const [wordPreviews, setWordPreviews] = useState({});
   const [wordBusy, setWordBusy] = useState("");
   const [purgeConfirm, setPurgeConfirm] = useState("");
-  const [editDialog, setEditDialog] = useState(null);
 
   const audioRef = useRef(null);
   const previewUrls = useRef(new Set());
@@ -27,7 +25,6 @@ export default function Studio() {
       setWordStatus("");
       setWordErr("");
       setPurgeConfirm("");
-      closeEditDialog();
     }
   }, [parentKey]);
 
@@ -100,23 +97,6 @@ export default function Studio() {
       delete next[word];
       return next;
     });
-  }
-
-  function closeEditDialog() {
-    setEditDialog(null);
-  }
-
-  async function onEditWord(word) {
-    setWordErr("");
-    try {
-      const entry = words.find(w => w.normalizedWord === word);
-      const url = entry?.audioUrl;
-      if (!url) throw new Error("Audio missing for this word.");
-      setEditDialog({ word, url });
-    } catch (e) {
-      setWordErr(String(e));
-      setEditDialog(null);
-    }
   }
 
   async function onDownload(word) {
@@ -334,13 +314,6 @@ export default function Studio() {
                   </button>
                   <button
                     className="btn"
-                    onClick={() => onEditWord(w.normalizedWord)}
-                    disabled={!parentKey || wordBusy === w.normalizedWord}
-                  >
-                    {wordBusy === w.normalizedWord ? "Working…" : "Edit"}
-                  </button>
-                  <button
-                    className="btn trashBtn"
                     onClick={() => onDeleteWord(w.normalizedWord)}
                     disabled={!parentKey || wordBusy === w.normalizedWord}
                     aria-label={`Delete ${w.normalizedWord}`}
@@ -396,17 +369,6 @@ export default function Studio() {
       </div>
       </div>
 
-      {editDialog ? (
-        <AudioTrimmer
-          word={editDialog.word}
-          url={editDialog.url}
-          onClose={closeEditDialog}
-          onSave={async base64 => {
-            await onReplace(editDialog.word, base64);
-            closeEditDialog();
-          }}
-        />
-      ) : null}
     </>
   );
 }
