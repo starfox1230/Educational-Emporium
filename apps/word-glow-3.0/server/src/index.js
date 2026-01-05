@@ -5,6 +5,7 @@ import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
 import pLimit from "p-limit";
+import imageSize from "image-size";
 
 import { getFirestore } from "./firebaseAdmin.js";
 import { splitIntoSentences, extractWords, normalizeWord } from "./text.js";
@@ -334,7 +335,9 @@ app.post("/api/process-story", requireParentKey, async (req, res) => {
         index: idx,
         text: s,
         sentenceAudioUrl: url,
-        imageUrl: null
+        imageUrl: null,
+        imageWidth: null,
+        imageHeight: null
       });
     }))
   );
@@ -367,6 +370,14 @@ app.post("/api/stories/:storyId/sentences/:index/image",
     const contentType = req.file.mimetype || "image/jpeg";
     const ext = contentType.includes("png") ? "png" : contentType.includes("webp") ? "webp" : "jpg";
 
+    let dimensions = {};
+    try {
+      const { width, height } = imageSize(req.file.buffer) || {};
+      if (width && height) dimensions = { imageWidth: width, imageHeight: height };
+    } catch (e) {
+      console.warn("Could not read image dimensions", e);
+    }
+
     const url = await uploadBufferAndGetDownloadUrl({
       bucketName: BUCKET,
       objectPath: `stories/${storyId}/images/${idx}.${ext}`,
@@ -374,8 +385,9 @@ app.post("/api/stories/:storyId/sentences/:index/image",
       contentType
     });
 
-    await storyRef.collection("sentences").doc(String(idx)).set({ imageUrl: url }, { merge: true });
-    res.json({ ok: true, imageUrl: url });
+    const update = { imageUrl: url, ...dimensions };
+    await storyRef.collection("sentences").doc(String(idx)).set(update, { merge: true });
+    res.json({ ok: true, ...update });
   }
 );
 
