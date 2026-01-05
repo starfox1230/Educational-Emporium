@@ -74,8 +74,11 @@ export default function Reader({ storyId }) {
     const w = normalizeWord(raw);
     if (!w) return;
 
+    const url = await ensureWordUrl(w);
+    if (!url) return;
+
     try {
-      const buffer = await ensureWordBuffer(w);
+      const buffer = await ensureWordBuffer(w, url);
       const ctx = getAudioContext();
       await ctx.resume();
       const src = ctx.createBufferSource();
@@ -84,13 +87,11 @@ export default function Reader({ storyId }) {
       src.start();
       return;
     } catch {
-      // Fall back to HTMLAudio playback if decoding fails.
+      // Fall back to HTMLAudio playback if decoding fails or is blocked.
     }
 
-    const entry = wordCache.current.get(w);
-    if (!entry?.url) return;
     if (!htmlAudioFallbackRef.current) htmlAudioFallbackRef.current = new Audio();
-    htmlAudioFallbackRef.current.src = entry.url;
+    htmlAudioFallbackRef.current.src = url;
     htmlAudioFallbackRef.current.play().catch(() => {});
   }
 
@@ -111,11 +112,11 @@ export default function Reader({ storyId }) {
     return url;
   }
 
-  async function ensureWordBuffer(w) {
+  async function ensureWordBuffer(w, urlFromCaller) {
     const cached = wordCache.current.get(w);
     if (cached?.buffer) return cached.buffer;
 
-    const url = cached?.url || (await ensureWordUrl(w));
+    const url = urlFromCaller || cached?.url || (await ensureWordUrl(w));
     if (!url) throw new Error("No URL");
 
     const ctx = getAudioContext();
@@ -133,7 +134,7 @@ export default function Reader({ storyId }) {
 
     const unique = Array.from(new Set(words));
     unique.forEach(w => {
-      ensureWordBuffer(w).catch(() => {
+      ensureWordUrl(w).catch(() => {
         // Ignore preload failures; playback will fall back to HTMLAudio.
       });
     });
