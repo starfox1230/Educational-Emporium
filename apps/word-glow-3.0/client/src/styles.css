@@ -198,7 +198,22 @@ body {
 }
 .imgBtn.disabled { opacity: 0.4; }
 
+.sentenceShell { position: relative; }
+.sentenceToolbar { display: flex; justify-content: flex-end; margin-bottom: 4px; }
 .sentence { font-size: 30px; line-height: 1.25; padding: 8px 6px 14px; }
+.sentence.editing { padding: 0; }
+.sentenceTextarea {
+  font-size: 22px;
+  line-height: 1.35;
+  min-height: 140px;
+  background: rgba(255,255,255,0.08);
+}
+.editTextActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+.editBtnRow { display: flex; gap: 8px; }
 
 .wordBtn {
   border: none;

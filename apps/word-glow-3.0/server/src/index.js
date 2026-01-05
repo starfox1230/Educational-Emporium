@@ -391,6 +391,116 @@ app.post("/api/stories/:storyId/sentences/:index/image",
   }
 );
 
+// Parent-only: update sentence text (optional audio regen + missing word audio)
+app.post("/api/stories/:storyId/sentences/:index/update-text",
+  requireParentKey,
+  async (req, res) => {
+    const { storyId, index } = req.params;
+    const { text, regenerateAudio } = req.body || {};
+
+    const trimmed = (text || "").toString().trim();
+    if (!trimmed) return res.status(400).json({ error: "Missing sentence text." });
+
+    const idx = Number(index);
+    if (!Number.isFinite(idx) || idx < 0) return res.status(400).json({ error: "Bad index." });
+
+    if (regenerateAudio && !BUCKET) return res.status(500).json({ error: "Missing FIREBASE_STORAGE_BUCKET." });
+
+    const db = getFirestore();
+    const storyRef = db.collection("stories").doc(storyId);
+    const storyDoc = await storyRef.get();
+    if (!storyDoc.exists) return res.status(404).json({ error: "Story not found." });
+
+    const sentenceRef = storyRef.collection("sentences").doc(String(idx));
+    const sentenceDoc = await sentenceRef.get();
+    if (!sentenceDoc.exists) return res.status(404).json({ error: "Sentence not found." });
+
+    let sentenceAudioUrl = sentenceDoc.data().sentenceAudioUrl || null;
+    let missingWordsGenerated = 0;
+
+    const normalizedWords = Array.from(new Set(
+      extractWords(trimmed).map(normalizeWord).filter(Boolean)
+    ));
+
+    if (regenerateAudio && normalizedWords.length) {
+      const missing = [];
+      const chunks = [];
+      for (let i = 0; i < normalizedWords.length; i += 200) chunks.push(normalizedWords.slice(i, i + 200));
+
+      for (const chunk of chunks) {
+        const refs = chunk.map(w => db.collection("wordLibrary").doc(w));
+        const snaps = await db.getAll(...refs);
+        snaps.forEach((docSnap, i) => {
+          if (!docSnap.exists) missing.push(chunk[i]);
+        });
+      }
+
+      const limit = pLimit(3);
+
+      await Promise.all(missing.map(w => limit(async () => {
+        const buf = await ttsMp3({
+          text: w,
+          voice: WORD_TTS.voice,
+          model: WORD_TTS.model,
+          instructions: WORD_TTS.instructions
+        });
+
+        const url = await uploadBufferAndGetDownloadUrl({
+          bucketName: BUCKET,
+          objectPath: `wordAudio/${WORD_TTS.model}_${WORD_TTS.voice}/${w}.mp3`,
+          buffer: buf,
+          contentType: "audio/mpeg"
+        });
+
+        await db.collection("wordLibrary").doc(w).set({
+          normalizedWord: w,
+          audioUrl: url,
+          createdAt: new Date().toISOString(),
+          ttsModel: WORD_TTS.model,
+          ttsVoice: WORD_TTS.voice
+        });
+      })));
+
+      missingWordsGenerated = missing.length;
+    }
+
+    if (regenerateAudio) {
+      const buf = await ttsMp3({
+        text: trimmed,
+        voice: SENTENCE_TTS.voice,
+        model: SENTENCE_TTS.model,
+        instructions: SENTENCE_TTS.instructions
+      });
+
+      const objectPath = `stories/${storyId}/sentences/${idx}.mp3`;
+      sentenceAudioUrl = await uploadBufferAndGetDownloadUrl({
+        bucketName: BUCKET,
+        objectPath,
+        buffer: buf,
+        contentType: "audio/mpeg"
+      });
+    }
+
+    const now = new Date().toISOString();
+    const update = {
+      text: trimmed,
+      updatedAt: now,
+      ...(regenerateAudio && sentenceAudioUrl ? { sentenceAudioUrl } : {})
+    };
+
+    await sentenceRef.set(update, { merge: true });
+    await storyRef.set({ updatedAt: now }, { merge: true });
+
+    res.json({
+      ok: true,
+      text: trimmed,
+      regenerated: !!regenerateAudio,
+      sentenceAudioUrl,
+      missingWordsGenerated
+    });
+  }
+);
+
 // Parent-only: regenerate audio for a specific sentence
 app.post("/api/stories/:storyId/sentences/:index/regenerate-audio",
   requireParentKey,

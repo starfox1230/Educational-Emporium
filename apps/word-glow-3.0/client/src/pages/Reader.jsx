@@ -231,6 +231,9 @@ export default function Reader({ storyId }) {
   const [tappedWordIndexes, setTappedWordIndexes] = useState(new Set());
   const [lastTappedWord, setLastTappedWord] = useState(null);
   const [imageSize, setImageSize] = useState({ width: 16, height: 9 });
+  const [isEditingText, setIsEditingText] = useState(false);
+  const [editTextValue, setEditTextValue] = useState("");
+  const [savingText, setSavingText] = useState(false);
 
   const sentenceAudioRef = useRef(null);
   const htmlAudioFallbackRef = useRef(null);
@@ -274,11 +277,14 @@ export default function Reader({ storyId }) {
 
   useEffect(() => {
     if (mode !== "edit") setDeleteStatus("");
+    if (mode !== "edit") setIsEditingText(false);
   }, [mode]);
 
   useEffect(() => {
     setTappedWordIndexes(new Set());
     setLastTappedWord(null);
+    setIsEditingText(false);
+    setEditTextValue(sentence?.text || "");
   }, [sentence?.text]);
 
   useLayoutEffect(() => {
@@ -393,6 +399,48 @@ export default function Reader({ storyId }) {
     const { naturalWidth, naturalHeight } = e.target || {};
     if (naturalWidth && naturalHeight) {
       setImageSize({ width: naturalWidth, height: naturalHeight });
+    }
+  }
+
+  function startEditingText() {
+    setIsEditingText(true);
+    setEditTextValue(sentence?.text || "");
+    setActionStatus("");
+  }
+
+  function cancelEditingText() {
+    setIsEditingText(false);
+    setEditTextValue(sentence?.text || "");
+    setActionStatus("");
+  }
+
+  async function saveEditedText({ regenerateAudio }) {
+    if (!isEditEnabled()) return;
+    const trimmed = (editTextValue || "").trim();
+    if (!trimmed) {
+      setErr("Please enter some text for the sentence.");
+      return;
+    }
+
+    setSavingText(true);
+    setErr("");
+    setActionStatus(regenerateAudio ? "Saving text and regenerating audio…" : "Saving text…");
+
+    try {
+      await apiPostJson(
+        `/api/stories/${storyId}/sentences/${idx}/update-text`,
+        { text: trimmed, regenerateAudio },
+        parentKey
+      );
+      const fresh = await apiGet(`/api/stories/${storyId}`);
+      setData(fresh);
+      setIsEditingText(false);
+      setActionStatus(regenerateAudio ? "Text updated and audio refreshed." : "Text updated.");
+    } catch (e) {
+      setErr(String(e));
+      setActionStatus("");
+    } finally {
+      setSavingText(false);
     }
   }
 
@@ -522,20 +570,64 @@ export default function Reader({ storyId }) {
           ) : null}
         </div>
 
-        <div className="sentence">
-          {tokens.map((t, i) => {
-            if (t.kind === "space") return <span key={i}>{t.text}</span>;
-            if (t.kind === "punct") return <span key={i}>{t.text}</span>;
-            return (
-              <button
-                key={i}
-                className={`wordBtn ${lastTappedWord === i ? "wordActive" : ""}`}
-                onClick={() => onWordTap(i, t.wordOnly)}
-              >
-                {t.text}
+        <div className="sentenceShell">
+          {mode === "edit" && !isEditingText ? (
+            <div className="sentenceToolbar">
+              <button className="btn" disabled={!isEditEnabled()} onClick={startEditingText}>
+                Edit Text
               </button>
-            );
-          })}
+            </div>
+          ) : null}
+
+          <div className={`sentence ${isEditingText ? "editing" : ""}`}>
+            {isEditingText ? (
+              <textarea
+                className="textarea sentenceTextarea"
+                value={editTextValue}
+                disabled={!isEditEnabled() || savingText}
+                onChange={e => setEditTextValue(e.target.value)}
+              />
+            ) : (
+              tokens.map((t, i) => {
+                if (t.kind === "space") return <span key={i}>{t.text}</span>;
+                if (t.kind === "punct") return <span key={i}>{t.text}</span>;
+                return (
+                  <button
+                    key={i}
+                    className={`wordBtn ${lastTappedWord === i ? "wordActive" : ""}`}
+                    onClick={() => onWordTap(i, t.wordOnly)}
+                  >
+                    {t.text}
+                  </button>
+                );
+              })
+            )}
+          </div>
+
+          {isEditingText ? (
+            <div className="editTextActions">
+              <div className="spacer" />
+              <div className="editBtnRow">
+                <button className="btn" onClick={cancelEditingText} disabled={savingText}>
+                  Cancel
+                </button>
+                <button
+                  className="btn"
+                  onClick={() => saveEditedText({ regenerateAudio: false })}
+                  disabled={!isEditEnabled() || savingText}
+                >
+                  Save
+                </button>
+                <button
+                  className="btnPrimary"
+                  onClick={() => saveEditedText({ regenerateAudio: true })}
+                  disabled={!isEditEnabled() || savingText}
+                >
+                  Save &amp; Regenerate Audio
+                </button>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <div className="controls">
