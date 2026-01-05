@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { apiDelete, apiGet, apiPostJson, apiUploadImage } from "../api.js";
 
 function extractDisplayWords(sentence) {
@@ -281,9 +281,18 @@ export default function Reader({ storyId }) {
     setLastTappedWord(null);
   }, [sentence?.text]);
 
-  useEffect(() => {
-    setImageSize({ width: 16, height: 9 });
-  }, [sentence?.imageUrl]);
+  useLayoutEffect(() => {
+    if (!sentence) {
+      setImageSize({ width: 16, height: 9 });
+      return;
+    }
+
+    if (sentence.imageWidth && sentence.imageHeight) {
+      setImageSize({ width: sentence.imageWidth, height: sentence.imageHeight });
+    } else if (!sentence.imageUrl) {
+      setImageSize({ width: 16, height: 9 });
+    }
+  }, [sentence]);
 
   async function playSentence() {
     if (!sentence?.sentenceAudioUrl) return;
@@ -408,7 +417,10 @@ export default function Reader({ storyId }) {
     if (!parentKey || mode !== "edit") return;
     try {
       setActionStatus("Uploading image…");
-      await apiUploadImage(`/api/stories/${storyId}/sentences/${idx}/image`, file, parentKey);
+      const uploaded = await apiUploadImage(`/api/stories/${storyId}/sentences/${idx}/image`, file, parentKey);
+      if (uploaded?.imageWidth && uploaded?.imageHeight) {
+        setImageSize({ width: uploaded.imageWidth, height: uploaded.imageHeight });
+      }
       const fresh = await apiGet(`/api/stories/${storyId}`);
       setData(fresh);
       setActionStatus("Image updated.");
