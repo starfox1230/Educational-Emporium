@@ -249,6 +249,50 @@ body {
 
 .controls { display: flex; gap: 10px; justify-content: space-between; margin-top: 10px; }
 
+.pageEditControls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 4px 2px;
+}
+
+.circleBtn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+  font-size: 26px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+
+.circleBtn.add {
+  border-color: rgba(126,240,195,0.5);
+  background: rgba(126,240,195,0.12);
+  color: #0c1a14;
+  box-shadow: 0 0 0 1px rgba(126,240,195,0.32);
+}
+
+.circleBtn.danger {
+  border-color: rgba(255,107,107,0.55);
+  background: rgba(255,107,107,0.16);
+  color: #1f0a0a;
+  box-shadow: 0 0 0 1px rgba(255,107,107,0.38);
+}
+
+.circleBtn:disabled { opacity: 0.42; cursor: not-allowed; }
+
+.circleBtn:not(:disabled):hover,
+.circleBtn:not(:disabled):focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  outline: none;
+}
+
 .modeToggle { display: flex; gap: 8px; margin: 10px 0; }
 .modeBtn {
   flex: 1;

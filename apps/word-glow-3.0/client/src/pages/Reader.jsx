@@ -234,6 +234,7 @@ export default function Reader({ storyId }) {
   const [isEditingText, setIsEditingText] = useState(false);
   const [editTextValue, setEditTextValue] = useState("");
   const [savingText, setSavingText] = useState(false);
+  const pendingAutoEditRef = useRef(false);
 
   const sentenceAudioRef = useRef(null);
   const htmlAudioFallbackRef = useRef(null);
@@ -283,8 +284,13 @@ export default function Reader({ storyId }) {
   useEffect(() => {
     setTappedWordIndexes(new Set());
     setLastTappedWord(null);
-    setIsEditingText(false);
     setEditTextValue(sentence?.text || "");
+    if (pendingAutoEditRef.current) {
+      pendingAutoEditRef.current = false;
+      setIsEditingText(true);
+    } else {
+      setIsEditingText(false);
+    }
   }, [sentence?.text]);
 
   useLayoutEffect(() => {
@@ -444,6 +450,55 @@ export default function Reader({ storyId }) {
     }
   }
 
+  async function onInsertPage(position) {
+    if (!isEditEnabled()) return;
+    const dir = position === "before" ? "before" : "after";
+    if (!window.confirm(`Add a new page ${dir} this one?`)) return;
+
+    setErr("");
+    setActionStatus("Adding page…");
+
+    try {
+      pendingAutoEditRef.current = true;
+      const r = await apiPostJson(
+        `/api/stories/${storyId}/sentences/${idx}/insert`,
+        { position: dir },
+        parentKey
+      );
+      const fresh = await apiGet(`/api/stories/${storyId}`);
+      setData(fresh);
+      const newIndex = Math.min(r.insertIndex ?? idx, Math.max(0, fresh.sentences.length - 1));
+      setIdx(newIndex);
+      setMode("edit");
+      setActionStatus("Page added. Start typing your new page.");
+    } catch (e) {
+      pendingAutoEditRef.current = false;
+      setErr(String(e));
+      setActionStatus("");
+    }
+  }
+
+  async function onDeletePage() {
+    if (!isEditEnabled()) return;
+    if (!window.confirm("Delete this page? This cannot be undone.")) return;
+
+    setErr("");
+    setActionStatus("Deleting page…");
+
+    try {
+      await apiDelete(`/api/stories/${storyId}/sentences/${idx}`, null, parentKey);
+      const fresh = await apiGet(`/api/stories/${storyId}`);
+      setData(fresh);
+      const nextIdx = Math.max(0, Math.min(idx, Math.max(0, (fresh.sentences?.length || 1) - 1)));
+      setIdx(nextIdx);
+      setIsEditingText(false);
+      setActionStatus("Page deleted.");
+    } catch (e) {
+      setErr(String(e));
+      setActionStatus("");
+    }
+  }
+
   const imageAspectStyle = useMemo(
     () => ({ "--img-aspect-ratio": `${imageSize.width} / ${imageSize.height}` }),
     [imageSize.height, imageSize.width]
@@ -580,6 +635,31 @@ export default function Reader({ storyId }) {
           ) : null}
 
           <div className={`sentence ${isEditingText ? "editing" : ""}`}>
+            {isEditingText ? (
+              <div className="pageEditControls">
+                <button
+                  className="circleBtn add"
+                  onClick={() => onInsertPage("before")}
+                  disabled={!isEditEnabled() || savingText}
+                >
+                  +
+                </button>
+                <button
+                  className="circleBtn danger"
+                  onClick={onDeletePage}
+                  disabled={!isEditEnabled() || savingText}
+                >
+                  −
+                </button>
+                <button
+                  className="circleBtn add"
+                  onClick={() => onInsertPage("after")}
+                  disabled={!isEditEnabled() || savingText}
+                >
+                  +
+                </button>
+              </div>
+            ) : null}
             {isEditingText ? (
               <textarea
                 className="textarea sentenceTextarea"
