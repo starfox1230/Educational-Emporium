@@ -21,8 +21,22 @@ export default function Reader({ storyId }) {
   const [deleteStatus, setDeleteStatus] = useState("");
   const [deleting, setDeleting] = useState(false);
 
-  const audioRef = useRef(null);
+  const sentenceAudioRef = useRef(null);
+  const htmlAudioFallbackRef = useRef(null);
   const wordCache = useRef(new Map());
+  const audioContextRef = useRef(null);
+
+  function getAudioContext() {
+    if (!audioContextRef.current) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      audioContextRef.current = new Ctx();
+    }
+    return audioContextRef.current;
+  }
+
+  function normalizeWord(raw) {
+    return (raw || "").toLowerCase().replace(/^'+|'+$/g, "");
+  }
 
   useEffect(() => {
     apiGet(`/api/stories/${storyId}`)
@@ -43,30 +57,99 @@ export default function Reader({ storyId }) {
 
   async function playSentence() {
     if (!sentence?.sentenceAudioUrl) return;
-    if (!audioRef.current) audioRef.current = new Audio();
-    audioRef.current.src = sentence.sentenceAudioUrl;
-    await audioRef.current.play();
+    if (!sentenceAudioRef.current) {
+      sentenceAudioRef.current = new Audio();
+      sentenceAudioRef.current.preload = "auto";
+    }
+    if (sentenceAudioRef.current.src !== sentence.sentenceAudioUrl) {
+      sentenceAudioRef.current.src = sentence.sentenceAudioUrl;
+      sentenceAudioRef.current.load();
+    }
+    sentenceAudioRef.current
+      .play()
+      .catch(() => {});
   }
 
   async function playWord(raw) {
-    const w = (raw || "").toLowerCase().replace(/^'+|'+$/g, "");
+    const w = normalizeWord(raw);
     if (!w) return;
 
-    let url = wordCache.current.get(w);
-    if (!url) {
-      try {
-        const r = await apiGet(`/api/word-audio?word=${encodeURIComponent(w)}`);
-        url = r.audioUrl;
-        wordCache.current.set(w, url);
-      } catch {
-        return;
-      }
+    try {
+      const buffer = await ensureWordBuffer(w);
+      const ctx = getAudioContext();
+      await ctx.resume();
+      const src = ctx.createBufferSource();
+      src.buffer = buffer;
+      src.connect(ctx.destination);
+      src.start();
+      return;
+    } catch {
+      // Fall back to HTMLAudio playback if decoding fails.
     }
 
-    if (!audioRef.current) audioRef.current = new Audio();
-    audioRef.current.src = url;
-    await audioRef.current.play();
+    const entry = wordCache.current.get(w);
+    if (!entry?.url) return;
+    if (!htmlAudioFallbackRef.current) htmlAudioFallbackRef.current = new Audio();
+    htmlAudioFallbackRef.current.src = entry.url;
+    htmlAudioFallbackRef.current.play().catch(() => {});
   }
+
+  async function ensureWordUrl(w) {
+    const existing = wordCache.current.get(w);
+    if (existing?.url) return existing.url;
+
+    const pendingUrl = existing?.fetchPromise;
+    if (pendingUrl) return pendingUrl;
+
+    const fetchPromise = apiGet(`/api/word-audio?word=${encodeURIComponent(w)}`)
+      .then(r => r.audioUrl)
+      .catch(() => null);
+
+    wordCache.current.set(w, { ...(existing || {}), fetchPromise });
+    const url = await fetchPromise;
+    wordCache.current.set(w, { ...(existing || {}), url });
+    return url;
+  }
+
+  async function ensureWordBuffer(w) {
+    const cached = wordCache.current.get(w);
+    if (cached?.buffer) return cached.buffer;
+
+    const url = cached?.url || (await ensureWordUrl(w));
+    if (!url) throw new Error("No URL");
+
+    const ctx = getAudioContext();
+    const arrayBuf = await fetch(url).then(r => r.arrayBuffer());
+    const buffer = await ctx.decodeAudioData(arrayBuf.slice(0));
+    wordCache.current.set(w, { ...(cached || {}), url, buffer });
+    return buffer;
+  }
+
+  useEffect(() => {
+    const words = tokens
+      .filter(t => t.kind === "word")
+      .map(t => normalizeWord(t.wordOnly))
+      .filter(Boolean);
+
+    const unique = Array.from(new Set(words));
+    unique.forEach(w => {
+      ensureWordBuffer(w).catch(() => {
+        // Ignore preload failures; playback will fall back to HTMLAudio.
+      });
+    });
+  }, [tokens]);
+
+  useEffect(() => {
+    if (!sentence?.sentenceAudioUrl) return;
+    if (!sentenceAudioRef.current) {
+      sentenceAudioRef.current = new Audio();
+      sentenceAudioRef.current.preload = "auto";
+    }
+    if (sentenceAudioRef.current.src !== sentence.sentenceAudioUrl) {
+      sentenceAudioRef.current.src = sentence.sentenceAudioUrl;
+      sentenceAudioRef.current.load();
+    }
+  }, [sentence?.sentenceAudioUrl]);
 
   async function onUploadImage(file) {
     if (!parentKey || mode !== "edit") return;
