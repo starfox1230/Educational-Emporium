@@ -168,7 +168,7 @@ function ScratchImageReveal({ src, locked = false, onImageLoad }) {
       if (data[i] === 0) transparent += 1;
     }
     const pct = Math.round((transparent / (data.length / 4)) * 100);
-    if (pct >= 70) triggerAutoReveal();
+    if (pct >= 45) triggerAutoReveal();
   }
 
   useEffect(() => {
