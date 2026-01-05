@@ -123,14 +123,14 @@ body {
   overflow: hidden;
   border: 1px solid var(--border);
   background: rgba(255,255,255,0.04);
-  aspect-ratio: 16 / 9;
+  aspect-ratio: var(--img-aspect-ratio, 16 / 9);
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 14px;
 }
 
-.img { width: 100%; height: 100%; object-fit: cover; }
+.img { width: 100%; height: 100%; object-fit: contain; }
 .imgPlaceholder { color: var(--muted); }
 
 .revealShell { position: relative; width: 100%; height: 100%; }
@@ -343,7 +343,8 @@ body {
 
 .progressPanel {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   gap: 8px;
   margin-bottom: 8px;
   padding: 0 2px;
@@ -361,9 +362,13 @@ body {
   position: absolute;
   inset: 0;
   width: 0;
-  background: var(--accent);
   border-radius: 999px;
   transition: width 180ms ease;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.22);
 }
-.progressFill.story { background: var(--progress-story); }
-.progressFill.sentence { background: var(--progress-sentence); }
+.progressFill.story {
+  background: linear-gradient(135deg, var(--progress-story), #8bb8ff);
+}
+.progressFill.sentence {
+  background: linear-gradient(135deg, var(--progress-sentence), #9cf6d7);
+}
