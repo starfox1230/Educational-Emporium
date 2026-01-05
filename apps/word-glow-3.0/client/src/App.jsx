@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Stories from "./pages/Stories.jsx";
 import Studio from "./pages/Studio.jsx";
 import Reader from "./pages/Reader.jsx";
+import { applyThemeById, loadSavedTheme } from "./theme.js";
 
 function parseRoute() {
   const hash = window.location.hash.replace("#", "");
@@ -15,6 +16,11 @@ export default function App() {
     const onHash = () => setRoute(parseRoute());
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
+  useEffect(() => {
+    const saved = loadSavedTheme();
+    applyThemeById(saved);
   }, []);
 
   if (route.length === 0) return <Stories />;

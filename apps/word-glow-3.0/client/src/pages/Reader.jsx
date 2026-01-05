@@ -158,6 +158,14 @@ export default function Reader({ storyId }) {
   const tokens = useMemo(() => extractDisplayWords(sentence?.text || ""), [sentence?.text]);
   const wordCount = useMemo(() => tokens.filter(t => t.kind === "word").length, [tokens]);
   const allWordsTapped = wordCount > 0 && tappedWordIndexes.size >= wordCount;
+  const storyProgressPct = useMemo(() => {
+    if (!data?.sentences?.length) return 0;
+    return Math.round(((idx + 1) / data.sentences.length) * 100);
+  }, [data?.sentences?.length, idx]);
+  const sentenceProgressPct = useMemo(() => {
+    if (!wordCount) return 0;
+    return Math.min(100, Math.round((tappedWordIndexes.size / wordCount) * 100));
+  }, [tappedWordIndexes.size, wordCount]);
 
   useEffect(() => {
     setActionStatus("");
@@ -343,6 +351,23 @@ export default function Reader({ storyId }) {
       </div>
 
       <div className="page">
+        <div className="progressPanel">
+          <div className="progressLabel">
+            <span>Story progress</span>
+            <span>{idx + 1} / {data.sentences.length}</span>
+          </div>
+          <div className="progressTrack" aria-hidden>
+            <div className="progressFill story" style={{ width: `${storyProgressPct}%` }} />
+          </div>
+          <div className="progressLabel">
+            <span>Sentence taps</span>
+            <span>{wordCount ? `${tappedWordIndexes.size}/${wordCount}` : "0/0"}</span>
+          </div>
+          <div className="progressTrack" aria-hidden>
+            <div className="progressFill sentence" style={{ width: `${sentenceProgressPct}%` }} />
+          </div>
+        </div>
+
         <div className="imageBox">
           {sentence.imageUrl ? (
             mode === "view" ? (
