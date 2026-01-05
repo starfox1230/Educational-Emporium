@@ -140,7 +140,7 @@ body {
   inset: 0;
   background: radial-gradient(circle at 30% 20%, rgba(126,240,195,0.12), transparent 38%),
               radial-gradient(circle at 70% 45%, rgba(102,166,255,0.14), transparent 36%),
-              rgba(6,10,16,0.35);
+              rgba(6,10,16,0.5);
   pointer-events: none;
 }
 .revealShell.unlockPulse .revealCanvas {

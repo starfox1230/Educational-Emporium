@@ -14,6 +14,7 @@ function extractDisplayWords(sentence) {
 function ScratchImageReveal({ src, locked = false, onImageLoad }) {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
+  const lastCanvasSize = useRef({ width: 0, height: 0 });
   const [isDrawing, setIsDrawing] = useState(false);
   const [unlockPulse, setUnlockPulse] = useState(false);
 
@@ -25,21 +26,45 @@ function ScratchImageReveal({ src, locked = false, onImageLoad }) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    function paintOverlay() {
+    lastCanvasSize.current = { width: 0, height: 0 };
+
+    function paintOverlay({ keepExisting = false, force = false } = {}) {
       const rect = container.getBoundingClientRect();
       const ratio = window.devicePixelRatio || 1;
-      canvas.width = rect.width * ratio;
-      canvas.height = rect.height * ratio;
+      const targetWidth = rect.width * ratio;
+      const targetHeight = rect.height * ratio;
+      const { width: prevW, height: prevH } = lastCanvasSize.current;
+      const sizeChanged =
+        Math.abs(targetWidth - prevW) > 1 || Math.abs(targetHeight - prevH) > 1;
+
+      if (!force && !sizeChanged) return;
+
+      let existingLayer = null;
+      if (keepExisting && canvas.width && canvas.height) {
+        existingLayer = document.createElement("canvas");
+        existingLayer.width = canvas.width;
+        existingLayer.height = canvas.height;
+        existingLayer.getContext("2d")?.drawImage(canvas, 0, 0);
+      }
+
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
       canvas.style.width = `${rect.width}px`;
       canvas.style.height = `${rect.height}px`;
+      lastCanvasSize.current = { width: targetWidth, height: targetHeight };
 
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(ratio, ratio);
       ctx.globalCompositeOperation = "source-over";
 
+      if (existingLayer) {
+        ctx.drawImage(existingLayer, 0, 0, rect.width, rect.height);
+        return;
+      }
+
       const gradient = ctx.createLinearGradient(0, 0, rect.width, rect.height);
-      gradient.addColorStop(0, "rgba(126,240,195,0.82)");
-      gradient.addColorStop(1, "rgba(102,166,255,0.88)");
+      gradient.addColorStop(0, "rgba(126,240,195,0.9)");
+      gradient.addColorStop(1, "rgba(102,166,255,0.95)");
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, rect.width, rect.height);
 
@@ -49,13 +74,13 @@ function ScratchImageReveal({ src, locked = false, onImageLoad }) {
         const y = Math.random() * rect.height;
         const hue = 130 + Math.random() * 120;
         ctx.beginPath();
-        ctx.fillStyle = `hsla(${hue}, 80%, 70%, 0.35)`;
+        ctx.fillStyle = `hsla(${hue}, 80%, 70%, 0.5)`;
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.fill();
       }
 
       ctx.lineWidth = 14;
-      ctx.strokeStyle = "rgba(255,255,255,0.35)";
+      ctx.strokeStyle = "rgba(255,255,255,0.5)";
       for (let i = 0; i < 4; i += 1) {
         ctx.beginPath();
         ctx.moveTo(Math.random() * rect.width, Math.random() * rect.height);
@@ -71,11 +96,11 @@ function ScratchImageReveal({ src, locked = false, onImageLoad }) {
       }
     }
 
-    paintOverlay();
-    const onResize = () => paintOverlay();
+    paintOverlay({ force: true });
+    const onResize = () => paintOverlay({ keepExisting: true });
     window.addEventListener("resize", onResize);
 
-    const resizeObserver = new ResizeObserver(() => paintOverlay());
+    const resizeObserver = new ResizeObserver(() => paintOverlay({ keepExisting: true }));
     resizeObserver.observe(container);
 
     return () => {
