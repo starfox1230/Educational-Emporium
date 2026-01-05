@@ -11,10 +11,11 @@ function extractDisplayWords(sentence) {
   });
 }
 
-function ScratchImageReveal({ src }) {
+function ScratchImageReveal({ src, locked = false }) {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [unlockPulse, setUnlockPulse] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -76,7 +77,15 @@ function ScratchImageReveal({ src }) {
     return () => window.removeEventListener("resize", onResize);
   }, [src]);
 
+  useEffect(() => {
+    if (locked) return;
+    setUnlockPulse(true);
+    const t = setTimeout(() => setUnlockPulse(false), 1100);
+    return () => clearTimeout(t);
+  }, [locked]);
+
   function scratch(e) {
+    if (locked) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -94,12 +103,13 @@ function ScratchImageReveal({ src }) {
   }
 
   return (
-    <div className="revealShell" ref={containerRef}>
+    <div className={`revealShell ${locked ? "locked" : ""} ${unlockPulse ? "unlockPulse" : ""}`} ref={containerRef}>
       <img className="img" src={src} alt="" draggable={false} />
       <canvas
-        className="revealCanvas"
+        className={`revealCanvas ${locked ? "isLocked" : ""}`}
         ref={canvasRef}
         onPointerDown={e => {
+          if (locked) return;
           canvasRef.current?.setPointerCapture(e.pointerId);
           setIsDrawing(true);
           scratch(e);
@@ -114,7 +124,6 @@ function ScratchImageReveal({ src }) {
         }}
         onPointerLeave={() => setIsDrawing(false)}
       />
-      <div className="revealHint">Swipe to reveal the art</div>
     </div>
   );
 }
@@ -371,17 +380,11 @@ export default function Reader({ storyId }) {
         <div className="imageBox">
           {sentence.imageUrl ? (
             mode === "view" ? (
-              allWordsTapped ? (
-                <ScratchImageReveal key={`${idx}-${sentence.imageUrl}`} src={sentence.imageUrl} />
-              ) : (
-                <div className="lockedImage">
-                  <img className="img" src={sentence.imageUrl} alt="" draggable={false} />
-                  <div className="lockOverlay">
-                    <div className="sparkle" />
-                    <div className="lockText">Tap every word to unlock the art.</div>
-                  </div>
-                </div>
-              )
+              <ScratchImageReveal
+                key={`${idx}-${sentence.imageUrl}`}
+                src={sentence.imageUrl}
+                locked={!allWordsTapped}
+              />
             ) : (
               <img className="img" src={sentence.imageUrl} alt="" draggable={false} />
             )
