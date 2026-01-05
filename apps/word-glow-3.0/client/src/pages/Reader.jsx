@@ -11,6 +11,114 @@ function extractDisplayWords(sentence) {
   });
 }
 
+function ScratchImageReveal({ src }) {
+  const containerRef = useRef(null);
+  const canvasRef = useRef(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    function paintOverlay() {
+      const rect = container.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = rect.width * ratio;
+      canvas.height = rect.height * ratio;
+      canvas.style.width = `${rect.width}px`;
+      canvas.style.height = `${rect.height}px`;
+
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(ratio, ratio);
+      ctx.globalCompositeOperation = "source-over";
+
+      const gradient = ctx.createLinearGradient(0, 0, rect.width, rect.height);
+      gradient.addColorStop(0, "rgba(126,240,195,0.82)");
+      gradient.addColorStop(1, "rgba(102,166,255,0.88)");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, rect.width, rect.height);
+
+      for (let i = 0; i < 46; i += 1) {
+        const radius = 10 + Math.random() * 34;
+        const x = Math.random() * rect.width;
+        const y = Math.random() * rect.height;
+        const hue = 130 + Math.random() * 120;
+        ctx.beginPath();
+        ctx.fillStyle = `hsla(${hue}, 80%, 70%, 0.35)`;
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.lineWidth = 14;
+      ctx.strokeStyle = "rgba(255,255,255,0.35)";
+      for (let i = 0; i < 4; i += 1) {
+        ctx.beginPath();
+        ctx.moveTo(Math.random() * rect.width, Math.random() * rect.height);
+        ctx.bezierCurveTo(
+          Math.random() * rect.width,
+          Math.random() * rect.height,
+          Math.random() * rect.width,
+          Math.random() * rect.height,
+          Math.random() * rect.width,
+          Math.random() * rect.height,
+        );
+        ctx.stroke();
+      }
+    }
+
+    paintOverlay();
+    const onResize = () => paintOverlay();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [src]);
+
+  function scratch(e) {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    ctx.save();
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.beginPath();
+    ctx.arc(x, y, 26, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  return (
+    <div className="revealShell" ref={containerRef}>
+      <img className="img" src={src} alt="" draggable={false} />
+      <canvas
+        className="revealCanvas"
+        ref={canvasRef}
+        onPointerDown={e => {
+          canvasRef.current?.setPointerCapture(e.pointerId);
+          setIsDrawing(true);
+          scratch(e);
+        }}
+        onPointerMove={e => {
+          if (!isDrawing) return;
+          scratch(e);
+        }}
+        onPointerUp={e => {
+          setIsDrawing(false);
+          canvasRef.current?.releasePointerCapture(e.pointerId);
+        }}
+        onPointerLeave={() => setIsDrawing(false)}
+      />
+      <div className="revealHint">Swipe to reveal the art</div>
+    </div>
+  );
+}
+
 export default function Reader({ storyId }) {
   const [data, setData] = useState(null);
   const [idx, setIdx] = useState(0);
@@ -20,6 +128,8 @@ export default function Reader({ storyId }) {
   const [actionStatus, setActionStatus] = useState("");
   const [deleteStatus, setDeleteStatus] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [tappedWordIndexes, setTappedWordIndexes] = useState(new Set());
+  const [lastTappedWord, setLastTappedWord] = useState(null);
 
   const sentenceAudioRef = useRef(null);
   const htmlAudioFallbackRef = useRef(null);
@@ -46,6 +156,8 @@ export default function Reader({ storyId }) {
 
   const sentence = data?.sentences?.[idx];
   const tokens = useMemo(() => extractDisplayWords(sentence?.text || ""), [sentence?.text]);
+  const wordCount = useMemo(() => tokens.filter(t => t.kind === "word").length, [tokens]);
+  const allWordsTapped = wordCount > 0 && tappedWordIndexes.size >= wordCount;
 
   useEffect(() => {
     setActionStatus("");
@@ -54,6 +166,11 @@ export default function Reader({ storyId }) {
   useEffect(() => {
     if (mode !== "edit") setDeleteStatus("");
   }, [mode]);
+
+  useEffect(() => {
+    setTappedWordIndexes(new Set());
+    setLastTappedWord(null);
+  }, [sentence?.text]);
 
   async function playSentence() {
     if (!sentence?.sentenceAudioUrl) return;
@@ -93,6 +210,16 @@ export default function Reader({ storyId }) {
     if (!htmlAudioFallbackRef.current) htmlAudioFallbackRef.current = new Audio();
     htmlAudioFallbackRef.current.src = url;
     htmlAudioFallbackRef.current.play().catch(() => {});
+  }
+
+  function onWordTap(wordIdx, raw) {
+    setLastTappedWord(wordIdx);
+    setTappedWordIndexes(prev => {
+      const next = new Set(prev);
+      next.add(wordIdx);
+      return next;
+    });
+    playWord(raw);
   }
 
   async function ensureWordUrl(w) {
@@ -218,7 +345,21 @@ export default function Reader({ storyId }) {
       <div className="page">
         <div className="imageBox">
           {sentence.imageUrl ? (
-            <img className="img" src={sentence.imageUrl} alt="" />
+            mode === "view" ? (
+              allWordsTapped ? (
+                <ScratchImageReveal key={`${idx}-${sentence.imageUrl}`} src={sentence.imageUrl} />
+              ) : (
+                <div className="lockedImage">
+                  <img className="img" src={sentence.imageUrl} alt="" draggable={false} />
+                  <div className="lockOverlay">
+                    <div className="sparkle" />
+                    <div className="lockText">Tap every word to unlock the art.</div>
+                  </div>
+                </div>
+              )
+            ) : (
+              <img className="img" src={sentence.imageUrl} alt="" draggable={false} />
+            )
           ) : (
             <div className="imgPlaceholder">No image</div>
           )}
@@ -245,7 +386,11 @@ export default function Reader({ storyId }) {
             if (t.kind === "space") return <span key={i}>{t.text}</span>;
             if (t.kind === "punct") return <span key={i}>{t.text}</span>;
             return (
-              <button key={i} className="wordBtn" onClick={() => playWord(t.wordOnly)}>
+              <button
+                key={i}
+                className={`wordBtn ${lastTappedWord === i ? "wordActive" : ""}`}
+                onClick={() => onWordTap(i, t.wordOnly)}
+              >
                 {t.text}
               </button>
             );
