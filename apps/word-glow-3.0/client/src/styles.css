@@ -153,6 +153,13 @@ body {
   100% { transform: scale(1); filter: brightness(1); }
 }
 
+@keyframes puffAway {
+  0% { opacity: 1; filter: blur(0px) brightness(1); transform: scale(1); }
+  30% { opacity: 0.92; filter: blur(2px) brightness(1.05); transform: scale(1.03); }
+  60% { opacity: 0.62; filter: blur(6px) brightness(1.08); transform: scale(1.07); }
+  100% { opacity: 0; filter: blur(12px) brightness(1.1); transform: scale(1.12); }
+}
+
 .revealCanvas {
   position: absolute;
   inset: 0;
@@ -161,6 +168,16 @@ body {
   touch-action: none;
   cursor: grab;
   transition: opacity 0.3s ease, filter 0.3s ease;
+}
+.revealCanvas.autoReveal {
+  pointer-events: none;
+  animation: puffAway 900ms ease-out forwards;
+  transform-origin: center;
+  box-shadow: 0 0 24px rgba(0,0,0,0.32);
+}
+.revealCanvas.revealGone {
+  opacity: 0;
+  pointer-events: none;
 }
 .revealCanvas.isLocked {
   pointer-events: none;

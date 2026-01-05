@@ -15,8 +15,14 @@ function ScratchImageReveal({ src, locked = false, onImageLoad }) {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   const lastCanvasSize = useRef({ width: 0, height: 0 });
+  const revealCheckPending = useRef(false);
   const [isDrawing, setIsDrawing] = useState(false);
   const [unlockPulse, setUnlockPulse] = useState(false);
+  const [overlayState, setOverlayState] = useState("idle");
+
+  useEffect(() => {
+    setOverlayState("idle");
+  }, [src, locked]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -117,6 +123,7 @@ function ScratchImageReveal({ src, locked = false, onImageLoad }) {
   }, [locked]);
 
   function scratch(e) {
+    if (overlayState !== "idle") return;
     if (locked) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -132,13 +139,65 @@ function ScratchImageReveal({ src, locked = false, onImageLoad }) {
     ctx.arc(x, y, 26, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
+
+    requestRevealCheck();
+  }
+
+  function requestRevealCheck() {
+    if (revealCheckPending.current || overlayState !== "idle") return;
+    revealCheckPending.current = true;
+    requestAnimationFrame(() => {
+      revealCheckPending.current = false;
+      measureRevealProgress();
+    });
+  }
+
+  function measureRevealProgress() {
+    const canvas = canvasRef.current;
+    if (!canvas || !canvas.width || !canvas.height) return;
+    const sampleSize = 96;
+    const sampler = document.createElement("canvas");
+    sampler.width = sampleSize;
+    sampler.height = sampleSize;
+    const sctx = sampler.getContext("2d");
+    if (!sctx) return;
+    sctx.drawImage(canvas, 0, 0, sampleSize, sampleSize);
+    const data = sctx.getImageData(0, 0, sampleSize, sampleSize).data;
+    let transparent = 0;
+    for (let i = 3; i < data.length; i += 4) {
+      if (data[i] === 0) transparent += 1;
+    }
+    const pct = Math.round((transparent / (data.length / 4)) * 100);
+    if (pct >= 70) triggerAutoReveal();
+  }
+
+  useEffect(() => {
+    if (overlayState !== "puff") return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const onDone = () => {
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.save();
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
+      }
+      setOverlayState("done");
+    };
+    canvas.addEventListener("animationend", onDone);
+    return () => canvas.removeEventListener("animationend", onDone);
+  }, [overlayState]);
+
+  function triggerAutoReveal() {
+    setOverlayState(prev => (prev === "idle" ? "puff" : prev));
   }
 
   return (
     <div className={`revealShell ${locked ? "locked" : ""} ${unlockPulse ? "unlockPulse" : ""}`} ref={containerRef}>
       <img className="img" src={src} alt="" draggable={false} onLoad={onImageLoad} />
       <canvas
-        className={`revealCanvas ${locked ? "isLocked" : ""}`}
+        className={`revealCanvas ${locked ? "isLocked" : ""} ${overlayState === "puff" ? "autoReveal" : ""} ${overlayState === "done" ? "revealGone" : ""}`}
         ref={canvasRef}
         onPointerDown={e => {
           if (locked) return;
