@@ -2,12 +2,14 @@ export function splitIntoSentences(text) {
   const cleaned = (text || "").replace(/\s+/g, " ").trim();
   if (!cleaned) return [];
 
-  // Match runs that end in sentence punctuation, optionally followed by
-  // closing quotes/brackets. This keeps quoted sentences intact and ensures
-  // punctuation like .” or ?' still signal the sentence boundary.
-  const matches = cleaned.match(/[^.!?]+[.!?]["'”’\)\]]*(?=\s+|$)/g);
+  // Use the built-in browser API for locale-aware sentence segmentation.
+  // This handles quotes, abbreviations (Mr., Dr.), and punctuation correctly.
+  const segmenter = new Intl.Segmenter("en", { granularity: "sentence" });
+  const segments = segmenter.segment(cleaned);
 
-  return matches ? matches.map(s => s.trim()) : [cleaned];
+  return Array.from(segments)
+    .map(s => s.segment.trim())
+    .filter(s => s.length > 0);
 }
 
 export function extractWords(text) {
