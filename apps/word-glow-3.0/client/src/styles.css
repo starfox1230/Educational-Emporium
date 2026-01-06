@@ -198,6 +198,28 @@ body {
 }
 .imgBtn.disabled { opacity: 0.4; }
 
+.imgDeleteBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.2);
+  background: #e44444;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.28);
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+
+.imgDeleteBtn:hover:not(.disabled) { transform: scale(1.05); }
+.imgDeleteBtn:active:not(.disabled) { transform: scale(0.97); }
+.imgDeleteBtn.disabled { opacity: 0.45; cursor: not-allowed; }
+
 .sentenceShell { position: relative; }
 .sentenceToolbar { display: flex; justify-content: flex-end; margin-bottom: 4px; }
 .sentence { font-size: 30px; line-height: 1.25; padding: 8px 6px 14px; }

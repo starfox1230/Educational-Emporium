@@ -533,6 +533,22 @@ export default function Reader({ storyId }) {
     }
   }
 
+  async function onDeleteImage() {
+    if (!parentKey || mode !== "edit" || !sentence?.imageUrl) return;
+    setErr("");
+    setActionStatus("Deleting image…");
+    try {
+      await apiDelete(`/api/stories/${storyId}/sentences/${idx}/image`, null, parentKey);
+      const fresh = await apiGet(`/api/stories/${storyId}`);
+      setData(fresh);
+      setImageSize({ width: 16, height: 9 });
+      setActionStatus("Image deleted.");
+    } catch (e) {
+      setErr(String(e));
+      setActionStatus("");
+    }
+  }
+
   async function onRegenerateAudio() {
     if (!parentKey || mode !== "edit") return;
     setErr("");
@@ -607,6 +623,17 @@ export default function Reader({ storyId }) {
           ) : (
             <div className="imgPlaceholder">No image</div>
           )}
+
+          {mode === "edit" && sentence.imageUrl ? (
+            <button
+              className={`imgDeleteBtn ${isEditEnabled() ? "" : "disabled"}`}
+              onClick={onDeleteImage}
+              disabled={!isEditEnabled()}
+              aria-label="Delete image"
+            >
+              ×
+            </button>
+          ) : null}
 
           {mode === "edit" ? (
             <label className={`imgBtn ${isEditEnabled() ? "" : "disabled"}`}>

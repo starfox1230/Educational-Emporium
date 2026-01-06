@@ -391,6 +391,35 @@ app.post("/api/stories/:storyId/sentences/:index/image",
   }
 );
 
+// Parent-only: delete image for a sentence index
+app.delete("/api/stories/:storyId/sentences/:index/image",
+  requireParentKey,
+  async (req, res) => {
+    const { storyId, index } = req.params;
+    if (!BUCKET) return res.status(500).json({ error: "Missing FIREBASE_STORAGE_BUCKET." });
+
+    const idx = Number(index);
+    if (!Number.isFinite(idx) || idx < 0) return res.status(400).json({ error: "Bad index." });
+
+    const db = getFirestore();
+    const storyRef = db.collection("stories").doc(storyId);
+    const storyDoc = await storyRef.get();
+    if (!storyDoc.exists) return res.status(404).json({ error: "Story not found." });
+
+    const sentenceRef = storyRef.collection("sentences").doc(String(idx));
+    const sentenceDoc = await sentenceRef.get();
+    if (!sentenceDoc.exists) return res.status(404).json({ error: "Sentence not found." });
+
+    const sentenceData = sentenceDoc.data() || {};
+    const imagePath = getObjectPathFromDownloadUrl({ url: sentenceData.imageUrl, bucketName: BUCKET });
+    if (imagePath) await deleteFileIfExists({ bucketName: BUCKET, objectPath: imagePath });
+
+    const cleared = { imageUrl: null, imageWidth: null, imageHeight: null };
+    await sentenceRef.set(cleared, { merge: true });
+    res.json({ ok: true, ...cleared });
+  }
+);
+
 // Parent-only: update sentence text (optional audio regen + missing word audio)
 app.post("/api/stories/:storyId/sentences/:index/update-text",
   requireParentKey,
