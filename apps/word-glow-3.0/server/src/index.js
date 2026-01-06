@@ -523,23 +523,22 @@ app.post("/api/stories/:storyId/sentences/:index/insert",
 
     const storyData = storyDoc.data() || {};
     const sentenceCount = Number(storyData.sentenceCount) || 0;
+    // Allow inserting at the very end
     if (insertIndex > sentenceCount) return res.status(400).json({ error: "Insert position out of range." });
 
     const sentenceCollection = storyRef.collection("sentences");
     const toShift = await sentenceCollection
       .where("index", ">=", insertIndex)
-      .orderBy("index", "desc")
+      .orderBy("index", "desc") // Work backwards to avoid overwriting data we haven't moved yet
       .get();
 
-    const shiftLimit = pLimit(3);
-    await Promise.all(
-      toShift.docs.map(doc => shiftLimit(async () => {
-        const data = doc.data();
-        const newIndex = (data.index ?? Number(doc.id)) + 1;
-        await sentenceCollection.doc(String(newIndex)).set({ ...data, index: newIndex });
-        await doc.ref.delete();
-      }))
-    );
+    // Shift them sequentially (No Deletes, just Overwrites)
+    const docs = toShift.docs;
+    for (const doc of docs) {
+      const data = doc.data();
+      const newIndex = (data.index ?? Number(doc.id)) + 1;
+      await sentenceCollection.doc(String(newIndex)).set({ ...data, index: newIndex });
+    }
 
     const now = new Date().toISOString();
 
@@ -630,23 +629,29 @@ app.delete("/api/stories/:storyId/sentences/:index",
     if (audioPath) await deleteFileIfExists({ bucketName: BUCKET, objectPath: audioPath });
     if (imagePath) await deleteFileIfExists({ bucketName: BUCKET, objectPath: imagePath });
 
-    await sentenceRef.delete();
-
     const sentenceCollection = storyRef.collection("sentences");
     const toShift = await sentenceCollection
       .where("index", ">", idx)
       .orderBy("index", "asc")
       .get();
 
-    const shiftLimit = pLimit(3);
-    await Promise.all(
-      toShift.docs.map(doc => shiftLimit(async () => {
-        const data = doc.data();
-        const newIndex = (data.index ?? Number(doc.id)) - 1;
-        await sentenceCollection.doc(String(newIndex)).set({ ...data, index: newIndex });
-        await doc.ref.delete();
-      }))
-    );
+    const docs = toShift.docs;
+    let lastIndex = idx;
+
+    for (const doc of docs) {
+      const data = doc.data();
+      const currentIndex = data.index ?? Number(doc.id);
+      const newIndex = currentIndex - 1;
+
+      await sentenceCollection.doc(String(newIndex)).set({ ...data, index: newIndex });
+      lastIndex = currentIndex;
+    }
+
+    if (docs.length > 0) {
+      await sentenceCollection.doc(String(lastIndex)).delete();
+    } else {
+      await sentenceRef.delete();
+    }
 
     const storyData = storyDoc.data() || {};
     const now = new Date().toISOString();
