@@ -552,26 +552,34 @@ app.post("/api/stories/:storyId/sentences/:index/insert",
 
     const storyData = storyDoc.data() || {};
     const sentenceCount = Number(storyData.sentenceCount) || 0;
-    // Allow inserting at the very end
     if (insertIndex > sentenceCount) return res.status(400).json({ error: "Insert position out of range." });
 
     const sentenceCollection = storyRef.collection("sentences");
+
+    // 1. Fetch all docs that need moving
     const toShift = await sentenceCollection
       .where("index", ">=", insertIndex)
-      .orderBy("index", "desc") // Work backwards to avoid overwriting data we haven't moved yet
+      .orderBy("index", "desc") // Descending is crucial for logic, though batch handles order safely
       .get();
 
-    // Shift them sequentially (No Deletes, just Overwrites)
-    const docs = toShift.docs;
-    for (const doc of docs) {
+    // 2. usage of WriteBatch ensures all moves happen or none happen
+    const batch = db.batch();
+
+    toShift.docs.forEach(doc => {
       const data = doc.data();
-      const newIndex = (data.index ?? Number(doc.id)) + 1;
-      await sentenceCollection.doc(String(newIndex)).set({ ...data, index: newIndex });
-    }
+      const oldIndex = data.index ?? Number(doc.id);
+      const newIndex = oldIndex + 1;
+
+      // Force the data into the correctly named document ID
+      const targetRef = sentenceCollection.doc(String(newIndex));
+      batch.set(targetRef, { ...data, index: newIndex });
+    });
 
     const now = new Date().toISOString();
 
-    await sentenceCollection.doc(String(insertIndex)).set({
+    // 3. Insert the new blank page
+    const newPageRef = sentenceCollection.doc(String(insertIndex));
+    batch.set(newPageRef, {
       index: insertIndex,
       text: "",
       sentenceAudioUrl: null,
@@ -582,7 +590,10 @@ app.post("/api/stories/:storyId/sentences/:index/insert",
       updatedAt: now
     });
 
-    await storyRef.set({ sentenceCount: sentenceCount + 1, updatedAt: now }, { merge: true });
+    // 4. Update story metadata
+    batch.set(storyRef, { sentenceCount: sentenceCount + 1, updatedAt: now }, { merge: true });
+
+    await batch.commit();
 
     res.json({ ok: true, insertIndex });
   }
@@ -652,40 +663,53 @@ app.delete("/api/stories/:storyId/sentences/:index",
     const sentenceDoc = await sentenceRef.get();
     if (!sentenceDoc.exists) return res.status(404).json({ error: "Sentence not found." });
 
+    // 1. Delete assets immediately (files)
     const sentenceData = sentenceDoc.data() || {};
     const audioPath = getObjectPathFromDownloadUrl({ url: sentenceData.sentenceAudioUrl, bucketName: BUCKET });
     const imagePath = getObjectPathFromDownloadUrl({ url: sentenceData.imageUrl, bucketName: BUCKET });
     if (audioPath) await deleteFileIfExists({ bucketName: BUCKET, objectPath: audioPath });
     if (imagePath) await deleteFileIfExists({ bucketName: BUCKET, objectPath: imagePath });
 
+    // 2. Fetch docs to shift down
     const sentenceCollection = storyRef.collection("sentences");
     const toShift = await sentenceCollection
       .where("index", ">", idx)
-      .orderBy("index", "asc")
+      .orderBy("index", "asc") 
       .get();
 
-    const docs = toShift.docs;
-    let lastIndex = idx;
+    const batch = db.batch();
 
-    for (const doc of docs) {
+    // 3. Shift following pages down (Overwriting the one being deleted)
+    let lastIndex = idx; // Track the highest index we encounter
+
+    toShift.docs.forEach(doc => {
       const data = doc.data();
-      const currentIndex = data.index ?? Number(doc.id);
-      const newIndex = currentIndex - 1;
+      const oldIndex = data.index ?? Number(doc.id);
+      const newIndex = oldIndex - 1;
 
-      await sentenceCollection.doc(String(newIndex)).set({ ...data, index: newIndex });
-      lastIndex = currentIndex;
-    }
+      // Force write to the calculated ID
+      const targetRef = sentenceCollection.doc(String(newIndex));
+      batch.set(targetRef, { ...data, index: newIndex });
 
-    if (docs.length > 0) {
-      await sentenceCollection.doc(String(lastIndex)).delete();
+      lastIndex = oldIndex;
+    });
+
+    // 4. Delete the tail document
+    // If we shifted 3->2, 4->3, we must delete doc 4.
+    // If we shifted nothing, we delete the target doc (idx).
+    if (toShift.empty) {
+      batch.delete(sentenceCollection.doc(String(idx)));
     } else {
-      await sentenceRef.delete();
+      batch.delete(sentenceCollection.doc(String(lastIndex)));
     }
 
+    // 5. Update story count
     const storyData = storyDoc.data() || {};
     const now = new Date().toISOString();
     const newCount = Math.max(0, (Number(storyData.sentenceCount) || 0) - 1);
-    await storyRef.set({ sentenceCount: newCount, updatedAt: now }, { merge: true });
+    batch.set(storyRef, { sentenceCount: newCount, updatedAt: now }, { merge: true });
+
+    await batch.commit();
 
     res.json({ ok: true, deletedIndex: idx, sentenceCount: newCount });
   }
