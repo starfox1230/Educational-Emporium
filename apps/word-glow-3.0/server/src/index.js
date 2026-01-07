@@ -6,6 +6,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import pLimit from "p-limit";
 import imageSize from "image-size";
+import JSZip from "jszip";
 
 import { getFirestore } from "./firebaseAdmin.js";
 import { splitIntoSentences, extractWords, normalizeWord } from "./text.js";
@@ -40,6 +41,197 @@ const TTS_CONFIG = {
 
 const SENTENCE_TTS = TTS_CONFIG.sentence;
 const WORD_TTS = TTS_CONFIG.word;
+
+function slugify(str) {
+  return (str || "")
+    .toString()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+    || "wordglow-story";
+}
+
+function guessExtensionFromUrl(url, fallback = "bin") {
+  try {
+    const decodedPath = decodeURIComponent(new URL(url).pathname);
+    const match = decodedPath.match(/\.([a-zA-Z0-9]+)$/);
+    if (match?.[1]) return match[1].toLowerCase();
+  } catch {
+    // ignore
+  }
+  return fallback;
+}
+
+async function fetchAsBuffer(url, label) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`Failed to download ${label || url}: ${r.status}`);
+  const arr = await r.arrayBuffer();
+  return Buffer.from(arr);
+}
+
+const OFFLINE_HTML = [
+  "<!doctype html>",
+  "<html lang=\"en\">",
+  "  <head>",
+  "    <meta charset=\"UTF-8\" />",
+  "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />",
+  "    <title>WordGlow Story</title>",
+  "    <link rel=\"stylesheet\" href=\"styles.css\" />",
+  "  </head>",
+  "  <body>",
+  "    <div class=\"wrap\">",
+  "      <header class=\"topbar\">",
+  "        <div class=\"title\" id=\"storyTitle\">WordGlow Story</div>",
+  "        <div class=\"subtitle\" id=\"storyMeta\"></div>",
+  "      </header>",
+  "",
+  "      <main class=\"page\">",
+  "        <div class=\"imageBox\" id=\"imageBox\">",
+  "          <img id=\"storyImage\" alt=\"Story\" />",
+  "          <div class=\"imgPlaceholder\" id=\"imagePlaceholder\">No image</div>",
+  "        </div>",
+  "",
+  "        <div class=\"sentence\" id=\"sentenceText\"></div>",
+  "",
+  "        <div class=\"controls\">",
+  "          <button class=\"btn\" id=\"prevBtn\">‹ Prev</button>",
+  "          <button class=\"btnPrimary\" id=\"playSentenceBtn\">Play Sentence</button>",
+  "          <button class=\"btn\" id=\"nextBtn\">Next ›</button>",
+  "        </div>",
+  "",
+  "        <div class=\"progress\" id=\"progressText\"></div>",
+  "      </main>",
+  "    </div>",
+  "",
+  "    <script src=\"viewer.js\"></script>",
+  "  </body>",
+  "</html>",
+].join("\n");
+
+const OFFLINE_CSS = [
+  ":root { color-scheme: light; font-family: 'Inter', system-ui, -apple-system, sans-serif; }",
+  "* { box-sizing: border-box; }",
+  "body { margin: 0; background: #f5f7fb; color: #1c2a3a; }",
+  ".wrap { max-width: 900px; margin: 0 auto; padding: 24px; }",
+  ".topbar { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }",
+  ".title { font-size: 28px; font-weight: 700; }",
+  ".subtitle { color: #4a5b70; font-size: 14px; }",
+  ".page { background: #fff; border: 1px solid #dfe7f3; border-radius: 12px; padding: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }",
+  ".imageBox { position: relative; width: 100%; padding-top: 56.25%; border-radius: 12px; overflow: hidden; background: linear-gradient(120deg, #dbeafe, #d1fae5); margin-bottom: 16px; border: 1px solid #d6e2f1; }",
+  ".imageBox img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #0001; display: none; }",
+  ".imgPlaceholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #6b7280; font-weight: 600; letter-spacing: 0.3px; }",
+  ".sentence { font-size: 22px; line-height: 1.5; margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 6px; }",
+  ".wordBtn { background: #eef2ff; border: 1px solid #c7d2fe; color: #1f2a44; border-radius: 10px; padding: 8px 12px; font-size: 18px; cursor: pointer; transition: transform 120ms ease, box-shadow 120ms ease; }",
+  ".wordBtn:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(79,70,229,0.2); }",
+  ".wordBtn:active { transform: translateY(0); box-shadow: none; }",
+  ".controls { display: flex; gap: 12px; justify-content: center; margin-bottom: 12px; }",
+  ".btn { background: #fff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px 14px; font-weight: 600; cursor: pointer; min-width: 92px; }",
+  ".btnPrimary { background: #2563eb; color: #fff; border: 1px solid #1d4ed8; border-radius: 10px; padding: 10px 14px; font-weight: 700; cursor: pointer; min-width: 150px; box-shadow: 0 10px 25px rgba(37,99,235,0.35); }",
+  ".btn:disabled, .btnPrimary:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }",
+  ".progress { text-align: center; color: #4a5b70; font-size: 14px; font-weight: 600; }",
+  "@media (max-width: 640px) { .sentence { font-size: 18px; } .btnPrimary { min-width: 0; width: 100%; } .controls { flex-wrap: wrap; } }",
+].join("\n");
+
+const OFFLINE_JS = [
+  "(() => {",
+  "  const sentenceTextEl = document.getElementById('sentenceText');",
+  "  const imageEl = document.getElementById('storyImage');",
+  "  const imagePlaceholderEl = document.getElementById('imagePlaceholder');",
+  "  const titleEl = document.getElementById('storyTitle');",
+  "  const metaEl = document.getElementById('storyMeta');",
+  "  const progressEl = document.getElementById('progressText');",
+  "  const prevBtn = document.getElementById('prevBtn');",
+  "  const nextBtn = document.getElementById('nextBtn');",
+  "  const playSentenceBtn = document.getElementById('playSentenceBtn');",
+  "",
+  "  let story = null;",
+  "  let idx = 0;",
+  "  const wordAudioCache = new Map();",
+  "  const sentenceAudio = new Audio();",
+  "",
+  "  const normalizeWord = (raw) => (raw || '').toLowerCase().replace(/^[\\'’]+|[\\'’]+$/g, '');",
+  "  const tokenize = (sentence) => {",
+  "    const parts = (sentence || '').split(/(\\s+)/);",
+  "    return parts.map(part => {",
+  "      if (/^\\s+$/.test(part)) return { kind: 'space', text: part };",
+  "      const m = part.match(/[A-Za-z]+(?:[-'’][A-Za-z]+)*/);",
+  "      if (!m) return { kind: 'punct', text: part };",
+  "      return { kind: 'word', text: part, wordOnly: m[0] };",
+  "    });",
+  "  };",
+  "",
+  "  const render = () => {",
+  "    if (!story) return;",
+  "    const sentence = story.sentences[idx];",
+  "    sentenceTextEl.innerHTML = '';",
+  "    const tokens = tokenize(sentence?.text || '');",
+  "    tokens.forEach((t) => {",
+  "      if (t.kind !== 'word') {",
+  "        const span = document.createElement('span');",
+  "        span.textContent = t.text;",
+  "        sentenceTextEl.appendChild(span);",
+  "        return;",
+  "      }",
+  "      const btn = document.createElement('button');",
+  "      btn.className = 'wordBtn';",
+  "      btn.textContent = t.text;",
+  "      btn.addEventListener('click', () => playWord(t.wordOnly));",
+  "      sentenceTextEl.appendChild(btn);",
+  "    });",
+  "",
+  "    if (sentence?.imagePath) {",
+  "      imageEl.src = sentence.imagePath;",
+  "      imageEl.style.display = 'block';",
+  "      imagePlaceholderEl.style.display = 'none';",
+  "    } else {",
+  "      imageEl.src = '';",
+  "      imageEl.style.display = 'none';",
+  "      imagePlaceholderEl.style.display = 'flex';",
+  "    }",
+  "",
+  "    progressEl.textContent = `Page ${idx + 1} of ${story.sentences.length}`;",
+  "    prevBtn.disabled = idx === 0;",
+  "    nextBtn.disabled = idx >= story.sentences.length - 1;",
+  "  };",
+  "",
+  "  const playSentence = () => {",
+  "    const sentence = story?.sentences?.[idx];",
+  "    if (!sentence?.sentenceAudioPath) return;",
+  "    sentenceAudio.src = sentence.sentenceAudioPath;",
+  "    sentenceAudio.play().catch(() => {});",
+  "  };",
+  "",
+  "  const playWord = (raw) => {",
+  "    const normalized = normalizeWord(raw);",
+  "    const src = story?.wordAudioMap?.[normalized];",
+  "    if (!src) return;",
+  "    let audio = wordAudioCache.get(normalized);",
+  "    if (!audio) {",
+  "      audio = new Audio(src);",
+  "      wordAudioCache.set(normalized, audio);",
+  "    }",
+  "    audio.currentTime = 0;",
+  "    audio.play().catch(() => {});",
+  "  };",
+  "",
+  "  const load = async () => {",
+  "    const payload = await fetch('story.json').then(r => r.json());",
+  "    story = payload;",
+  "    titleEl.textContent = payload.title || 'WordGlow Story';",
+  "    metaEl.textContent = payload.appName || '';",
+  "    render();",
+  "  };",
+  "",
+  "  prevBtn.addEventListener('click', () => { idx = Math.max(0, idx - 1); render(); });",
+  "  nextBtn.addEventListener('click', () => { if (story) idx = Math.min(story.sentences.length - 1, idx + 1); render(); });",
+  "  playSentenceBtn.addEventListener('click', playSentence);",
+  "",
+  "  load().catch(() => {",
+  "    titleEl.textContent = 'Unable to load story';",
+  "    metaEl.textContent = 'Check that all files are present in this folder.';",
+  "  });",
+  "})();",
+].join("\n");
 
 function base64ToBuffer(str) {
   try {
@@ -79,6 +271,116 @@ app.get("/api/stories/:storyId", async (req, res) => {
 
   const sentences = sentSnap.docs.map(d => d.data());
   res.json({ id: storyDoc.id, ...storyDoc.data(), sentences });
+});
+
+// Public: download a standalone offline app for a single story
+app.get("/api/stories/:storyId/download", async (req, res) => {
+  const { storyId } = req.params;
+  const db = getFirestore();
+
+  const storyDoc = await db.collection("stories").doc(storyId).get();
+  if (!storyDoc.exists) return res.status(404).json({ error: "Story not found." });
+
+  const sentSnap = await db.collection("stories").doc(storyId)
+    .collection("sentences").orderBy("index").get();
+
+  const sentences = sentSnap.docs.map(d => d.data());
+  if (sentences.some(s => !s.sentenceAudioUrl)) {
+    return res.status(400).json({ error: "Story is missing sentence audio." });
+  }
+
+  const allWords = new Set();
+  for (const s of sentences) {
+    for (const raw of extractWords(s.text || "")) {
+      const n = normalizeWord(raw);
+      if (n) allWords.add(n);
+    }
+  }
+
+  // Load word audio entries
+  const wordList = Array.from(allWords);
+  const missingWords = [];
+  const wordAudioDocs = [];
+  const chunked = [];
+  for (let i = 0; i < wordList.length; i += 200) chunked.push(wordList.slice(i, i + 200));
+
+  for (const chunk of chunked) {
+    const refs = chunk.map(w => db.collection("wordLibrary").doc(w));
+    const snaps = await db.getAll(...refs);
+    snaps.forEach((docSnap, i) => {
+      if (!docSnap.exists) {
+        missingWords.push(chunk[i]);
+      } else {
+        wordAudioDocs.push({ word: chunk[i], data: docSnap.data() });
+      }
+    });
+  }
+
+  if (missingWords.length) {
+    return res.status(400).json({
+      error: `Missing word audio for: ${missingWords.slice(0, 10).join(", ")}${missingWords.length > 10 ? "…" : ""}`
+    });
+  }
+
+  const zip = new JSZip();
+  const assets = zip.folder("assets");
+  const sentenceFolder = assets.folder("sentences");
+  const imageFolder = assets.folder("images");
+  const wordFolder = assets.folder("words");
+
+  const downloadLimit = pLimit(4);
+
+  const sentencePayloads = await Promise.all(sentences.map((s, idx) => downloadLimit(async () => {
+    const audioExt = guessExtensionFromUrl(s.sentenceAudioUrl, "mp3");
+    const audioBuf = await fetchAsBuffer(s.sentenceAudioUrl, `sentence audio ${idx}`);
+    const audioPath = `assets/sentences/${s.index ?? idx}.${audioExt}`;
+    sentenceFolder.file(`${s.index ?? idx}.${audioExt}`, audioBuf);
+
+    let imagePath = null;
+    if (s.imageUrl) {
+      const imageExt = guessExtensionFromUrl(s.imageUrl, "jpg");
+      const imgBuf = await fetchAsBuffer(s.imageUrl, `sentence image ${idx}`);
+      imagePath = `assets/images/${s.index ?? idx}.${imageExt}`;
+      imageFolder.file(`${s.index ?? idx}.${imageExt}`, imgBuf);
+    }
+
+    return {
+      index: s.index ?? idx,
+      text: s.text,
+      sentenceAudioPath: audioPath,
+      imagePath
+    };
+  })));
+
+  const wordAudioMap = {};
+  await Promise.all(wordAudioDocs.map(entry => downloadLimit(async () => {
+    const audioUrl = entry.data.audioUrl;
+    const ext = guessExtensionFromUrl(audioUrl, "mp3");
+    const buf = await fetchAsBuffer(audioUrl, `word audio ${entry.word}`);
+    const objectPath = `assets/words/${entry.word}.${ext}`;
+    wordFolder.file(`${entry.word}.${ext}`, buf);
+    wordAudioMap[entry.word] = objectPath;
+  })));
+
+  const payload = {
+    id: storyDoc.id,
+    title: storyDoc.data().title || "WordGlow Story",
+    appName: storyDoc.data().appName || "WordGlow 3.0",
+    createdAt: storyDoc.data().createdAt || null,
+    sentences: sentencePayloads.sort((a, b) => (a.index ?? 0) - (b.index ?? 0)),
+    wordAudioMap
+  };
+
+  zip.file("story.json", JSON.stringify(payload, null, 2));
+  zip.file("index.html", OFFLINE_HTML);
+  zip.file("styles.css", OFFLINE_CSS);
+  zip.file("viewer.js", OFFLINE_JS);
+
+  const zipBuffer = await zip.generateAsync({ type: "nodebuffer" });
+  const filename = `${slugify(payload.title)}-app.zip`;
+  res.setHeader("Content-Type", "application/zip");
+  res.setHeader("Content-Disposition", `attachment; filename=\"${filename}\"`);
+  res.send(zipBuffer);
 });
 
 // Public: fetch word audio by word
