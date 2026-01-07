@@ -11,7 +11,12 @@ import JSZip from "jszip";
 import { getFirestore } from "./firebaseAdmin.js";
 import { splitIntoSentences, extractWords, normalizeWord } from "./text.js";
 import { ttsMp3 } from "./openaiTts.js";
-import { deleteFileIfExists, getObjectPathFromDownloadUrl, uploadBufferAndGetDownloadUrl } from "./storage.js";
+import {
+  deleteFileIfExists,
+  downloadBufferFromGcs,
+  getObjectPathFromDownloadUrl,
+  uploadBufferAndGetDownloadUrl
+} from "./storage.js";
 
 const app = express();
 app.use(express.json({ limit: "2mb" }));
@@ -62,11 +67,24 @@ function guessExtensionFromUrl(url, fallback = "bin") {
   return fallback;
 }
 
-async function fetchAsBuffer(url, label) {
+async function fetchAsBuffer(url, label, { bucketName } = {}) {
   const r = await fetch(url);
-  if (!r.ok) throw new Error(`Failed to download ${label || url}: ${r.status}`);
-  const arr = await r.arrayBuffer();
-  return Buffer.from(arr);
+  if (r.ok) {
+    const arr = await r.arrayBuffer();
+    return Buffer.from(arr);
+  }
+
+  const objectPath = bucketName ? getObjectPathFromDownloadUrl({ url, bucketName }) : null;
+  if (objectPath) {
+    try {
+      return await downloadBufferFromGcs({ bucketName, objectPath });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new Error(`Failed to download ${label || url}: ${r.status} (storage fallback failed: ${msg})`);
+    }
+  }
+
+  throw new Error(`Failed to download ${label || url}: ${r.status}`);
 }
 
 const OFFLINE_HTML = [
@@ -332,14 +350,14 @@ app.get("/api/stories/:storyId/download", async (req, res) => {
 
   const sentencePayloads = await Promise.all(sentences.map((s, idx) => downloadLimit(async () => {
     const audioExt = guessExtensionFromUrl(s.sentenceAudioUrl, "mp3");
-    const audioBuf = await fetchAsBuffer(s.sentenceAudioUrl, `sentence audio ${idx}`);
+    const audioBuf = await fetchAsBuffer(s.sentenceAudioUrl, `sentence audio ${idx}`, { bucketName: BUCKET });
     const audioPath = `assets/sentences/${s.index ?? idx}.${audioExt}`;
     sentenceFolder.file(`${s.index ?? idx}.${audioExt}`, audioBuf);
 
     let imagePath = null;
     if (s.imageUrl) {
       const imageExt = guessExtensionFromUrl(s.imageUrl, "jpg");
-      const imgBuf = await fetchAsBuffer(s.imageUrl, `sentence image ${idx}`);
+      const imgBuf = await fetchAsBuffer(s.imageUrl, `sentence image ${idx}`, { bucketName: BUCKET });
       imagePath = `assets/images/${s.index ?? idx}.${imageExt}`;
       imageFolder.file(`${s.index ?? idx}.${imageExt}`, imgBuf);
     }
@@ -356,7 +374,7 @@ app.get("/api/stories/:storyId/download", async (req, res) => {
   await Promise.all(wordAudioDocs.map(entry => downloadLimit(async () => {
     const audioUrl = entry.data.audioUrl;
     const ext = guessExtensionFromUrl(audioUrl, "mp3");
-    const buf = await fetchAsBuffer(audioUrl, `word audio ${entry.word}`);
+    const buf = await fetchAsBuffer(audioUrl, `word audio ${entry.word}`, { bucketName: BUCKET });
     const objectPath = `assets/words/${entry.word}.${ext}`;
     wordFolder.file(`${entry.word}.${ext}`, buf);
     wordAudioMap[entry.word] = objectPath;

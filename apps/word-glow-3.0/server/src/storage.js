@@ -62,3 +62,14 @@ export function getObjectPathFromDownloadUrl({ url, bucketName }) {
   if (bucketName && !url.includes(bucketName)) return null;
   return path;
 }
+
+export async function downloadBufferFromGcs({ bucketName, objectPath }) {
+  if (!bucketName || !objectPath) {
+    throw new Error("Missing bucketName or objectPath for download.");
+  }
+  const storage = getGcsClient();
+  const bucket = storage.bucket(bucketName);
+  const file = bucket.file(objectPath);
+  const [buffer] = await file.download();
+  return buffer;
+}
