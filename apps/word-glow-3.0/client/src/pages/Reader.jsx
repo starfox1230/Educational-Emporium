@@ -628,7 +628,7 @@ export default function Reader({ storyId }) {
       anchor.click();
       anchor.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1500);
-      setDownloadStatus("Standalone app download ready.");
+      setDownloadStatus("Standalone book download ready.");
     } catch (e) {
       setErr(String(e));
       setDownloadStatus("");
@@ -857,12 +857,6 @@ export default function Reader({ storyId }) {
       </div>
 
       <div className="card storyMeta">
-        <div className="subtitle">Download</div>
-        <button className="btnPrimary" onClick={onDownloadStory} disabled={downloading}>
-          {downloading ? "Preparing zip…" : "Download standalone app"}
-        </button>
-        {downloadStatus ? <div className="status">{downloadStatus}</div> : null}
-
         <div className="subtitle">Studio Key (optional)</div>
         <input
           className="input"
@@ -887,6 +881,12 @@ export default function Reader({ storyId }) {
         <div className="muted">
           View mode is read-only. Switch to edit to upload photos or regenerate sentence audio (key required).
         </div>
+
+        <div className="subtitle">Download</div>
+        <button className="btnPrimary" onClick={onDownloadStory} disabled={downloading}>
+          {downloading ? "Preparing zip…" : "Download standalone book"}
+        </button>
+        {downloadStatus ? <div className="status">{downloadStatus}</div> : null}
 
         {mode === "edit" ? (
           <div className="storyDangerRow">
