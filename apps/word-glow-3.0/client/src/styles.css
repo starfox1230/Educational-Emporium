@@ -269,7 +269,83 @@ body {
   user-select: none;
 }
 
-.controls { display: flex; gap: 10px; justify-content: space-between; margin-top: 10px; }
+.playRow {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.floatingNav {
+  position: fixed;
+  left: 18px;
+  right: 18px;
+  bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  z-index: 40;
+  pointer-events: none;
+}
+
+.floatingNav > * {
+  pointer-events: auto;
+}
+
+.navBtn {
+  min-width: 110px;
+}
+
+.pageSelect {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  flex: 1;
+}
+
+.pageBtn {
+  min-width: 200px;
+}
+
+.pageMenu {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(240px, 70vw);
+  max-height: 240px;
+  overflow-y: auto;
+  background: rgba(10, 16, 24, 0.96);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 16px 30px rgba(0,0,0,0.35);
+}
+
+.pageMenuItem {
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.04);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.pageMenuItem:hover,
+.pageMenuItem:focus-visible {
+  border-color: rgba(126,240,195,0.5);
+  outline: none;
+  background: rgba(126,240,195,0.12);
+}
+
+.pageMenuItem.active {
+  border-color: rgba(102,166,255,0.65);
+  background: rgba(102,166,255,0.18);
+}
 
 .pageEditControls {
   display: flex;
@@ -469,4 +545,7 @@ body {
 }
 .progressFill.sentence {
   background: linear-gradient(135deg, var(--progress-sentence), #9cf6d7);
+}
+.reader {
+  padding-bottom: 140px;
 }
