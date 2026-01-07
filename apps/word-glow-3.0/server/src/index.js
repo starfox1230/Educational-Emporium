@@ -121,6 +121,7 @@ const OFFLINE_HTML = [
   "      </main>",
   "    </div>",
   "",
+  "    <script src=\"story.js\"></script>",
   "    <script src=\"viewer.js\"></script>",
   "  </body>",
   "</html>",
@@ -233,7 +234,12 @@ const OFFLINE_JS = [
   "  };",
   "",
   "  const load = async () => {",
-  "    const payload = await fetch('story.json').then(r => r.json());",
+  "    let payload = window.__WORDGLOW_STORY__;",
+  "    if (!payload) {",
+  "      const response = await fetch('story.json');",
+  "      if (!response.ok) throw new Error('Story JSON missing');",
+  "      payload = await response.json();",
+  "    }",
   "    story = payload;",
   "    titleEl.textContent = payload.title || 'WordGlow Story';",
   "    metaEl.textContent = payload.appName || '';",
@@ -390,6 +396,7 @@ app.get("/api/stories/:storyId/download", async (req, res) => {
   };
 
   zip.file("story.json", JSON.stringify(payload, null, 2));
+  zip.file("story.js", `window.__WORDGLOW_STORY__ = ${JSON.stringify(payload)};`);
   zip.file("index.html", OFFLINE_HTML);
   zip.file("styles.css", OFFLINE_CSS);
   zip.file("viewer.js", OFFLINE_JS);
