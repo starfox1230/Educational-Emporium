@@ -236,12 +236,15 @@ export default function Reader({ storyId }) {
   const [isEditingText, setIsEditingText] = useState(false);
   const [editTextValue, setEditTextValue] = useState("");
   const [savingText, setSavingText] = useState(false);
+  const [isPageMenuOpen, setIsPageMenuOpen] = useState(false);
   const pendingAutoEditRef = useRef(false);
+  const pageMenuRef = useRef(null);
 
   const sentenceAudioRef = useRef(null);
   const htmlAudioFallbackRef = useRef(null);
   const wordCache = useRef(new Map());
   const audioContextRef = useRef(null);
+  const pageStorageKey = useMemo(() => `wordglow.reader.page.${storyId}`, [storyId]);
 
   function getAudioContext() {
     if (!audioContextRef.current) {
@@ -257,11 +260,18 @@ export default function Reader({ storyId }) {
 
   useEffect(() => {
     apiGet(`/api/stories/${storyId}`)
-      .then(d => { setData(d); setIdx(0); })
+      .then(d => {
+        setData(d);
+        const storedIdx = Number.parseInt(localStorage.getItem(pageStorageKey) ?? "", 10);
+        const maxIdx = Math.max(0, (d.sentences?.length || 1) - 1);
+        const safeIdx = Number.isNaN(storedIdx) ? 0 : Math.min(Math.max(storedIdx, 0), maxIdx);
+        setIdx(safeIdx);
+      })
       .catch(e => setErr(String(e)));
     setDownloadStatus("");
     setDownloading(false);
-  }, [storyId]);
+    setIsPageMenuOpen(false);
+  }, [storyId, pageStorageKey]);
 
   const sentence = data?.sentences?.[idx];
   const tokens = useMemo(() => extractDisplayWords(sentence?.text || ""), [sentence?.text]);
@@ -278,6 +288,7 @@ export default function Reader({ storyId }) {
 
   useEffect(() => {
     setActionStatus("");
+    setIsPageMenuOpen(false);
   }, [idx]);
 
   useEffect(() => {
@@ -296,6 +307,22 @@ export default function Reader({ storyId }) {
       setIsEditingText(false);
     }
   }, [sentence?.text]);
+
+  useEffect(() => {
+    if (!data?.sentences?.length) return;
+    localStorage.setItem(pageStorageKey, String(idx));
+  }, [idx, data?.sentences?.length, pageStorageKey]);
+
+  useEffect(() => {
+    if (!isPageMenuOpen) return;
+    const handlePointer = event => {
+      if (pageMenuRef.current && !pageMenuRef.current.contains(event.target)) {
+        setIsPageMenuOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", handlePointer);
+    return () => document.removeEventListener("pointerdown", handlePointer);
+  }, [isPageMenuOpen]);
 
   useLayoutEffect(() => {
     if (!sentence) {
@@ -764,10 +791,8 @@ export default function Reader({ storyId }) {
           ) : null}
         </div>
 
-        <div className="controls">
-          <button className="btn" onClick={() => setIdx(Math.max(0, idx - 1))} disabled={idx === 0}>‹ Prev</button>
+        <div className="playRow">
           <button className="btnPrimary" onClick={playSentence}>Play Sentence</button>
-          <button className="btn" onClick={() => setIdx(Math.min(data.sentences.length - 1, idx + 1))} disabled={idx === data.sentences.length - 1}>Next ›</button>
         </div>
 
         {mode === "edit" ? (
@@ -784,6 +809,51 @@ export default function Reader({ storyId }) {
         ) : null}
 
         <div className="muted center">Page {idx + 1} / {data.sentences.length}</div>
+      </div>
+
+      <div className="floatingNav" role="navigation" aria-label="Page navigation">
+        <button
+          className="btn navBtn"
+          onClick={() => setIdx(Math.max(0, idx - 1))}
+          disabled={idx === 0}
+        >
+          ‹ Prev
+        </button>
+        <div className="pageSelect" ref={pageMenuRef}>
+          <button
+            className="btnPrimary pageBtn"
+            onClick={() => setIsPageMenuOpen(open => !open)}
+            aria-haspopup="listbox"
+            aria-expanded={isPageMenuOpen}
+          >
+            Page {idx + 1} / {data.sentences.length}
+          </button>
+          {isPageMenuOpen ? (
+            <div className="pageMenu" role="listbox" aria-label="Select a page">
+              {data.sentences.map((entry, pageIndex) => (
+                <button
+                  key={`${pageIndex}-${entry.text?.slice(0, 6) || "page"}`}
+                  className={`pageMenuItem ${pageIndex === idx ? "active" : ""}`}
+                  onClick={() => {
+                    setIdx(pageIndex);
+                    setIsPageMenuOpen(false);
+                  }}
+                  role="option"
+                  aria-selected={pageIndex === idx}
+                >
+                  Page {pageIndex + 1}
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </div>
+        <button
+          className="btn navBtn"
+          onClick={() => setIdx(Math.min(data.sentences.length - 1, idx + 1))}
+          disabled={idx === data.sentences.length - 1}
+        >
+          Next ›
+        </button>
       </div>
 
       <div className="card storyMeta">
