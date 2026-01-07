@@ -54,3 +54,13 @@ export async function apiUploadImage(path, file, parentKey) {
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
+
+export async function downloadStoryZip(storyId) {
+  const r = await fetch(`/api/stories/${storyId}/download`);
+  if (!r.ok) throw new Error(await r.text());
+  const disposition = r.headers.get("content-disposition") || "";
+  const match = disposition.match(/filename=\"?([^\";]+)\"?/i);
+  const filename = match?.[1] || `${storyId}.zip`;
+  const blob = await r.blob();
+  return { blob, filename };
+}

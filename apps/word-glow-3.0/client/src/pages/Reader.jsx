@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { apiDelete, apiGet, apiPostJson, apiUploadImage } from "../api.js";
+import { apiDelete, apiGet, apiPostJson, apiUploadImage, downloadStoryZip } from "../api.js";
 
 function extractDisplayWords(sentence) {
   const parts = sentence.split(/(\s+)/);
@@ -226,6 +226,8 @@ export default function Reader({ storyId }) {
   const [parentKey, setParentKey] = useState(""); // paste key to enable uploads
   const [mode, setMode] = useState("view");
   const [actionStatus, setActionStatus] = useState("");
+  const [downloadStatus, setDownloadStatus] = useState("");
+  const [downloading, setDownloading] = useState(false);
   const [deleteStatus, setDeleteStatus] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [tappedWordIndexes, setTappedWordIndexes] = useState(new Set());
@@ -257,6 +259,8 @@ export default function Reader({ storyId }) {
     apiGet(`/api/stories/${storyId}`)
       .then(d => { setData(d); setIdx(0); })
       .catch(e => setErr(String(e)));
+    setDownloadStatus("");
+    setDownloading(false);
   }, [storyId]);
 
   const sentence = data?.sentences?.[idx];
@@ -583,6 +587,29 @@ export default function Reader({ storyId }) {
     }
   }
 
+  async function onDownloadStory() {
+    setErr("");
+    setDownloadStatus("Preparing download…");
+    setDownloading(true);
+    try {
+      const { blob, filename } = await downloadStoryZip(storyId);
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      setDownloadStatus("Standalone app download ready.");
+    } catch (e) {
+      setErr(String(e));
+      setDownloadStatus("");
+    } finally {
+      setDownloading(false);
+    }
+  }
+
   function isEditEnabled() {
     return mode === "edit" && !!parentKey;
   }
@@ -760,6 +787,12 @@ export default function Reader({ storyId }) {
       </div>
 
       <div className="card storyMeta">
+        <div className="subtitle">Download</div>
+        <button className="btnPrimary" onClick={onDownloadStory} disabled={downloading}>
+          {downloading ? "Preparing zip…" : "Download standalone app"}
+        </button>
+        {downloadStatus ? <div className="status">{downloadStatus}</div> : null}
+
         <div className="subtitle">Studio Key (optional)</div>
         <input
           className="input"
