@@ -277,13 +277,14 @@ body {
 
 .floatingNav {
   position: fixed;
-  left: 18px;
-  right: 18px;
+  left: max(12px, env(safe-area-inset-left));
+  right: max(12px, env(safe-area-inset-right));
   bottom: 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  max-width: calc(100vw - 24px);
   z-index: 40;
   pointer-events: none;
 }
@@ -293,7 +294,8 @@ body {
 }
 
 .navBtn {
-  min-width: 110px;
+  min-width: 88px;
+  background: rgba(255,255,255,0.14);
 }
 
 .pageSelect {
@@ -304,7 +306,9 @@ body {
 }
 
 .pageBtn {
-  min-width: 200px;
+  min-width: 110px;
+  padding: 8px 12px;
+  font-size: 14px;
 }
 
 .pageMenu {
