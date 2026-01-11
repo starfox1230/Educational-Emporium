@@ -67,6 +67,32 @@ function guessExtensionFromUrl(url, fallback = "bin") {
   return fallback;
 }
 
+async function copySentenceAudio({
+  bucketName,
+  storyId,
+  newIndex,
+  sentenceAudioUrl
+}) {
+  if (!bucketName || !sentenceAudioUrl) return { sentenceAudioUrl };
+
+  const objectPath = getObjectPathFromDownloadUrl({ url: sentenceAudioUrl, bucketName });
+  if (!objectPath || !objectPath.startsWith(`stories/${storyId}/sentences/`)) {
+    return { sentenceAudioUrl };
+  }
+
+  const ext = guessExtensionFromUrl(sentenceAudioUrl, "mp3");
+  const buffer = await downloadBufferFromGcs({ bucketName, objectPath });
+  const newObjectPath = `stories/${storyId}/sentences/${newIndex}.${ext}`;
+  const newUrl = await uploadBufferAndGetDownloadUrl({
+    bucketName,
+    objectPath: newObjectPath,
+    buffer,
+    contentType: "audio/mpeg"
+  });
+
+  return { sentenceAudioUrl: newUrl, oldObjectPath: objectPath };
+}
+
 async function fetchAsBuffer(url, label, { bucketName } = {}) {
   const r = await fetch(url);
   if (r.ok) {
@@ -891,15 +917,35 @@ app.post("/api/stories/:storyId/sentences/:index/insert",
 
     // 2. usage of WriteBatch ensures all moves happen or none happen
     const batch = db.batch();
+    const audioMoves = [];
+    const limit = pLimit(3);
 
-    toShift.docs.forEach(doc => {
+    const shiftedDocs = await Promise.all(toShift.docs.map(doc => limit(async () => {
       const data = doc.data();
       const oldIndex = data.index ?? Number(doc.id);
       const newIndex = oldIndex + 1;
+      const audioUpdate = await copySentenceAudio({
+        bucketName: BUCKET,
+        storyId,
+        newIndex,
+        sentenceAudioUrl: data.sentenceAudioUrl
+      });
 
+      if (audioUpdate.oldObjectPath) {
+        audioMoves.push(audioUpdate.oldObjectPath);
+      }
+
+      return {
+        data,
+        newIndex,
+        sentenceAudioUrl: audioUpdate.sentenceAudioUrl
+      };
+    })));
+
+    shiftedDocs.forEach(({ data, newIndex, sentenceAudioUrl }) => {
       // Force the data into the correctly named document ID
       const targetRef = sentenceCollection.doc(String(newIndex));
-      batch.set(targetRef, { ...data, index: newIndex });
+      batch.set(targetRef, { ...data, index: newIndex, sentenceAudioUrl });
     });
 
     const now = new Date().toISOString();
@@ -921,6 +967,10 @@ app.post("/api/stories/:storyId/sentences/:index/insert",
     batch.set(storyRef, { sentenceCount: sentenceCount + 1, updatedAt: now }, { merge: true });
 
     await batch.commit();
+
+    await Promise.all(audioMoves.map(objectPath => limit(() =>
+      deleteFileIfExists({ bucketName: BUCKET, objectPath })
+    )));
 
     res.json({ ok: true, insertIndex });
   }
@@ -1005,18 +1055,39 @@ app.delete("/api/stories/:storyId/sentences/:index",
       .get();
 
     const batch = db.batch();
+    const audioMoves = [];
+    const limit = pLimit(3);
 
     // 3. Shift following pages down (Overwriting the one being deleted)
     let lastIndex = idx; // Track the highest index we encounter
 
-    toShift.docs.forEach(doc => {
+    const shiftedDocs = await Promise.all(toShift.docs.map(doc => limit(async () => {
       const data = doc.data();
       const oldIndex = data.index ?? Number(doc.id);
       const newIndex = oldIndex - 1;
+      const audioUpdate = await copySentenceAudio({
+        bucketName: BUCKET,
+        storyId,
+        newIndex,
+        sentenceAudioUrl: data.sentenceAudioUrl
+      });
 
+      if (audioUpdate.oldObjectPath) {
+        audioMoves.push(audioUpdate.oldObjectPath);
+      }
+
+      return {
+        data,
+        newIndex,
+        sentenceAudioUrl: audioUpdate.sentenceAudioUrl,
+        oldIndex
+      };
+    })));
+
+    shiftedDocs.forEach(({ data, newIndex, sentenceAudioUrl, oldIndex }) => {
       // Force write to the calculated ID
       const targetRef = sentenceCollection.doc(String(newIndex));
-      batch.set(targetRef, { ...data, index: newIndex });
+      batch.set(targetRef, { ...data, index: newIndex, sentenceAudioUrl });
 
       lastIndex = oldIndex;
     });
@@ -1037,6 +1108,10 @@ app.delete("/api/stories/:storyId/sentences/:index",
     batch.set(storyRef, { sentenceCount: newCount, updatedAt: now }, { merge: true });
 
     await batch.commit();
+
+    await Promise.all(audioMoves.map(objectPath => limit(() =>
+      deleteFileIfExists({ bucketName: BUCKET, objectPath })
+    )));
 
     res.json({ ok: true, deletedIndex: idx, sentenceCount: newCount });
   }
