@@ -237,8 +237,13 @@ export default function Reader({ storyId }) {
   const [editTextValue, setEditTextValue] = useState("");
   const [savingText, setSavingText] = useState(false);
   const [isPageMenuOpen, setIsPageMenuOpen] = useState(false);
+  const [isPlaySentenceEnabled, setIsPlaySentenceEnabled] = useState(true);
+  const [isPlayMenuOpen, setIsPlayMenuOpen] = useState(false);
   const pendingAutoEditRef = useRef(false);
   const pageMenuRef = useRef(null);
+  const playMenuRef = useRef(null);
+  const playMenuTimerRef = useRef(null);
+  const playMenuTriggeredRef = useRef(false);
 
   const sentenceAudioRef = useRef(null);
   const htmlAudioFallbackRef = useRef(null);
@@ -324,6 +329,25 @@ export default function Reader({ storyId }) {
     return () => document.removeEventListener("pointerdown", handlePointer);
   }, [isPageMenuOpen]);
 
+  useEffect(() => {
+    if (!isPlayMenuOpen) return;
+    const handlePointer = event => {
+      if (playMenuRef.current && !playMenuRef.current.contains(event.target)) {
+        setIsPlayMenuOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", handlePointer);
+    return () => document.removeEventListener("pointerdown", handlePointer);
+  }, [isPlayMenuOpen]);
+
+  useEffect(() => {
+    return () => {
+      if (playMenuTimerRef.current) {
+        clearTimeout(playMenuTimerRef.current);
+      }
+    };
+  }, []);
+
   useLayoutEffect(() => {
     if (!sentence) {
       setImageSize({ width: 16, height: 9 });
@@ -338,6 +362,7 @@ export default function Reader({ storyId }) {
   }, [sentence]);
 
   async function playSentence() {
+    if (!isPlaySentenceEnabled) return;
     if (!sentence?.sentenceAudioUrl) return;
     if (!sentenceAudioRef.current) {
       sentenceAudioRef.current = new Audio();
@@ -350,6 +375,28 @@ export default function Reader({ storyId }) {
     sentenceAudioRef.current
       .play()
       .catch(() => {});
+  }
+
+  function openPlayMenu() {
+    setIsPlayMenuOpen(true);
+  }
+
+  function startPlayMenuTimer() {
+    playMenuTriggeredRef.current = false;
+    if (playMenuTimerRef.current) {
+      clearTimeout(playMenuTimerRef.current);
+    }
+    playMenuTimerRef.current = setTimeout(() => {
+      playMenuTriggeredRef.current = true;
+      openPlayMenu();
+    }, 550);
+  }
+
+  function clearPlayMenuTimer() {
+    if (playMenuTimerRef.current) {
+      clearTimeout(playMenuTimerRef.current);
+      playMenuTimerRef.current = null;
+    }
   }
 
   async function playWord(raw) {
@@ -791,8 +838,61 @@ export default function Reader({ storyId }) {
           ) : null}
         </div>
 
-        <div className="playRow">
-          <button className="btnPrimary" onClick={playSentence}>Play Sentence</button>
+        <div className="playRow" ref={playMenuRef}>
+          <button
+            className={`btnPrimary ${isPlaySentenceEnabled ? "" : "playDisabled"}`}
+            onClick={() => {
+              if (playMenuTriggeredRef.current) {
+                playMenuTriggeredRef.current = false;
+                return;
+              }
+              if (isPlayMenuOpen) {
+                setIsPlayMenuOpen(false);
+                return;
+              }
+              if (!isPlaySentenceEnabled) return;
+              playSentence();
+            }}
+            onPointerDown={startPlayMenuTimer}
+            onPointerUp={clearPlayMenuTimer}
+            onPointerLeave={clearPlayMenuTimer}
+            onPointerCancel={clearPlayMenuTimer}
+            onContextMenu={event => {
+              event.preventDefault();
+              openPlayMenu();
+            }}
+            aria-disabled={!isPlaySentenceEnabled}
+            aria-haspopup="menu"
+            aria-expanded={isPlayMenuOpen}
+          >
+            Play Sentence
+          </button>
+          {isPlayMenuOpen ? (
+            <div className="playMenu" role="menu" aria-label="Play sentence options">
+              <button
+                className={`playMenuItem ${isPlaySentenceEnabled ? "active" : ""}`}
+                onClick={() => {
+                  setIsPlaySentenceEnabled(true);
+                  setIsPlayMenuOpen(false);
+                }}
+                role="menuitemradio"
+                aria-checked={isPlaySentenceEnabled}
+              >
+                Enable Play Sentence
+              </button>
+              <button
+                className={`playMenuItem ${!isPlaySentenceEnabled ? "active" : ""}`}
+                onClick={() => {
+                  setIsPlaySentenceEnabled(false);
+                  setIsPlayMenuOpen(false);
+                }}
+                role="menuitemradio"
+                aria-checked={!isPlaySentenceEnabled}
+              >
+                Disable Play Sentence
+              </button>
+            </div>
+          ) : null}
         </div>
 
         {mode === "edit" ? (
