@@ -16,6 +16,7 @@ function ScratchImageReveal({ src, locked = false, onImageLoad }) {
   const canvasRef = useRef(null);
   const lastCanvasSize = useRef({ width: 0, height: 0 });
   const revealCheckPending = useRef(false);
+  const lastPointRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [unlockPulse, setUnlockPulse] = useState(false);
   const [overlayState, setOverlayState] = useState("idle");
@@ -122,6 +123,12 @@ function ScratchImageReveal({ src, locked = false, onImageLoad }) {
     return () => clearTimeout(t);
   }, [locked]);
 
+  function drawEraseCircle(ctx, x, y) {
+    ctx.beginPath();
+    ctx.arc(x, y, 26, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   function scratch(e) {
     if (overlayState !== "idle") return;
     if (locked) return;
@@ -135,11 +142,23 @@ function ScratchImageReveal({ src, locked = false, onImageLoad }) {
 
     ctx.save();
     ctx.globalCompositeOperation = "destination-out";
-    ctx.beginPath();
-    ctx.arc(x, y, 26, 0, Math.PI * 2);
-    ctx.fill();
+    const lastPoint = lastPointRef.current;
+    if (!lastPoint) {
+      drawEraseCircle(ctx, x, y);
+    } else {
+      const dx = x - lastPoint.x;
+      const dy = y - lastPoint.y;
+      const distance = Math.hypot(dx, dy);
+      const step = 10;
+      const steps = Math.max(1, Math.ceil(distance / step));
+      for (let i = 1; i <= steps; i += 1) {
+        const t = i / steps;
+        drawEraseCircle(ctx, lastPoint.x + dx * t, lastPoint.y + dy * t);
+      }
+    }
     ctx.restore();
 
+    lastPointRef.current = { x, y };
     requestRevealCheck();
   }
 
@@ -203,6 +222,7 @@ function ScratchImageReveal({ src, locked = false, onImageLoad }) {
           if (locked) return;
           canvasRef.current?.setPointerCapture(e.pointerId);
           setIsDrawing(true);
+          lastPointRef.current = null;
           scratch(e);
         }}
         onPointerMove={e => {
@@ -211,9 +231,13 @@ function ScratchImageReveal({ src, locked = false, onImageLoad }) {
         }}
         onPointerUp={e => {
           setIsDrawing(false);
+          lastPointRef.current = null;
           canvasRef.current?.releasePointerCapture(e.pointerId);
         }}
-        onPointerLeave={() => setIsDrawing(false)}
+        onPointerLeave={() => {
+          setIsDrawing(false);
+          lastPointRef.current = null;
+        }}
       />
     </div>
   );
