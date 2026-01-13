@@ -403,11 +403,15 @@
 
       const edgeMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.22 });
 
+      renderer.domElement.style.width = "100%";
+      renderer.domElement.style.height = "100%";
+      renderer.domElement.style.display = "block";
+
       function resize() {
         const r = el.viewer.getBoundingClientRect();
-        const w = Math.max(1, r.width);
-        const h = Math.max(1, r.height);
-        renderer.setSize(w, h, false);
+        const w = Math.max(1, Math.round(r.width));
+        const h = Math.max(1, Math.round(r.height));
+        renderer.setSize(w, h, true);
         camera.aspect = w / h;
         camera.updateProjectionMatrix();
       }
