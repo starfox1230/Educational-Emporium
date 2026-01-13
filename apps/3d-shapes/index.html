@@ -453,7 +453,8 @@
         group.add(mesh);
         group.add(line);
 
-        group.position.y = -0.05;
+        // Fixed Y position in center
+        group.position.y = 0;
 
         controls.target.set(0, 0, 0);
         controls.update();
@@ -677,14 +678,12 @@
       });
 
       // Animate
-      let t = 0;
       function animate() {
         requestAnimationFrame(animate);
         controls.update();
         if (currentMesh) {
-          t += 0.012;
-          currentMesh.position.y = -0.05 + Math.sin(t) * 0.06;
-          currentMesh.rotation.y += 0.002;
+          // No bobbing, just rotate
+          currentMesh.rotation.y += 0.005;
         }
         renderer.render(scene, camera);
       }
