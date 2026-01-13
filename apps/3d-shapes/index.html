@@ -374,6 +374,8 @@
       controls.rotateSpeed = 0.65;
       controls.zoomSpeed = 0.85;
       controls.panSpeed = 0.65;
+      controls.enablePan = false;
+      controls.screenSpacePanning = false;
       controls.minDistance = 1.6;
       controls.maxDistance = 7.5;
 
@@ -453,14 +455,29 @@
         group.add(mesh);
         group.add(line);
 
-        // Fixed Y position in center
-        group.position.y = 0;
-
-        controls.target.set(0, 0, 0);
-        controls.update();
+        centerAndFrame(group);
 
         scene.add(group);
         currentMesh = group;
+      }
+
+      function centerAndFrame(group) {
+        const box = new THREE.Box3().setFromObject(group);
+        const center = box.getCenter(new THREE.Vector3());
+        group.position.sub(center);
+        group.rotation.set(0, 0, 0);
+
+        const sphere = box.getBoundingSphere(new THREE.Sphere());
+        const radius = Math.max(sphere.radius, 0.9);
+        const distance = radius * 2.8;
+
+        camera.position.set(distance * 0.55, radius * 0.4, distance);
+        camera.lookAt(0, 0, 0);
+
+        controls.target.set(0, 0, 0);
+        controls.minDistance = radius * 1.6;
+        controls.maxDistance = radius * 6;
+        controls.update();
       }
 
       function triangularPrismGeometry() {
