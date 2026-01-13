@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Letter Pop! — Listen & Tap</title>
+  <style>
+    :root{
+      --bg1:#070B2A;
+      --bg2:#0B3A66;
+      --ink:#EAF2FF;
+      --muted:#AFC2FF;
+      --good:#32E875;
+      --bad:#FF4D6D;
+      --accent:#5CE1FF;
+      --accent2:#B86BFF;
+      --gold:#FFD84A;
+      --shadow: 0 18px 50px rgba(0,0,0,.45);
+      --radius: 24px;
+      --btnRadius: 18px;
+      --tileRadius: 22px;
+      --tileShadow: 0 14px 30px rgba(0,0,0,.35);
+      --stroke: rgba(255,255,255,.18);
+      --focus: rgba(92,225,255,.35);
+      --font: ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--font);
+      color:var(--ink);
+      background:
+        radial-gradient(1200px 700px at 25% 10%, rgba(184,107,255,.25), transparent 60%),
+        radial-gradient(900px 600px at 85% 15%, rgba(92,225,255,.22), transparent 55%),
+        radial-gradient(900px 700px at 60% 95%, rgba(255,216,74,.12), transparent 55%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      overflow-x:hidden;
+    }
+    .wrap{max-width:980px;margin:0 auto;padding:18px 14px 30px;}
+    header{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      padding:14px;border-radius:var(--radius);
+      background: linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border:1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      position:sticky;top:10px;backdrop-filter: blur(10px);z-index:5;
+    }
+    .brand{display:flex;align-items:center;gap:10px;min-width:220px;}
+    .logo{
+      width:44px;height:44px;border-radius:16px;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,.35), transparent 55%),
+        linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 10px 22px rgba(0,0,0,.35);
+      display:grid;place-items:center;font-weight:900;color:#06112B;letter-spacing:.5px;
+    }
+    .title{line-height:1.05}
+    .title b{font-size:18px;display:block;letter-spacing:.3px}
+    .title span{font-size:12px;color:var(--muted);display:block;margin-top:3px}
+    .topStats{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;justify-content:flex-end;}
+    .pill{
+      display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:16px;
+      background: rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.14);min-height:44px;
+    }
+    .pill .k{font-size:12px;color:var(--muted);letter-spacing:.3px}
+    .pill .v{font-size:16px;font-weight:850;letter-spacing:.3px}
+
+    main{margin-top:14px;display:grid;grid-template-columns:1.1fr .9fr;gap:14px;}
+    @media (max-width: 900px){
+      main{grid-template-columns:1fr;}
+      header{position:relative;top:auto;}
+      .brand{min-width:unset;}
+    }
+
+    .card{
+      border-radius:var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.05));
+      border:1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .bigStage{padding:14px;}
+    .prompt{
+      border-radius:var(--radius);
+      background: radial-gradient(circle at 20% 25%, rgba(255,255,255,.14), transparent 55%),
+                  radial-gradient(circle at 85% 20%, rgba(255,216,74,.16), transparent 55%),
+                  linear-gradient(180deg, rgba(0,0,0,.14), rgba(0,0,0,.22));
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow: 0 18px 40px rgba(0,0,0,.35);
+      padding:16px;
+      display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    }
+
+    .modeTag{
+      display:inline-flex;gap:6px;align-items:center;
+      padding:7px 10px;border-radius:999px;
+      background: rgba(255,255,255,.09);
+      border:1px solid rgba(255,255,255,.14);
+      font-size:12px;color:var(--muted);
+    }
+    .modeDot{
+      width:10px;height:10px;border-radius:50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 0 0 3px rgba(92,225,255,.12);
+    }
+
+    .sayBtn{
+      border:0;border-radius: 16px;padding:12px 14px;
+      font-weight:900;font-size:14px;color:#041026;
+      background: linear-gradient(135deg, var(--gold), rgba(255,255,255,.90));
+      box-shadow: 0 14px 24px rgba(0,0,0,.3);
+      cursor:pointer;user-select:none;display:flex;gap:8px;align-items:center;
+      transition: transform .08s ease;
+      min-width: 140px;justify-content:center;
+    }
+    .sayBtn:active{ transform: translateY(1px) scale(.99); }
+    .sayBtn:focus{ outline: 3px solid var(--focus); outline-offset:2px; }
+    .sayBtn .ico{
+      width:18px;height:18px;border-radius:6px;background: rgba(0,0,0,.12);
+      display:grid;place-items:center;font-size:12px;
+    }
+
+    .choices{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:10px;
+    }
+    @media (max-width: 520px){
+      .choices{ grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .tile{
+      border:1px solid rgba(255,255,255,.16);
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(0,0,0,.10));
+      border-radius: var(--tileRadius);
+      box-shadow: var(--tileShadow);
+      padding: 16px 10px;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .10s ease, box-shadow .10s ease, border-color .10s ease;
+      position:relative;
+      overflow:hidden;
+      min-height:98px;
+      display:grid;
+      place-items:center;
+    }
+    .tile:hover{
+      transform: translateY(-2px);
+      border-color: rgba(92,225,255,.35);
+      box-shadow: 0 18px 40px rgba(0,0,0,.42);
+    }
+    .tile:active{ transform: translateY(0px) scale(.995); }
+    .tile:focus{ outline: 3px solid var(--focus); outline-offset:2px; }
+    .tile::before{
+      content:"";position:absolute;inset:-40px;
+      background: radial-gradient(circle at 25% 30%, rgba(92,225,255,.20), transparent 55%),
+                  radial-gradient(circle at 80% 35%, rgba(184,107,255,.15), transparent 55%);
+      transform: rotate(8deg);
+      pointer-events:none;
+    }
+    .tileLetter{
+      position:relative;
+      font-size: clamp(50px, 8vw, 74px);
+      font-weight: 950;
+      letter-spacing: 1px;
+      color: rgba(255,255,255,.96);
+      text-shadow: 0 10px 22px rgba(0,0,0,.45);
+      line-height:1;
+    }
+
+    .side{padding:14px;display:flex;flex-direction:column;gap:12px;}
+    .controlBox{
+      border-radius: var(--radius);
+      background: rgba(0,0,0,.16);
+      border:1px solid rgba(255,255,255,.12);
+      padding:12px;
+    }
+    .controlBox h3{margin:0 0 8px;font-size:14px;letter-spacing:.3px}
+    .toggleGroup{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px;}
+    .seg{
+      border-radius: 16px;border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.07);
+      padding:10px 8px;cursor:pointer;user-select:none;text-align:center;
+      font-weight:900;color: var(--ink);
+      transition: transform .08s ease, border-color .12s ease, background .12s ease;
+    }
+    .seg:active{ transform: translateY(1px); }
+    .seg.on{
+      background: linear-gradient(135deg, rgba(92,225,255,.22), rgba(184,107,255,.18));
+      border-color: rgba(92,225,255,.45);
+      box-shadow: 0 0 0 3px rgba(92,225,255,.12) inset;
+    }
+
+    .sliderWrap{margin-top:10px;display:grid;gap:8px;}
+    .kv{display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--muted);font-size:12.5px;margin-top:6px;}
+    .kv b{color:var(--ink);}
+    input[type="range"]{width:100%;accent-color: var(--accent);}
+    select{
+      width:100%;
+      padding:10px 10px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      color: var(--ink);
+      font-weight:800;
+    }
+
+    .btnRow{display:grid;grid-template-columns: 1fr 1fr;gap:10px;margin-top:10px;}
+    .btn{
+      border:0;border-radius: var(--btnRadius);
+      padding:12px 10px;font-weight:950;font-size:14px;cursor:pointer;user-select:none;
+      box-shadow: 0 14px 26px rgba(0,0,0,.35);
+      transition: transform .08s ease;
+    }
+    .btn:active{ transform: translateY(1px) scale(.99); }
+    .btn:focus{ outline: 3px solid var(--focus); outline-offset:2px; }
+    .btnPrimary{color:#041026;background: linear-gradient(135deg, var(--accent), rgba(255,255,255,.92));}
+    .btnGhost{
+      color: var(--ink);
+      background: rgba(255,255,255,.09);
+      border:1px solid rgba(255,255,255,.14);
+      box-shadow: 0 10px 18px rgba(0,0,0,.22);
+    }
+
+    .confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9999;display:none;}
+    .confetti.show{display:block;}
+    .confetti i{
+      position:absolute;width:10px;height:14px;border-radius:3px;opacity:.95;top:-20px;
+      animation: fall linear forwards;
+      filter: drop-shadow(0 8px 10px rgba(0,0,0,.25));
+    }
+    @keyframes fall{
+      to{transform: translate3d(var(--dx), 110vh, 0) rotate(var(--rot));}
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .tile:hover{ transform:none; }
+      .btn, .sayBtn, .seg{ transition:none; }
+      .confetti i{ animation-duration: 0.001ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo">Aa</div>
+        <div class="title">
+          <b>Letter Pop!</b>
+          <span>Listen • Tap • Repeat</span>
+        </div>
+      </div>
+      <div class="topStats">
+        <div class="pill"><div class="k">Streak</div><div class="v" id="streak">0</div></div>
+        <div class="pill"><div class="k">Score</div><div class="v" id="score">0</div></div>
+        <div class="pill"><div class="k">Accuracy</div><div class="v" id="acc">—</div></div>
+      </div>
+    </header>
+
+    <main>
+      <!-- LEFT: game -->
+      <section class="card">
+        <div class="bigStage">
+          <div class="prompt">
+            <div class="modeTag" id="modeTag">
+              <span class="modeDot"></span>
+              <span id="modeText">Mode: Both</span>
+            </div>
+            <button class="sayBtn" id="sayBtn" type="button" aria-label="Speak the letter">
+              <span class="ico">🔊</span>
+              <span>Hear it</span>
+            </button>
+          </div>
+
+          <div class="choices" id="choices" role="group" aria-label="Letter choices"></div>
+        </div>
+      </section>
+
+      <!-- RIGHT: controls -->
+      <aside class="card">
+        <div class="side">
+          <div class="controlBox">
+            <h3>Mode</h3>
+            <div class="toggleGroup" role="group" aria-label="Letter mode">
+              <button class="seg" id="modeUpper" type="button">ABC</button>
+              <button class="seg" id="modeLower" type="button">abc</button>
+              <button class="seg on" id="modeBoth" type="button">Aa</button>
+            </div>
+          </div>
+
+          <div class="controlBox">
+            <h3>Speech</h3>
+            <div class="sliderWrap">
+              <div class="kv"><span>Voice</span><b id="voiceName">Auto</b></div>
+              <select id="voiceSelect">
+                <option value="auto">Auto</option>
+              </select>
+
+              <div class="kv"><span>Rate</span><b id="rateLabel">1.0×</b></div>
+              <input id="rate" type="range" min="0.6" max="1.4" step="0.1" value="1.0" />
+
+              <div class="kv"><span>Pitch</span><b id="pitchLabel">1.1</b></div>
+              <input id="pitch" type="range" min="0.7" max="1.6" step="0.1" value="1.1" />
+
+              <label class="kv" style="gap:10px;">
+                <span>
+                  <input id="autoSpeak" type="checkbox" checked />
+                  Auto-speak
+                </span>
+                <b id="autoSpeakLabel">On</b>
+              </label>
+            </div>
+
+            <div class="btnRow">
+              <button class="btn btnPrimary" id="newRoundBtn" type="button">New</button>
+              <button class="btn btnGhost" id="resetBtn" type="button">Reset</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <div class="confetti" id="confetti" aria-hidden="true"></div>
+
+  <script>
+    // Letter Pop! — Listen-only prompt (no on-screen question/answer)
+
+    const $ = (id) => document.getElementById(id);
+    const sample = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    const shuffle = (arr) => {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    };
+    const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+    const LETTERS = Array.from({length: 26}, (_, i) => String.fromCharCode(65 + i)); // A-Z
+
+    const state = {
+      mode: "both",              // "upper" | "lower" | "both"
+      promptLetter: "A",         // base letter A-Z
+      promptCase: "upper",       // "upper" or "lower" (only varies in "both")
+      score: 0,
+      streak: 0,
+      correct: 0,
+      total: 0,
+      choicesCount: 6,
+      locked: false,
+
+      // TTS
+      voices: [],
+      voiceURI: "auto",
+      rate: 1.0,
+      pitch: 1.1,
+      autoSpeak: true
+    };
+
+    const el = {
+      choices: $("choices"),
+      score: $("score"),
+      streak: $("streak"),
+      acc: $("acc"),
+      modeText: $("modeText"),
+      modeUpper: $("modeUpper"),
+      modeLower: $("modeLower"),
+      modeBoth: $("modeBoth"),
+      sayBtn: $("sayBtn"),
+      newRoundBtn: $("newRoundBtn"),
+      resetBtn: $("resetBtn"),
+      confetti: $("confetti"),
+      voiceSelect: $("voiceSelect"),
+      voiceName: $("voiceName"),
+      rate: $("rate"),
+      rateLabel: $("rateLabel"),
+      pitch: $("pitch"),
+      pitchLabel: $("pitchLabel"),
+      autoSpeak: $("autoSpeak"),
+      autoSpeakLabel: $("autoSpeakLabel")
+    };
+
+    function getModeLabel(){
+      if (state.mode === "upper") return "Uppercase";
+      if (state.mode === "lower") return "Lowercase";
+      return "Both";
+    }
+
+    function pickPrompt(){
+      state.promptLetter = sample(LETTERS);
+      if (state.mode === "upper") state.promptCase = "upper";
+      else if (state.mode === "lower") state.promptCase = "lower";
+      else state.promptCase = Math.random() < 0.5 ? "upper" : "lower";
+    }
+
+    function getPromptChar(){
+      return state.promptCase === "upper" ? state.promptLetter : state.promptLetter.toLowerCase();
+    }
+
+    // ===== TTS =====
+    function hasTTS(){
+      return "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
+    }
+
+    function stopSpeaking(){
+      if (!hasTTS()) return;
+      try { window.speechSynthesis.cancel(); } catch(e){}
+    }
+
+    function populateVoices() {
+      if (!hasTTS()) return;
+      const voices = window.speechSynthesis.getVoices() || [];
+      state.voices = voices;
+
+      const current = state.voiceURI;
+      const opts = [`<option value="auto">Auto</option>`]
+        .concat(voices.map(v => {
+          const label = `${v.name} (${v.lang})${v.default ? " ★" : ""}`;
+          const safe = label.replace(/</g,"&lt;").replace(/>/g,"&gt;");
+          return `<option value="${encodeURIComponent(v.voiceURI)}">${safe}</option>`;
+        }))
+        .join("");
+      el.voiceSelect.innerHTML = opts;
+
+      if (current !== "auto") {
+        const found = voices.some(v => v.voiceURI === decodeURIComponent(current));
+        if (found) el.voiceSelect.value = current;
+      } else {
+        el.voiceSelect.value = "auto";
+      }
+      updateVoiceLabel();
+    }
+
+    function getSelectedVoice(){
+      if (!hasTTS()) return null;
+      if (state.voiceURI === "auto") return null;
+      const uri = decodeURIComponent(state.voiceURI);
+      return state.voices.find(v => v.voiceURI === uri) || null;
+    }
+
+    function updateVoiceLabel(){
+      const v = getSelectedVoice();
+      el.voiceName.textContent = v ? v.name : "Auto";
+    }
+
+    function speak(text){
+      if (!hasTTS()) return;
+      stopSpeaking();
+      const utt = new SpeechSynthesisUtterance(text);
+      utt.rate = state.rate;
+      utt.pitch = state.pitch;
+      const v = getSelectedVoice();
+      if (v) utt.voice = v;
+      window.speechSynthesis.speak(utt);
+    }
+
+    function sayPrompt(){
+      const base = state.promptLetter;     // A-Z
+      const targetChar = getPromptChar();  // 'A' or 'a'
+      const caseWord = (targetChar === base) ? "uppercase" : "lowercase";
+      // Do not speak the letter itself visually—only audio prompt
+      speak(`${caseWord} ${targetChar}`);
+    }
+
+    // ===== UI / game =====
+    function buildChoices(){
+      const correctChar = getPromptChar();
+      const base = state.promptLetter;
+      const otherLetters = LETTERS.filter(L => L !== base);
+
+      const picks = new Set();
+      while (picks.size < state.choicesCount - 1) picks.add(sample(otherLetters));
+
+      const distractors = Array.from(picks).map(L => {
+        if (state.mode === "both") return (Math.random() < 0.5 ? L : L.toLowerCase());
+        if (state.mode === "upper") return L;
+        return L.toLowerCase();
+      });
+
+      const all = shuffle([correctChar, ...distractors]);
+
+      el.choices.innerHTML = "";
+      all.forEach((ch) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "tile";
+        btn.setAttribute("data-char", ch);
+
+        const letter = document.createElement("div");
+        letter.className = "tileLetter";
+        letter.textContent = ch;
+
+        btn.appendChild(letter);
+        btn.addEventListener("click", () => onPick(btn, ch));
+        el.choices.appendChild(btn);
+      });
+    }
+
+    function onPick(btn, ch){
+      if (state.locked) return;
+      state.locked = true;
+
+      const correctChar = getPromptChar();
+      const isCorrect = (ch === correctChar);
+
+      state.total += 1;
+
+      if (isCorrect) {
+        state.correct += 1;
+        state.streak += 1;
+        state.score += 10 + Math.min(30, state.streak);
+
+        btn.style.borderColor = "rgba(50,232,117,.75)";
+        btn.style.boxShadow = "0 0 0 4px rgba(50,232,117,.18), 0 18px 40px rgba(0,0,0,.45)";
+
+        speak(`yes`);
+        popConfetti();
+      } else {
+        state.streak = 0;
+
+        btn.style.borderColor = "rgba(255,77,109,.75)";
+        btn.style.boxShadow = "0 0 0 4px rgba(255,77,109,.18), 0 18px 40px rgba(0,0,0,.45)";
+
+        const correctBtn = Array.from(el.choices.querySelectorAll(".tile"))
+          .find(b => b.getAttribute("data-char") === correctChar);
+        if (correctBtn) {
+          correctBtn.style.borderColor = "rgba(92,225,255,.55)";
+          correctBtn.style.boxShadow = "0 0 0 4px rgba(92,225,255,.12), 0 18px 40px rgba(0,0,0,.35)";
+        }
+
+        speak(`try again`);
+      }
+
+      updateStats();
+
+      setTimeout(() => newRound(), isCorrect ? 800 : 1100);
+    }
+
+    function updateStats(){
+      el.score.textContent = state.score;
+      el.streak.textContent = state.streak;
+      el.acc.textContent = state.total === 0 ? "—" : Math.round((state.correct / state.total) * 100) + "%";
+    }
+
+    function newRound(){
+      state.locked = false;
+      pickPrompt();
+      buildChoices();
+      el.modeText.textContent = `Mode: ${getModeLabel()}`;
+      if (state.autoSpeak) setTimeout(() => sayPrompt(), 120);
+    }
+
+    function resetGame(){
+      stopSpeaking();
+      state.score = 0;
+      state.streak = 0;
+      state.correct = 0;
+      state.total = 0;
+      updateStats();
+      newRound();
+    }
+
+    function setMode(mode){
+      state.mode = mode;
+      el.modeUpper.classList.toggle("on", mode === "upper");
+      el.modeLower.classList.toggle("on", mode === "lower");
+      el.modeBoth.classList.toggle("on", mode === "both");
+      newRound();
+    }
+
+    // ===== Confetti =====
+    function popConfetti(){
+      const container = el.confetti;
+      container.innerHTML = "";
+      container.classList.add("show");
+
+      const n = 34;
+      const colors = [
+        "rgba(92,225,255,.95)",
+        "rgba(184,107,255,.95)",
+        "rgba(255,216,74,.95)",
+        "rgba(50,232,117,.95)",
+        "rgba(255,77,109,.95)"
+      ];
+
+      for (let i = 0; i < n; i++){
+        const piece = document.createElement("i");
+        piece.style.left = rand(5, 95) + "vw";
+        piece.style.background = sample(colors);
+
+        const dur = rand(650, 1150);
+        piece.style.animationDuration = dur + "ms";
+
+        const dx = rand(-140, 140) + "px";
+        const rot = rand(-720, 720) + "deg";
+        piece.style.setProperty("--dx", dx);
+        piece.style.setProperty("--rot", rot);
+
+        piece.style.width = rand(7, 12) + "px";
+        piece.style.height = rand(10, 18) + "px";
+        container.appendChild(piece);
+      }
+      setTimeout(() => container.classList.remove("show"), 850);
+    }
+
+    // ===== Wire up controls =====
+    el.modeUpper.addEventListener("click", () => setMode("upper"));
+    el.modeLower.addEventListener("click", () => setMode("lower"));
+    el.modeBoth.addEventListener("click", () => setMode("both"));
+
+    el.sayBtn.addEventListener("click", () => sayPrompt());
+    el.newRoundBtn.addEventListener("click", () => { stopSpeaking(); newRound(); });
+    el.resetBtn.addEventListener("click", () => resetGame());
+
+    el.voiceSelect.addEventListener("change", () => {
+      state.voiceURI = el.voiceSelect.value;
+      updateVoiceLabel();
+    });
+
+    el.rate.addEventListener("input", () => {
+      state.rate = parseFloat(el.rate.value);
+      el.rateLabel.textContent = state.rate.toFixed(1) + "×";
+    });
+
+    el.pitch.addEventListener("input", () => {
+      state.pitch = parseFloat(el.pitch.value);
+      el.pitchLabel.textContent = state.pitch.toFixed(1);
+    });
+
+    el.autoSpeak.addEventListener("change", () => {
+      state.autoSpeak = el.autoSpeak.checked;
+      el.autoSpeakLabel.textContent = state.autoSpeak ? "On" : "Off";
+    });
+
+    // Optional keyboard shortcuts (no on-screen instructions)
+    window.addEventListener("keydown", (e) => {
+      const k = e.key.toLowerCase();
+      if (k === " ") { e.preventDefault(); sayPrompt(); }
+      else if (k === "n") { stopSpeaking(); newRound(); }
+      else if (k === "r") { resetGame(); }
+      else if (k === "1") { setMode("upper"); }
+      else if (k === "2") { setMode("lower"); }
+      else if (k === "3") { setMode("both"); }
+    });
+
+    // Voices load async
+    if (("speechSynthesis" in window) && ("SpeechSynthesisUtterance" in window)){
+      populateVoices();
+      window.speechSynthesis.onvoiceschanged = populateVoices;
+    }
+
+    // Init
+    el.rateLabel.textContent = state.rate.toFixed(1) + "×";
+    el.pitchLabel.textContent = state.pitch.toFixed(1);
+    el.autoSpeakLabel.textContent = state.autoSpeak ? "On" : "Off";
+    el.modeText.textContent = `Mode: ${getModeLabel()}`;
+    updateVoiceLabel();
+    updateStats();
+    newRound();
+  </script>
+</body>
+</html>
