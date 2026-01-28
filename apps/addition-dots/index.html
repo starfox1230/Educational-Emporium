@@ -43,8 +43,15 @@
       overflow: hidden;
     }
 
-    .app {
+    .app-shell {
       width: min(520px, 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+
+    .app {
       background: #ffffff;
       border-radius: 28px;
       box-shadow: 0 16px 32px var(--shadow);
@@ -54,9 +61,7 @@
     }
 
     .score-chip {
-      position: absolute;
-      top: 16px;
-      right: 16px;
+      align-self: flex-end;
       background: var(--pink-400);
       color: #ffffff;
       padding: 8px 14px;
@@ -93,8 +98,8 @@
     .equation {
       display: flex;
       justify-content: center;
-      align-items: center;
-      gap: 10px;
+      align-items: flex-start;
+      gap: 12px;
       font-size: clamp(1.6rem, 4vw, 2.3rem);
       font-weight: 700;
     }
@@ -107,6 +112,17 @@
       text-align: center;
       border: 2px solid var(--pink-300);
       box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.8);
+    }
+
+    .number-stack {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .symbol {
+      padding-top: 12px;
     }
 
     .answer-select {
@@ -135,22 +151,15 @@
       cursor: default;
     }
 
-    .dot-rows {
-      display: grid;
-      gap: 10px;
-      margin-top: 16px;
-    }
-
-    .dot-row {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(44px, 1fr));
+    .dot-column {
+      display: flex;
+      flex-direction: column;
       gap: 8px;
-      justify-content: center;
     }
 
     .dot {
-      width: 100%;
-      aspect-ratio: 1;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       border: 3px dashed var(--pink-300);
       background: #ffffff;
@@ -176,7 +185,7 @@
     }
 
     .dot.disabled {
-      opacity: 0.25;
+      opacity: 0.35;
       cursor: not-allowed;
       border-style: solid;
     }
@@ -223,6 +232,34 @@
       display: none;
     }
 
+    .attempt-card {
+      background: #ffffff;
+      border-radius: 18px;
+      border: 2px solid var(--pink-200);
+      padding: 12px 14px 16px;
+      text-align: center;
+      margin-top: 8px;
+      box-shadow: inset 0 0 0 2px rgba(255, 215, 234, 0.4);
+    }
+
+    .attempt-title {
+      font-weight: 700;
+      color: #c26494;
+      margin-bottom: 10px;
+    }
+
+    .attempt-grid {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+    }
+
+    .attempt-label {
+      font-size: 0.9rem;
+      color: #9b6a84;
+      margin-bottom: 6px;
+    }
+
     @media (max-width: 420px) {
       .app {
         padding: 20px 16px 24px;
@@ -236,46 +273,64 @@
         font-size: 0.9rem;
       }
 
-      .dot-row {
-        grid-template-columns: repeat(5, minmax(38px, 1fr));
+      .dot {
+        width: 38px;
+        height: 38px;
       }
     }
   </style>
 </head>
 <body>
-  <main class="app" aria-live="polite">
+  <div class="app-shell">
     <div class="score-chip">⭐ Score: <span id="score">0</span></div>
-    <h1 class="title">Pink Dot Addition</h1>
-    <p class="subtitle">Tap the dots, then pick the answer!</p>
+    <main class="app" aria-live="polite">
+      <h1 class="title">Pink Dot Addition</h1>
+      <p class="subtitle">Tap the dots, then pick the answer!</p>
 
-    <section class="problem-card">
-      <div class="equation" aria-label="addition problem">
-        <span class="number-pill" id="first-number">0</span>
-        <span>+</span>
-        <span class="number-pill" id="second-number">0</span>
-        <span>=</span>
-        <select id="answer" class="answer-select" aria-label="Select the answer">
-          <option value="" selected disabled>?</option>
-          <option value="0">0</option>
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-          <option value="5">5</option>
-        </select>
+      <section class="problem-card">
+        <div class="equation" aria-label="addition problem">
+          <div class="number-stack">
+            <span class="number-pill" id="first-number">0</span>
+            <div class="dot-column" id="dots-first" aria-label="dots for first number"></div>
+          </div>
+          <span class="symbol">+</span>
+          <div class="number-stack">
+            <span class="number-pill" id="second-number">0</span>
+            <div class="dot-column" id="dots-second" aria-label="dots for second number"></div>
+          </div>
+          <span class="symbol">=</span>
+          <select id="answer" class="answer-select" aria-label="Select the answer">
+            <option value="" selected disabled>?</option>
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </div>
+      </section>
+
+      <section id="attempt-card" class="attempt-card" hidden>
+        <div class="attempt-title">Your attempt</div>
+        <div class="attempt-grid">
+          <div>
+            <div class="attempt-label">First number</div>
+            <div class="dot-column" id="attempt-first" aria-label="attempt dots for first number"></div>
+          </div>
+          <div>
+            <div class="attempt-label">Second number</div>
+            <div class="dot-column" id="attempt-second" aria-label="attempt dots for second number"></div>
+          </div>
+        </div>
+      </section>
+
+      <div id="feedback" class="feedback"></div>
+      <div class="actions">
+        <button id="next" class="next-button" hidden>Next Problem ✨</button>
       </div>
-
-      <div class="dot-rows" aria-label="counting dots">
-        <div class="dot-row" id="dots-first" aria-label="dots for first number"></div>
-        <div class="dot-row" id="dots-second" aria-label="dots for second number"></div>
-      </div>
-    </section>
-
-    <div id="feedback" class="feedback"></div>
-    <div class="actions">
-      <button id="next" class="next-button" hidden>Next Problem ✨</button>
-    </div>
-  </main>
+    </main>
+  </div>
 
   <script>
     const MAX_NUMBER = 5;
@@ -287,6 +342,9 @@
       answerSelect: document.getElementById('answer'),
       dotsFirst: document.getElementById('dots-first'),
       dotsSecond: document.getElementById('dots-second'),
+      attemptCard: document.getElementById('attempt-card'),
+      attemptFirst: document.getElementById('attempt-first'),
+      attemptSecond: document.getElementById('attempt-second'),
       feedback: document.getElementById('feedback'),
       score: document.getElementById('score'),
       nextButton: document.getElementById('next')
@@ -298,22 +356,29 @@
       locked: false
     };
 
-    function createDots(container, count) {
+    function createDots(container, { filledCount = 0, interactive = true } = {}) {
       container.innerHTML = '';
       for (let i = 0; i < MAX_NUMBER; i += 1) {
         const dot = document.createElement('button');
         dot.type = 'button';
         dot.className = 'dot';
-        if (i >= count) {
+        if (i < filledCount) {
+          dot.classList.add('filled');
+        }
+        if (!interactive) {
           dot.classList.add('disabled');
           dot.disabled = true;
+        } else {
+          dot.addEventListener('click', () => {
+            dot.classList.toggle('filled');
+          });
         }
-        dot.addEventListener('click', () => {
-          if (dot.disabled) return;
-          dot.classList.toggle('filled');
-        });
         container.appendChild(dot);
       }
+    }
+
+    function getFilledCount(container) {
+      return container.querySelectorAll('.dot.filled').length;
     }
 
     function pickNumbers() {
@@ -335,9 +400,10 @@
       elements.feedback.textContent = '';
       elements.feedback.className = 'feedback';
       elements.nextButton.hidden = true;
+      elements.attemptCard.hidden = true;
       state.locked = false;
-      createDots(elements.dotsFirst, state.current.a);
-      createDots(elements.dotsSecond, state.current.b);
+      createDots(elements.dotsFirst);
+      createDots(elements.dotsSecond);
     }
 
     function celebrate() {
@@ -354,6 +420,14 @@
       const selected = Number(elements.answerSelect.value);
       if (Number.isNaN(selected)) return;
 
+      const attempt = {
+        first: getFilledCount(elements.dotsFirst),
+        second: getFilledCount(elements.dotsSecond)
+      };
+
+      createDots(elements.dotsFirst, { filledCount: state.current.a, interactive: false });
+      createDots(elements.dotsSecond, { filledCount: state.current.b, interactive: false });
+
       if (selected === state.current.sum) {
         state.score += 1;
         elements.score.textContent = state.score;
@@ -362,10 +436,18 @@
         state.locked = true;
         elements.answerSelect.disabled = true;
         elements.nextButton.hidden = false;
+        elements.attemptCard.hidden = true;
         celebrate();
       } else {
         elements.feedback.textContent = 'Keep counting the dots 💗';
         elements.feedback.classList.add('try');
+        if (attempt.first > 0 || attempt.second > 0) {
+          createDots(elements.attemptFirst, { filledCount: attempt.first, interactive: false });
+          createDots(elements.attemptSecond, { filledCount: attempt.second, interactive: false });
+          elements.attemptCard.hidden = false;
+        } else {
+          elements.attemptCard.hidden = true;
+        }
       }
     }
 
