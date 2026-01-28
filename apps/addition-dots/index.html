@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Pink Dot Addition</title>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <style>
+    :root {
+      --pink-100: #fff0f7;
+      --pink-200: #ffd7ea;
+      --pink-300: #ffb9d9;
+      --pink-400: #ff9bc9;
+      --pink-500: #ff7db8;
+      --purple-100: #efe5ff;
+      --ink: #4b2b45;
+      --shadow: rgba(255, 125, 184, 0.25);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    html,
+    body {
+      height: 100%;
+      overscroll-behavior: none;
+      font-family: 'Nunito', sans-serif;
+      background: radial-gradient(circle at top, #fffafc 0%, #ffe9f5 55%, #ffe0f0 100%);
+      color: var(--ink);
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      overflow: hidden;
+    }
+
+    .app {
+      width: min(520px, 100%);
+      background: #ffffff;
+      border-radius: 28px;
+      box-shadow: 0 16px 32px var(--shadow);
+      padding: 24px 20px 28px;
+      border: 4px solid var(--pink-200);
+      position: relative;
+    }
+
+    .score-chip {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: var(--pink-400);
+      color: #ffffff;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 1rem;
+      box-shadow: 0 8px 16px rgba(255, 125, 184, 0.3);
+    }
+
+    .title {
+      text-align: center;
+      font-family: 'Baloo 2', cursive;
+      font-size: 2rem;
+      color: var(--pink-500);
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 1rem;
+      color: #8a5d7a;
+      margin-bottom: 18px;
+    }
+
+    .problem-card {
+      background: var(--pink-100);
+      border-radius: 20px;
+      border: 3px dashed var(--pink-300);
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .equation {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      font-size: clamp(1.6rem, 4vw, 2.3rem);
+      font-weight: 700;
+    }
+
+    .number-pill {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 8px 12px;
+      min-width: 54px;
+      text-align: center;
+      border: 2px solid var(--pink-300);
+      box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.8);
+    }
+
+    .answer-select {
+      appearance: none;
+      border: 3px solid var(--pink-400);
+      border-radius: 16px;
+      min-width: 72px;
+      padding: 8px 14px;
+      font-size: 1.4rem;
+      font-weight: 700;
+      text-align: center;
+      color: var(--ink);
+      background: #fff;
+      box-shadow: 0 6px 12px rgba(255, 125, 184, 0.2);
+      cursor: pointer;
+      background-image: linear-gradient(45deg, transparent 50%, var(--pink-400) 50%),
+        linear-gradient(135deg, var(--pink-400) 50%, transparent 50%);
+      background-position: calc(100% - 18px) calc(50% - 2px), calc(100% - 12px) calc(50% - 2px);
+      background-size: 6px 6px, 6px 6px;
+      background-repeat: no-repeat;
+      padding-right: 28px;
+    }
+
+    .answer-select:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    .dot-rows {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .dot-row {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(44px, 1fr));
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .dot {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 3px dashed var(--pink-300);
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--pink-500);
+      box-shadow: 0 4px 10px rgba(255, 155, 201, 0.2);
+      cursor: pointer;
+      transition: transform 0.15s ease, background-color 0.2s ease;
+    }
+
+    .dot:active {
+      transform: scale(0.95);
+    }
+
+    .dot.filled {
+      background: var(--pink-400);
+      border-style: solid;
+      color: #fff;
+    }
+
+    .dot.disabled {
+      opacity: 0.25;
+      cursor: not-allowed;
+      border-style: solid;
+    }
+
+    .feedback {
+      min-height: 32px;
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin: 16px 0 8px;
+    }
+
+    .feedback.good {
+      color: #ff5fa2;
+    }
+
+    .feedback.try {
+      color: #a56b8a;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+    }
+
+    .next-button {
+      background: var(--pink-500);
+      border: none;
+      color: #fff;
+      border-radius: 18px;
+      padding: 12px 24px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 10px 20px rgba(255, 125, 184, 0.3);
+      transition: transform 0.15s ease;
+    }
+
+    .next-button:active {
+      transform: scale(0.97);
+    }
+
+    .next-button[hidden] {
+      display: none;
+    }
+
+    @media (max-width: 420px) {
+      .app {
+        padding: 20px 16px 24px;
+      }
+
+      .title {
+        font-size: 1.7rem;
+      }
+
+      .score-chip {
+        font-size: 0.9rem;
+      }
+
+      .dot-row {
+        grid-template-columns: repeat(5, minmax(38px, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app" aria-live="polite">
+    <div class="score-chip">⭐ Score: <span id="score">0</span></div>
+    <h1 class="title">Pink Dot Addition</h1>
+    <p class="subtitle">Tap the dots, then pick the answer!</p>
+
+    <section class="problem-card">
+      <div class="equation" aria-label="addition problem">
+        <span class="number-pill" id="first-number">0</span>
+        <span>+</span>
+        <span class="number-pill" id="second-number">0</span>
+        <span>=</span>
+        <select id="answer" class="answer-select" aria-label="Select the answer">
+          <option value="" selected disabled>?</option>
+          <option value="0">0</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+        </select>
+      </div>
+
+      <div class="dot-rows" aria-label="counting dots">
+        <div class="dot-row" id="dots-first" aria-label="dots for first number"></div>
+        <div class="dot-row" id="dots-second" aria-label="dots for second number"></div>
+      </div>
+    </section>
+
+    <div id="feedback" class="feedback"></div>
+    <div class="actions">
+      <button id="next" class="next-button" hidden>Next Problem ✨</button>
+    </div>
+  </main>
+
+  <script>
+    const MAX_NUMBER = 5;
+    const MAX_SUM = 5;
+
+    const elements = {
+      firstNumber: document.getElementById('first-number'),
+      secondNumber: document.getElementById('second-number'),
+      answerSelect: document.getElementById('answer'),
+      dotsFirst: document.getElementById('dots-first'),
+      dotsSecond: document.getElementById('dots-second'),
+      feedback: document.getElementById('feedback'),
+      score: document.getElementById('score'),
+      nextButton: document.getElementById('next')
+    };
+
+    const state = {
+      score: 0,
+      current: { a: 0, b: 0, sum: 0 },
+      locked: false
+    };
+
+    function createDots(container, count) {
+      container.innerHTML = '';
+      for (let i = 0; i < MAX_NUMBER; i += 1) {
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'dot';
+        if (i >= count) {
+          dot.classList.add('disabled');
+          dot.disabled = true;
+        }
+        dot.addEventListener('click', () => {
+          if (dot.disabled) return;
+          dot.classList.toggle('filled');
+        });
+        container.appendChild(dot);
+      }
+    }
+
+    function pickNumbers() {
+      let a = 0;
+      let b = 0;
+      do {
+        a = Math.floor(Math.random() * (MAX_NUMBER + 1));
+        b = Math.floor(Math.random() * (MAX_NUMBER + 1));
+      } while (a + b > MAX_SUM);
+      state.current = { a, b, sum: a + b };
+    }
+
+    function resetQuestion() {
+      pickNumbers();
+      elements.firstNumber.textContent = state.current.a;
+      elements.secondNumber.textContent = state.current.b;
+      elements.answerSelect.value = '';
+      elements.answerSelect.disabled = false;
+      elements.feedback.textContent = '';
+      elements.feedback.className = 'feedback';
+      elements.nextButton.hidden = true;
+      state.locked = false;
+      createDots(elements.dotsFirst, state.current.a);
+      createDots(elements.dotsSecond, state.current.b);
+    }
+
+    function celebrate() {
+      confetti({
+        particleCount: 120,
+        spread: 80,
+        origin: { y: 0.7 },
+        colors: ['#ff7db8', '#ffd1e8', '#ffeef7', '#f3b0ff']
+      });
+    }
+
+    function handleAnswer() {
+      if (state.locked) return;
+      const selected = Number(elements.answerSelect.value);
+      if (Number.isNaN(selected)) return;
+
+      if (selected === state.current.sum) {
+        state.score += 1;
+        elements.score.textContent = state.score;
+        elements.feedback.textContent = 'Sparkly job! 🌸';
+        elements.feedback.classList.add('good');
+        state.locked = true;
+        elements.answerSelect.disabled = true;
+        elements.nextButton.hidden = false;
+        celebrate();
+      } else {
+        elements.feedback.textContent = 'Keep counting the dots 💗';
+        elements.feedback.classList.add('try');
+      }
+    }
+
+    elements.answerSelect.addEventListener('change', handleAnswer);
+    elements.nextButton.addEventListener('click', resetQuestion);
+
+    ['gesturestart', 'gesturechange', 'gestureend'].forEach((eventName) => {
+      document.addEventListener(eventName, (event) => event.preventDefault());
+    });
+
+    resetQuestion();
+  </script>
+</body>
+</html>
