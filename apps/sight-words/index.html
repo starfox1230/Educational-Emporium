@@ -2192,8 +2192,199 @@
         }
     };
 
+    function createRescueAvoidGame(config) {
+        return {
+            name: config.name,
+            score: 0,
+            duration: 20000,
+            critters: [],
+            container: null,
+            onCompleteCallback: null,
+            elements: {},
+            gameTimerId: null,
+            timerIntervalId: null,
+            animationFrameId: null,
+            boundGameLoop: null,
+            boundTapHandler: null,
+            numGood: config.numGood || 8,
+            numBad: config.numBad || 4,
+            minSpeed: config.minSpeed || 1,
+            maxSpeed: config.maxSpeed || 2.5,
+            start: function(containerElement, onComplete) {
+                this.container = containerElement;
+                this.onCompleteCallback = onComplete;
+                this.score = 0;
+                this.critters = [];
+                this.container.innerHTML = '';
+                this.container.style.cursor = 'pointer';
+                this.container.style.touchAction = 'none';
+                speak(config.prompt);
+                const infoBar = document.createElement('div');
+                infoBar.className = 'minigame-info-bar';
+                this.elements.scoreDisplay = document.createElement('div');
+                this.elements.scoreDisplay.className = 'minigame-score';
+                infoBar.appendChild(this.elements.scoreDisplay);
+                this.updateScoreDisplay();
+                const timerContainer = document.createElement('div');
+                timerContainer.className = 'minigame-timer-bar-container';
+                this.elements.timerBar = document.createElement('div');
+                this.elements.timerBar.className = 'minigame-timer-bar';
+                timerContainer.appendChild(this.elements.timerBar);
+                infoBar.appendChild(timerContainer);
+                this.container.appendChild(infoBar);
+                for (let i = 0; i < this.numGood; i++) { this.spawnCritter('good'); }
+                for (let i = 0; i < this.numBad; i++) { this.spawnCritter('bad'); }
+                let timeLeft = this.duration;
+                this.elements.timerBar.style.width = '100%';
+                this.timerIntervalId = setInterval(() => {
+                    timeLeft -= 100;
+                    const progress = Math.max(0, (timeLeft / this.duration) * 100);
+                    this.elements.timerBar.style.width = `${progress}%`;
+                    if (timeLeft <= 0) clearInterval(this.timerIntervalId);
+                }, 100);
+                this.gameTimerId = setTimeout(() => this.endGame(), this.duration);
+                this.boundTapHandler = this.handleTap.bind(this);
+                this.container.addEventListener('pointerdown', this.boundTapHandler);
+                this.boundGameLoop = this.gameLoop.bind(this);
+                this.animationFrameId = requestAnimationFrame(this.boundGameLoop);
+            },
+            spawnCritter: function(type) {
+                if (!this.container) return;
+                const containerRect = this.container.getBoundingClientRect();
+                const size = type === 'good' ? (config.goodSize || 40) : (config.badSize || 45);
+                const speedX = this.minSpeed + Math.random() * (this.maxSpeed - this.minSpeed);
+                const speedY = this.minSpeed + Math.random() * (this.maxSpeed - this.minSpeed);
+                const critter = {
+                    element: document.createElement('div'),
+                    type: type,
+                    size: size,
+                    x: Math.random() * Math.max(1, containerRect.width - size),
+                    y: Math.random() * Math.max(1, containerRect.height - size),
+                    vx: speedX * (Math.random() < 0.5 ? -1 : 1),
+                    vy: speedY * (Math.random() < 0.5 ? -1 : 1),
+                };
+                critter.element.textContent = type === 'good' ? config.goodEmoji : config.badEmoji;
+                critter.element.style.cssText = `position: absolute; font-size: ${size}px; user-select: none; left: 0; top: 0; will-change: transform;`;
+                critter.element.dataset.critterType = type;
+                this.critters.push(critter);
+                this.container.appendChild(critter.element);
+            },
+            handleTap: function(event) {
+                const targetElement = event.target;
+                const critterType = targetElement.dataset.critterType;
+                if (!critterType) return;
+                const critterIndex = this.critters.findIndex(c => c.element === targetElement);
+                if (critterIndex === -1) return;
+                const critter = this.critters[critterIndex];
+                if (critter.type === 'good') {
+                    this.score++;
+                    playBell();
+                    const rect = critter.element.getBoundingClientRect();
+                    const confettiX = (rect.left + rect.right) / 2 / window.innerWidth;
+                    const confettiY = (rect.top + rect.bottom) / 2 / window.innerHeight;
+                    myConfetti({ particleCount: 30, spread: 50, origin: { x: confettiX, y: confettiY }, scalar: 0.8 });
+                    critter.element.remove();
+                    this.critters.splice(critterIndex, 1);
+                    this.spawnCritter('good');
+                } else {
+                    this.score--;
+                    playBuzz();
+                    this.container.classList.add('red-flash-effect');
+                    setTimeout(() => this.container && this.container.classList.remove('red-flash-effect'), 300);
+                }
+                this.updateScoreDisplay();
+            },
+            gameLoop: function() {
+                if (!this.container) return;
+                const containerRect = this.container.getBoundingClientRect();
+                this.critters.forEach(critter => {
+                    critter.x += critter.vx;
+                    critter.y += critter.vy;
+                    if (critter.x <= 0 || critter.x >= containerRect.width - critter.size) {
+                        critter.vx *= -1;
+                        critter.x = Math.max(0, Math.min(critter.x, containerRect.width - critter.size));
+                    }
+                    if (critter.y <= 0 || critter.y >= containerRect.height - critter.size) {
+                        critter.vy *= -1;
+                        critter.y = Math.max(0, Math.min(critter.y, containerRect.height - critter.size));
+                    }
+                    critter.element.style.transform = `translate(${critter.x}px, ${critter.y}px)`;
+                });
+                this.animationFrameId = requestAnimationFrame(this.boundGameLoop);
+            },
+            updateScoreDisplay: function() {
+                if (this.elements.scoreDisplay) {
+                    this.elements.scoreDisplay.textContent = `Score: ${this.score}`;
+                }
+            },
+            endGame: function() {
+                const canCallPrimaryCallback = !!this.onCompleteCallback;
+                cancelAnimationFrame(this.animationFrameId);
+                clearInterval(this.timerIntervalId);
+                clearTimeout(this.gameTimerId);
+                this.animationFrameId = null;
+                this.timerIntervalId = null;
+                this.gameTimerId = null;
+                if (this.container && this.boundTapHandler) {
+                    this.container.removeEventListener('pointerdown', this.boundTapHandler);
+                    this.container.style.cursor = 'default';
+                    this.container.style.touchAction = '';
+                    this.container.classList.remove('red-flash-effect');
+                }
+                this.critters.forEach(c => c.element.remove());
+                this.critters = [];
+                if (canCallPrimaryCallback) {
+                    speak(config.finishMessage(Math.max(0, this.score)));
+                    const callbackToExecute = this.onCompleteCallback;
+                    this.onCompleteCallback = null;
+                    if (callbackToExecute) { callbackToExecute(this.score); }
+                }
+            },
+            destroy: function() {
+                this.endGame();
+                if (this.container) { this.container.innerHTML = ''; }
+                this.container = null;
+                this.elements = {};
+                this.onCompleteCallback = null;
+            }
+        };
+    }
+
+    const FishSharkRescueGame = createRescueAvoidGame({
+        name: "Fish Rescue",
+        prompt: "Save the fish, but don't touch the sharks!",
+        goodEmoji: "\uD83D\uDC1F",
+        badEmoji: "\uD83E\uDD88",
+        finishMessage: score => `Great job! You saved ${score} fish!`
+    });
+    const PuppyTigerRescueGame = createRescueAvoidGame({
+        name: "Puppy Tiger Rescue",
+        prompt: "Save the puppies, but don't touch the tigers!",
+        goodEmoji: "\uD83D\uDC36",
+        badEmoji: "\uD83D\uDC05",
+        finishMessage: score => `Great job! You saved ${score} puppies!`
+    });
+    const PrincessMonsterRescueGame = createRescueAvoidGame({
+        name: "Princess Rescue",
+        prompt: "Save the princesses, but don't touch the monsters!",
+        goodEmoji: "\uD83D\uDC78",
+        badEmoji: "\uD83D\uDC7E",
+        finishMessage: score => `Wonderful! You saved ${score} princesses!`
+    });
+    const CatZombieTapGame = createRescueAvoidGame({
+        name: "Cat Zombie Dodge",
+        prompt: "Touch the cats, but don't touch the zombies!",
+        goodEmoji: "\uD83D\uDC08",
+        badEmoji: "\uD83E\uDDDF",
+        finishMessage: score => `Great job! You touched ${score} cats!`
+    });
+
 const MINI_GAME_LIBRARY = [
         { id: 'catRescue', label: CatRescueGame.name, game: CatRescueGame },
+        { id: 'fishSharkRescue', label: FishSharkRescueGame.name, game: FishSharkRescueGame },
+        { id: 'puppyTigerRescue', label: PuppyTigerRescueGame.name, game: PuppyTigerRescueGame },
+        { id: 'princessMonsterRescue', label: PrincessMonsterRescueGame.name, game: PrincessMonsterRescueGame },
+        { id: 'catZombieTap', label: CatZombieTapGame.name, game: CatZombieTapGame },
         { id: 'hoopBounce', label: HoopBounceGame.name, game: HoopBounceGame },
         { id: 'unicornDragonDash', label: UnicornDragonDash.name, game: UnicornDragonDash },
         { id: 'puppyLaserDefender', label: PuppyLaserDefenderGame.name, game: PuppyLaserDefenderGame },
@@ -2213,6 +2404,11 @@ const MINI_GAME_LIBRARY = [
             const parsed = JSON.parse(stored);
             const ids = Array.isArray(parsed) ? parsed : (parsed && Array.isArray(parsed.order) ? parsed.order : []);
             const filtered = ids.filter(id => MINI_GAME_LIBRARY.some(game => game.id === id));
+            MINI_GAME_LIBRARY.forEach(game => {
+                if (!filtered.includes(game.id)) {
+                    filtered.push(game.id);
+                }
+            });
             return filtered.length ? filtered : fallback;
         } catch (error) {
             console.warn('Failed to parse mini-game order from storage', error);
