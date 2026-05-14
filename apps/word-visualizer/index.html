@@ -208,7 +208,7 @@
       background-clip: text;
       color: transparent;
       text-shadow: none;
-      padding-bottom: 0.08em;
+      padding-bottom: 0.2em;
     }
 
     .word-shell::before {
@@ -224,7 +224,7 @@
       position: relative;
       z-index: 1;
       font-size: var(--displaySize);
-      line-height: 1.08;
+      line-height: 1.22;
       font-weight: 900;
       letter-spacing: 0;
       text-align: center;
@@ -277,26 +277,6 @@
 
     .favorite-btn:active {
       transform: scale(0.94);
-    }
-
-    .bottombar {
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      color: var(--muted);
-      font-size: clamp(0.76rem, 2vw, 0.95rem);
-      text-align: center;
-      flex-wrap: wrap;
-      font-weight: 700;
-    }
-
-    .key {
-      color: var(--text);
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 2px 7px;
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
     }
 
     .drawer {
@@ -519,12 +499,6 @@
       </button>
     </section>
 
-    <footer class="bottombar">
-      <span><span class="key">Space</span> next word</span>
-      <span><span class="key">Right</span> next</span>
-      <span><span class="key">Left</span> previous</span>
-      <span><span class="key">Ctrl</span> + <span class="key">Z</span> previous word</span>
-    </footer>
   </main>
 
   <aside class="drawer" id="drawer" aria-hidden="true">
@@ -919,7 +893,7 @@
         event.preventDefault();
         nextWord();
       }
-      if (event.key === "ArrowLeft" || ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z")) {
+      if (event.key === "ArrowLeft" || event.key === "Backspace" || ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z")) {
         event.preventDefault();
         previousWord();
       }
