@@ -77,6 +77,31 @@
       --shadow: 0 24px 80px rgba(224, 52, 87, 0.18);
     }
 
+    body[data-theme="rainbow"] {
+      --bg: #fffaf0;
+      --bg2: #eefbff;
+      --panel: rgba(255, 255, 255, 0.88);
+      --text: #20223b;
+      --muted: #5d6380;
+      --accent: #ff4f8b;
+      --accent2: #20b8ff;
+      --shadow: 0 24px 80px rgba(62, 102, 220, 0.18);
+    }
+
+    body[data-theme="rainbow-night"] {
+      --bg: #070914;
+      --bg2: #171021;
+      --panel: rgba(17, 19, 35, 0.9);
+      --text: #fff8ff;
+      --muted: #c8bed8;
+      --accent: #ff7ad9;
+      --accent2: #61f4ff;
+      --border: rgba(255, 255, 255, 0.17);
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+      --button: rgba(255, 255, 255, 0.08);
+      --buttonText: #fff8ff;
+    }
+
     * { box-sizing: border-box; }
     html, body { min-height: 100%; margin: 0; }
     body {
@@ -146,9 +171,12 @@
 
     .stage {
       min-height: 0;
-      display: grid;
-      place-items: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
       padding: clamp(10px, 2vw, 28px);
+      gap: 14px;
     }
 
     .word-shell {
@@ -163,6 +191,23 @@
       padding: clamp(22px, 6vw, 80px);
       position: relative;
       overflow: hidden;
+    }
+
+    body[data-theme="rainbow"] .word-shell,
+    body[data-theme="rainbow-night"] .word-shell {
+      background:
+        linear-gradient(var(--panel), var(--panel)) padding-box,
+        linear-gradient(120deg, #ff477e, #ffca3a, #6ee7b7, #38bdf8, #a78bfa, #ff70c8) border-box;
+      border: 3px solid transparent;
+    }
+
+    body[data-theme="rainbow"] .word,
+    body[data-theme="rainbow-night"] .word {
+      background: linear-gradient(100deg, #ff477e, #f59e0b, #10b981, #0ea5e9, #8b5cf6, #ec4899);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: none;
     }
 
     .word-shell::before {
@@ -195,6 +240,42 @@
       font-weight: 700;
       line-height: 1.5;
       font-size: clamp(1.1rem, 3vw, 1.5rem);
+    }
+
+    .favorite-btn {
+      width: clamp(54px, 10vw, 72px);
+      height: clamp(54px, 10vw, 72px);
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: color-mix(in srgb, var(--muted) 78%, white);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12);
+      transition: transform 160ms ease, color 160ms ease, background 160ms ease;
+    }
+
+    .favorite-btn svg {
+      width: 62%;
+      height: 62%;
+      fill: transparent;
+      stroke: currentColor;
+      stroke-width: 2;
+    }
+
+    .favorite-btn.active {
+      color: #ffb703;
+      background: color-mix(in srgb, var(--panel) 90%, #fff4bf);
+      border-color: color-mix(in srgb, #ffb703 55%, var(--border));
+    }
+
+    .favorite-btn.active svg {
+      fill: currentColor;
+    }
+
+    .favorite-btn:active {
+      transform: scale(0.94);
     }
 
     .bottombar {
@@ -387,6 +468,14 @@
 
     .utility-btn.full { grid-column: 1 / -1; }
 
+    .status-line {
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 800;
+      margin-top: 8px;
+      min-height: 1.2em;
+    }
+
     @media (max-width: 700px) {
       .app { gap: 8px; }
       .word-shell {
@@ -422,10 +511,17 @@
         <div class="word" id="wordDisplay">the</div>
         <div class="empty" id="emptyState" hidden>Choose at least one list or word in settings.</div>
       </div>
+      <button class="favorite-btn" id="favoriteBtn" type="button" aria-label="Add current word to favorites" title="Favorite word">
+        <svg viewBox="0 0 24 24" aria-hidden="true" stroke-linejoin="round">
+          <path d="m12 2.7 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.5l-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9L12 2.7Z"></path>
+        </svg>
+      </button>
     </section>
 
     <footer class="bottombar">
       <span><span class="key">Space</span> next word</span>
+      <span><span class="key">Right</span> next</span>
+      <span><span class="key">Left</span> previous</span>
       <span><span class="key">Ctrl</span> + <span class="key">Z</span> previous word</span>
     </footer>
   </main>
@@ -454,7 +550,10 @@
       <div class="tools">
         <button class="utility-btn" id="selectAllBtn" type="button">Select All</button>
         <button class="utility-btn" id="clearAllBtn" type="button">Clear All</button>
+        <button class="utility-btn" id="favoritesOnlyBtn" type="button">Favorites Only</button>
+        <button class="utility-btn" id="copyFavoritesBtn" type="button">Copy Favorites</button>
       </div>
+      <p class="status-line" id="favoriteStatus"></p>
       <div class="level-list" id="levelList"></div>
     </section>
   </aside>
@@ -486,7 +585,9 @@
       ["bright", "Bright"],
       ["blush", "Blush Pink"],
       ["rose", "Rose Pink"],
-      ["strawberry", "Strawberry"]
+      ["strawberry", "Strawberry"],
+      ["rainbow", "Bright Rainbow"],
+      ["rainbow-night", "Night Rainbow"]
     ];
     const STORE = "wordVisualizerSettings";
     const defaultSelection = {
@@ -502,10 +603,14 @@
     const wordDisplay = document.getElementById("wordDisplay");
     const emptyState = document.getElementById("emptyState");
     const counter = document.getElementById("counter");
+    const favoriteBtn = document.getElementById("favoriteBtn");
     const drawer = document.getElementById("drawer");
     const themeGrid = document.getElementById("themeGrid");
     const orderGroup = document.getElementById("orderGroup");
     const levelList = document.getElementById("levelList");
+    const favoritesOnlyBtn = document.getElementById("favoritesOnlyBtn");
+    const copyFavoritesBtn = document.getElementById("copyFavoritesBtn");
+    const favoriteStatus = document.getElementById("favoriteStatus");
 
     function loadSettings() {
       try {
@@ -514,10 +619,12 @@
           theme: parsed?.theme || "blush",
           order: parsed?.order || "inOrder",
           selection: normalizeSelection(parsed?.selection),
-          wordSelections: normalizeWordSelections(parsed?.wordSelections)
+          wordSelections: normalizeWordSelections(parsed?.wordSelections),
+          favorites: Array.isArray(parsed?.favorites) ? parsed.favorites.filter(Boolean) : [],
+          favoritesOnly: Boolean(parsed?.favoritesOnly)
         };
       } catch {
-        return { theme: "blush", order: "inOrder", selection: structuredClone(defaultSelection), wordSelections: {} };
+        return { theme: "blush", order: "inOrder", selection: structuredClone(defaultSelection), wordSelections: {}, favorites: [], favoritesOnly: false };
       }
     }
 
@@ -562,10 +669,14 @@
 
     function rebuildActiveWords(keepWord) {
       const words = [];
-      for (const listKey of Object.keys(WORD_BANK)) {
-        for (const levelKey of Object.keys(WORD_BANK[listKey])) {
-          if (!settings.selection[listKey]?.[levelKey]) continue;
-          words.push(...settings.wordSelections[listKey][levelKey]);
+      if (settings.favoritesOnly) {
+        words.push(...settings.favorites);
+      } else {
+        for (const listKey of Object.keys(WORD_BANK)) {
+          for (const levelKey of Object.keys(WORD_BANK[listKey])) {
+            if (!settings.selection[listKey]?.[levelKey]) continue;
+            words.push(...settings.wordSelections[listKey][levelKey]);
+          }
         }
       }
       activeWords = uniqueWords(words);
@@ -613,9 +724,33 @@
       const hasWords = activeWords.length > 0;
       wordDisplay.hidden = !hasWords;
       emptyState.hidden = hasWords;
-      wordDisplay.textContent = hasWords ? activeWords[index] : "";
+      emptyState.textContent = settings.favoritesOnly ? "No favorites yet. Tap the star under a word to add one." : "Choose at least one list or word in settings.";
+      const currentWord = hasWords ? activeWords[index] : "";
+      wordDisplay.textContent = currentWord;
       counter.textContent = hasWords ? `${index + 1} / ${activeWords.length}` : "0 / 0";
+      updateFavoriteButton();
       fitWord();
+    }
+
+    function updateFavoriteButton() {
+      const currentWord = activeWords[index];
+      const isFavorite = Boolean(currentWord && settings.favorites.includes(currentWord));
+      favoriteBtn.classList.toggle("active", isFavorite);
+      favoriteBtn.disabled = !currentWord;
+      favoriteBtn.setAttribute("aria-label", isFavorite ? `Remove ${currentWord} from favorites` : `Add ${currentWord || "current word"} to favorites`);
+    }
+
+    function toggleFavorite() {
+      const currentWord = activeWords[index];
+      if (!currentWord) return;
+      const favorites = new Set(settings.favorites);
+      if (favorites.has(currentWord)) favorites.delete(currentWord);
+      else favorites.add(currentWord);
+      settings.favorites = Array.from(favorites);
+      if (settings.favoritesOnly && !favorites.has(currentWord)) rebuildActiveWords();
+      else renderWord();
+      renderFavoriteControls();
+      save();
     }
 
     function fitWord() {
@@ -660,7 +795,9 @@
     }
 
     function renderLevels() {
+      levelList.toggleAttribute("hidden", settings.favoritesOnly);
       levelList.innerHTML = "";
+      if (settings.favoritesOnly) return;
       for (const listKey of ["dolch", "fry"]) {
         const title = document.createElement("h2");
         title.textContent = listKey === "dolch" ? "Dolch Sight Words" : "Fry Sight Words";
@@ -715,8 +852,31 @@
       document.body.dataset.theme = settings.theme;
       renderThemes();
       renderOrder();
+      renderFavoriteControls();
       if (rebuild) rebuildActiveWords(activeWords[index]);
       save();
+    }
+
+    function renderFavoriteControls() {
+      favoritesOnlyBtn.classList.toggle("active", settings.favoritesOnly);
+      favoritesOnlyBtn.textContent = settings.favoritesOnly ? `Viewing Favorites (${settings.favorites.length})` : `Favorites Only (${settings.favorites.length})`;
+      copyFavoritesBtn.disabled = settings.favorites.length === 0;
+      favoriteStatus.textContent = settings.favoritesOnly ? "Showing only starred words." : "";
+    }
+
+    async function copyFavorites() {
+      const text = settings.favorites.join("\n");
+      if (!text) {
+        favoriteStatus.textContent = "No favorites to copy yet.";
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(text);
+        favoriteStatus.textContent = `Copied ${settings.favorites.length} favorite word${settings.favorites.length === 1 ? "" : "s"}.`;
+      } catch {
+        favoriteStatus.textContent = "Clipboard blocked. Use the popup to copy favorites.";
+        window.prompt("Copy favorites", text);
+      }
     }
 
     document.getElementById("settingsBtn").addEventListener("click", () => {
@@ -745,14 +905,20 @@
       }
       applySettings(true);
     });
+    favoritesOnlyBtn.addEventListener("click", () => {
+      settings.favoritesOnly = !settings.favoritesOnly;
+      applySettings(true);
+    });
+    copyFavoritesBtn.addEventListener("click", copyFavorites);
+    favoriteBtn.addEventListener("click", toggleFavorite);
 
     document.addEventListener("keydown", event => {
       if (event.target.matches("input, button, select, textarea")) return;
-      if (event.code === "Space") {
+      if (event.code === "Space" || event.key === "ArrowRight") {
         event.preventDefault();
         nextWord();
       }
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
+      if (event.key === "ArrowLeft" || ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z")) {
         event.preventDefault();
         previousWord();
       }
