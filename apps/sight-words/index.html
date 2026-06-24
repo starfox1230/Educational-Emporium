@@ -8,7 +8,7 @@
   <title>Sight Words Quiz Deluxe - Mini-Games Edition</title>
   
   <!-- iOS & PWA: make it launch standalone (no browser chrome) -->
-  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="manifest" href="manifest.webmanifest">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Sight Words">
@@ -1054,12 +1054,102 @@
         custom: []
     };
 
-    let selectionState = {}; // The single source of truth for word selections
+    let selectionState = {}; // The single source of truth for list/level activation
 
     function isPlainObject(value) {
         return typeof value === 'object' && value !== null && !Array.isArray(value);
     }
     let words = []; // Current words for the quiz
+
+    function getUserSelectionsKey(listKey, levelKey) {
+        return `${listKey}_${listKey === 'custom' ? '__ALL__' : levelKey}_userSelections`;
+    }
+
+    function getBaseWordsForLevel(listKey, levelKey) {
+        if (listKey === 'custom') {
+            return Array.isArray(WORD_BANK.custom) ? [...WORD_BANK.custom] : [];
+        }
+        return [...(WORD_BANK[listKey]?.[levelKey] || [])];
+    }
+
+    function getStoredUserSelectionSubset(listKey, levelKey, baseWords) {
+        const userSelectionsKey = getUserSelectionsKey(listKey, levelKey);
+        const storedUserSelections = localStorage.getItem(userSelectionsKey);
+        if (!storedUserSelections) return null;
+
+        try {
+            const parsedSelections = JSON.parse(storedUserSelections);
+            if (!Array.isArray(parsedSelections)) {
+                localStorage.removeItem(userSelectionsKey);
+                return null;
+            }
+
+            const validWords = new Set(baseWords);
+            const sanitized = [...new Set(parsedSelections)].filter(word => validWords.has(word));
+            if (parsedSelections.length > 0 && sanitized.length === 0 && baseWords.length > 0) {
+                localStorage.removeItem(userSelectionsKey);
+                return null;
+            }
+            if (sanitized.length !== parsedSelections.length) {
+                localStorage.setItem(userSelectionsKey, JSON.stringify(sanitized.sort((a, b) => a.localeCompare(b))));
+            }
+            return sanitized;
+        } catch (e) {
+            console.error(`Error parsing user selections for ${userSelectionsKey}:`, e);
+            localStorage.removeItem(userSelectionsKey);
+            return null;
+        }
+    }
+
+    function getSelectedWordsForLevel(listKey, levelKey) {
+        const baseWordsForLevel = getBaseWordsForLevel(listKey, levelKey);
+        const userSelectedSubset = getStoredUserSelectionSubset(listKey, levelKey, baseWordsForLevel);
+        return Array.isArray(userSelectedSubset) ? userSelectedSubset : baseWordsForLevel;
+    }
+
+    function normalizeSelectionState() {
+        if (!isPlainObject(selectionState)) {
+            selectionState = {};
+        }
+
+        Object.keys(WORD_BANK).forEach(listKey => {
+            if (!isPlainObject(selectionState[listKey])) {
+                selectionState[listKey] = {};
+            }
+            if (listKey === 'custom') {
+                if (typeof selectionState.custom.all !== 'boolean') {
+                    selectionState.custom.all = true;
+                }
+                return;
+            }
+            Object.keys(WORD_BANK[listKey]).forEach(levelKey => {
+                if (typeof selectionState[listKey][levelKey] !== 'boolean') {
+                    selectionState[listKey][levelKey] = false;
+                }
+            });
+        });
+    }
+
+    function normalizeCustomBankFromStorage() {
+        if (!Array.isArray(WORD_BANK.custom)) {
+            WORD_BANK.custom = [];
+        }
+        if (WORD_BANK.custom.length === 0) {
+            try {
+                const storedSelections = localStorage.getItem(getUserSelectionsKey('custom', 'all'));
+                const parsedSelections = storedSelections ? JSON.parse(storedSelections) : null;
+                if (Array.isArray(parsedSelections) && parsedSelections.length > 0) {
+                    WORD_BANK.custom = [...new Set(parsedSelections)]
+                        .filter(word => typeof word === 'string' && word.trim())
+                        .sort((a, b) => a.localeCompare(b));
+                    localStorage.setItem('customBank', JSON.stringify(WORD_BANK.custom));
+                }
+            } catch (e) {
+                console.error('Could not recover custom words from stored selections:', e);
+            }
+        }
+        getStoredUserSelectionSubset('custom', 'all', WORD_BANK.custom);
+    }
 
     // --- IMPORT/EXPORT & DATA HELPERS (UNCHANGED) ---
     function downloadWordData() {
@@ -1090,7 +1180,7 @@
     }
     async function processImportedData(importedData) {
         try {
-            if (!importedData || typeof importedData.customBank === 'undefined') { showFloatingMessage("Invalid file format.", "var(--incorrect-bg)"); return; }
+            if (!importedData || !Array.isArray(importedData.customBank)) { showFloatingMessage("Invalid file format.", "var(--incorrect-bg)"); return; }
             const existingCustomWords = WORD_BANK.custom.length > 0;
             const incomingCustomWords = importedData.customBank.length > 0;
             let action = 'merge';
@@ -1107,6 +1197,7 @@
             }
             if (importedData.wordSelectionState) {
                 selectionState = importedData.wordSelectionState;
+                normalizeSelectionState();
                 localStorage.setItem('wordSelectionState', JSON.stringify(selectionState));
             } else if (importedData.activeWordList && importedData.selectedLevels) {
                 selectionState = {};
@@ -1115,10 +1206,15 @@
                     if (listKey === 'custom') { selectionState.custom.all = importedData.activeWordList === 'custom'; }
                     else { Object.keys(WORD_BANK[listKey]).forEach(levelKey => { selectionState[listKey][levelKey] = (importedData.activeWordList === listKey && importedData.selectedLevels.includes(levelKey)); }); }
                 });
+                normalizeSelectionState();
                 localStorage.setItem('wordSelectionState', JSON.stringify(selectionState));
             }
             showFloatingMessage("Word data imported successfully!", "var(--correct-bg)");
-            updateQuizWordsFromSelectionState(); closeWordCustomizationModal();
+            updateQuizWordsFromSelectionState();
+            if (wordListModal.classList.contains('visible')) {
+                renderWordListModalContent();
+            }
+            closeWordCustomizationModal();
         } catch (error) { console.error("Error processing imported data:", error); showFloatingMessage("Error processing data. Check console.", "var(--incorrect-bg)"); }
     }
     function triggerFileUpload() { document.getElementById('upload-file-input').click(); }
@@ -1275,7 +1371,7 @@
     let miniGameHoldTimeout = null;
     let miniGameHoldTriggered = false;
     let ignoreNextMiniGameToggle = false;
-    let animatedBackgroundsEnabled = localStorage.getItem('animatedBackgroundsEnabled') !== 'true';
+    let animatedBackgroundsEnabled = localStorage.getItem('animatedBackgroundsEnabled') !== 'false';
     let PREFERS_REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 
@@ -1283,8 +1379,12 @@
     function hydrateFromStorage() {
         try {
             const storedCustomBank = localStorage.getItem('customBank');
-            if (storedCustomBank) { WORD_BANK.custom = JSON.parse(storedCustomBank); }
+            if (storedCustomBank) {
+                const parsedCustomBank = JSON.parse(storedCustomBank);
+                WORD_BANK.custom = Array.isArray(parsedCustomBank) ? parsedCustomBank : [];
+            }
         } catch (e) { console.error("Error parsing customBank from localStorage:", e); WORD_BANK.custom = []; }
+        normalizeCustomBankFromStorage();
         
         const storedSelectionState = localStorage.getItem('wordSelectionState');
         if (storedSelectionState) {
@@ -1306,26 +1406,7 @@
     
         // — MERGE IN ANY NEW BANKS/LEVELS (e.g. readingcom) SO OLD SAVED STATES
         //   DON’T “LOSE” THEM WHEN YOU ADD NEW LISTS OR LESSONS —
-        Object.keys(WORD_BANK).forEach(listKey => {
-            if (!isPlainObject(selectionState)) {
-                selectionState = {};
-            }
-
-            if (!isPlainObject(selectionState[listKey])) {
-                selectionState[listKey] = {};
-            }
-            if (listKey === 'custom') {
-                if (typeof selectionState.custom.all !== 'boolean') {
-                    selectionState.custom.all = true;
-                }
-            } else {
-                Object.keys(WORD_BANK[listKey]).forEach(levelKey => {
-                    if (typeof selectionState[listKey][levelKey] !== 'boolean') {
-                        selectionState[listKey][levelKey] = false;
-                    }
-                });
-            }
-        });
+        normalizeSelectionState();
     
         // Persist the now-complete state back to localStorage
         localStorage.setItem('wordSelectionState', JSON.stringify(selectionState));
@@ -1334,7 +1415,7 @@
         miniGamesEnabled = localStorage.getItem('miniGamesEnabled') === 'true';
         miniGameInterval = loadMiniGameInterval();
         const raw = localStorage.getItem('animatedBackgroundsEnabled');
-        animatedBackgroundsEnabled = (raw === 'true');
+        animatedBackgroundsEnabled = raw === null ? true : raw === 'true';
         currentGameMode = localStorage.getItem('sightWordsGameMode') || 'listenAndPickWord';
         const storedTimeLimit = localStorage.getItem('quizTimeLimit');
         if (storedTimeLimit !== null && !isNaN(parseInt(storedTimeLimit))) { timeLimit = parseInt(storedTimeLimit); }
@@ -2855,6 +2936,7 @@ const MINI_GAME_LIBRARY = [
             const allPossibleWords = [];
             Object.values(WORD_BANK.dolch).forEach(arr => allPossibleWords.push(...arr));
             Object.values(WORD_BANK.fry).forEach(arr => allPossibleWords.push(...arr));
+            Object.values(WORD_BANK.readingcom).forEach(arr => allPossibleWords.push(...arr));
             allPossibleWords.push(...WORD_BANK.custom);
             const uniqueWords = [...new Set(allPossibleWords)];
             do { distractorWord = uniqueWords[Math.floor(Math.random()*uniqueWords.length)]; } while(distractorWord === currentCorrectWord && uniqueWords.length > 1);
@@ -3037,17 +3119,25 @@ const MINI_GAME_LIBRARY = [
         let summaryParts = [];
         wordListTreeContainer.querySelectorAll('details').forEach(details => {
             let bankSelectedWords = 0;
-            const listKey = Object.keys(bankDisplayNames).find(key => bankDisplayNames[key] === details.querySelector('summary span:first-child').textContent);
             details.querySelectorAll('.level-item').forEach(item => {
                 const checkbox = item.querySelector('input[type="checkbox"]');
-                const levelNameText = checkbox.nextElementSibling.textContent;
-                const levelKey = levelNameText.includes('Custom') ? 'all' : (listKey === 'dolch' ? levelNameText.split(' ')[1] : levelNameText.split(' ')[1]);
+                const listKey = checkbox.dataset.listKey;
+                const levelKey = checkbox.dataset.levelKey;
                 const levelWordCount = getWordCountForLevel(listKey, levelKey);
                 item.querySelector('.level-word-count').textContent = `(${levelWordCount})`;
                 if (checkbox.checked) {
                     bankSelectedWords += levelWordCount;
-                    if(listKey !== 'custom') summaryParts.push(`${listKey === 'dolch' ? 'Dolch' : 'Fry'} ${levelKey}`);
-                    else if(!summaryParts.includes('Custom')) summaryParts.push('Custom');
+                    if (listKey === 'custom') {
+                        if (!summaryParts.includes('Custom')) summaryParts.push('Custom');
+                    } else if (listKey === 'dolch') {
+                        summaryParts.push(`Dolch ${levelKey}`);
+                    } else if (listKey === 'fry') {
+                        summaryParts.push(`Fry ${levelKey}`);
+                    } else if (listKey === 'readingcom') {
+                        summaryParts.push(`Reading.com ${levelKey}`);
+                    } else {
+                        summaryParts.push(`${bankDisplayNames[listKey] || listKey} ${levelKey}`);
+                    }
                 }
             });
             details.querySelector('.bank-count').textContent = `(${bankSelectedWords} words)`;
@@ -3058,40 +3148,27 @@ const MINI_GAME_LIBRARY = [
     }
 
     function getWordCountForLevel(listKey, levelKey) {
-        let wordsForLevel = (listKey === 'custom') ? WORD_BANK.custom : (WORD_BANK[listKey]?.[levelKey] || []);
-        const userSelectionsKey = `${listKey}_${levelKey === 'all' ? '__ALL__' : levelKey}_userSelections`;
-        const storedUserSelections = localStorage.getItem(userSelectionsKey);
-        if (storedUserSelections) {
-            try {
-                const userSelectedSubset = JSON.parse(storedUserSelections);
-                return wordsForLevel.filter(word => userSelectedSubset.includes(word)).length;
-            } catch (e) { /* fall through */ }
-        }
-        return wordsForLevel.length;
+        return getSelectedWordsForLevel(listKey, levelKey).length;
     }
 
-    function updateQuizWordsFromSelectionState() {
+    function updateQuizWordsFromSelectionState({ restartQuiz = true, showEmptyMessage = true } = {}) {
+        normalizeSelectionState();
         const currentWordSet = new Set();
         Object.keys(selectionState).forEach(listKey => {
             Object.keys(selectionState[listKey]).forEach(levelKey => {
                 if (selectionState[listKey][levelKey]) {
-                    let baseWordsForLevel = (listKey === 'custom') ? [...WORD_BANK.custom] : [...(WORD_BANK[listKey]?.[levelKey] || [])];
-                    const userSelectionsKey = `${listKey}_${levelKey === 'all' ? '__ALL__' : levelKey}_userSelections`;
-                    const storedUserSelections = localStorage.getItem(userSelectionsKey);
-                    if (storedUserSelections) {
-                        try {
-                            const userSelectedSubset = JSON.parse(storedUserSelections);
-                            if (Array.isArray(userSelectedSubset)) { baseWordsForLevel = baseWordsForLevel.filter(word => userSelectedSubset.includes(word)); }
-                        } catch (e) { console.error(`Error parsing user selections for ${userSelectionsKey}:`, e); }
-                    }
-                    baseWordsForLevel.forEach(word => currentWordSet.add(word));
+                    getSelectedWordsForLevel(listKey, levelKey).forEach(word => currentWordSet.add(word));
                 }
             });
         });
         words = Array.from(currentWordSet);
         wordCountBadge.textContent = words.length;
-        if (words.length === 0) { showFloatingMessage("No words selected. Please choose some lists.", "var(--brand-dark)"); }
-        clearTimeout(questionTimeoutId); resetQuestionState(); setTimeout(nextQ, 100);
+        if (words.length === 0 && showEmptyMessage) { showFloatingMessage("No words selected. Please choose some lists.", "var(--brand-dark)"); }
+        if (restartQuiz) {
+            clearTimeout(questionTimeoutId);
+            resetQuestionState();
+            setTimeout(nextQ, 100);
+        }
     }
 
     // --- WORD CUSTOMIZATION MODAL (Inner modal, with instant save) ---
@@ -3116,13 +3193,16 @@ const MINI_GAME_LIBRARY = [
         populateModalWordList();
         wordCustomizationModal.classList.add('visible');
     }
-    function closeWordCustomizationModal() { wordCustomizationModal.classList.remove('visible'); }
+    function closeWordCustomizationModal() {
+        wordCustomizationModal.classList.remove('visible');
+        updateQuizWordsFromSelectionState();
+    }
   
     function populateModalWordList() {
         modalWordList.innerHTML = '';
         const rawSearchTerm = modalSearchInput.value.trim();
         const normalizedSearchTerm = rawSearchTerm.toLowerCase();
-        const userSelectionsKey = `${currentModalListContext}_${(currentModalListContext === 'custom') ? '__ALL__' : currentModalLevelContext}_userSelections`;
+        const userSelectionsKey = getUserSelectionsKey(currentModalListContext, currentModalLevelContext);
         let userSelectedSubset = null;
         const storedUserSelections = localStorage.getItem(userSelectionsKey);
         if (storedUserSelections) { try { userSelectedSubset = JSON.parse(storedUserSelections); } catch (e) { console.error("Could not parse user selections for key:", userSelectionsKey, e); } }
@@ -3175,7 +3255,7 @@ const MINI_GAME_LIBRARY = [
             WORD_BANK.custom.sort((a, b) => a.localeCompare(b));
             localStorage.setItem('customBank', JSON.stringify(WORD_BANK.custom));
 
-            const customSelectionsKey = 'custom___ALL__userSelections';
+            const customSelectionsKey = getUserSelectionsKey('custom', 'all');
             let customSelections = null;
             try {
                 const storedSelections = localStorage.getItem(customSelectionsKey);
@@ -3206,7 +3286,7 @@ const MINI_GAME_LIBRARY = [
 
             showFloatingMessage(`"${newWord}" added to Custom list.`, "var(--correct-bg)");
             populateModalWordList();
-            updateQuizWordsFromSelectionState();
+            updateQuizWordsFromSelectionState({ restartQuiz: false, showEmptyMessage: false });
             if (wordListModal.classList.contains('visible')) updateWordListModalUI();
         } else { showFloatingMessage(`"${newWord}" is already in Custom list.`, "var(--brand-light)", "var(--fg)"); }
         modalSearchInput.value = ''; modalAddCustomWordBtn.classList.add('hidden');
@@ -3217,7 +3297,7 @@ const MINI_GAME_LIBRARY = [
         const displayedWords = checkboxes.map(cb => cb.value);
         const selectedDisplayedWords = checkboxes.filter(cb => cb.checked).map(cb => cb.value);
         const allPossibleWordsForContext = (currentModalListContext === 'custom') ? WORD_BANK.custom : (WORD_BANK[currentModalListContext]?.[currentModalLevelContext] || []);
-        const userSelectionsKey = `${currentModalListContext}_${currentModalListContext === 'custom' ? '__ALL__' : currentModalLevelContext}_userSelections`;
+        const userSelectionsKey = getUserSelectionsKey(currentModalListContext, currentModalLevelContext);
 
         const allWordsSet = new Set(allPossibleWordsForContext);
         let existingSelectionSet = new Set(allPossibleWordsForContext);
@@ -3250,7 +3330,7 @@ const MINI_GAME_LIBRARY = [
         if (wordListModal.classList.contains('visible')) {
             updateWordListModalUI();
         }
-        updateQuizWordsFromSelectionState();
+        updateQuizWordsFromSelectionState({ restartQuiz: false, showEmptyMessage: false });
     }
 
     function toggleAllModalWords(select) {
