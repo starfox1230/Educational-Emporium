@@ -291,6 +291,42 @@
         transition: background-color 0.2s;
     }
     .edit-level-btn:hover { background-color: #e0f7fa; }
+    .level-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        flex-shrink: 0;
+    }
+    .custom-list-action-btn {
+        background: #f3fbfc;
+        border: 1px solid #d7f1f5;
+        border-radius: 8px;
+        color: var(--brand-dark);
+        cursor: pointer;
+        font-size: 0.78rem;
+        font-weight: 600;
+        padding: 0.35rem 0.45rem;
+    }
+    .custom-list-action-btn:hover { background-color: #e0f7fa; }
+    .custom-list-action-btn.danger {
+        color: #9b1c1c;
+        border-color: #f2c8c8;
+        background: #fff8f8;
+    }
+    .custom-list-create-row {
+        padding: 0.5rem 0 0.25rem 0.5rem;
+    }
+    .custom-list-create-btn {
+        width: 100%;
+        padding: 0.7rem;
+        background-color: var(--brand-light);
+        color: var(--brand-dark);
+        border: 1px dashed var(--brand-dark);
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 700;
+    }
+    .custom-list-create-btn:hover { background-color: var(--brand); color: white; }
 
     .word-list-modal-footer {
         padding: 1rem;
@@ -1054,6 +1090,11 @@
         custom: []
     };
 
+    const CUSTOM_LISTS_STORAGE_KEY = 'customLists';
+    const LEGACY_CUSTOM_SELECTION_KEY = 'custom___ALL___userSelections';
+    const DEFAULT_CUSTOM_LIST_ID = 'custom-default';
+    const DEFAULT_CUSTOM_LIST_NAME = 'My Custom Words';
+    let customLists = [];
     let selectionState = {}; // The single source of truth for list/level activation
 
     function isPlainObject(value) {
@@ -1061,13 +1102,83 @@
     }
     let words = []; // Current words for the quiz
 
+    function createCustomListId() {
+        return `custom-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    }
+
+    function sanitizeWordArray(wordArray) {
+        if (!Array.isArray(wordArray)) return [];
+        const seen = new Set();
+        return wordArray
+            .map(word => typeof word === 'string' ? word.trim() : '')
+            .filter(Boolean)
+            .filter(word => {
+                const key = word.toLowerCase();
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            })
+            .sort((a, b) => a.localeCompare(b));
+    }
+
+    function sanitizeCustomList(rawList, fallbackName = DEFAULT_CUSTOM_LIST_NAME, fallbackId = null) {
+        const rawName = typeof rawList?.name === 'string' ? rawList.name.trim() : '';
+        return {
+            id: typeof rawList?.id === 'string' && rawList.id.trim() ? rawList.id.trim() : (fallbackId || createCustomListId()),
+            name: rawName || fallbackName,
+            words: sanitizeWordArray(rawList?.words || rawList?.customBank || [])
+        };
+    }
+
+    function getCustomListById(listId) {
+        return customLists.find(list => list.id === listId) || null;
+    }
+
+    function getPrimaryCustomList() {
+        if (customLists.length === 0) {
+            customLists.push({ id: DEFAULT_CUSTOM_LIST_ID, name: DEFAULT_CUSTOM_LIST_NAME, words: [] });
+            saveCustomLists();
+        }
+        return customLists[0];
+    }
+
+    function getAllCustomWords() {
+        const allWords = customLists.flatMap(list => list.words || []);
+        return sanitizeWordArray(allWords);
+    }
+
+    function isWordInAnyCustomList(word) {
+        const normalized = String(word || '').trim().toLowerCase();
+        if (!normalized) return false;
+        return customLists.some(list => (list.words || []).some(customWord => customWord.toLowerCase() === normalized));
+    }
+
+    function customListHasWord(list, word) {
+        const normalized = String(word || '').trim().toLowerCase();
+        return !!list && (list.words || []).some(customWord => customWord.toLowerCase() === normalized);
+    }
+
+    function syncLegacyCustomBank() {
+        WORD_BANK.custom = getAllCustomWords();
+        localStorage.setItem('customBank', JSON.stringify(WORD_BANK.custom));
+    }
+
+    function saveCustomLists() {
+        customLists = customLists.map((list, index) => sanitizeCustomList(list, `Custom List ${index + 1}`, list.id));
+        if (customLists.length === 0) {
+            customLists.push({ id: DEFAULT_CUSTOM_LIST_ID, name: DEFAULT_CUSTOM_LIST_NAME, words: [] });
+        }
+        localStorage.setItem(CUSTOM_LISTS_STORAGE_KEY, JSON.stringify(customLists));
+        syncLegacyCustomBank();
+    }
+
     function getUserSelectionsKey(listKey, levelKey) {
-        return `${listKey}_${listKey === 'custom' ? '__ALL__' : levelKey}_userSelections`;
+        return `${listKey}_${listKey === 'custom' ? levelKey : levelKey}_userSelections`;
     }
 
     function getBaseWordsForLevel(listKey, levelKey) {
         if (listKey === 'custom') {
-            return Array.isArray(WORD_BANK.custom) ? [...WORD_BANK.custom] : [];
+            return [...(getCustomListById(levelKey)?.words || [])];
         }
         return [...(WORD_BANK[listKey]?.[levelKey] || [])];
     }
@@ -1117,8 +1228,31 @@
                 selectionState[listKey] = {};
             }
             if (listKey === 'custom') {
-                if (typeof selectionState.custom.all !== 'boolean') {
-                    selectionState.custom.all = true;
+                const legacyAllSelected = typeof selectionState.custom.all === 'boolean' ? selectionState.custom.all : null;
+                if ('all' in selectionState.custom) {
+                    delete selectionState.custom.all;
+                }
+
+                const validCustomIds = new Set(customLists.map(list => list.id));
+                Object.keys(selectionState.custom).forEach(customListId => {
+                    if (!validCustomIds.has(customListId)) {
+                        delete selectionState.custom[customListId];
+                    }
+                });
+
+                customLists.forEach((list, index) => {
+                    if (typeof selectionState.custom[list.id] !== 'boolean') {
+                        selectionState.custom[list.id] = legacyAllSelected !== null ? legacyAllSelected : index === 0;
+                    }
+                });
+
+                if (legacyAllSelected !== null && customLists.length > 0) {
+                    const primaryCustomListId = customLists[0].id;
+                    const newSelectionKey = getUserSelectionsKey('custom', primaryCustomListId);
+                    const legacySelections = localStorage.getItem(LEGACY_CUSTOM_SELECTION_KEY);
+                    if (legacySelections && !localStorage.getItem(newSelectionKey)) {
+                        localStorage.setItem(newSelectionKey, legacySelections);
+                    }
                 }
                 return;
             }
@@ -1130,36 +1264,71 @@
         });
     }
 
-    function normalizeCustomBankFromStorage() {
-        if (!Array.isArray(WORD_BANK.custom)) {
-            WORD_BANK.custom = [];
+    function hydrateCustomListsFromStorage() {
+        let loadedCustomLists = [];
+
+        try {
+            const storedCustomLists = localStorage.getItem(CUSTOM_LISTS_STORAGE_KEY);
+            if (storedCustomLists) {
+                const parsedCustomLists = JSON.parse(storedCustomLists);
+                if (Array.isArray(parsedCustomLists)) {
+                    loadedCustomLists = parsedCustomLists.map((list, index) => sanitizeCustomList(list, `Custom List ${index + 1}`, list.id));
+                }
+            }
+        } catch (e) {
+            console.error("Error parsing customLists from localStorage:", e);
+            loadedCustomLists = [];
         }
-        if (WORD_BANK.custom.length === 0) {
+
+        if (loadedCustomLists.length === 0) {
+            let legacyWords = [];
             try {
-                const storedSelections = localStorage.getItem(getUserSelectionsKey('custom', 'all'));
-                const parsedSelections = storedSelections ? JSON.parse(storedSelections) : null;
-                if (Array.isArray(parsedSelections) && parsedSelections.length > 0) {
-                    WORD_BANK.custom = [...new Set(parsedSelections)]
-                        .filter(word => typeof word === 'string' && word.trim())
-                        .sort((a, b) => a.localeCompare(b));
-                    localStorage.setItem('customBank', JSON.stringify(WORD_BANK.custom));
+                const storedCustomBank = localStorage.getItem('customBank');
+                if (storedCustomBank) {
+                    legacyWords = sanitizeWordArray(JSON.parse(storedCustomBank));
                 }
             } catch (e) {
-                console.error('Could not recover custom words from stored selections:', e);
+                console.error("Error parsing customBank from localStorage:", e);
             }
+
+            if (legacyWords.length === 0) {
+                try {
+                    const storedSelections = localStorage.getItem(LEGACY_CUSTOM_SELECTION_KEY);
+                    const parsedSelections = storedSelections ? JSON.parse(storedSelections) : null;
+                    legacyWords = sanitizeWordArray(parsedSelections);
+                } catch (e) {
+                    console.error('Could not recover custom words from stored selections:', e);
+                }
+            }
+
+            loadedCustomLists = [{ id: DEFAULT_CUSTOM_LIST_ID, name: DEFAULT_CUSTOM_LIST_NAME, words: legacyWords }];
         }
-        getStoredUserSelectionSubset('custom', 'all', WORD_BANK.custom);
+
+        customLists = loadedCustomLists;
+        saveCustomLists();
+
+        customLists.forEach(list => {
+            getStoredUserSelectionSubset('custom', list.id, list.words);
+        });
     }
 
     // --- IMPORT/EXPORT & DATA HELPERS (UNCHANGED) ---
     function downloadWordData() {
         const dataToExport = {
+            version: 2,
             wordSelectionState: selectionState,
-            customBank: WORD_BANK.custom,
+            customLists: customLists.map(list => ({ id: list.id, name: list.name, words: [...list.words] })),
+            customBank: getAllCustomWords(),
             userIndividualWordSelections: {}
         };
         Object.keys(WORD_BANK).forEach(listKey => {
-            if (listKey !== 'custom' && WORD_BANK[listKey] && typeof WORD_BANK[listKey] === 'object') {
+            if (listKey === 'custom') {
+                dataToExport.userIndividualWordSelections.custom = {};
+                customLists.forEach(customList => {
+                    const selection = JSON.parse(localStorage.getItem(getUserSelectionsKey('custom', customList.id)) || 'null');
+                    if (selection) { dataToExport.userIndividualWordSelections.custom[customList.id] = selection; }
+                });
+            } else if (WORD_BANK[listKey] && typeof WORD_BANK[listKey] === 'object') {
                 dataToExport.userIndividualWordSelections[listKey] = {};
                 Object.keys(WORD_BANK[listKey]).forEach(levelKey => {
                     const selection = JSON.parse(localStorage.getItem(`${listKey}_${levelKey}_userSelections`) || 'null');
@@ -1178,37 +1347,120 @@
         setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
         showFloatingMessage("Word data downloaded!", "var(--brand-light)", "var(--fg)");
     }
+
+    function customListsFromImportedData(importedData) {
+        if (Array.isArray(importedData)) {
+            return [{ id: createCustomListId(), name: 'Imported Custom Words', words: sanitizeWordArray(importedData) }];
+        }
+        if (Array.isArray(importedData?.customLists)) {
+            return importedData.customLists
+                .map((list, index) => sanitizeCustomList(list, `Imported List ${index + 1}`))
+                .filter(list => list.words.length > 0 || list.name);
+        }
+        if (Array.isArray(importedData?.customBank)) {
+            return [{ id: DEFAULT_CUSTOM_LIST_ID, name: importedData.customListName || DEFAULT_CUSTOM_LIST_NAME, words: sanitizeWordArray(importedData.customBank) }];
+        }
+        if (Array.isArray(importedData?.words)) {
+            return [{ id: createCustomListId(), name: importedData.name || 'Imported Custom Words', words: sanitizeWordArray(importedData.words) }];
+        }
+        return [];
+    }
+
+    function importCustomLists(incomingLists, action) {
+        const idMap = {};
+        const sanitizedIncomingLists = incomingLists.map((list, index) => sanitizeCustomList(list, `Imported List ${index + 1}`, list.id));
+
+        if (action === 'replace') {
+            customLists = sanitizedIncomingLists.length > 0 ? sanitizedIncomingLists : [{ id: DEFAULT_CUSTOM_LIST_ID, name: DEFAULT_CUSTOM_LIST_NAME, words: [] }];
+            customLists.forEach(list => { idMap[list.id] = list.id; });
+            saveCustomLists();
+            return idMap;
+        }
+
+        if (customLists.length === 1 && customLists[0].id === DEFAULT_CUSTOM_LIST_ID && customLists[0].words.length === 0 && sanitizedIncomingLists.length === 1) {
+            customLists[0] = sanitizeCustomList({ ...sanitizedIncomingLists[0], id: DEFAULT_CUSTOM_LIST_ID }, sanitizedIncomingLists[0].name, DEFAULT_CUSTOM_LIST_ID);
+            idMap[sanitizedIncomingLists[0].id] = DEFAULT_CUSTOM_LIST_ID;
+            if (!selectionState.custom || !isPlainObject(selectionState.custom)) { selectionState.custom = {}; }
+            selectionState.custom[DEFAULT_CUSTOM_LIST_ID] = true;
+            saveCustomLists();
+            return idMap;
+        }
+
+        const existingIds = new Set(customLists.map(list => list.id));
+        sanitizedIncomingLists.forEach(incomingList => {
+            const originalId = incomingList.id;
+            if (existingIds.has(incomingList.id)) {
+                incomingList.id = createCustomListId();
+            }
+            existingIds.add(incomingList.id);
+            idMap[originalId] = incomingList.id;
+            customLists.push(incomingList);
+            if (!selectionState.custom || !isPlainObject(selectionState.custom)) { selectionState.custom = {}; }
+            selectionState.custom[incomingList.id] = true;
+        });
+        saveCustomLists();
+        return idMap;
+    }
+
     async function processImportedData(importedData) {
         try {
-            if (!importedData || !Array.isArray(importedData.customBank)) { showFloatingMessage("Invalid file format.", "var(--incorrect-bg)"); return; }
-            const existingCustomWords = WORD_BANK.custom.length > 0;
-            const incomingCustomWords = importedData.customBank.length > 0;
+            const incomingCustomLists = customListsFromImportedData(importedData);
+            if (!importedData || incomingCustomLists.length === 0) { showFloatingMessage("Invalid file format.", "var(--incorrect-bg)"); return; }
+            const existingCustomWords = customLists.some(list => list.words.length > 0);
+            const incomingCustomWords = incomingCustomLists.some(list => list.words.length > 0);
             let action = 'merge';
             if (existingCustomWords && incomingCustomWords) {
                 try { action = await promptConflictResolution(); } catch (error) { showFloatingMessage("Upload cancelled.", "var(--brand-dark)"); return; }
             }
-            if (action === 'merge' && incomingCustomWords) { WORD_BANK.custom = Array.from(new Set([...WORD_BANK.custom, ...importedData.customBank])).sort(); }
-            else if (action === 'replace') { WORD_BANK.custom = [...new Set(importedData.customBank)].sort(); }
-            localStorage.setItem('customBank', JSON.stringify(WORD_BANK.custom));
+            const customListIdMap = importCustomLists(incomingCustomLists, action);
             if (importedData.userIndividualWordSelections) {
                 Object.keys(importedData.userIndividualWordSelections).forEach(listKey => {
-                    if (WORD_BANK[listKey]) { Object.keys(importedData.userIndividualWordSelections[listKey]).forEach(levelKey => { if (WORD_BANK[listKey][levelKey]) { localStorage.setItem(`${listKey}_${levelKey}_userSelections`, JSON.stringify(importedData.userIndividualWordSelections[listKey][levelKey])); } }); }
+                    if (listKey === 'custom') {
+                        Object.keys(importedData.userIndividualWordSelections.custom).forEach(customListId => {
+                            const mappedCustomListId = customListIdMap[customListId] || customListId;
+                            if (getCustomListById(mappedCustomListId)) {
+                                localStorage.setItem(getUserSelectionsKey('custom', mappedCustomListId), JSON.stringify(importedData.userIndividualWordSelections.custom[customListId]));
+                            }
+                        });
+                    } else if (WORD_BANK[listKey]) {
+                        Object.keys(importedData.userIndividualWordSelections[listKey]).forEach(levelKey => {
+                            if (WORD_BANK[listKey][levelKey]) {
+                                localStorage.setItem(`${listKey}_${levelKey}_userSelections`, JSON.stringify(importedData.userIndividualWordSelections[listKey][levelKey]));
+                            }
+                        });
+                    }
                 });
             }
             if (importedData.wordSelectionState) {
                 selectionState = importedData.wordSelectionState;
+                if (isPlainObject(selectionState.custom)) {
+                    const mappedCustomSelectionState = {};
+                    Object.keys(selectionState.custom).forEach(customListId => {
+                        const mappedCustomListId = customListId === 'all'
+                            ? (customListIdMap[DEFAULT_CUSTOM_LIST_ID] || customLists[0]?.id)
+                            : (customListIdMap[customListId] || customListId);
+                        if (getCustomListById(mappedCustomListId)) {
+                            mappedCustomSelectionState[mappedCustomListId] = selectionState.custom[customListId];
+                        }
+                    });
+                    selectionState.custom = mappedCustomSelectionState;
+                }
                 normalizeSelectionState();
                 localStorage.setItem('wordSelectionState', JSON.stringify(selectionState));
             } else if (importedData.activeWordList && importedData.selectedLevels) {
                 selectionState = {};
                 Object.keys(WORD_BANK).forEach(listKey => {
                     selectionState[listKey] = {};
-                    if (listKey === 'custom') { selectionState.custom.all = importedData.activeWordList === 'custom'; }
+                    if (listKey === 'custom') {
+                        customLists.forEach(list => { selectionState.custom[list.id] = importedData.activeWordList === 'custom'; });
+                    }
                     else { Object.keys(WORD_BANK[listKey]).forEach(levelKey => { selectionState[listKey][levelKey] = (importedData.activeWordList === listKey && importedData.selectedLevels.includes(levelKey)); }); }
                 });
                 normalizeSelectionState();
                 localStorage.setItem('wordSelectionState', JSON.stringify(selectionState));
             }
+            normalizeSelectionState();
+            localStorage.setItem('wordSelectionState', JSON.stringify(selectionState));
             showFloatingMessage("Word data imported successfully!", "var(--correct-bg)");
             updateQuizWordsFromSelectionState();
             if (wordListModal.classList.contains('visible')) {
@@ -1217,8 +1469,75 @@
             closeWordCustomizationModal();
         } catch (error) { console.error("Error processing imported data:", error); showFloatingMessage("Error processing data. Check console.", "var(--incorrect-bg)"); }
     }
+    function extractImportedWords(importedData) {
+        if (Array.isArray(importedData)) return sanitizeWordArray(importedData);
+        if (Array.isArray(importedData?.customBank)) return sanitizeWordArray(importedData.customBank);
+        if (Array.isArray(importedData?.words)) return sanitizeWordArray(importedData.words);
+        if (Array.isArray(importedData?.customLists)) {
+            return sanitizeWordArray(importedData.customLists.flatMap(list => Array.isArray(list?.words) ? list.words : []));
+        }
+        return [];
+    }
+
+    async function importWordsIntoCustomList(customListId, importedData) {
+        const targetList = getCustomListById(customListId);
+        if (!targetList) {
+            showFloatingMessage("Choose a custom list before importing words.", "var(--incorrect-bg)");
+            return;
+        }
+
+        const incomingWords = extractImportedWords(importedData);
+        if (incomingWords.length === 0) {
+            showFloatingMessage("No words found in that JSON.", "var(--incorrect-bg)");
+            return;
+        }
+
+        let action = 'merge';
+        if (targetList.words.length > 0) {
+            try { action = await promptConflictResolution(); } catch (error) { showFloatingMessage("Upload cancelled.", "var(--brand-dark)"); return; }
+        }
+
+        if (action === 'replace') {
+            targetList.words = incomingWords;
+            localStorage.removeItem(getUserSelectionsKey('custom', targetList.id));
+        } else {
+            const beforeWords = [...targetList.words];
+            targetList.words = sanitizeWordArray([...targetList.words, ...incomingWords]);
+            const selectionKey = getUserSelectionsKey('custom', targetList.id);
+            const storedSelections = localStorage.getItem(selectionKey);
+            if (storedSelections) {
+                try {
+                    const selectedWords = sanitizeWordArray(JSON.parse(storedSelections));
+                    const mergedSelections = sanitizeWordArray([...selectedWords, ...incomingWords.filter(word => !beforeWords.some(existing => existing.toLowerCase() === word.toLowerCase()))]);
+                    localStorage.setItem(selectionKey, JSON.stringify(mergedSelections));
+                } catch (e) {
+                    console.error('Could not update custom list selections after import:', e);
+                }
+            }
+        }
+
+        saveCustomLists();
+        normalizeSelectionState();
+        localStorage.setItem('wordSelectionState', JSON.stringify(selectionState));
+        showFloatingMessage(`Imported ${incomingWords.length} words into "${targetList.name}".`, "var(--correct-bg)");
+        populateModalWordList();
+        updateQuizWordsFromSelectionState();
+        if (wordListModal.classList.contains('visible')) {
+            renderWordListModalContent();
+        }
+    }
+
+    async function handleImportedPayload(importedData) {
+        if (uploadMode === 'custom-list' && customImportTargetListId) {
+            await importWordsIntoCustomList(customImportTargetListId, importedData);
+        } else {
+            await processImportedData(importedData);
+        }
+        uploadMode = 'full-data';
+        customImportTargetListId = null;
+    }
     function triggerFileUpload() { document.getElementById('upload-file-input').click(); }
-    async function handleFileUpload(event) { const file = event.target.files[0]; if (!file) return; event.target.value = null; try { const fileContent = await file.text(); const importedData = JSON.parse(fileContent); await processImportedData(importedData); } catch (error) { console.error("Error reading or parsing file:", error); showFloatingMessage("Could not read or parse the file.", "var(--incorrect-bg)"); } }
+    async function handleFileUpload(event) { const file = event.target.files[0]; if (!file) return; event.target.value = null; try { const fileContent = await file.text(); const importedData = JSON.parse(fileContent); await handleImportedPayload(importedData); } catch (error) { console.error("Error reading or parsing file:", error); showFloatingMessage("Could not read or parse the file.", "var(--incorrect-bg)"); } }
     function promptConflictResolution() { return new Promise((resolve, reject) => { const modal = document.getElementById('upload-conflict-modal'); const mergeBtn = document.getElementById('upload-conflict-merge-btn'); const replaceBtn = document.getElementById('upload-conflict-replace-btn'); const cancelBtn = document.getElementById('upload-conflict-cancel-btn'); const cleanup = () => { modal.classList.remove('visible'); mergeBtn.replaceWith(mergeBtn.cloneNode(true)); replaceBtn.replaceWith(replaceBtn.cloneNode(true)); cancelBtn.replaceWith(cancelBtn.cloneNode(true)); }; const onMerge = () => { cleanup(); resolve('merge'); }; const onReplace = () => { cleanup(); resolve('replace'); }; const onCancel = () => { cleanup(); reject(new Error('User cancelled upload.')); }; mergeBtn.addEventListener('click', onMerge, { once: true }); replaceBtn.addEventListener('click', onReplace, { once: true }); cancelBtn.addEventListener('click', onCancel, { once: true }); modal.classList.add('visible'); }); }
 
     // --- VANTA.JS DYNAMIC BACKGROUNDS (UNCHANGED) ---
@@ -1361,7 +1680,9 @@
     let currentGameMode = localStorage.getItem('sightWordsGameMode') || 'listenAndPickWord';
     let selectedSoundButton = null;
     let currentModalListContext = 'dolch';
-    let currentModalLevelContext = 'A';    
+    let currentModalLevelContext = 'A';
+    let uploadMode = 'full-data';
+    let customImportTargetListId = null;
     let miniGamesEnabled = localStorage.getItem('miniGamesEnabled') === 'true';
     let isMiniGameActive = false;
     let availableMiniGames = [];
@@ -1377,14 +1698,7 @@
 
     // ---- INITIALIZATION & STATE HYDRATION (REWRITTEN) ----
     function hydrateFromStorage() {
-        try {
-            const storedCustomBank = localStorage.getItem('customBank');
-            if (storedCustomBank) {
-                const parsedCustomBank = JSON.parse(storedCustomBank);
-                WORD_BANK.custom = Array.isArray(parsedCustomBank) ? parsedCustomBank : [];
-            }
-        } catch (e) { console.error("Error parsing customBank from localStorage:", e); WORD_BANK.custom = []; }
-        normalizeCustomBankFromStorage();
+        hydrateCustomListsFromStorage();
         
         const storedSelectionState = localStorage.getItem('wordSelectionState');
         if (storedSelectionState) {
@@ -1427,7 +1741,7 @@
         Object.keys(WORD_BANK).forEach(listKey => {
             selectionState[listKey] = {};
             if (listKey === 'custom') {
-                selectionState.custom.all = true;
+                customLists.forEach(list => { selectionState.custom[list.id] = true; });
             } else {
                 const levelKeys = Object.keys(WORD_BANK[listKey]);
                 levelKeys.forEach((levelKey, index) => {
@@ -1533,9 +1847,22 @@
       modalDownloadBtn.addEventListener('click', downloadWordData);
       
       if (wordListUploadBtn) {
-          wordListUploadBtn.addEventListener('click', () => uploadChoiceModal.classList.add('visible'));
+          wordListUploadBtn.addEventListener('click', () => {
+              uploadMode = 'full-data';
+              customImportTargetListId = null;
+              uploadChoiceModal.classList.add('visible');
+          });
       }
-      modalUploadBtn.addEventListener('click', () => uploadChoiceModal.classList.add('visible'));
+      modalUploadBtn.addEventListener('click', () => {
+          if (currentModalListContext === 'custom') {
+              uploadMode = 'custom-list';
+              customImportTargetListId = currentModalLevelContext;
+          } else {
+              uploadMode = 'full-data';
+              customImportTargetListId = null;
+          }
+          uploadChoiceModal.classList.add('visible');
+      });
       uploadFileInput.addEventListener('change', handleFileUpload);
       
       document.getElementById('upload-choice-cancel-btn').addEventListener('click', () => uploadChoiceModal.classList.remove('visible'));
@@ -1545,7 +1872,7 @@
       document.getElementById('paste-json-process-btn').addEventListener('click', async () => {
           const jsonText = document.getElementById('paste-json-textarea').value;
           if (!jsonText.trim()) { showFloatingMessage("Text box is empty.", "var(--incorrect-bg)"); return; }
-          try { const importedData = JSON.parse(jsonText); pasteJsonModal.classList.remove('visible'); await processImportedData(importedData); }
+          try { const importedData = JSON.parse(jsonText); pasteJsonModal.classList.remove('visible'); await handleImportedPayload(importedData); }
           catch (error) { showFloatingMessage("Invalid JSON. Please check the text.", "var(--incorrect-bg)"); }
       });
     });
@@ -2937,7 +3264,7 @@ const MINI_GAME_LIBRARY = [
             Object.values(WORD_BANK.dolch).forEach(arr => allPossibleWords.push(...arr));
             Object.values(WORD_BANK.fry).forEach(arr => allPossibleWords.push(...arr));
             Object.values(WORD_BANK.readingcom).forEach(arr => allPossibleWords.push(...arr));
-            allPossibleWords.push(...WORD_BANK.custom);
+            allPossibleWords.push(...getAllCustomWords());
             const uniqueWords = [...new Set(allPossibleWords)];
             do { distractorWord = uniqueWords[Math.floor(Math.random()*uniqueWords.length)]; } while(distractorWord === currentCorrectWord && uniqueWords.length > 1);
             if (distractorWord === currentCorrectWord && uniqueWords.length <=1) distractorWord = "word"; // Absolute fallback
@@ -3057,8 +3384,18 @@ const MINI_GAME_LIBRARY = [
             details.appendChild(summary);
 
             if (listKey === 'custom') {
-                const levelItem = createLevelItem(listKey, 'all', `All Custom Words`);
-                details.appendChild(levelItem);
+                customLists.forEach(customList => {
+                    details.appendChild(createLevelItem(listKey, customList.id, customList.name));
+                });
+                const createRow = document.createElement('div');
+                createRow.className = 'custom-list-create-row';
+                const createBtn = document.createElement('button');
+                createBtn.className = 'custom-list-create-btn';
+                createBtn.type = 'button';
+                createBtn.textContent = '+ New Custom List';
+                createBtn.addEventListener('click', handleCreateCustomList);
+                createRow.appendChild(createBtn);
+                details.appendChild(createRow);
             } else {
                 const levelKeys = Object.keys(WORD_BANK[listKey]);
                 if (listKey === 'fry') { levelKeys.sort((a, b) => parseInt(a.split('-')[0]) - parseInt(b.split('-')[0])); }
@@ -3104,14 +3441,88 @@ const MINI_GAME_LIBRARY = [
         label.appendChild(checkbox);
         label.appendChild(nameSpan);
         label.appendChild(countSpan);
+        const actions = document.createElement('div');
+        actions.className = 'level-actions';
         const editBtn = document.createElement('button');
         editBtn.className = 'edit-level-btn';
         editBtn.innerHTML = '✎';
         editBtn.title = `Edit words for ${levelName}`;
-        editBtn.addEventListener('click', () => { openWordCustomizationModal(listKey, listKey === 'custom' ? '__ALL__' : levelKey); });
+        editBtn.addEventListener('click', () => { openWordCustomizationModal(listKey, levelKey); });
         itemDiv.appendChild(label);
-        itemDiv.appendChild(editBtn);
+        actions.appendChild(editBtn);
+        if (listKey === 'custom') {
+            const renameBtn = document.createElement('button');
+            renameBtn.className = 'custom-list-action-btn';
+            renameBtn.type = 'button';
+            renameBtn.textContent = 'Rename';
+            renameBtn.title = `Rename ${levelName}`;
+            renameBtn.addEventListener('click', () => handleRenameCustomList(levelKey));
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'custom-list-action-btn danger';
+            deleteBtn.type = 'button';
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.title = `Delete ${levelName}`;
+            deleteBtn.addEventListener('click', () => handleDeleteCustomList(levelKey));
+
+            actions.appendChild(renameBtn);
+            actions.appendChild(deleteBtn);
+        }
+        itemDiv.appendChild(actions);
         return itemDiv;
+    }
+
+    function handleCreateCustomList() {
+        const name = prompt('Name this custom list:', `Custom List ${customLists.length + 1}`);
+        if (name === null) return;
+        const trimmedName = name.trim();
+        if (!trimmedName) {
+            showFloatingMessage("List name can't be empty.", "var(--incorrect-bg)");
+            return;
+        }
+        const newList = { id: createCustomListId(), name: trimmedName, words: [] };
+        customLists.push(newList);
+        if (!selectionState.custom || !isPlainObject(selectionState.custom)) { selectionState.custom = {}; }
+        selectionState.custom[newList.id] = true;
+        saveCustomLists();
+        localStorage.setItem('wordSelectionState', JSON.stringify(selectionState));
+        renderWordListModalContent();
+        openWordCustomizationModal('custom', newList.id);
+    }
+
+    function handleRenameCustomList(customListId) {
+        const customList = getCustomListById(customListId);
+        if (!customList) return;
+        const name = prompt('Rename this custom list:', customList.name);
+        if (name === null) return;
+        const trimmedName = name.trim();
+        if (!trimmedName) {
+            showFloatingMessage("List name can't be empty.", "var(--incorrect-bg)");
+            return;
+        }
+        customList.name = trimmedName;
+        saveCustomLists();
+        renderWordListModalContent();
+        if (wordCustomizationModal.classList.contains('visible') && currentModalListContext === 'custom' && currentModalLevelContext === customListId) {
+            modalTitle.textContent = `Customize: ${customList.name}`;
+        }
+    }
+
+    function handleDeleteCustomList(customListId) {
+        const customList = getCustomListById(customListId);
+        if (!customList) return;
+        if (!confirm(`Delete "${customList.name}"? This removes the list and its words from this app.`)) return;
+        customLists = customLists.filter(list => list.id !== customListId);
+        if (selectionState.custom) { delete selectionState.custom[customListId]; }
+        localStorage.removeItem(getUserSelectionsKey('custom', customListId));
+        saveCustomLists();
+        normalizeSelectionState();
+        localStorage.setItem('wordSelectionState', JSON.stringify(selectionState));
+        renderWordListModalContent();
+        updateQuizWordsFromSelectionState();
+        if (wordCustomizationModal.classList.contains('visible') && currentModalListContext === 'custom' && currentModalLevelContext === customListId) {
+            closeWordCustomizationModal();
+        }
     }
 
     function updateWordListModalUI() {
@@ -3128,7 +3539,8 @@ const MINI_GAME_LIBRARY = [
                 if (checkbox.checked) {
                     bankSelectedWords += levelWordCount;
                     if (listKey === 'custom') {
-                        if (!summaryParts.includes('Custom')) summaryParts.push('Custom');
+                        const customList = getCustomListById(levelKey);
+                        summaryParts.push(customList?.name || 'Custom');
                     } else if (listKey === 'dolch') {
                         summaryParts.push(`Dolch ${levelKey}`);
                     } else if (listKey === 'fry') {
@@ -3178,11 +3590,15 @@ const MINI_GAME_LIBRARY = [
         modalSearchInput.value = '';
         modalAddCustomWordBtn.classList.add('hidden');
         if (listKey === 'custom') {
-            modalTitle.textContent = `Customize: Custom Word List`;
+            const customList = getCustomListById(levelKeyContext) || getPrimaryCustomList();
+            currentModalLevelContext = customList.id;
+            modalTitle.textContent = `Customize: ${customList.name}`;
             modalLevelSelector.style.display = 'none'; modalLevelSelectorLabel.style.display = 'none';
+            modalUploadBtn.textContent = 'Import Words';
         } else {
             modalTitle.textContent = `Customize: ${listKey.charAt(0).toUpperCase() + listKey.slice(1)} - ${(listKey === 'dolch' ? "Level " : "")}${levelKeyContext}`;
             modalLevelSelector.style.display = 'inline-block'; modalLevelSelectorLabel.style.display = 'inline-block';
+            modalUploadBtn.textContent = 'Upload Data';
             modalLevelSelector.innerHTML = '';
             const levelsForThisList = Object.keys(WORD_BANK[listKey]);
             if (listKey === 'fry') { levelsForThisList.sort((a, b) => parseInt(a.split('-')[0]) - parseInt(b.split('-')[0])); }
@@ -3206,7 +3622,8 @@ const MINI_GAME_LIBRARY = [
         let userSelectedSubset = null;
         const storedUserSelections = localStorage.getItem(userSelectionsKey);
         if (storedUserSelections) { try { userSelectedSubset = JSON.parse(storedUserSelections); } catch (e) { console.error("Could not parse user selections for key:", userSelectionsKey, e); } }
-        const baseWordsForContext = (currentModalListContext === 'custom') ? (WORD_BANK.custom || []) : (WORD_BANK[currentModalListContext]?.[currentModalLevelContext] || []);
+        const activeCustomList = currentModalListContext === 'custom' ? getCustomListById(currentModalLevelContext) : null;
+        const baseWordsForContext = activeCustomList ? activeCustomList.words : (WORD_BANK[currentModalListContext]?.[currentModalLevelContext] || []);
         let wordsToDisplay = new Map();
         let foundExactMatchInContext = false;
         baseWordsForContext.forEach(word => {
@@ -3216,7 +3633,7 @@ const MINI_GAME_LIBRARY = [
             }
             if (normalizedSearchTerm === '' || normalizedWord.includes(normalizedSearchTerm)) {
                 const isSelected = !Array.isArray(userSelectedSubset) || userSelectedSubset.includes(word);
-                wordsToDisplay.set(word, { isCustomGlobal: WORD_BANK.custom.includes(word), isSelectedForBaseLevel: isSelected });
+                wordsToDisplay.set(word, { isCustomGlobal: isWordInAnyCustomList(word), isSelectedForBaseLevel: isSelected });
             }
         });
         const sortedWords = Array.from(wordsToDisplay.keys()).sort((a, b) => a.localeCompare(b));
@@ -3238,7 +3655,8 @@ const MINI_GAME_LIBRARY = [
             itemDiv.appendChild(label);
             modalWordList.appendChild(itemDiv);
         });
-        const customHasExactMatch = WORD_BANK.custom.some(word => word.toLowerCase() === normalizedSearchTerm);
+        const targetCustomList = currentModalListContext === 'custom' ? activeCustomList : getPrimaryCustomList();
+        const customHasExactMatch = customListHasWord(targetCustomList, rawSearchTerm);
         if (rawSearchTerm !== '' && !customHasExactMatch && !foundExactMatchInContext) {
             modalAddCustomWordTerm.textContent = rawSearchTerm;
             modalAddCustomWordBtn.classList.remove('hidden');
@@ -3250,12 +3668,15 @@ const MINI_GAME_LIBRARY = [
     function handleAddCustomWordFromModal() {
         const newWord = modalSearchInput.value.trim(); if (newWord === '') return;
         const normalizedNewWord = newWord.toLowerCase();
-        if (!WORD_BANK.custom.some(word => word.toLowerCase() === normalizedNewWord)) {
-            WORD_BANK.custom.push(newWord);
-            WORD_BANK.custom.sort((a, b) => a.localeCompare(b));
-            localStorage.setItem('customBank', JSON.stringify(WORD_BANK.custom));
+        const targetCustomList = currentModalListContext === 'custom'
+            ? (getCustomListById(currentModalLevelContext) || getPrimaryCustomList())
+            : getPrimaryCustomList();
+        if (!customListHasWord(targetCustomList, newWord)) {
+            targetCustomList.words.push(newWord);
+            targetCustomList.words = sanitizeWordArray(targetCustomList.words);
+            saveCustomLists();
 
-            const customSelectionsKey = getUserSelectionsKey('custom', 'all');
+            const customSelectionsKey = getUserSelectionsKey('custom', targetCustomList.id);
             let customSelections = null;
             try {
                 const storedSelections = localStorage.getItem(customSelectionsKey);
@@ -3274,21 +3695,21 @@ const MINI_GAME_LIBRARY = [
 
             let selectionStateChanged = false;
             if (!selectionState.custom) { selectionState.custom = {}; selectionStateChanged = true; }
-            if (selectionState.custom.all !== true) {
-                selectionState.custom.all = true;
+            if (selectionState.custom[targetCustomList.id] !== true) {
+                selectionState.custom[targetCustomList.id] = true;
                 selectionStateChanged = true;
             }
             if (selectionStateChanged) {
                 localStorage.setItem('wordSelectionState', JSON.stringify(selectionState));
             }
-            const customCheckbox = wordListTreeContainer.querySelector('input[type="checkbox"][data-list-key="custom"][data-level-key="all"]');
+            const customCheckbox = wordListTreeContainer.querySelector(`input[type="checkbox"][data-list-key="custom"][data-level-key="${targetCustomList.id}"]`);
             if (customCheckbox) { customCheckbox.checked = true; }
 
-            showFloatingMessage(`"${newWord}" added to Custom list.`, "var(--correct-bg)");
+            showFloatingMessage(`"${newWord}" added to ${targetCustomList.name}.`, "var(--correct-bg)");
             populateModalWordList();
             updateQuizWordsFromSelectionState({ restartQuiz: false, showEmptyMessage: false });
             if (wordListModal.classList.contains('visible')) updateWordListModalUI();
-        } else { showFloatingMessage(`"${newWord}" is already in Custom list.`, "var(--brand-light)", "var(--fg)"); }
+        } else { showFloatingMessage(`"${newWord}" is already in ${targetCustomList.name}.`, "var(--brand-light)", "var(--fg)"); }
         modalSearchInput.value = ''; modalAddCustomWordBtn.classList.add('hidden');
     }
     
@@ -3296,7 +3717,8 @@ const MINI_GAME_LIBRARY = [
         const checkboxes = Array.from(modalWordList.querySelectorAll('input[type="checkbox"]'));
         const displayedWords = checkboxes.map(cb => cb.value);
         const selectedDisplayedWords = checkboxes.filter(cb => cb.checked).map(cb => cb.value);
-        const allPossibleWordsForContext = (currentModalListContext === 'custom') ? WORD_BANK.custom : (WORD_BANK[currentModalListContext]?.[currentModalLevelContext] || []);
+        const activeCustomList = currentModalListContext === 'custom' ? getCustomListById(currentModalLevelContext) : null;
+        const allPossibleWordsForContext = activeCustomList ? activeCustomList.words : (WORD_BANK[currentModalListContext]?.[currentModalLevelContext] || []);
         const userSelectionsKey = getUserSelectionsKey(currentModalListContext, currentModalLevelContext);
 
         const allWordsSet = new Set(allPossibleWordsForContext);
