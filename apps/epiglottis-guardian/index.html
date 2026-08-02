@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#061521" />
+  <title>Epiglottis Guardian</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #061521;
+      --panel: rgba(8, 28, 42, 0.84);
+      --line: rgba(255,255,255,0.12);
+      --text: #f4fbff;
+      --muted: #a8c4d3;
+      --cyan: #6ce7ff;
+      --green: #69f0ae;
+      --amber: #ffd166;
+      --red: #ff6b7a;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--bg); }
+    body {
+      font-family: ui-rounded, "SF Pro Rounded", "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      touch-action: none;
+      overscroll-behavior: none;
+      user-select: none;
+    }
+
+    #app {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 50% -10%, rgba(40, 185, 221, 0.22), transparent 45%),
+        linear-gradient(180deg, #071b2a 0%, #04111b 100%);
+    }
+
+    #gameShell {
+      position: relative;
+      width: min(100vw, 560px);
+      height: 100dvh;
+      max-height: 1000px;
+      overflow: hidden;
+      background: linear-gradient(180deg, #082237 0%, #061521 58%, #041019 100%);
+      box-shadow: 0 0 80px rgba(0,0,0,0.45);
+    }
+
+    canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+    #hud {
+      position: absolute;
+      z-index: 4;
+      inset: max(10px, env(safe-area-inset-top)) 12px auto 12px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: start;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .scoreCard {
+      width: max-content;
+      min-width: 132px;
+      padding: 9px 12px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(3, 16, 25, 0.58);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    }
+
+    .scoreValue { font-size: clamp(24px, 6vw, 34px); font-weight: 900; letter-spacing: -0.04em; line-height: 1; }
+    .scoreLabel { margin-top: 3px; font-size: 10px; font-weight: 800; letter-spacing: 0.16em; color: var(--muted); text-transform: uppercase; }
+
+    .rightHud { display: grid; gap: 7px; justify-items: end; }
+    .iconRow { display: flex; gap: 7px; }
+    .hudButton {
+      pointer-events: auto;
+      width: 42px; height: 42px; border: 1px solid var(--line); border-radius: 14px;
+      background: rgba(3,16,25,0.58); color: var(--text); font: inherit; font-weight: 900;
+      backdrop-filter: blur(12px);
+    }
+    .lives { display: flex; gap: 4px; padding: 6px 9px; border: 1px solid var(--line); border-radius: 999px; background: rgba(3,16,25,0.58); }
+    .heart { font-size: 15px; filter: drop-shadow(0 2px 5px rgba(255, 71, 97, 0.35)); }
+    .heart.empty { opacity: 0.18; filter: none; }
+
+    #oxygenWrap {
+      position: absolute;
+      z-index: 4;
+      top: calc(max(10px, env(safe-area-inset-top)) + 70px);
+      left: 12px;
+      width: min(48vw, 220px);
+      pointer-events: none;
+      transition: filter .2s ease, transform .2s ease;
+    }
+    .barHeader { display:flex; justify-content:space-between; align-items:center; font-size:10px; font-weight:900; letter-spacing:0.12em; color:var(--muted); text-transform:uppercase; margin:0 4px 5px; }
+    .barTrack { height: 10px; border: 1px solid var(--line); background: rgba(0,0,0,0.28); border-radius: 999px; overflow: hidden; }
+    #oxygenBar { height: 100%; width: 100%; border-radius: inherit; background: linear-gradient(90deg, #5ec8ff, #70f4ff); transform-origin: left center; }
+    #oxygenWrap.low { filter: drop-shadow(0 0 8px rgba(255, 91, 112, .35)); }
+    #oxygenWrap.low .barHeader { color: #ffb1ba; }
+    #oxygenWrap.low #oxygenBar { background: linear-gradient(90deg, #ff6b7a, #ffd166); }
+
+    #controlDock {
+      position: absolute;
+      z-index: 5;
+      left: 12px; right: 12px;
+      bottom: max(12px, env(safe-area-inset-bottom));
+      display: grid;
+      gap: 9px;
+      pointer-events: none;
+    }
+
+    #statusPill {
+      justify-self: center;
+      padding: 8px 13px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: rgba(3,16,25,0.62);
+      backdrop-filter: blur(12px);
+      transition: transform .16s ease, background .16s ease;
+    }
+
+    #mainControl {
+      pointer-events: auto;
+      min-height: 72px;
+      border: 0;
+      border-radius: 24px;
+      padding: 10px 18px;
+      color: #031018;
+      background: linear-gradient(180deg, #86efff, #4dcfe8);
+      box-shadow: 0 14px 30px rgba(42, 196, 225, 0.28), inset 0 1px 0 rgba(255,255,255,0.7);
+      font: inherit;
+      font-weight: 950;
+      font-size: clamp(18px, 5vw, 24px);
+      letter-spacing: -0.02em;
+      transform: translateZ(0);
+    }
+    #mainControl:active { transform: scale(0.985); }
+    #mainControl.closed { color: #221300; background: linear-gradient(180deg, #ffe38f, #ffc54c); box-shadow: 0 14px 30px rgba(255, 193, 62, 0.28), inset 0 1px 0 rgba(255,255,255,0.7); }
+    #mainControl.cough { color: white; background: linear-gradient(180deg, #ff7f8d, #e74056); box-shadow: 0 14px 36px rgba(255, 66, 91, 0.38); }
+
+    #toast {
+      position: absolute;
+      z-index: 8;
+      left: 50%; top: 23%;
+      transform: translate(-50%, -50%) scale(.86);
+      opacity: 0;
+      padding: 10px 15px;
+      border-radius: 999px;
+      background: rgba(4, 20, 30, 0.88);
+      border: 1px solid var(--line);
+      color: white;
+      font-weight: 950;
+      font-size: 15px;
+      pointer-events: none;
+      transition: opacity .16s ease, transform .16s ease;
+      white-space: nowrap;
+      backdrop-filter: blur(12px);
+    }
+    #toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+    .screen {
+      position: absolute;
+      z-index: 10;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: max(24px, env(safe-area-inset-top)) 22px max(24px, env(safe-area-inset-bottom));
+      background: linear-gradient(180deg, rgba(4,16,25,0.45), rgba(3,12,19,0.92));
+      backdrop-filter: blur(8px);
+    }
+    .screen.hidden { display: none; }
+    .panel {
+      width: min(100%, 430px);
+      padding: 26px 22px 22px;
+      border-radius: 30px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: linear-gradient(180deg, rgba(11,39,57,0.96), rgba(5,22,33,0.96));
+      box-shadow: 0 28px 80px rgba(0,0,0,0.45);
+      text-align: center;
+    }
+    .eyebrow { color: var(--cyan); font-weight: 900; letter-spacing: .16em; text-transform: uppercase; font-size: 11px; }
+    h1 { margin: 8px 0 12px; font-size: clamp(38px, 11vw, 62px); line-height: .91; letter-spacing: -.06em; }
+    h2 { margin: 8px 0 12px; font-size: clamp(32px, 9vw, 48px); line-height: .95; letter-spacing: -.05em; }
+    .panel p { margin: 0 auto 17px; max-width: 34ch; color: #c0d7e3; line-height: 1.45; font-size: 15px; }
+    .miniDiagram { display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; margin: 18px 0; }
+    .tip { padding: 12px 8px; min-height: 88px; border:1px solid var(--line); border-radius:18px; background:rgba(0,0,0,.16); display:grid; align-content:center; gap:5px; }
+    .tipIcon { font-size: 23px; }
+    .tip b { font-size: 12px; }
+    .tip span { color:var(--muted); font-size:10px; line-height:1.25; }
+    .primary {
+      width: 100%; min-height: 58px; border:0; border-radius:19px; padding:14px 18px;
+      background: linear-gradient(180deg, #80ecff, #45cbe5); color:#031019;
+      font:inherit; font-weight:950; font-size:18px;
+      box-shadow: 0 12px 28px rgba(50,196,224,.28);
+    }
+    .secondary {
+      width:100%; margin-top:9px; min-height:50px; border:1px solid var(--line); border-radius:17px;
+      background:rgba(255,255,255,.05); color:white; font:inherit; font-weight:850;
+    }
+    .statGrid { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin:18px 0; }
+    .stat { padding:14px 8px; border:1px solid var(--line); border-radius:18px; background:rgba(0,0,0,.15); }
+    .stat strong { display:block; font-size:26px; }
+    .stat span { color:var(--muted); text-transform:uppercase; letter-spacing:.1em; font-weight:900; font-size:9px; }
+
+    #rotateHint {
+      display:none;
+      position:absolute; z-index:30; inset:0; place-items:center; padding:28px; text-align:center;
+      background:#04111b;
+    }
+
+    @media (orientation: landscape) and (max-height: 520px) {
+      #gameShell { width: 100vw; max-width:none; }
+      #rotateHint { display:grid; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <main id="gameShell" aria-label="Epiglottis Guardian game">
+    <canvas id="gameCanvas"></canvas>
+
+    <section id="hud" aria-live="polite">
+      <div class="scoreCard">
+        <div class="scoreValue" id="score">0</div>
+        <div class="scoreLabel">Score · <span id="combo">x1</span></div>
+      </div>
+      <div class="rightHud">
+        <div class="iconRow">
+          <button class="hudButton" id="soundButton" aria-label="Toggle sound">♪</button>
+          <button class="hudButton" id="pauseButton" aria-label="Pause game">Ⅱ</button>
+        </div>
+        <div class="lives" id="lives" aria-label="Lives"></div>
+      </div>
+    </section>
+
+    <section id="oxygenWrap">
+      <div class="barHeader"><span>Oxygen reserve</span><span id="oxygenText">100%</span></div>
+      <div class="barTrack"><div id="oxygenBar"></div></div>
+    </section>
+
+    <div id="toast"></div>
+
+    <section id="controlDock">
+      <div id="statusPill">Airway open</div>
+      <button id="mainControl" aria-label="Toggle epiglottis">TAP TO CLOSE</button>
+    </section>
+
+    <section class="screen" id="startScreen">
+      <div class="panel">
+        <div class="eyebrow">Swallow safely. Breathe freely.</div>
+        <h1>Epiglottis<br>Guardian</h1>
+        <p>Keep the airway open to refill oxygen. Close the epiglottis just before food reaches the throat, then reopen it before your oxygen reserve runs out.</p>
+        <div class="miniDiagram" aria-hidden="true">
+          <div class="tip"><div class="tipIcon">🫁</div><b>Stay open</b><span>Refill the airflow meter</span></div>
+          <div class="tip"><div class="tipIcon">🥕</div><b>Close in time</b><span>Send food to the esophagus</span></div>
+          <div class="tip"><div class="tipIcon">💥</div><b>Cough fast</b><span>Rapid taps eject aspirated food</span></div>
+        </div>
+        <button class="primary" id="startButton">START SWALLOWING</button>
+      </div>
+    </section>
+
+    <section class="screen hidden" id="pauseScreen">
+      <div class="panel">
+        <div class="eyebrow">Game paused</div>
+        <h2>Take a breath.</h2>
+        <p>Your score and current swallow are saved.</p>
+        <button class="primary" id="resumeButton">RESUME</button>
+        <button class="secondary" id="restartFromPause">RESTART</button>
+      </div>
+    </section>
+
+    <section class="screen hidden" id="gameOverScreen">
+      <div class="panel">
+        <div class="eyebrow">Airway overwhelmed</div>
+        <h2>Game over</h2>
+        <div class="statGrid">
+          <div class="stat"><strong id="finalScore">0</strong><span>Final score</span></div>
+          <div class="stat"><strong id="bestScore">0</strong><span>Best score</span></div>
+        </div>
+        <button class="primary" id="playAgainButton">PLAY AGAIN</button>
+      </div>
+    </section>
+
+    <div id="rotateHint">
+      <div><h2>Rotate upright</h2><p>This game is designed for portrait play.</p></div>
+    </div>
+  </main>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d', { alpha: false });
+  const shell = document.getElementById('gameShell');
+  const scoreEl = document.getElementById('score');
+  const comboEl = document.getElementById('combo');
+  const livesEl = document.getElementById('lives');
+  const oxygenBar = document.getElementById('oxygenBar');
+  const oxygenText = document.getElementById('oxygenText');
+  const mainControl = document.getElementById('mainControl');
+  const statusPill = document.getElementById('statusPill');
+  const oxygenWrap = document.getElementById('oxygenWrap');
+  const toastEl = document.getElementById('toast');
+  const soundButton = document.getElementById('soundButton');
+  const pauseButton = document.getElementById('pauseButton');
+  const startScreen = document.getElementById('startScreen');
+  const pauseScreen = document.getElementById('pauseScreen');
+  const gameOverScreen = document.getElementById('gameOverScreen');
+  const finalScoreEl = document.getElementById('finalScore');
+  const bestScoreEl = document.getElementById('bestScore');
+
+  const TAU = Math.PI * 2;
+  let W = 390, H = 844, DPR = 1;
+  let lastTime = performance.now();
+  let state = 'menu';
+  let epiglottisClosed = false;
+  let score = 0;
+  let combo = 1;
+  let safeSwallows = 0;
+  let lives = 3;
+  let oxygen = 1;
+  let difficulty = 1;
+  let spawnTimer = 1.2;
+  let shake = 0;
+  let flash = 0;
+  let coughProgress = 0;
+  let coughTimer = 0;
+  let coughTapGlow = 0;
+  let currentAspiration = null;
+  let muted = false;
+  let toastTimer = 0;
+  let time = 0;
+  let particles = [];
+  let foods = [];
+  let ambientBubbles = [];
+  let audioCtx = null;
+
+  const foodTypes = [
+    { name: 'carrot', fill: '#ff9a3c', edge: '#ffcf7a', shape: 'slice' },
+    { name: 'berry', fill: '#8b6cff', edge: '#c7bbff', shape: 'circle' },
+    { name: 'pea', fill: '#69d273', edge: '#b5f1a9', shape: 'circle' },
+    { name: 'cracker', fill: '#e3bb72', edge: '#fff0bd', shape: 'square' },
+    { name: 'apple', fill: '#ff6675', edge: '#ffc0c7', shape: 'wedge' }
+  ];
+
+  function resize() {
+    const rect = shell.getBoundingClientRect();
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = rect.width;
+    H = rect.height;
+    canvas.width = Math.round(W * DPR);
+    canvas.height = Math.round(H * DPR);
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function ease(t) { return t * t * (3 - 2 * t); }
+  function rand(a, b) { return a + Math.random() * (b - a); }
+
+  function haptic(pattern) {
+    if (navigator.vibrate) navigator.vibrate(pattern);
+  }
+
+  function ensureAudio() {
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) audioCtx = new AC();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  }
+
+  function tone(freq, duration, type = 'sine', gain = 0.045, slideTo = null) {
+    if (muted || !audioCtx) return;
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, now);
+    if (slideTo) osc.frequency.exponentialRampToValueAtTime(slideTo, now + duration);
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(gain, now + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    osc.connect(g).connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + duration + 0.03);
+  }
+
+  function noiseBurst(duration = 0.15, gain = 0.04) {
+    if (muted || !audioCtx) return;
+    const length = Math.floor(audioCtx.sampleRate * duration);
+    const buffer = audioCtx.createBuffer(1, length, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / length);
+    const source = audioCtx.createBufferSource();
+    const filter = audioCtx.createBiquadFilter();
+    const g = audioCtx.createGain();
+    filter.type = 'bandpass';
+    filter.frequency.value = 420;
+    filter.Q.value = 0.8;
+    g.gain.value = gain;
+    source.buffer = buffer;
+    source.connect(filter).connect(g).connect(audioCtx.destination);
+    source.start();
+  }
+
+  function setToast(text, duration = 0.9) {
+    toastEl.textContent = text;
+    toastEl.classList.add('show');
+    toastTimer = duration;
+  }
+
+  function updateHUD() {
+    scoreEl.textContent = Math.floor(score).toLocaleString();
+    comboEl.textContent = 'x' + combo;
+    oxygenBar.style.transform = `scaleX(${clamp(oxygen, 0, 1)})`;
+    oxygenWrap.classList.toggle('low', oxygen < 0.25);
+    oxygenText.textContent = oxygen < 0.25 ? 'BREATHE' : Math.round(oxygen * 100) + '%';
+
+    livesEl.innerHTML = '';
+    for (let i = 0; i < 3; i++) {
+      const span = document.createElement('span');
+      span.className = 'heart' + (i >= lives ? ' empty' : '');
+      span.textContent = '♥';
+      livesEl.appendChild(span);
+    }
+
+    if (state === 'cough') {
+      mainControl.textContent = 'TAP RAPIDLY TO COUGH';
+      mainControl.className = 'cough';
+      statusPill.textContent = 'Aspiration — eject the food';
+      statusPill.style.color = '#ffdce1';
+    } else if (epiglottisClosed) {
+      mainControl.textContent = 'TAP TO OPEN';
+      mainControl.className = 'closed';
+      statusPill.textContent = oxygen < 0.25 ? 'Closed - breathe soon' : 'Epiglottis closed';
+      statusPill.style.color = oxygen < 0.25 ? '#ffb1ba' : '#ffe29a';
+    } else {
+      mainControl.textContent = 'TAP TO CLOSE';
+      mainControl.className = '';
+      statusPill.textContent = 'Airway open';
+      statusPill.style.color = '#baf6ff';
+    }
+  }
+
+  function resetGame() {
+    score = 0;
+    combo = 1;
+    safeSwallows = 0;
+    lives = 3;
+    oxygen = 1;
+    difficulty = 1;
+    spawnTimer = 1.35;
+    epiglottisClosed = false;
+    foods = [];
+    particles = [];
+    ambientBubbles = [];
+    shake = 0;
+    flash = 0;
+    coughProgress = 0;
+    currentAspiration = null;
+    state = 'playing';
+    updateHUD();
+  }
+
+  function startGame() {
+    ensureAudio();
+    resetGame();
+    startScreen.classList.add('hidden');
+    pauseScreen.classList.add('hidden');
+    gameOverScreen.classList.add('hidden');
+    tone(440, 0.09, 'triangle', 0.04, 660);
+  }
+
+  function pauseGame() {
+    if (state !== 'playing') return;
+    state = 'paused';
+    pauseScreen.classList.remove('hidden');
+  }
+
+  function resumeGame() {
+    if (state !== 'paused') return;
+    ensureAudio();
+    state = 'playing';
+    pauseScreen.classList.add('hidden');
+    lastTime = performance.now();
+  }
+
+  function endGame() {
+    state = 'gameover';
+    const best = Math.max(Number(localStorage.getItem('epiglottisBest') || 0), Math.floor(score));
+    localStorage.setItem('epiglottisBest', String(best));
+    finalScoreEl.textContent = Math.floor(score).toLocaleString();
+    bestScoreEl.textContent = best.toLocaleString();
+    gameOverScreen.classList.remove('hidden');
+    tone(180, 0.6, 'sawtooth', 0.045, 70);
+  }
+
+  function toggleEpiglottis() {
+    if (state !== 'playing') return;
+    ensureAudio();
+    epiglottisClosed = !epiglottisClosed;
+    tone(epiglottisClosed ? 220 : 320, 0.07, 'triangle', 0.028, epiglottisClosed ? 160 : 430);
+    haptic(12);
+    updateHUD();
+  }
+
+  function coughTap() {
+    if (state !== 'cough') return;
+    ensureAudio();
+    const now = performance.now();
+    coughProgress = clamp(coughProgress + 0.105 + Math.min(0.04, difficulty * 0.004), 0, 1.2);
+    coughTapGlow = 1;
+    shake = Math.max(shake, 7);
+    haptic(18);
+    noiseBurst(0.09, 0.025);
+    tone(rand(95, 125), 0.08, 'square', 0.018, 70);
+    emitCoughParticles();
+    if (currentAspiration) currentAspiration.coughKick = 1;
+    if (coughProgress >= 1) resolveCough(true);
+  }
+
+  function resolveCough(success) {
+    if (success) {
+      score += 160 * combo;
+      setToast('AIRWAY CLEARED +160', 1.1);
+      tone(330, 0.12, 'triangle', 0.04, 660);
+      haptic([20, 35, 20]);
+      if (currentAspiration) {
+        currentAspiration.ejected = true;
+        currentAspiration.vx = rand(-45, 45);
+        currentAspiration.vy = -360;
+        currentAspiration.life = 1.2;
+        particles.push(currentAspiration);
+      }
+    } else {
+      lives--;
+      combo = 1;
+      setToast('COUGH FAILED — LIFE LOST', 1.2);
+      tone(120, 0.35, 'sawtooth', 0.05, 55);
+      haptic([70, 50, 100]);
+    }
+    currentAspiration = null;
+    coughProgress = 0;
+    coughTimer = 0;
+    epiglottisClosed = false;
+    foods = foods.filter(f => f.phase !== 'aspirated');
+    if (lives <= 0) endGame();
+    else {
+      state = 'playing';
+      oxygen = Math.max(oxygen, 0.45);
+      spawnTimer = 1.4;
+      updateHUD();
+    }
+  }
+
+  function spawnFood() {
+    const type = foodTypes[Math.floor(Math.random() * foodTypes.length)];
+    const size = rand(10, 15) * Math.min(W / 390, 1.2);
+    foods.push({
+      type,
+      size,
+      t: 0,
+      phase: 'mouth',
+      speed: 0.24 + difficulty * 0.012,
+      rotation: rand(-0.5, 0.5),
+      spin: rand(-1.8, 1.8),
+      x: 0,
+      y: 0,
+      routed: false,
+      pulse: 0
+    });
+  }
+
+  function foodPosition(food) {
+    const mouth = { x: W * 0.17, y: H * 0.245 };
+    const pharynx = { x: W * 0.43, y: H * 0.35 };
+    const split = { x: W * 0.48, y: H * 0.49 };
+    // In a sagittal view the esophagus sits just behind the trachea.
+    const esophagus1 = { x: W * 0.56, y: H * 0.62 };
+    const esophagus2 = { x: W * 0.57, y: H * 0.84 };
+    const trachea1 = { x: W * 0.46, y: H * 0.62 };
+    const trachea2 = { x: W * 0.46, y: H * 0.84 };
+
+    let p;
+    if (food.phase === 'mouth') {
+      const t = ease(clamp(food.t / 0.38, 0, 1));
+      p = { x: lerp(mouth.x, pharynx.x, t), y: lerp(mouth.y, pharynx.y, t) };
+    } else if (food.phase === 'throat') {
+      const t = ease(clamp(food.t, 0, 1));
+      p = { x: lerp(pharynx.x, split.x, t), y: lerp(pharynx.y, split.y, t) };
+    } else if (food.phase === 'esophagus') {
+      const t = clamp(food.t, 0, 1);
+      if (t < 0.45) {
+        const q = ease(t / 0.45);
+        p = { x: lerp(split.x, esophagus1.x, q), y: lerp(split.y, esophagus1.y, q) };
+      } else {
+        const q = ease((t - 0.45) / 0.55);
+        p = { x: lerp(esophagus1.x, esophagus2.x, q), y: lerp(esophagus1.y, esophagus2.y, q) };
+      }
+    } else {
+      const t = clamp(food.t, 0, 1);
+      if (t < 0.45) {
+        const q = ease(t / 0.45);
+        p = { x: lerp(split.x, trachea1.x, q), y: lerp(split.y, trachea1.y, q) };
+      } else {
+        const q = ease((t - 0.45) / 0.55);
+        p = { x: lerp(trachea1.x, trachea2.x, q), y: lerp(trachea1.y, trachea2.y, q) };
+      }
+    }
+    return p;
+  }
+
+  function emitSuccess(food) {
+    for (let i = 0; i < 14; i++) {
+      particles.push({
+        kind: 'spark', x: food.x, y: food.y, vx: rand(-85, 85), vy: rand(-90, 40),
+        life: rand(0.35, 0.7), maxLife: 0.7, size: rand(2, 5), fill: '#70f2b1'
+      });
+    }
+  }
+
+  function emitCoughParticles() {
+    const x = W * 0.44, y = H * 0.54;
+    for (let i = 0; i < 7; i++) {
+      particles.push({
+        kind: 'air', x, y, vx: rand(-70, 70), vy: rand(-190, -90),
+        life: rand(0.25, 0.5), maxLife: 0.5, size: rand(3, 8), fill: '#bdefff'
+      });
+    }
+  }
+
+  function aspirate(food) {
+    state = 'cough';
+    currentAspiration = { ...food, kind: 'aspirated', phase: 'aspirated', x: food.x, y: food.y, coughKick: 0 };
+    coughProgress = 0;
+    coughTimer = 3.4;
+    shake = 20;
+    flash = 1;
+    combo = 1;
+    setToast('FOOD IN THE TRACHEA!', 1.0);
+    haptic([100, 45, 100]);
+    noiseBurst(0.35, 0.08);
+    tone(95, 0.35, 'sawtooth', 0.04, 48);
+    updateHUD();
+  }
+
+  function updateFoods(dt) {
+    for (let i = foods.length - 1; i >= 0; i--) {
+      const f = foods[i];
+      f.rotation += f.spin * dt;
+      f.pulse = Math.max(0, f.pulse - dt * 3);
+
+      if (f.phase === 'mouth') {
+        f.t += dt * (0.75 + difficulty * 0.015);
+        if (f.t >= 0.38) { f.phase = 'throat'; f.t = 0; }
+      } else if (f.phase === 'throat') {
+        f.t += dt * f.speed;
+        if (f.t >= 0.82 && !f.routed) {
+          f.routed = true;
+          if (epiglottisClosed) {
+            f.phase = 'esophagus';
+            f.t = 0;
+            safeSwallows++;
+            combo = Math.min(8, 1 + Math.floor(safeSwallows / 3));
+            score += 100 * combo;
+            oxygen = clamp(oxygen + 0.08, 0, 1);
+            f.pulse = 1;
+            emitSuccess(f);
+            setToast(combo > 1 ? `SAFE SWALLOW · x${combo}` : 'SAFE SWALLOW', 0.7);
+            tone(520, 0.08, 'triangle', 0.035, 760);
+            haptic(20);
+            difficulty = 1 + score / 1100;
+          } else {
+            f.phase = 'trachea';
+            f.t = 0;
+            combo = 1;
+          }
+          updateHUD();
+        }
+      } else if (f.phase === 'esophagus') {
+        f.t += dt * (0.48 + difficulty * 0.012);
+        if (f.t >= 1) foods.splice(i, 1);
+      } else if (f.phase === 'trachea') {
+        f.t += dt * (0.43 + difficulty * 0.011);
+        if (f.t >= 0.52 && state === 'playing') {
+          const p = foodPosition(f); f.x = p.x; f.y = p.y;
+          foods.splice(i, 1);
+          aspirate(f);
+          break;
+        }
+      }
+
+      if (foods[i]) {
+        const p = foodPosition(f);
+        f.x = p.x; f.y = p.y;
+      }
+    }
+  }
+
+  function updateParticles(dt) {
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.life -= dt;
+      if (p.life <= 0) { particles.splice(i, 1); continue; }
+      p.x += (p.vx || 0) * dt;
+      p.y += (p.vy || 0) * dt;
+      if (p.kind === 'spark') p.vy += 120 * dt;
+      if (p.kind === 'air') p.vx *= 0.96;
+      if (p.kind === 'aspirated') p.vy += 260 * dt;
+    }
+  }
+
+  function updateAmbient(dt) {
+    if (state === 'playing' && !epiglottisClosed && Math.random() < dt * 5) {
+      // Air moves from the larynx down through the trachea; it does not rise
+      // from the lower airway like bubbles in water.
+      ambientBubbles.push({ x: W * 0.46 + rand(-5,5), y: H * 0.51, r: rand(2,4), vy: rand(42,68), life: rand(0.75,1.15) });
+    }
+    for (let i = ambientBubbles.length - 1; i >= 0; i--) {
+      const b = ambientBubbles[i];
+      b.life -= dt; b.y += b.vy * dt; b.x += Math.sin(time * 5 + i) * dt * 2;
+      if (b.life <= 0 || b.y > H * 0.88) ambientBubbles.splice(i, 1);
+    }
+  }
+
+  function update(dt) {
+    time += dt;
+    if (toastTimer > 0) {
+      toastTimer -= dt;
+      if (toastTimer <= 0) toastEl.classList.remove('show');
+    }
+    shake = Math.max(0, shake - dt * 36);
+    flash = Math.max(0, flash - dt * 2.8);
+    coughTapGlow = Math.max(0, coughTapGlow - dt * 4.2);
+    updateParticles(dt);
+    updateAmbient(dt);
+
+    if (state === 'playing') {
+      // A full reserve lasts about ten seconds while the airway is closed.
+      const drain = epiglottisClosed ? (0.095 + difficulty * 0.0015) : -0.18;
+      oxygen = clamp(oxygen - drain * dt, 0, 1);
+      if (oxygen <= 0) {
+        lives--;
+        oxygen = 0.58;
+        epiglottisClosed = false;
+        combo = 1;
+        setToast('OPEN THE AIRWAY — LIFE LOST', 1.2);
+        tone(120, 0.3, 'square', 0.04, 60);
+        haptic([80,40,80]);
+        if (lives <= 0) endGame();
+      }
+
+      spawnTimer -= dt;
+      if (spawnTimer <= 0 && foods.length < 2) {
+        spawnFood();
+        const minGap = Math.max(0.68, 1.45 - difficulty * 0.055);
+        spawnTimer = rand(minGap, minGap + 0.85);
+      }
+      updateFoods(dt);
+      updateHUD();
+    } else if (state === 'cough') {
+      coughTimer -= dt;
+      coughProgress = Math.max(0, coughProgress - dt * (0.16 + difficulty * 0.006));
+      if (currentAspiration) {
+        const baseY = H * 0.67;
+        const topY = H * 0.43;
+        currentAspiration.y = lerp(baseY, topY, ease(clamp(coughProgress, 0, 1)));
+        currentAspiration.x = W * 0.43 + Math.sin(time * 13) * 3;
+        currentAspiration.rotation += dt * 2.6;
+        currentAspiration.coughKick = Math.max(0, currentAspiration.coughKick - dt * 6);
+      }
+      if (Math.floor(coughTimer * 4) !== Math.floor((coughTimer + dt) * 4)) shake = Math.max(shake, 3);
+      if (coughTimer <= 0) resolveCough(false);
+      updateHUD();
+    }
+  }
+
+  function roundedRectPath(x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function drawTube(points, outerWidth, innerWidth, outer, inner) {
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = outer;
+    ctx.lineWidth = outerWidth;
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i++) {
+      const p = points[i - 1], q = points[i];
+      const mx = (p.x + q.x) / 2, my = (p.y + q.y) / 2;
+      ctx.quadraticCurveTo(p.x, p.y, mx, my);
+      if (i === points.length - 1) ctx.quadraticCurveTo(q.x, q.y, q.x, q.y);
+    }
+    ctx.stroke();
+    ctx.strokeStyle = inner;
+    ctx.lineWidth = innerWidth;
+    ctx.stroke();
+  }
+
+  function drawBackground() {
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#0a2a42');
+    g.addColorStop(0.56, '#071a29');
+    g.addColorStop(1, '#041019');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    const rg = ctx.createRadialGradient(W * 0.5, H * 0.42, 10, W * 0.5, H * 0.42, W * 0.58);
+    rg.addColorStop(0, 'rgba(45,182,207,.13)');
+    rg.addColorStop(1, 'rgba(45,182,207,0)');
+    ctx.fillStyle = rg;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.globalAlpha = 0.055;
+    ctx.strokeStyle = '#b9efff';
+    ctx.lineWidth = 1;
+    const step = 34;
+    for (let y = 120; y < H - 80; y += step) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawAnatomy() {
+    const s = Math.min(W / 390, H / 844);
+
+    // A simplified mid-sagittal profile: face and mouth are anterior/left;
+    // the back of the neck is posterior/right.
+    ctx.fillStyle = 'rgba(247, 178, 154, 0.16)';
+    ctx.strokeStyle = 'rgba(255, 210, 193, 0.27)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(W * 0.49, H * 0.075);
+    ctx.bezierCurveTo(W * 0.34, H * 0.055, W * 0.20, H * 0.095, W * 0.145, H * 0.17);
+    ctx.bezierCurveTo(W * 0.12, H * 0.195, W * 0.105, H * 0.215, W * 0.065, H * 0.23);
+    ctx.bezierCurveTo(W * 0.095, H * 0.245, W * 0.12, H * 0.25, W * 0.105, H * 0.265);
+    ctx.bezierCurveTo(W * 0.095, H * 0.28, W * 0.13, H * 0.29, W * 0.16, H * 0.30);
+    ctx.bezierCurveTo(W * 0.195, H * 0.325, W * 0.215, H * 0.35, W * 0.245, H * 0.37);
+    ctx.bezierCurveTo(W * 0.285, H * 0.40, W * 0.30, H * 0.46, W * 0.30, H * 0.56);
+    ctx.bezierCurveTo(W * 0.30, H * 0.70, W * 0.275, H * 0.81, W * 0.245, H * 0.90);
+    ctx.lineTo(W * 0.70, H * 0.90);
+    ctx.bezierCurveTo(W * 0.675, H * 0.76, W * 0.665, H * 0.61, W * 0.675, H * 0.46);
+    ctx.bezierCurveTo(W * 0.685, H * 0.31, W * 0.625, H * 0.19, W * 0.49, H * 0.075);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+
+    // Face/profile cues make the sagittal orientation readable at a glance.
+    ctx.fillStyle = 'rgba(255, 220, 204, .32)';
+    ctx.beginPath(); ctx.arc(W * .43, H * .19, 8*s, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(35, 19, 28, .75)';
+    ctx.beginPath(); ctx.arc(W * .43, H * .19, 2.2*s, 0, TAU); ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 210, 193, .26)';
+    ctx.lineWidth = 1.5*s;
+    ctx.beginPath(); ctx.arc(W * .42, H * .235, 18*s, .12, 2.65); ctx.stroke();
+
+    // Mouth / oral cavity
+    ctx.fillStyle = 'rgba(119, 41, 73, 0.75)';
+    ctx.strokeStyle = 'rgba(255, 153, 178, 0.45)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(W * 0.105, H * 0.235);
+    ctx.quadraticCurveTo(W * 0.23, H * 0.205, W * 0.39, H * 0.255);
+    ctx.quadraticCurveTo(W * 0.45, H * 0.275, W * 0.46, H * 0.33);
+    ctx.quadraticCurveTo(W * 0.31, H * 0.315, W * 0.18, H * 0.30);
+    ctx.quadraticCurveTo(W * 0.125, H * 0.285, W * 0.105, H * 0.235);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+
+    // Tongue
+    ctx.fillStyle = '#b9506e';
+    ctx.beginPath();
+    ctx.moveTo(W * 0.14, H * 0.27);
+    ctx.quadraticCurveTo(W * 0.28, H * 0.235, W * 0.44, H * 0.285);
+    ctx.quadraticCurveTo(W * 0.35, H * 0.315, W * 0.19, H * 0.30);
+    ctx.closePath();
+    ctx.fill();
+
+    // Pharynx: the shared passage behind the mouth.
+    drawTube(
+      [{x:W*.43,y:H*.30},{x:W*.46,y:H*.38},{x:W*.48,y:H*.49}],
+      38*s, 25*s, 'rgba(204,106,127,.58)', '#542c43'
+    );
+
+    // Esophagus (posterior/right) and trachea (anterior/left) stay nearly parallel.
+    drawTube(
+      [{x:W*.54,y:H*.49},{x:W*.56,y:H*.61},{x:W*.57,y:H*.86}],
+      34*s, 22*s, 'rgba(190,103,136,.62)', '#5a2947'
+    );
+    drawTube(
+      [{x:W*.47,y:H*.49},{x:W*.46,y:H*.61},{x:W*.46,y:H*.86}],
+      42*s, 27*s, 'rgba(114,203,226,.68)', '#12384a'
+    );
+
+    // Tracheal rings
+    ctx.strokeStyle = 'rgba(151,231,248,.52)';
+    ctx.lineWidth = 3*s;
+    for (let i = 0; i < 6; i++) {
+      const y = H * (0.59 + i * 0.043);
+      const x = W * 0.46;
+      ctx.beginPath();
+      ctx.arc(x, y, 16*s, 0.25, Math.PI - 0.25);
+      ctx.stroke();
+    }
+
+    // Laryngeal inlet: the opening the epiglottis guards.
+    const inletX = W * .47, inletY = H * .49;
+    const inletG = ctx.createRadialGradient(inletX,inletY,1,inletX,inletY,38*s);
+    inletG.addColorStop(0, epiglottisClosed ? 'rgba(255,196,76,.27)' : 'rgba(103,226,255,.23)');
+    inletG.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle = inletG; ctx.beginPath(); ctx.arc(W*.47,H*.49,38*s,0,TAU); ctx.fill();
+    ctx.fillStyle = epiglottisClosed ? 'rgba(39, 24, 28, .9)' : 'rgba(4, 21, 30, .9)';
+    ctx.beginPath(); ctx.ellipse(inletX, inletY + 7*s, 12*s, 25*s, 0, 0, TAU); ctx.fill();
+
+    // Epiglottis: leaf-shaped cartilage on a visible hinge. Open = upright;
+    // closed = folded backward across the laryngeal inlet.
+    ctx.save();
+    const px = inletX, py = inletY;
+    ctx.shadowColor = epiglottisClosed ? 'rgba(255,196,76,.55)' : 'rgba(105,240,174,.42)';
+    ctx.shadowBlur = 14*s;
+    ctx.fillStyle = epiglottisClosed ? '#f7c450' : '#67d58e';
+    ctx.strokeStyle = epiglottisClosed ? '#ffe596' : '#b9f7cf';
+    ctx.lineWidth = 2*s;
+    ctx.beginPath();
+    if (!epiglottisClosed) {
+      ctx.moveTo(px, py + 4*s);
+      ctx.quadraticCurveTo(px + 5*s, py - 22*s, px + 8*s, py - 52*s);
+      ctx.quadraticCurveTo(px + 11*s, py - 67*s, px + 22*s, py - 70*s);
+      ctx.quadraticCurveTo(px + 32*s, py - 57*s, px + 28*s, py - 40*s);
+      ctx.quadraticCurveTo(px + 21*s, py - 16*s, px + 12*s, py + 5*s);
+    } else {
+      ctx.moveTo(px, py + 3*s);
+      ctx.quadraticCurveTo(px + 18*s, py - 4*s, px + 44*s, py - 2*s);
+      ctx.quadraticCurveTo(px + 61*s, py - 1*s, px + 67*s, py + 8*s);
+      ctx.quadraticCurveTo(px + 58*s, py + 19*s, px + 40*s, py + 17*s);
+      ctx.quadraticCurveTo(px + 18*s, py + 14*s, px + 8*s, py + 8*s);
+    }
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = epiglottisClosed ? '#ffe596' : '#b9f7cf';
+    ctx.beginPath(); ctx.arc(px, py + 4*s, 4*s, 0, TAU); ctx.fill();
+    ctx.restore();
+
+    // Labels
+    const label = (x,y,text,align='left') => {
+      ctx.textAlign = align;
+      ctx.font = `800 ${Math.max(10, 11*s)}px system-ui`;
+      ctx.fillStyle = 'rgba(221,245,252,.72)';
+      ctx.fillText(text, x, y);
+    };
+    label(W*.30,H*.715,'TRACHEA','right');
+    label(W*.66,H*.715,'ESOPHAGUS','left');
+    label(W*.88,H*.39,'EPIGLOTTIS','right');
+    ctx.strokeStyle='rgba(221,245,252,.28)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(W*.84,H*.395); ctx.lineTo(W*.55,H*.425); ctx.stroke();
+    label(W*.13,H*.205,'MOUTH','left');
+    label(W*.54,H*.34,'PHARYNX','left');
+
+    // Airflow particles travel downward through the open trachea.
+    for (const b of ambientBubbles) {
+      ctx.globalAlpha = clamp(b.life,0,1) * .7;
+      ctx.fillStyle = '#b8f4ff';
+      ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,TAU); ctx.fill();
+      ctx.strokeStyle = 'rgba(184,244,255,.65)';
+      ctx.lineWidth = 1.5*s;
+      ctx.beginPath(); ctx.moveTo(b.x, b.y - 7*s); ctx.lineTo(b.x, b.y - 2*s); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawFood(f, x=f.x, y=f.y, alpha=1) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(f.rotation || 0);
+    ctx.globalAlpha = alpha;
+    const r = f.size;
+    ctx.shadowColor = 'rgba(0,0,0,.35)';
+    ctx.shadowBlur = 7;
+    ctx.shadowOffsetY = 3;
+    ctx.fillStyle = f.type.fill;
+    ctx.strokeStyle = f.type.edge;
+    ctx.lineWidth = 2;
+    if (f.type.shape === 'circle') {
+      ctx.beginPath(); ctx.arc(0,0,r,0,TAU); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,.34)'; ctx.beginPath(); ctx.arc(-r*.32,-r*.32,r*.22,0,TAU); ctx.fill();
+    } else if (f.type.shape === 'square') {
+      roundedRectPath(-r,-r,r*2,r*2,r*.28); ctx.fill(); ctx.stroke();
+      ctx.fillStyle='rgba(92,54,21,.35)';
+      for (const [dx,dy] of [[-.38,-.35],[.35,-.2],[-.18,.35],[.42,.42]]) { ctx.beginPath();ctx.arc(dx*r,dy*r,r*.09,0,TAU);ctx.fill(); }
+    } else if (f.type.shape === 'wedge') {
+      ctx.beginPath(); ctx.moveTo(-r,-r*.45); ctx.quadraticCurveTo(0,-r*1.2,r,-r*.25); ctx.lineTo(r*.35,r); ctx.lineTo(-r*.55,r*.8); ctx.closePath(); ctx.fill();ctx.stroke();
+      ctx.strokeStyle='#5eaf62';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,-r*.85);ctx.lineTo(r*.15,-r*1.2);ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.moveTo(-r,-r*.55);ctx.lineTo(r,-r*.28);ctx.lineTo(r*.58,r*.68);ctx.lineTo(-r*.72,r*.56);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.strokeStyle='#64ad61';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-r*.2,-r*.62);ctx.lineTo(-r*.55,-r*1.1);ctx.moveTo(r*.1,-r*.56);ctx.lineTo(r*.42,-r*1.05);ctx.stroke();
+    }
+    if (f.pulse > 0) {
+      ctx.globalAlpha = f.pulse;
+      ctx.strokeStyle = '#91ffc7'; ctx.lineWidth=3;
+      ctx.beginPath();ctx.arc(0,0,r*(1.2+(1-f.pulse)*.9),0,TAU);ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawCoughOverlay() {
+    if (state !== 'cough') return;
+    const p = clamp(coughProgress, 0, 1);
+    ctx.save();
+    const rg = ctx.createRadialGradient(W*.5,H*.55,20,W*.5,H*.55,W*.62);
+    rg.addColorStop(0, `rgba(255,61,86,${.12 + coughTapGlow*.14})`);
+    rg.addColorStop(1,'rgba(255,35,61,0)');
+    ctx.fillStyle=rg;ctx.fillRect(0,0,W,H);
+
+    // Cough arrow and pressure waves
+    ctx.strokeStyle = `rgba(222,248,255,${.35 + coughTapGlow*.45})`;
+    ctx.lineWidth = 5;
+    ctx.lineCap='round';
+    for(let i=0;i<3;i++){
+      const y=H*(.61-i*.055)-p*H*.08;
+      ctx.beginPath();ctx.moveTo(W*.38,y);ctx.quadraticCurveTo(W*.43,y-20,W*.48,y);ctx.stroke();
+    }
+    ctx.fillStyle='#eafcff';
+    ctx.beginPath();ctx.moveTo(W*.43,H*.47-p*20);ctx.lineTo(W*.39,H*.52-p*20);ctx.lineTo(W*.47,H*.52-p*20);ctx.closePath();ctx.fill();
+
+    if (currentAspiration) drawFood(currentAspiration, currentAspiration.x, currentAspiration.y);
+
+    // Cough progress panel
+    const x=22,y=H*.17,w=W-44,h=72;
+    roundedRectPath(x,y,w,h,22);
+    ctx.fillStyle='rgba(59,8,19,.76)';ctx.fill();
+    ctx.strokeStyle='rgba(255,185,196,.25)';ctx.lineWidth=1;ctx.stroke();
+    ctx.textAlign='center';ctx.fillStyle='white';ctx.font=`950 ${Math.max(18,W*.052)}px system-ui`;
+    ctx.fillText('COUGH IT OUT!',W/2,y+28);
+    roundedRectPath(x+16,y+42,w-32,12,6);ctx.fillStyle='rgba(0,0,0,.28)';ctx.fill();
+    roundedRectPath(x+16,y+42,(w-32)*p,12,6);ctx.fillStyle='#ff6d7e';ctx.fill();
+    ctx.font=`850 11px system-ui`;ctx.fillStyle='#ffd8de';
+    ctx.fillText(`${Math.max(0,coughTimer).toFixed(1)} s`,W/2,y+68);
+    ctx.restore();
+  }
+
+  function drawParticles() {
+    for (const p of particles) {
+      if (p.kind === 'aspirated') { drawFood(p, p.x, p.y, clamp(p.life,0,1)); continue; }
+      ctx.globalAlpha = clamp(p.life / (p.maxLife || 1),0,1);
+      ctx.fillStyle = p.fill || '#fff';
+      ctx.beginPath();ctx.arc(p.x,p.y,p.size || 3,0,TAU);ctx.fill();
+    }
+    ctx.globalAlpha=1;
+  }
+
+  function drawIncomingWarning() {
+    if (state !== 'playing') return;
+    const next = foods.find(f => f.phase === 'mouth' || f.phase === 'throat');
+    if (!next) return;
+    const urgency = next.phase === 'throat' ? clamp(next.t,0,1) : 0;
+    if (urgency > .42 && !next.routed) {
+      const alpha=.35+Math.sin(time*10)*.12+urgency*.3;
+      ctx.save();
+      ctx.textAlign='center';
+      ctx.font=`950 ${Math.max(13,W*.038)}px system-ui`;
+      ctx.fillStyle=`rgba(255,220,126,${alpha})`;
+      ctx.fillText('SWALLOW INCOMING',W*.5,H*.135);
+      ctx.restore();
+    }
+  }
+
+  function render() {
+    ctx.save();
+    if (shake > 0) ctx.translate(rand(-shake, shake), rand(-shake, shake));
+    drawBackground();
+    drawAnatomy();
+    drawIncomingWarning();
+    for (const f of foods) drawFood(f);
+    drawParticles();
+    drawCoughOverlay();
+    if (flash > 0) {
+      ctx.fillStyle=`rgba(255,50,70,${flash*.2})`;ctx.fillRect(0,0,W,H);
+    }
+    ctx.restore();
+  }
+
+  function loop(now) {
+    const dt = Math.min(0.033, (now - lastTime) / 1000 || 0);
+    lastTime = now;
+    if (state !== 'paused' && state !== 'menu' && state !== 'gameover') update(dt);
+    else { time += dt; updateParticles(dt); updateAmbient(dt); }
+    render();
+    requestAnimationFrame(loop);
+  }
+
+  function primaryAction(e) {
+    e?.preventDefault();
+    if (state === 'playing') toggleEpiglottis();
+    else if (state === 'cough') coughTap();
+  }
+
+  mainControl.addEventListener('pointerdown', primaryAction);
+  canvas.addEventListener('pointerdown', primaryAction);
+  document.getElementById('startButton').addEventListener('click', startGame);
+  document.getElementById('resumeButton').addEventListener('click', resumeGame);
+  document.getElementById('restartFromPause').addEventListener('click', startGame);
+  document.getElementById('playAgainButton').addEventListener('click', startGame);
+  pauseButton.addEventListener('click', (e) => { e.stopPropagation(); pauseGame(); });
+  soundButton.addEventListener('click', (e) => {
+    e.stopPropagation(); muted = !muted; soundButton.textContent = muted ? '×' : '♪';
+    if (!muted) { ensureAudio(); tone(500,.08,'triangle',.03,700); }
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && state === 'playing') pauseGame();
+  });
+  window.addEventListener('resize', resize, { passive: true });
+  window.addEventListener('orientationchange', resize, { passive: true });
+
+  // Keyboard support for desktop testing/accessibility.
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); primaryAction(e); }
+    if (e.code === 'Escape') state === 'paused' ? resumeGame() : pauseGame();
+  });
+
+  resize();
+  updateHUD();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
