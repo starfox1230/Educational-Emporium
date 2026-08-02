@@ -532,7 +532,6 @@
   function coughTap() {
     if (state !== 'cough') return;
     ensureAudio();
-    const now = performance.now();
     coughProgress = clamp(coughProgress + 0.105 + Math.min(0.04, difficulty * 0.004), 0, 1.2);
     coughTapGlow = 1;
     shake = Math.max(shake, 7);
@@ -552,9 +551,11 @@
       haptic([20, 35, 20]);
       if (currentAspiration) {
         currentAspiration.ejected = true;
-        currentAspiration.vx = rand(-45, 45);
-        currentAspiration.vy = -360;
-        currentAspiration.life = 1.2;
+        currentAspiration.kind = 'ejected';
+        currentAspiration.ejectT = 0;
+        currentAspiration.ejectStart = { x: currentAspiration.x, y: currentAspiration.y };
+        currentAspiration.life = 1.25;
+        currentAspiration.maxLife = 1.25;
         particles.push(currentAspiration);
       }
     } else {
@@ -572,7 +573,6 @@
     if (lives <= 0) endGame();
     else {
       state = 'playing';
-      oxygen = Math.max(oxygen, 0.45);
       spawnTimer = 1.4;
       updateHUD();
     }
@@ -655,6 +655,16 @@
     }
   }
 
+  function ejectedFoodPosition(food, t) {
+    const start = food.ejectStart || { x: W * .46, y: H * .56 };
+    const throat = { x: W * .43, y: H * .36 };
+    const mouth = { x: W * .16, y: H * .24 };
+    if (t < 0.5) {
+      return quadraticPoint(start, { x: W * .45, y: H * .45 }, throat, ease(t / 0.5));
+    }
+    return quadraticPoint(throat, { x: W * .30, y: H * .26 }, mouth, ease((t - 0.5) / 0.5));
+  }
+
   function aspirate(food) {
     state = 'cough';
     currentAspiration = { ...food, kind: 'aspirated', phase: 'aspirated', x: food.x, y: food.y, coughKick: 0 };
@@ -726,6 +736,16 @@
   function updateParticles(dt) {
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i];
+      if (p.kind === 'ejected') {
+        p.ejectT += dt * 0.9;
+        const route = ejectedFoodPosition(p, clamp(p.ejectT, 0, 1));
+        p.x = route.x;
+        p.y = route.y;
+        p.rotation -= dt * 4.5;
+        p.life = (1 - clamp(p.ejectT, 0, 1)) * (p.maxLife || 1.25);
+        if (p.ejectT >= 1) particles.splice(i, 1);
+        continue;
+      }
       p.life -= dt;
       if (p.life <= 0) { particles.splice(i, 1); continue; }
       p.x += (p.vx || 0) * dt;
@@ -785,6 +805,8 @@
       updateFoods(dt);
       updateHUD();
     } else if (state === 'cough') {
+      // Coughing is work: it consumes some of the same oxygen reserve.
+      oxygen = clamp(oxygen - (0.055 + difficulty * 0.001) * dt, 0, 1);
       coughTimer -= dt;
       coughProgress = Math.max(0, coughProgress - dt * (0.16 + difficulty * 0.006));
       if (currentAspiration) {
@@ -831,12 +853,42 @@
     ctx.stroke();
   }
 
-  function drawPosteriorTube(points, outerWidth, innerWidth, posteriorPush, outer, inner) {
+  function drawVariableLumen(points, widths, fill) {
+    const sidePoint = (point, width, side) => ({ x: point.x + side * width / 2, y: point.y });
+    const traceSide = (side, reverse = false) => {
+      const indices = reverse ? [...points.keys()].reverse() : [...points.keys()];
+      const first = indices[0];
+      const start = sidePoint(points[first], widths[first], side);
+      ctx.moveTo(start.x, start.y);
+      for (let n = 1; n < indices.length; n++) {
+        const previousIndex = indices[n - 1];
+        const currentIndex = indices[n];
+        const previous = sidePoint(points[previousIndex], widths[previousIndex], side);
+        const current = sidePoint(points[currentIndex], widths[currentIndex], side);
+        const mx = (previous.x + current.x) / 2;
+        const my = (previous.y + current.y) / 2;
+        ctx.quadraticCurveTo(previous.x, previous.y, mx, my);
+        if (n === indices.length - 1) ctx.quadraticCurveTo(current.x, current.y, current.x, current.y);
+      }
+    };
+
+    ctx.beginPath();
+    traceSide(-1);
+    const rightEnd = sidePoint(points[points.length - 1], widths[widths.length - 1], 1);
+    ctx.lineTo(rightEnd.x, rightEnd.y);
+    traceSide(1, true);
+    ctx.closePath();
+    ctx.fillStyle = fill;
+    ctx.fill();
+  }
+
+  function drawPosteriorTube(points, outerWidth, innerWidth, posteriorPush, lumenPushes, outer, inner) {
     // Widen only the posterior/right side while preserving the anterior/left
-    // edge and the original lumen path.
+    // edge. The lumen can widen independently and taper back down.
     const shifted = points.map(p => ({ x: p.x + posteriorPush / 2, y: p.y }));
     drawTube(shifted, outerWidth + posteriorPush, 0, outer, 'rgba(0,0,0,0)');
-    drawTube(points, 1, innerWidth, 'rgba(0,0,0,0)', inner);
+    const pushes = Array.isArray(lumenPushes) ? lumenPushes : points.map(() => lumenPushes);
+    drawVariableLumen(points, points.map((_, i) => innerWidth + pushes[i]), inner);
   }
 
   function drawBackground() {
@@ -920,14 +972,14 @@
     // Pharynx: the shared passage behind the mouth.
     drawPosteriorTube(
       [{x:W*.43,y:H*.30},{x:W*.46,y:H*.38},{x:W*.48,y:H*.49}],
-      38*s, 25*s, 18*s, 'rgba(204,106,127,.58)', '#542c43'
+      38*s, 25*s, 18*s, 14*s, 'rgba(204,106,127,.58)', '#542c43'
     );
 
     // Esophagus (posterior/right) continues directly from the lower pharynx;
     // the trachea (anterior/left) stays nearly parallel beside it.
     drawPosteriorTube(
       [{x:W*.49,y:H*.48},{x:W*.535,y:H*.54},{x:W*.58,y:H*.62},{x:W*.59,y:H*.86}],
-      34*s, 22*s, 18*s, 'rgba(190,103,136,.62)', '#5a2947'
+      34*s, 22*s, 18*s, [14*s, 11*s, 5*s, 0], 'rgba(190,103,136,.62)', '#5a2947'
     );
     drawTube(
       [{x:W*.47,y:H*.49},{x:W*.46,y:H*.61},{x:W*.46,y:H*.86}],
@@ -1086,7 +1138,7 @@
 
   function drawParticles() {
     for (const p of particles) {
-      if (p.kind === 'aspirated') { drawFood(p, p.x, p.y, clamp(p.life,0,1)); continue; }
+      if (p.kind === 'aspirated' || p.kind === 'ejected') { drawFood(p, p.x, p.y, clamp(p.life,0,1)); continue; }
       ctx.globalAlpha = clamp(p.life / (p.maxLife || 1),0,1);
       ctx.fillStyle = p.fill || '#fff';
       ctx.beginPath();ctx.arc(p.x,p.y,p.size || 3,0,TAU);ctx.fill();
