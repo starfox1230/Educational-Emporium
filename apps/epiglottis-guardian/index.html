@@ -539,7 +539,7 @@
     tone(rand(95, 125), 0.08, 'square', 0.018, 70);
     emitCoughParticles();
     if (currentAspiration) currentAspiration.coughKick = 1;
-    if (coughProgress >= 1) resolveCough();
+    if (coughProgress >= 1 && (!currentAspiration || currentAspiration.fallProgress >= 1)) resolveCough();
   }
 
   function resolveCough() {
@@ -657,7 +657,16 @@
 
   function aspirate(food) {
     state = 'cough';
-    currentAspiration = { ...food, kind: 'aspirated', phase: 'aspirated', x: food.x, y: food.y, coughKick: 0 };
+    currentAspiration = {
+      ...food,
+      kind: 'aspirated',
+      phase: 'aspirated',
+      x: food.x,
+      y: food.y,
+      coughKick: 0,
+      fallProgress: 0,
+      tracheaStartT: food.t
+    };
     coughProgress = 0;
     shake = 20;
     flash = 1;
@@ -707,7 +716,9 @@
         if (f.t >= 1) foods.splice(i, 1);
       } else if (f.phase === 'trachea') {
         f.t += dt * (0.43 + difficulty * 0.011);
-        if (f.t >= 0.52 && state === 'playing') {
+        // The warning starts just below the epiglottis hinge, but the food
+        // continues down the same tracheal route to its usual stuck point.
+        if (f.t >= 0.04 && state === 'playing') {
           const p = foodPosition(f); f.x = p.x; f.y = p.y;
           foods.splice(i, 1);
           aspirate(f);
@@ -817,10 +828,18 @@
       }
       coughProgress = Math.max(0, coughProgress - dt * (0.16 + difficulty * 0.006));
       if (currentAspiration) {
-        const baseY = H * 0.67;
-        const topY = H * 0.43;
-        currentAspiration.y = lerp(baseY, topY, ease(clamp(coughProgress, 0, 1)));
-        currentAspiration.x = W * 0.43 + Math.sin(time * 13) * 3;
+        if (currentAspiration.fallProgress < 1) {
+          currentAspiration.fallProgress = clamp(currentAspiration.fallProgress + dt / 0.34, 0, 1);
+          const travelT = lerp(currentAspiration.tracheaStartT, 0.52, ease(currentAspiration.fallProgress));
+          const travelPosition = foodPosition({ phase: 'trachea', t: travelT });
+          currentAspiration.x = travelPosition.x;
+          currentAspiration.y = travelPosition.y;
+        } else {
+          const baseY = H * 0.67;
+          const topY = H * 0.43;
+          currentAspiration.y = lerp(baseY, topY, ease(clamp(coughProgress, 0, 1)));
+          currentAspiration.x = W * 0.43 + Math.sin(time * 13) * 3;
+        }
         currentAspiration.rotation += dt * 2.6;
         currentAspiration.coughKick = Math.max(0, currentAspiration.coughKick - dt * 6);
       }
