@@ -858,12 +858,48 @@
     ctx.stroke();
   }
 
-  function drawPosteriorTube(points, outerWidth, innerWidth, posteriorPush, outer, inner) {
+  function drawPosteriorLumen(points, innerWidth, pushes, inner) {
+    const offsets = Array.isArray(pushes) ? pushes : points.map(() => pushes);
+    const samples = [];
+    for (let i = 1; i < points.length; i++) {
+      const start = i === 1 ? points[0] : {
+        x: (points[i - 2].x + points[i - 1].x) / 2,
+        y: (points[i - 2].y + points[i - 1].y) / 2
+      };
+      const end = i === points.length - 1 ? points[i] : {
+        x: (points[i - 1].x + points[i].x) / 2,
+        y: (points[i - 1].y + points[i].y) / 2
+      };
+      const startPush = i === 1 ? offsets[0] : (offsets[i - 2] + offsets[i - 1]) / 2;
+      const endPush = i === points.length - 1 ? offsets[i] : (offsets[i - 1] + offsets[i]) / 2;
+      for (let step = 0; step <= 10; step++) {
+        if (i > 1 && step === 0) continue;
+        const t = step / 10;
+        const raw = quadraticPoint(start, points[i - 1], end, t);
+        const u = 1 - t;
+        const push = u * u * startPush + 2 * u * t * offsets[i - 1] + t * t * endPush;
+        samples.push({ x: raw.x + push / 2, y: raw.y, push });
+      }
+    }
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = inner;
+    for (let i = 1; i < samples.length; i++) {
+      ctx.lineWidth = innerWidth + (samples[i - 1].push + samples[i].push) / 2;
+      ctx.beginPath();
+      ctx.moveTo(samples[i - 1].x, samples[i - 1].y);
+      ctx.lineTo(samples[i].x, samples[i].y);
+      ctx.stroke();
+    }
+  }
+
+  function drawPosteriorTube(points, outerWidth, innerWidth, posteriorPush, lumenPushes, outer, inner) {
     // Widen only the posterior/right side while preserving the anterior/left
     // edge and the original lumen path.
     const shifted = points.map(p => ({ x: p.x + posteriorPush / 2, y: p.y }));
     drawTube(shifted, outerWidth + posteriorPush, 0, outer, 'rgba(0,0,0,0)');
-    drawTube(points, 1, innerWidth, 'rgba(0,0,0,0)', inner);
+    if (lumenPushes) drawPosteriorLumen(points, innerWidth, lumenPushes, inner);
+    else drawTube(points, 1, innerWidth, 'rgba(0,0,0,0)', inner);
   }
 
   function drawBackground() {
@@ -947,14 +983,14 @@
     // Pharynx: the shared passage behind the mouth.
     drawPosteriorTube(
       [{x:W*.43,y:H*.30},{x:W*.46,y:H*.38},{x:W*.48,y:H*.49}],
-      38*s, 25*s, 18*s, 'rgba(204,106,127,.58)', '#542c43'
+      38*s, 25*s, 18*s, [0, 7*s, 9*s], 'rgba(204,106,127,.58)', '#542c43'
     );
 
     // Esophagus (posterior/right) continues directly from the lower pharynx;
     // the trachea (anterior/left) stays nearly parallel beside it.
     drawPosteriorTube(
       [{x:W*.49,y:H*.48},{x:W*.535,y:H*.54},{x:W*.58,y:H*.62},{x:W*.59,y:H*.86}],
-      34*s, 22*s, 18*s, 'rgba(190,103,136,.62)', '#5a2947'
+      34*s, 22*s, 18*s, [9*s, 7*s, 3*s, 0], 'rgba(190,103,136,.62)', '#5a2947'
     );
     drawTube(
       [{x:W*.47,y:H*.49},{x:W*.46,y:H*.61},{x:W*.46,y:H*.86}],
