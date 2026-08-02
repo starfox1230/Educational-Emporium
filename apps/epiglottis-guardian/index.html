@@ -1034,9 +1034,9 @@
 
     // Laryngeal inlet: the opening the epiglottis guards.
     const inletX = W * .47, inletY = H * .49;
-    // The hinge sits on the posterior/right rim of the tracheal inlet,
-    // rather than in the middle of the airway lumen.
-    const hingeX = W * .515;
+    // The hinge sits on the anterior/left rim of the tracheal inlet. When
+    // closed, the smaller leaf folds posteriorly across the trachea only.
+    const hingeX = W * .445;
     const inletG = ctx.createRadialGradient(inletX,inletY,1,inletX,inletY,38*s);
     inletG.addColorStop(0, epiglottisClosed ? 'rgba(255,196,76,.27)' : 'rgba(103,226,255,.23)');
     inletG.addColorStop(1,'rgba(0,0,0,0)');
@@ -1044,8 +1044,9 @@
     ctx.fillStyle = epiglottisClosed ? 'rgba(39, 24, 28, .9)' : 'rgba(4, 21, 30, .9)';
     ctx.beginPath(); ctx.ellipse(inletX, inletY + 7*s, 12*s, 25*s, 0, 0, TAU); ctx.fill();
 
-    // Epiglottis: leaf-shaped cartilage on a visible hinge. Open = upright;
-    // closed = folded across the tracheal inlet, away from the esophagus.
+    // Epiglottis: leaf-shaped cartilage on a visible anterior hinge. Open =
+    // upright; closed = folded across the tracheal inlet, stopping before the
+    // esophageal lumen.
     ctx.save();
     const px = hingeX, py = inletY;
     ctx.shadowColor = epiglottisClosed ? 'rgba(255,196,76,.55)' : 'rgba(105,240,174,.42)';
@@ -1062,10 +1063,10 @@
       ctx.quadraticCurveTo(px + 21*s, py - 16*s, px + 12*s, py + 5*s);
     } else {
       ctx.moveTo(px, py + 3*s);
-      ctx.quadraticCurveTo(px - 18*s, py - 4*s, px - 44*s, py - 2*s);
-      ctx.quadraticCurveTo(px - 61*s, py - 1*s, px - 67*s, py + 8*s);
-      ctx.quadraticCurveTo(px - 58*s, py + 19*s, px - 40*s, py + 17*s);
-      ctx.quadraticCurveTo(px - 18*s, py + 14*s, px - 8*s, py + 8*s);
+      ctx.quadraticCurveTo(px + 10*s, py - 5*s, px + 22*s, py - 4*s);
+      ctx.quadraticCurveTo(px + 34*s, py - 3*s, px + 37*s, py + 5*s);
+      ctx.quadraticCurveTo(px + 34*s, py + 14*s, px + 24*s, py + 16*s);
+      ctx.quadraticCurveTo(px + 12*s, py + 12*s, px + 6*s, py + 7*s);
     }
     ctx.closePath();
     ctx.fill(); ctx.stroke();
