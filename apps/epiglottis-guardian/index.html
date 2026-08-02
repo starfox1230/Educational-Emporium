@@ -594,8 +594,8 @@
     const pharynx = { x: W * 0.43, y: H * 0.35 };
     const split = { x: W * 0.48, y: H * 0.49 };
     // In a sagittal view the esophagus sits just behind the trachea.
-    const esophagus1 = { x: W * 0.51, y: H * 0.54 };
-    const esophagus2 = { x: W * 0.57, y: H * 0.84 };
+    const esophagus1 = { x: W * 0.535, y: H * 0.54 };
+    const esophagus2 = { x: W * 0.59, y: H * 0.84 };
     const trachea1 = { x: W * 0.46, y: H * 0.62 };
     const trachea2 = { x: W * 0.46, y: H * 0.84 };
 
@@ -910,7 +910,7 @@
     // Esophagus (posterior/right) continues directly from the lower pharynx;
     // the trachea (anterior/left) stays nearly parallel beside it.
     drawTube(
-      [{x:W*.48,y:H*.48},{x:W*.51,y:H*.54},{x:W*.55,y:H*.62},{x:W*.57,y:H*.86}],
+      [{x:W*.49,y:H*.48},{x:W*.535,y:H*.54},{x:W*.58,y:H*.62},{x:W*.59,y:H*.86}],
       34*s, 22*s, 'rgba(190,103,136,.62)', '#5a2947'
     );
     drawTube(
@@ -931,6 +931,9 @@
 
     // Laryngeal inlet: the opening the epiglottis guards.
     const inletX = W * .47, inletY = H * .49;
+    // The hinge sits on the posterior/right rim of the tracheal inlet,
+    // rather than in the middle of the airway lumen.
+    const hingeX = W * .515;
     const inletG = ctx.createRadialGradient(inletX,inletY,1,inletX,inletY,38*s);
     inletG.addColorStop(0, epiglottisClosed ? 'rgba(255,196,76,.27)' : 'rgba(103,226,255,.23)');
     inletG.addColorStop(1,'rgba(0,0,0,0)');
@@ -941,7 +944,7 @@
     // Epiglottis: leaf-shaped cartilage on a visible hinge. Open = upright;
     // closed = folded across the tracheal inlet, away from the esophagus.
     ctx.save();
-    const px = inletX, py = inletY;
+    const px = hingeX, py = inletY;
     ctx.shadowColor = epiglottisClosed ? 'rgba(255,196,76,.55)' : 'rgba(105,240,174,.42)';
     ctx.shadowBlur = 14*s;
     ctx.fillStyle = epiglottisClosed ? '#f7c450' : '#67d58e';
