@@ -339,7 +339,6 @@
   let shake = 0;
   let flash = 0;
   let coughProgress = 0;
-  let coughTimer = 0;
   let coughTapGlow = 0;
   let currentAspiration = null;
   let muted = false;
@@ -540,34 +539,25 @@
     tone(rand(95, 125), 0.08, 'square', 0.018, 70);
     emitCoughParticles();
     if (currentAspiration) currentAspiration.coughKick = 1;
-    if (coughProgress >= 1) resolveCough(true);
+    if (coughProgress >= 1) resolveCough();
   }
 
-  function resolveCough(success) {
-    if (success) {
-      score += 160 * combo;
-      setToast('AIRWAY CLEARED +160', 1.1);
-      tone(330, 0.12, 'triangle', 0.04, 660);
-      haptic([20, 35, 20]);
-      if (currentAspiration) {
-        currentAspiration.ejected = true;
-        currentAspiration.kind = 'ejected';
-        currentAspiration.ejectT = 0;
-        currentAspiration.ejectStart = { x: currentAspiration.x, y: currentAspiration.y };
-        currentAspiration.life = 1.25;
-        currentAspiration.maxLife = 1.25;
-        particles.push(currentAspiration);
-      }
-    } else {
-      lives--;
-      combo = 1;
-      setToast('COUGH FAILED — LIFE LOST', 1.2);
-      tone(120, 0.35, 'sawtooth', 0.05, 55);
-      haptic([70, 50, 100]);
+  function resolveCough() {
+    score += 160 * combo;
+    setToast('AIRWAY CLEARED +160', 1.1);
+    tone(330, 0.12, 'triangle', 0.04, 660);
+    haptic([20, 35, 20]);
+    if (currentAspiration) {
+      currentAspiration.ejected = true;
+      currentAspiration.kind = 'ejected';
+      currentAspiration.ejectT = 0;
+      currentAspiration.ejectStart = { x: currentAspiration.x, y: currentAspiration.y };
+      currentAspiration.life = 1.25;
+      currentAspiration.maxLife = 1.25;
+      particles.push(currentAspiration);
     }
     currentAspiration = null;
     coughProgress = 0;
-    coughTimer = 0;
     epiglottisClosed = false;
     foods = foods.filter(f => f.phase !== 'aspirated');
     if (lives <= 0) endGame();
@@ -669,7 +659,6 @@
     state = 'cough';
     currentAspiration = { ...food, kind: 'aspirated', phase: 'aspirated', x: food.x, y: food.y, coughKick: 0 };
     coughProgress = 0;
-    coughTimer = 3.4;
     shake = 20;
     flash = 1;
     combo = 1;
@@ -807,7 +796,25 @@
     } else if (state === 'cough') {
       // Coughing is work: it consumes some of the same oxygen reserve.
       oxygen = clamp(oxygen - (0.055 + difficulty * 0.001) * dt, 0, 1);
-      coughTimer -= dt;
+      if (oxygen <= 0) {
+        lives--;
+        oxygen = 0.58;
+        currentAspiration = null;
+        coughProgress = 0;
+        epiglottisClosed = false;
+        combo = 1;
+        foods = foods.filter(f => f.phase !== 'aspirated');
+        setToast('OXYGEN DEPLETED — LIFE LOST', 1.2);
+        tone(120, 0.3, 'square', 0.04, 60);
+        haptic([80,40,80]);
+        if (lives <= 0) endGame();
+        else {
+          state = 'playing';
+          spawnTimer = 1.4;
+          updateHUD();
+        }
+        return;
+      }
       coughProgress = Math.max(0, coughProgress - dt * (0.16 + difficulty * 0.006));
       if (currentAspiration) {
         const baseY = H * 0.67;
@@ -817,8 +824,6 @@
         currentAspiration.rotation += dt * 2.6;
         currentAspiration.coughKick = Math.max(0, currentAspiration.coughKick - dt * 6);
       }
-      if (Math.floor(coughTimer * 4) !== Math.floor((coughTimer + dt) * 4)) shake = Math.max(shake, 3);
-      if (coughTimer <= 0) resolveCough(false);
       updateHUD();
     }
   }
@@ -1092,7 +1097,7 @@
 
     if (currentAspiration) drawFood(currentAspiration, currentAspiration.x, currentAspiration.y);
 
-    // Cough progress panel
+    // Cough effort panel. Oxygen is the only time-based limit.
     const x=22,y=H*.17,w=W-44,h=72;
     roundedRectPath(x,y,w,h,22);
     ctx.fillStyle='rgba(59,8,19,.76)';ctx.fill();
@@ -1102,7 +1107,7 @@
     roundedRectPath(x+16,y+42,w-32,12,6);ctx.fillStyle='rgba(0,0,0,.28)';ctx.fill();
     roundedRectPath(x+16,y+42,(w-32)*p,12,6);ctx.fillStyle='#ff6d7e';ctx.fill();
     ctx.font=`850 11px system-ui`;ctx.fillStyle='#ffd8de';
-    ctx.fillText(`${Math.max(0,coughTimer).toFixed(1)} s`,W/2,y+68);
+    ctx.fillText(`OXYGEN ${Math.round(oxygen * 100)}%`,W/2,y+68);
     ctx.restore();
   }
 
