@@ -97,16 +97,17 @@
       height: min(58vh, 500px);
       min-height: 260px;
       display: grid;
-      grid-template-rows: auto 1fr;
-      justify-items: center;
+      grid-template-columns: 1fr 22px;
+      grid-template-rows: 1fr;
+      align-items: center;
       gap: 7px;
       pointer-events: none;
       transition: filter .2s ease, transform .2s ease;
     }
-    .barHeader { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10px; font-weight:900; letter-spacing:0.12em; color:var(--muted); text-transform:uppercase; margin:0; }
+    .barHeader { grid-column:1; grid-row:1; display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10px; font-weight:900; letter-spacing:0.12em; color:var(--muted); text-transform:uppercase; margin:0; }
     .barHeader span:first-child { writing-mode:vertical-rl; transform:rotate(180deg); font-size:9px; letter-spacing:0.16em; }
     .barHeader span:last-child { font-size:10px; letter-spacing:0.08em; }
-    .barTrack { width: 22px; height: 100%; border: 1px solid var(--line); background: rgba(0,0,0,0.28); border-radius: 999px; overflow: hidden; box-shadow: inset 0 0 10px rgba(0,0,0,.16); }
+    .barTrack { grid-column:2; grid-row:1; width: 22px; height: 100%; border: 1px solid var(--line); background: rgba(0,0,0,0.28); border-radius: 999px; overflow: hidden; box-shadow: inset 0 0 10px rgba(0,0,0,.16); }
     #oxygenBar { height: 100%; width: 100%; border-radius: inherit; background: linear-gradient(0deg, #5ec8ff, #70f4ff); transform-origin: bottom center; }
     #oxygenWrap.low { filter: drop-shadow(0 0 8px rgba(255, 91, 112, .35)); }
     #oxygenWrap.low .barHeader { color: #ffb1ba; }
@@ -705,7 +706,6 @@
             safeSwallows++;
             combo = Math.min(8, 1 + Math.floor(safeSwallows / 3));
             score += 100 * combo;
-            oxygen = clamp(oxygen + 0.08, 0, 1);
             f.pulse = 1;
             emitSuccess(f);
             setToast(combo > 1 ? `SAFE SWALLOW · x${combo}` : 'SAFE SWALLOW', 0.7);
