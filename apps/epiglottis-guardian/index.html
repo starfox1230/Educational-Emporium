@@ -1036,7 +1036,7 @@
     const inletX = W * .47, inletY = H * .49;
     // The hinge sits on the anterior/left rim of the tracheal inlet. When
     // closed, the smaller leaf folds posteriorly across the trachea only.
-    const hingeX = W * .445;
+    const hingeX = W * .425;
     const inletG = ctx.createRadialGradient(inletX,inletY,1,inletX,inletY,38*s);
     inletG.addColorStop(0, epiglottisClosed ? 'rgba(255,196,76,.27)' : 'rgba(103,226,255,.23)');
     inletG.addColorStop(1,'rgba(0,0,0,0)');
@@ -1056,11 +1056,16 @@
     ctx.lineWidth = 2*s;
     ctx.beginPath();
     if (!epiglottisClosed) {
-      ctx.moveTo(px, py + 4*s);
-      ctx.quadraticCurveTo(px + 5*s, py - 22*s, px + 8*s, py - 52*s);
-      ctx.quadraticCurveTo(px + 11*s, py - 67*s, px + 22*s, py - 70*s);
-      ctx.quadraticCurveTo(px + 32*s, py - 57*s, px + 28*s, py - 40*s);
-      ctx.quadraticCurveTo(px + 21*s, py - 16*s, px + 12*s, py + 5*s);
+      // About 100° from the posterior horizontal: nearly upright, with a
+      // slight anterior lean and a narrow, shorter leaf.
+      const leafLength = 48*s;
+      const tilt = 10 * Math.PI / 180;
+      const tipX = px - Math.sin(tilt) * leafLength;
+      const tipY = py - Math.cos(tilt) * leafLength;
+      ctx.moveTo(px, py + 3*s);
+      ctx.quadraticCurveTo(px - 2*s, py - 12*s, tipX - 3*s, tipY + 5*s);
+      ctx.quadraticCurveTo(tipX, tipY, tipX + 4*s, tipY + 3*s);
+      ctx.quadraticCurveTo(px + 5*s, py - 12*s, px + 6*s, py + 4*s);
     } else {
       ctx.moveTo(px, py + 3*s);
       ctx.quadraticCurveTo(px + 10*s, py - 5*s, px + 22*s, py - 4*s);
@@ -1072,7 +1077,7 @@
     ctx.fill(); ctx.stroke();
     ctx.shadowBlur = 0;
     ctx.fillStyle = epiglottisClosed ? '#ffe596' : '#b9f7cf';
-    ctx.beginPath(); ctx.arc(px, py + 4*s, 4*s, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(px, py + 4*s, 3*s, 0, TAU); ctx.fill();
     ctx.restore();
 
     // Labels
