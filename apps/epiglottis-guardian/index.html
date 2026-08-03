@@ -1049,10 +1049,10 @@
     // esophageal lumen.
     ctx.save();
     const px = hingeX, py = inletY;
-    ctx.shadowColor = epiglottisClosed ? 'rgba(255,196,76,.55)' : 'rgba(105,240,174,.42)';
+    ctx.shadowColor = 'rgba(255,196,76,.55)';
     ctx.shadowBlur = 14*s;
-    ctx.fillStyle = epiglottisClosed ? '#f7c450' : '#67d58e';
-    ctx.strokeStyle = epiglottisClosed ? '#ffe596' : '#b9f7cf';
+    ctx.fillStyle = '#f7c450';
+    ctx.strokeStyle = '#ffe596';
     ctx.lineWidth = 2*s;
     ctx.beginPath();
     if (!epiglottisClosed) {
@@ -1076,7 +1076,7 @@
     ctx.closePath();
     ctx.fill(); ctx.stroke();
     ctx.shadowBlur = 0;
-    ctx.fillStyle = epiglottisClosed ? '#ffe596' : '#b9f7cf';
+    ctx.fillStyle = '#ffe596';
     ctx.beginPath(); ctx.arc(px, py + 4*s, 3*s, 0, TAU); ctx.fill();
     ctx.restore();
 
