@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#fbf8f0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Matilda Math">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <title>Matilda Math</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap');
+
+    :root {
+      --paper: #fbf8f0;
+      --ink: #173b45;
+      --muted: #6c8588;
+      --line: #dce8e2;
+      --card: #ffffff;
+      --green: #4f9b81;
+      --green-deep: #2d735e;
+      --green-soft: #e4f2e9;
+      --yellow: #f1be4e;
+      --yellow-soft: #fff3d0;
+      --coral: #ef826f;
+      --coral-soft: #fff0eb;
+      --blue: #6d9bd1;
+      --blue-soft: #eaf1fb;
+      --purple: #9279c4;
+      --purple-soft: #f0ebfa;
+      --shadow: 0 14px 35px rgba(36, 72, 70, .09);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Nunito, ui-rounded, "SF Pro Rounded", system-ui, sans-serif;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, a { font: inherit; }
+    button { border: 0; color: inherit; cursor: pointer; }
+    button, .interactive { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+    button:focus-visible, a:focus-visible { outline: 4px solid #f1be4e; outline-offset: 4px; }
+    .game, .screen { min-height: 100%; }
+    .game {
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      overscroll-behavior: none;
+      padding: max(18px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+    }
+    .screen { display: none; flex-direction: column; max-width: 1100px; margin: 0 auto; }
+    .screen.active { display: flex; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; min-height: 58px; gap: 12px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-size: clamp(1.05rem, 3vw, 1.35rem); font-weight: 900; letter-spacing: -.02em; }
+    .brand-mark { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 13px; background: var(--green); color: #fff; font-size: 1.5rem; box-shadow: 0 5px 12px rgba(79,155,129,.22); }
+    .home-button, .sound-button { min-width: 54px; min-height: 48px; border-radius: 16px; background: var(--card); border: 2px solid var(--line); font-size: 1.45rem; box-shadow: 0 4px 10px rgba(36,72,70,.05); }
+    .sound-button { font-size: 1.3rem; }
+    .home-button:hover, .sound-button:hover { transform: translateY(-2px); }
+    .eyebrow { margin: 0 0 6px; color: var(--green-deep); font-size: .84rem; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
+    h1, h2, p { margin-top: 0; }
+    h1 { max-width: 680px; margin-bottom: 12px; font-size: clamp(2.2rem, 6vw, 4rem); line-height: .98; letter-spacing: -.06em; }
+    h2 { margin-bottom: 8px; font-size: clamp(1.8rem, 5vw, 3.2rem); line-height: 1; letter-spacing: -.045em; }
+    .subhead { max-width: 590px; margin-bottom: 0; color: var(--muted); font-size: clamp(1rem, 2.5vw, 1.25rem); line-height: 1.4; font-weight: 700; }
+    .home-intro { padding: clamp(16px, 3.5vh, 38px) 5px 14px; }
+    .lesson-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(12px, 2.4vw, 22px); padding: 8px 0 20px; }
+    .lesson-card { min-height: clamp(126px, 18vh, 190px); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; padding: clamp(16px, 2.4vw, 25px); border-radius: 28px; text-align: left; background: var(--card); border: 3px solid transparent; box-shadow: var(--shadow); transition: transform .2s ease, box-shadow .2s ease; }
+    .lesson-card:hover, .lesson-card:active { transform: translateY(-4px); box-shadow: 0 18px 38px rgba(36,72,70,.15); }
+    .lesson-card.wide { grid-column: span 2; min-height: clamp(112px, 15vh, 170px); }
+    .lesson-card .card-icon { font-size: clamp(2.4rem, 7vw, 4rem); line-height: 1; filter: saturate(.9); }
+    .lesson-card .card-title { font-size: clamp(1.25rem, 3.4vw, 2rem); font-weight: 900; letter-spacing: -.04em; }
+    .lesson-card .card-caption { color: var(--muted); font-size: .95rem; font-weight: 800; }
+    .lesson-card .card-check { position: absolute; top: 17px; right: 18px; display: none; width: 35px; height: 35px; border-radius: 50%; place-items: center; color: #fff; background: var(--green); font-size: 1.2rem; }
+    .lesson-card.done .card-check { display: grid; }
+    .lesson-card.plus { background: var(--yellow-soft); border-color: #f7df9a; }
+    .lesson-card.pieces { background: var(--coral-soft); border-color: #f7c6bb; }
+    .lesson-card.four { background: var(--blue-soft); border-color: #cadcf1; }
+    .lesson-card.five { background: var(--purple-soft); border-color: #ddd2f3; }
+    .lesson-card.tally { background: var(--green-soft); border-color: #cce6d6; }
+    .install-note { margin-top: auto; padding: 12px 4px 0; color: var(--muted); font-size: .9rem; font-weight: 700; }
+    .install-note span { color: var(--green-deep); }
+
+    .lesson-screen { justify-content: space-between; min-height: calc(100dvh - max(36px, env(safe-area-inset-top)) - max(36px, env(safe-area-inset-bottom))); }
+    .lesson-main { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 12px 0 18px; }
+    .lesson-heading { text-align: center; margin: 0 auto clamp(14px, 3vh, 28px); }
+    .lesson-heading h2 { margin-bottom: 10px; }
+    .lesson-heading p { margin-bottom: 0; color: var(--muted); font-size: clamp(1rem, 2.6vw, 1.25rem); font-weight: 800; }
+    .lesson-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 10px; }
+    .progress-dots { display: flex; gap: 8px; align-items: center; }
+    .progress-dots span { width: 11px; height: 11px; border-radius: 50%; background: #d7e2dd; }
+    .progress-dots span.active { width: 30px; border-radius: 20px; background: var(--green); }
+    .next-button, .primary-button { min-height: 64px; padding: 0 28px; border-radius: 20px; color: #fff; background: var(--green); box-shadow: 0 8px 16px rgba(79,155,129,.23); font-size: 1.12rem; font-weight: 900; }
+    .next-button:disabled { opacity: .45; box-shadow: none; cursor: not-allowed; }
+    .next-button:not(:disabled):hover, .primary-button:hover { background: var(--green-deep); transform: translateY(-2px); }
+    .small-note { color: var(--muted); font-size: .85rem; font-weight: 800; }
+    .center-stage { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: min(47vh, 450px); }
+    .equation { display: flex; align-items: center; justify-content: center; gap: clamp(11px, 3vw, 28px); width: 100%; font-size: clamp(2.4rem, 9vw, 5.5rem); font-weight: 900; }
+    .fruit-group { display: flex; gap: clamp(4px, 1.3vw, 13px); padding: 20px; border-radius: 22px; background: rgba(255,255,255,.65); }
+    .fruit { display: inline-block; line-height: 1; }
+    .plus-symbol { color: var(--yellow); font-size: 1.2em; }
+    .equation-result { margin-top: 26px; color: var(--green-deep); font-size: clamp(2rem, 7vw, 4.4rem); font-weight: 900; opacity: 0; transform: scale(.8); }
+    .equation-result.show { opacity: 1; transform: scale(1); transition: .35s ease; }
+    .tap-items { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; max-width: 650px; min-height: 130px; }
+    .tap-fruit { width: clamp(60px, 12vw, 86px); height: clamp(60px, 12vw, 86px); border-radius: 24px; background: #fff; border: 3px solid #f4df9b; box-shadow: 0 7px 0 #e8ca76; font-size: clamp(2.1rem, 6vw, 3.3rem); transition: transform .18s, opacity .18s, box-shadow .18s; }
+    .tap-fruit.tapped { transform: translateY(5px); opacity: .5; box-shadow: 0 2px 0 #e8ca76; }
+    .tap-count { height: 58px; min-width: 150px; margin-top: 24px; display: grid; place-items: center; border-radius: 18px; background: var(--yellow-soft); color: #a26f12; font-size: 1.6rem; font-weight: 900; }
+    .choice-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; width: min(800px, 100%); }
+    .choice { min-height: 130px; padding: 18px; border-radius: 24px; background: #fff; border: 3px solid var(--line); box-shadow: 0 8px 0 #d7e2dd; font-size: clamp(1.05rem, 3.2vw, 1.55rem); font-weight: 900; }
+    .choice:hover { transform: translateY(-3px); }
+    .choice.correct { border-color: var(--green); background: var(--green-soft); box-shadow: 0 8px 0 #b5d8c2; }
+    .choice.wrong { animation: wiggle .3s ease; border-color: #efb2a7; }
+    .trace-prompt { min-height: 60px; color: var(--muted); text-align: center; font-size: 1.05rem; font-weight: 800; }
+    .plus-trace { position: relative; width: min(380px, 75vw); height: min(300px, 36vh); }
+    .plus-trace .ghost-line { position: absolute; background: #f1cf74; border-radius: 99px; opacity: .28; }
+    .plus-trace .ghost-v { width: 24px; height: 230px; left: calc(50% - 12px); top: 34px; }
+    .plus-trace .ghost-h { width: 230px; height: 24px; left: calc(50% - 115px); top: calc(50% - 12px); }
+    .plus-trace .ghost-line, .trace-dot { pointer-events: none; }
+    .trace-dot { position: absolute; z-index: 2; width: 26px; height: 26px; border: 5px solid var(--yellow); border-radius: 50%; background: var(--paper); }
+    .trace-dot.one { left: calc(50% - 13px); top: 22px; }
+    .trace-dot.two { left: calc(50% - 128px); top: calc(50% - 13px); }
+    .trace-dot.done { background: var(--yellow); }
+    .trace-canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; }
+    .piece-board { display: flex; flex-direction: column; align-items: center; gap: 24px; width: min(850px, 100%); }
+    .piece-row { display: flex; justify-content: center; flex-wrap: wrap; gap: clamp(10px, 2vw, 20px); min-height: 130px; }
+    .piece { width: clamp(76px, 15vw, 116px); height: clamp(76px, 15vw, 116px); border-radius: 24px; display: grid; place-items: center; background: #fff; border: 4px solid #f2b0a4; box-shadow: 0 8px 0 #e8cec7; font-size: clamp(2.4rem, 7vw, 4rem); transition: transform .18s, box-shadow .18s, background .18s; }
+    .piece.selected { transform: translateY(6px); background: #ffe3da; box-shadow: 0 2px 0 #e8cec7; }
+    .count-label { padding: 10px 22px; border-radius: 18px; color: #b35d4e; background: var(--coral-soft); font-size: 1.6rem; font-weight: 900; }
+    .word-choice { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .word-choice .choice { min-height: 100px; font-size: clamp(1rem, 3vw, 1.45rem); }
+    .number-guide { position: relative; width: min(310px, 70vw); height: min(280px, 36vh); margin: 0 auto 8px; }
+    .number-guide .ghost-number { position: absolute; inset: 0; display: grid; place-items: center; color: transparent; -webkit-text-stroke: 5px #c5d9ec; font-size: min(16rem, 44vw); line-height: 1; font-weight: 900; opacity: .65; }
+    .number-guide .guide-arrow { position: absolute; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: var(--blue); font-size: 1rem; font-weight: 900; box-shadow: 0 4px 0 rgba(61,104,160,.18); }
+    .number-guide .arrow-one { top: 8px; left: 30%; }
+    .number-guide .arrow-two { top: 40%; right: 16%; }
+    .number-guide .arrow-three { bottom: 10px; left: 43%; }
+    .number-guide.five .ghost-number { -webkit-text-stroke-color: #d4c7ed; }
+    .number-guide.five .guide-arrow { background: var(--purple); box-shadow: 0 4px 0 rgba(102,75,151,.16); }
+    .writing-wrap { width: min(760px, 100%); margin: 0 auto; }
+    .writing-canvas-shell { position: relative; height: min(48vh, 420px); min-height: 250px; overflow: hidden; border-radius: 32px; background: #fff; border: 4px solid #d7e7ee; box-shadow: inset 0 0 0 10px #f7fbfc; touch-action: none; }
+    .writing-canvas-shell.five { border-color: #e1d9f1; background: #fff; }
+    .writing-canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; }
+    .writing-ghost { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; color: transparent; -webkit-text-stroke: 5px #c5d9ec; font-size: min(22rem, 50vw); font-weight: 900; line-height: 1; opacity: .5; }
+    .writing-canvas-shell.five .writing-ghost { -webkit-text-stroke-color: #d4c7ed; }
+    .stroke-hint { display: flex; justify-content: center; gap: 10px; margin-top: 14px; color: var(--muted); font-size: .96rem; font-weight: 800; }
+    .stroke-hint b { display: inline-grid; place-items: center; width: 27px; height: 27px; border-radius: 50%; color: #fff; background: var(--blue); }
+    .tally-machine { display: flex; flex-direction: column; align-items: center; gap: 22px; width: min(900px, 100%); }
+    .tally-groups { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; min-height: 160px; padding: 22px; width: 100%; border-radius: 28px; background: #fff; border: 3px solid #d4eadb; }
+    .tally-group { position: relative; display: flex; gap: 8px; align-items: flex-end; height: 110px; padding: 14px 18px; border-radius: 18px; background: #f4fbf5; }
+    .tally-mark { position: relative; width: 8px; height: 78px; border-radius: 10px; background: var(--green); }
+    .tally-group .slash { position: absolute; z-index: 2; left: 7px; top: 44px; width: 93px; height: 8px; border-radius: 10px; background: var(--coral); transform: rotate(-52deg); transform-origin: left center; }
+    .tally-number { min-height: 58px; padding: 8px 22px; border-radius: 18px; color: var(--green-deep); background: var(--green-soft); font-size: 1.7rem; font-weight: 900; }
+    .tally-add { min-height: 74px; padding: 0 30px; border-radius: 22px; color: #fff; background: var(--green); box-shadow: 0 8px 0 var(--green-deep); font-size: clamp(1.1rem, 3vw, 1.45rem); font-weight: 900; }
+    .tally-add:active { transform: translateY(6px); box-shadow: 0 2px 0 var(--green-deep); }
+    .tally-choice .choice { min-height: 100px; font-size: 1.7rem; }
+    .summary-screen { align-items: center; justify-content: center; text-align: center; }
+    .summary-star { font-size: clamp(4rem, 15vw, 8rem); animation: float 2.4s ease-in-out infinite; }
+    .summary-screen h1 { margin-bottom: 20px; }
+    .star-list { display: grid; gap: 10px; width: min(430px, 100%); margin: 20px 0 30px; text-align: left; }
+    .star-list div { display: flex; align-items: center; gap: 15px; padding: 14px 18px; border-radius: 18px; background: #fff; box-shadow: 0 5px 15px rgba(36,72,70,.07); font-size: 1.2rem; font-weight: 900; }
+    .star-list span { color: var(--yellow); font-size: 1.4rem; }
+    .toast { position: fixed; z-index: 10; left: 50%; bottom: max(105px, calc(env(safe-area-inset-bottom) + 90px)); transform: translate(-50%, 20px); pointer-events: none; opacity: 0; padding: 11px 18px; border-radius: 16px; color: #fff; background: var(--ink); font-weight: 900; transition: opacity .2s, transform .2s; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .celebrate { animation: success .55s ease; }
+    @keyframes wiggle { 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+    @keyframes success { 30% { transform: scale(1.04); } 65% { transform: scale(.98); } }
+    @keyframes float { 50% { transform: translateY(-9px) rotate(3deg); } }
+    @media (max-width: 620px) {
+      .home-intro { padding-top: 18px; }
+      .lesson-grid { gap: 11px; }
+      .lesson-card { border-radius: 22px; padding: 16px; min-height: 145px; }
+      .lesson-card.wide { min-height: 130px; }
+      .choice-grid { gap: 10px; }
+      .choice { min-height: 112px; padding: 12px 8px; border-radius: 18px; box-shadow: 0 5px 0 #d7e2dd; }
+      .choice.correct { box-shadow: 0 5px 0 #b5d8c2; }
+      .piece { border-radius: 18px; }
+      .lesson-main { padding-bottom: 5px; }
+      .lesson-footer { padding-bottom: 0; }
+      .small-note { display: none; }
+    }
+    @media (max-height: 700px) and (orientation: landscape) {
+      .home-intro { padding: 8px 5px 12px; }
+      .home-intro h1 { font-size: 2.2rem; }
+      .lesson-card { min-height: 115px; }
+      .center-stage { min-height: 220px; }
+      .writing-canvas-shell { min-height: 185px; height: 45vh; }
+    }
+    @media (min-width: 621px) and (max-height: 800px) {
+      .home-intro { padding-top: 12px; padding-bottom: 10px; }
+      .home-intro h1 { font-size: 3rem; }
+      .lesson-card { min-height: 104px; display: grid; grid-template-columns: 62px 1fr; align-items: center; padding: 13px 18px; }
+      .lesson-card.wide { min-height: 104px; }
+      .lesson-card .card-icon { grid-row: 1 / 3; font-size: 2.5rem; }
+      .install-note { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="game" id="game" aria-live="polite">
+    <section class="screen active" id="homeScreen" aria-labelledby="homeTitle">
+      <header class="topbar">
+        <div class="brand"><span class="brand-mark">✦</span><span>Matilda Math</span></div>
+        <button class="sound-button" id="soundButton" type="button" aria-label="Turn sounds off">🔊</button>
+      </header>
+      <div class="home-intro">
+        <p class="eyebrow">Little steps · big thinking</p>
+        <h1 id="homeTitle">What shall we<br>practice today?</h1>
+        <p class="subhead">Pick a card. Tap, trace, and learn.</p>
+      </div>
+      <div class="lesson-grid" id="lessonGrid"></div>
+      <p class="install-note">Tip: add this game to the home screen for <span>full-screen play</span> ✦</p>
+    </section>
+
+    <section class="screen lesson-screen" id="lessonScreen" aria-labelledby="lessonTitle">
+      <header class="topbar">
+        <button class="home-button" id="homeButton" type="button" aria-label="Back to lessons">⌂</button>
+        <div class="brand"><span class="brand-mark" id="lessonMark">+</span><span id="lessonName">PLUS</span></div>
+        <button class="sound-button" id="lessonSoundButton" type="button" aria-label="Turn sounds off">🔊</button>
+      </header>
+      <div class="lesson-main" id="lessonMain"></div>
+      <footer class="lesson-footer">
+        <div class="progress-dots" id="progressDots" aria-label="Lesson progress"></div>
+        <span class="small-note" id="lessonNote">One little step at a time.</span>
+        <button class="next-button" id="nextButton" type="button">Next <span aria-hidden="true">→</span></button>
+      </footer>
+    </section>
+
+    <section class="screen summary-screen" id="summaryScreen" aria-labelledby="summaryTitle">
+      <div class="summary-star">⭐</div>
+      <p class="eyebrow">You did it!</p>
+      <h1 id="summaryTitle">You practiced<br>5 things!</h1>
+      <div class="star-list">
+        <div><span>⭐</span> Plus</div><div><span>⭐</span> Pieces</div><div><span>⭐</span> Writing 4</div><div><span>⭐</span> Writing 5</div><div><span>⭐</span> Counting by 5s</div>
+      </div>
+      <button class="primary-button" id="againButton" type="button">Practice again <span aria-hidden="true">↗</span></button>
+    </section>
+  </main>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    (() => {
+      const KEY = 'matildaMathProgress';
+      const SOUND_KEY = 'matildaMathSound';
+      const lessons = [
+        { id: 'plus', title: 'PLUS', icon: '+', emoji: '🍎', caption: 'Put together', tone: 'plus' },
+        { id: 'pieces', title: 'PIECES', icon: '◒', emoji: '🧩', caption: 'Count each one', tone: 'pieces' },
+        { id: 'four', title: 'WRITE 4', icon: '4', emoji: '4️⃣', caption: 'Trace the 4', tone: 'four' },
+        { id: 'five', title: 'WRITE 5', icon: '5', emoji: '5️⃣', caption: 'Trace the 5', tone: 'five' },
+        { id: 'tally', title: 'TALLY BY 5s', icon: '||||̸', emoji: '🌿', caption: 'Make groups of 5', tone: 'tally', wide: true }
+      ];
+      const state = { progress: loadProgress(), sound: localStorage.getItem(SOUND_KEY) !== 'off', lesson: null, step: 0, data: {} };
+      const els = {
+        home: document.querySelector('#homeScreen'), lesson: document.querySelector('#lessonScreen'), summary: document.querySelector('#summaryScreen'),
+        grid: document.querySelector('#lessonGrid'), main: document.querySelector('#lessonMain'), title: document.querySelector('#lessonName'), mark: document.querySelector('#lessonMark'),
+        dots: document.querySelector('#progressDots'), next: document.querySelector('#nextButton'), toast: document.querySelector('#toast'), sound: document.querySelector('#soundButton'), lessonSound: document.querySelector('#lessonSoundButton')
+      };
+
+      function loadProgress() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } }
+      function saveProgress() { localStorage.setItem(KEY, JSON.stringify(state.progress)); }
+      function speak(message) {
+        if (!state.sound || !('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const voice = new SpeechSynthesisUtterance(message);
+        voice.rate = .86; voice.pitch = 1.08;
+        window.speechSynthesis.speak(voice);
+      }
+      function beep(kind = 'good') {
+        if (!state.sound) return;
+        try {
+          const audio = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = audio.createOscillator(); const gain = audio.createGain();
+          osc.frequency.value = kind === 'good' ? 660 : 230; osc.type = 'sine'; gain.gain.value = .035;
+          osc.connect(gain); gain.connect(audio.destination); osc.start(); gain.gain.exponentialRampToValueAtTime(.001, audio.currentTime + .18); osc.stop(audio.currentTime + .2);
+        } catch {}
+      }
+      function announce(message, kind = 'good') { beep(kind); speak(message); showToast(message); }
+      function showToast(message) { els.toast.textContent = message; els.toast.classList.add('show'); clearTimeout(showToast.timer); showToast.timer = setTimeout(() => els.toast.classList.remove('show'), 1250); }
+      function toggleSound() {
+        state.sound = !state.sound; localStorage.setItem(SOUND_KEY, state.sound ? 'on' : 'off'); updateSoundButtons();
+        if (state.sound) speak('Sounds on');
+      }
+      function updateSoundButtons() { [els.sound, els.lessonSound].forEach(button => { button.textContent = state.sound ? '🔊' : '🔇'; button.setAttribute('aria-label', state.sound ? 'Turn sounds off' : 'Turn sounds on'); }); }
+      function showScreen(screen) { [els.home, els.lesson, els.summary].forEach(item => item.classList.remove('active')); screen.classList.add('active'); }
+      function renderHome() {
+        els.grid.innerHTML = lessons.map((lesson) => `<button class="lesson-card ${lesson.tone} ${lesson.wide ? 'wide' : ''} ${state.progress[lesson.id] ? 'done' : ''}" data-lesson="${lesson.id}" type="button"><span class="card-icon">${lesson.emoji}</span><span><span class="card-title">${lesson.title}</span><br><span class="card-caption">${lesson.caption}</span></span><span class="card-check" aria-label="Completed">✓</span></button>`).join('');
+        els.grid.querySelectorAll('[data-lesson]').forEach(card => card.addEventListener('click', () => startLesson(card.dataset.lesson)));
+      }
+      function startLesson(id) {
+        state.lesson = id; state.step = 0; state.data = {};
+        const lesson = lessons.find(item => item.id === id); els.title.textContent = lesson.title; els.mark.textContent = lesson.icon;
+        showScreen(els.lesson); renderLesson();
+      }
+      function stepsFor(id) { return id === 'plus' ? 4 : id === 'pieces' ? 3 : id === 'tally' ? 2 : 3; }
+      function renderDots() { const total = stepsFor(state.lesson); els.dots.innerHTML = Array.from({ length: total }, (_, i) => `<span class="${i === state.step ? 'active' : ''}"></span>`).join(''); }
+      function renderLesson() {
+        renderDots(); els.next.textContent = state.step === stepsFor(state.lesson) - 1 ? 'Finish ✓' : 'Next →'; els.next.disabled = !canAdvance();
+        const renderers = { plus: renderPlus, pieces: renderPieces, four: () => renderWriting('4'), five: () => renderWriting('5'), tally: renderTally };
+        els.main.innerHTML = renderers[state.lesson](); bindStepEvents();
+        if (state.lesson === 'plus' && state.step === 0) speak('Two apples plus three apples.');
+        if (state.lesson === 'pieces' && state.step === 0) speak('Tap each piece.');
+        if ((state.lesson === 'four' || state.lesson === 'five') && state.step === 0) speak('Trace the number. Follow the dots.');
+        if (state.lesson === 'tally' && state.step === 0) speak('Tap add a tally. Make ten.');
+      }
+      function heading(title, prompt) { return `<div class="lesson-heading"><p class="eyebrow">${title}</p><h2 id="lessonTitle">${prompt}</h2></div>`; }
+      function renderPlus() {
+        if (state.step === 0) return `${heading('See it', 'Plus means put together') }<div class="center-stage"><div class="equation"><span class="fruit-group"><span class="fruit">🍎</span><span class="fruit">🍎</span></span><span class="plus-symbol">+</span><span class="fruit-group"><span class="fruit">🍎</span><span class="fruit">🍎</span><span class="fruit">🍎</span></span></div><div class="equation-result" id="equationResult">2 + 3 = 5</div></div>`;
+        if (state.step === 1) return `${heading('Tap and count', 'Tap every apple') }<div class="center-stage"><div class="tap-items">${[1,2,3,4,5].map(i => `<button class="tap-fruit" type="button" data-tap="${i}" aria-label="Apple ${i}">🍎</button>`).join('')}</div><div class="tap-count" id="tapCount">0 apples</div></div>`;
+        if (state.step === 2) return `${heading('Your turn', 'What does + mean?')}<div class="center-stage"><div class="choice-grid"><button class="choice" data-answer="correct" type="button">Put<br>together</button><button class="choice" data-answer="wrong" type="button">Take<br>away</button><button class="choice" data-answer="wrong" type="button">Same<br>as</button></div></div>`;
+        return `${heading('Make a +', 'Trace the plus sign')}<div class="center-stage"><p class="trace-prompt" id="tracePrompt">Start at the top dot. Go down.</p><div class="plus-trace"><span class="ghost-line ghost-v"></span><span class="ghost-line ghost-h"></span><span class="trace-dot one"></span><span class="trace-dot two"></span><canvas class="trace-canvas" id="plusCanvas"></canvas></div></div>`;
+      }
+      function renderPieces() {
+        if (state.step === 0) return `${heading('Meet the word', 'These are pieces') }<div class="center-stage"><div class="piece-board"><div class="piece-row">${[1,2,3].map(i => `<button class="piece" type="button" data-piece="${i}" aria-label="Piece ${i}">🧩</button>`).join('')}</div><div class="count-label" id="pieceCount">3 PIECES</div></div></div>`;
+        if (state.step === 1) return `${heading('Your turn', 'Tap 4 pieces') }<div class="center-stage"><div class="piece-board"><div class="piece-row">${[1,2,3,4,5,6].map(i => `<button class="piece challenge-piece" type="button" data-piece="${i}" aria-label="Piece ${i}">🧩</button>`).join('')}</div><div class="count-label" id="pieceChallengeCount">0 of 4</div></div></div>`;
+        return `${heading('Find the word', 'Which word says PIECES?')}<div class="center-stage"><div class="choice-grid word-choice"><button class="choice" data-answer="wrong" type="button">PIZZA</button><button class="choice" data-answer="correct" type="button">PIECES</button><button class="choice" data-answer="wrong" type="button">PARTY</button></div></div>`;
+      }
+      function renderWriting(number) {
+        const first = state.step === 0; const guided = state.step === 1;
+        const prompt = first ? `Trace the ${number}` : guided ? `Write the ${number} with help` : `Write a ${number} by yourself`;
+        const detail = first ? 'Follow the thick path with your finger.' : guided ? 'Start at ① and follow the arrows.' : 'Start at the dot. You can do it.';
+        return `${heading(number === '4' ? 'Writing 4' : 'Writing 5', prompt)}<div class="writing-wrap"><div class="writing-canvas-shell ${number === '5' ? 'five' : ''}"><div class="writing-ghost">${number}</div>${guided || first ? `<div class="number-guide ${number === '5' ? 'five' : ''}"><span class="ghost-number">${number}</span><span class="guide-arrow arrow-one">1</span><span class="guide-arrow arrow-two">2</span><span class="guide-arrow arrow-three">3</span></div>` : ''}<canvas class="writing-canvas" id="writingCanvas" data-number="${number}" data-mode="${first ? 'trace' : guided ? 'guided' : 'free'}"></canvas></div><p class="stroke-hint"><b>1</b> start <b>2</b> turn <b>3</b> finish</p><p class="trace-prompt" id="writingPrompt">${detail}</p></div>`;
+      }
+      function tallyGroups(count) { const groups = []; for (let i = 0; i < count; i += 5) groups.push(Math.min(5, count - i)); return groups; }
+      function renderTally() {
+        if (state.step === 0) { const count = state.data.tallies || 0; return `${heading('Tap and count', 'Make 10 tally marks')}<div class="center-stage"><div class="tally-machine"><div class="tally-groups" id="tallyGroups">${tallyGroups(count).map(tallyGroup).join('') || '<span class="small-note">Your tally marks will go here.</span>'}</div><div class="tally-number" id="tallyNumber">${count}</div><button class="tally-add" id="tallyAdd" type="button">ADD A TALLY</button></div></div>`; }
+        const correct = state.data.tallyAnswer || null; return `${heading('Think in groups', 'How many tally marks?')}<div class="center-stage"><div class="tally-machine"><div class="tally-groups">${[1,2,3].map(() => tallyGroup(5)).join('')}</div><div class="choice-grid tally-choice"><button class="choice ${correct === 10 ? 'correct' : ''}" data-value="10" type="button">10</button><button class="choice ${correct === 15 ? 'correct' : ''}" data-value="15" type="button">15</button><button class="choice ${correct === 20 ? 'correct' : ''}" data-value="20" type="button">20</button></div></div></div>`;
+      }
+      function tallyGroup(amount) { return `<div class="tally-group">${Array.from({ length: Math.min(amount, 5) }, () => '<span class="tally-mark"></span>').join('')}${amount === 5 ? '<span class="slash"></span>' : ''}</div>`; }
+      function canAdvance() {
+        if (state.lesson === 'plus') return [true, (state.data.tapped || 0) === 5, !!state.data.plusMeaning, !!state.data.plusTrace][state.step];
+        if (state.lesson === 'pieces') return [(state.data.pieces || 0) === 3, (state.data.challenge || 0) === 4, !!state.data.wordPieces][state.step];
+        if (state.lesson === 'tally') return [state.data.tallies === 10, !!state.data.tallyAnswer][state.step];
+        return !!state.data.writingSuccess;
+      }
+      function bindStepEvents() {
+        els.main.querySelectorAll('[data-answer]').forEach(button => button.addEventListener('click', () => {
+          if (button.dataset.answer === 'correct') { button.classList.add('correct'); markStep(state.lesson === 'plus' ? 'plusMeaning' : 'wordPieces'); announce('Great!'); }
+          else { button.classList.add('wrong'); beep('wrong'); setTimeout(() => button.classList.remove('wrong'), 350); }
+        }));
+        els.main.querySelectorAll('[data-tap]').forEach(button => button.addEventListener('click', () => {
+          if (button.classList.contains('tapped')) return;
+          button.classList.add('tapped'); state.data.tapped = (state.data.tapped || 0) + 1; document.querySelector('#tapCount').textContent = `${state.data.tapped} apple${state.data.tapped === 1 ? '' : 's'}`; speak(String(state.data.tapped)); if (state.data.tapped === 5) announce('Five apples!'); updateNext();
+        }));
+        els.main.querySelectorAll('[data-piece]').forEach(button => button.addEventListener('click', () => {
+          const key = state.step === 1 ? 'challenge' : 'pieces'; if (button.classList.contains('selected')) return; const total = state.data[key] || 0; if ((state.step === 1 && total >= 4) || (state.step !== 1 && total >= 3)) return; button.classList.add('selected'); state.data[key] = total + 1; const target = state.step === 1 ? '#pieceChallengeCount' : '#pieceCount'; document.querySelector(target).textContent = state.step === 1 ? `${state.data[key]} of 4` : `${state.data[key]} PIECES`; speak(String(state.data[key])); if (canAdvance()) announce(state.step === 1 ? 'Four pieces!' : 'Three pieces!'); updateNext();
+        }));
+        const tallyAdd = document.querySelector('#tallyAdd'); if (tallyAdd) tallyAdd.addEventListener('click', () => { if ((state.data.tallies || 0) >= 10) return; state.data.tallies = (state.data.tallies || 0) + 1; renderLesson(); speak(String(state.data.tallies)); if (state.data.tallies === 5 || state.data.tallies === 10) announce(`${state.data.tallies}!`); });
+        els.main.querySelectorAll('[data-value]').forEach(button => button.addEventListener('click', () => { const value = Number(button.dataset.value); if (value === 15) { state.data.tallyAnswer = value; button.classList.add('correct'); announce('Yes! Fifteen!'); } else { button.classList.add('wrong'); beep('wrong'); setTimeout(() => button.classList.remove('wrong'), 350); } updateNext(); }));
+        if (state.lesson === 'plus' && state.step === 0) setTimeout(() => document.querySelector('#equationResult')?.classList.add('show'), 500);
+        if (state.lesson === 'plus' && state.step === 3) setupPlusCanvas();
+        if (state.lesson === 'four' || state.lesson === 'five') setupWritingCanvas();
+        updateNext();
+      }
+      function markStep(key) { state.data[key] = true; updateNext(); }
+      function updateNext() { els.next.disabled = !canAdvance(); }
+      function canvasPoint(canvas, event) { const rect = canvas.getBoundingClientRect(); return { x: event.clientX - rect.left, y: event.clientY - rect.top }; }
+      function setupPlusCanvas() {
+        const canvas = document.querySelector('#plusCanvas'); const box = canvas.parentElement; canvas.width = box.clientWidth * devicePixelRatio; canvas.height = box.clientHeight * devicePixelRatio; const ctx = canvas.getContext('2d'); ctx.scale(devicePixelRatio, devicePixelRatio); let drawing = false; let stage = 0; let last = null;
+        const draw = event => { if (!drawing) return; const p = canvasPoint(canvas, event); ctx.strokeStyle = '#e4ad35'; ctx.lineWidth = 12; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(last?.x || p.x, last?.y || p.y); ctx.lineTo(p.x, p.y); ctx.stroke(); last = p; };
+        canvas.addEventListener('pointerdown', event => { event.preventDefault(); canvas.setPointerCapture(event.pointerId); const p = canvasPoint(canvas, event); const w = box.clientWidth, h = box.clientHeight; const valid = stage === 0 ? p.y < h * .3 && Math.abs(p.x - w / 2) < w * .25 : Math.abs(p.y - h / 2) < h * .25 && p.x < w * .55; if (!valid) { document.querySelector('#tracePrompt').textContent = 'Start at the glowing dot.'; beep('wrong'); return; } drawing = true; last = p; });
+        canvas.addEventListener('pointermove', draw); canvas.addEventListener('pointerup', event => { if (!drawing) return; drawing = false; last = null; stage++; if (stage === 1) { document.querySelector('.trace-dot.one').classList.add('done'); document.querySelector('#tracePrompt').textContent = 'Now go across from the side dot.'; } else { document.querySelector('.trace-dot.two').classList.add('done'); document.querySelector('#tracePrompt').textContent = 'Beautiful plus sign!'; markStep('plusTrace'); announce('Beautiful plus sign!'); } }); canvas.addEventListener('pointercancel', () => { drawing = false; last = null; });
+      }
+      function setupWritingCanvas() {
+        const canvas = document.querySelector('#writingCanvas'); const shell = canvas.parentElement; canvas.width = shell.clientWidth * devicePixelRatio; canvas.height = shell.clientHeight * devicePixelRatio; const ctx = canvas.getContext('2d'); ctx.scale(devicePixelRatio, devicePixelRatio); const number = canvas.dataset.number; const mode = canvas.dataset.mode; let strokes = []; let current = []; let drawing = false; let last = null; let success = false;
+        const bounds = () => ({ w: shell.clientWidth, h: shell.clientHeight });
+        const allowed = (p, index) => { const { w, h } = bounds(); if (mode === 'trace') return true; if (number === '4') return index === 0 ? p.y < h * .42 : index === 1 ? p.x > w * .34 && p.y > h * .22 : true; return index === 0 ? p.y < h * .34 : index === 1 ? p.y > h * .25 && p.y < h * .72 : true; };
+        const draw = event => { if (!drawing) return; const p = canvasPoint(canvas, event); ctx.strokeStyle = mode === 'trace' ? '#6d9bd1' : number === '5' ? '#9279c4' : '#6d9bd1'; ctx.lineWidth = mode === 'trace' ? 20 : 15; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(last?.x || p.x, last?.y || p.y); ctx.lineTo(p.x, p.y); ctx.stroke(); current.push(p); last = p; };
+        canvas.addEventListener('pointerdown', event => { event.preventDefault(); canvas.setPointerCapture(event.pointerId); const p = canvasPoint(canvas, event); if (!allowed(p, strokes.length)) { document.querySelector('#writingPrompt').textContent = 'Try starting at the glowing dot.'; shell.animate([{transform:'translateX(-5px)'},{transform:'translateX(5px)'},{transform:'none'}], {duration:260}); beep('wrong'); return; } drawing = true; current = [p]; last = p; });
+        canvas.addEventListener('pointermove', draw); canvas.addEventListener('pointerup', () => { if (!drawing) return; drawing = false; last = null; strokes.push(current); const needed = mode === 'free' ? 1 : 3; if (strokes.length >= needed && current.length > 1) { success = true; document.querySelector('#writingPrompt').textContent = `Great ${number}!`; markStep('writingSuccess'); announce(`Great ${number}!`); } else { const left = needed - strokes.length; document.querySelector('#writingPrompt').textContent = `Nice start. ${left} more stroke${left === 1 ? '' : 's'}.`; } }); canvas.addEventListener('pointercancel', () => { drawing = false; last = null; });
+      }
+      els.next.addEventListener('click', () => { if (els.next.disabled) return; if (state.step < stepsFor(state.lesson) - 1) { state.step++; state.data.writingSuccess = false; renderLesson(); } else { state.progress[state.lesson] = true; saveProgress(); const index = lessons.findIndex(item => item.id === state.lesson); if (index < lessons.length - 1) startLesson(lessons[index + 1].id); else { renderHome(); showScreen(els.summary); } } });
+      document.querySelector('#homeButton').addEventListener('click', () => { renderHome(); showScreen(els.home); });
+      els.sound.addEventListener('click', toggleSound); els.lessonSound.addEventListener('click', toggleSound);
+      document.querySelector('#againButton').addEventListener('click', () => { state.progress = {}; saveProgress(); renderHome(); showScreen(els.home); });
+      if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('./sw.js').catch(() => {});
+      updateSoundButtons(); renderHome();
+    })();
+  </script>
+</body>
+</html>

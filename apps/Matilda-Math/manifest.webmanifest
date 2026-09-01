@@ -1,0 +1,14 @@
+{
+  "name": "Matilda Math",
+  "short_name": "Matilda Math",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fbf8f0",
+  "theme_color": "#4f9b81",
+  "description": "A calm, touch-first practice game for plus, pieces, writing 4 and 5, and tally marks.",
+  "icons": [
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
