@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Shape Game</title>
+  <style>
+    :root {
+      --ink: #2f2b38;
+      --muted: #756f7d;
+      --paper: #fffdf9;
+      --line: #e9e1e5;
+      --pink: #efbfd3;
+      --blue: #c9e7f5;
+      --green: #d4ecd8;
+      --yellow: #f6e3aa;
+      --lavender: #d9cef1;
+      --shadow: 0 18px 55px rgba(50, 38, 60, .14);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: ui-rounded, "SF Pro Rounded", "Avenir Next", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 8%, rgba(239,191,211,.34), transparent 25%),
+        radial-gradient(circle at 88% 14%, rgba(201,231,245,.40), transparent 24%),
+        linear-gradient(145deg, #fffaf7, #fbf9ff 56%, #f7fcfa);
+      display: flex;
+      justify-content: center;
+      padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
+      user-select: none;
+    }
+
+    .shell {
+      width: min(980px, 100%);
+      min-height: calc(100vh - 36px);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 16px;
+    }
+
+    header {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 2px 4px 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.1rem);
+      letter-spacing: -0.045em;
+      line-height: 1;
+    }
+
+    .sub {
+      color: var(--muted);
+      text-align: right;
+      font-size: clamp(.9rem, 2vw, 1.05rem);
+    }
+
+    .card {
+      min-height: 560px;
+      background: rgba(255,253,249,.95);
+      border: 1px solid var(--line);
+      border-radius: 34px;
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      overflow: hidden;
+      cursor: pointer;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+      position: relative;
+    }
+
+    .question {
+      text-align: center;
+      padding: 26px 24px 8px;
+      font-size: clamp(1.8rem, 5vw, 3.25rem);
+      line-height: 1.05;
+      font-weight: 850;
+      letter-spacing: -0.035em;
+      min-height: 90px;
+      display: grid;
+      place-items: center;
+    }
+
+    .stage {
+      min-height: 330px;
+      display: grid;
+      place-items: center;
+      padding: 4px 28px;
+    }
+
+    svg {
+      width: min(560px, 84vw);
+      height: min(350px, 42vh);
+      overflow: visible;
+      filter: drop-shadow(0 12px 18px rgba(48, 37, 57, .10));
+    }
+
+    .shape {
+      stroke: #36313d;
+      stroke-width: 7;
+      stroke-linejoin: round;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .answer-area {
+      min-height: 105px;
+      display: grid;
+      place-items: center;
+      padding: 6px 24px 24px;
+      text-align: center;
+    }
+
+    #answer {
+      opacity: 0;
+      transform: translateY(5px);
+      transition: opacity .16s ease, transform .16s ease;
+      font-size: clamp(2rem, 6vw, 4.2rem);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    #answer.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    #hint {
+      color: var(--muted);
+      font-size: 1rem;
+      font-weight: 650;
+    }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      color: var(--muted);
+      font-size: .92rem;
+      padding: 0 6px;
+    }
+
+    #progress { font-weight: 750; }
+
+    .restart {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.8);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 7px 12px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    @media (max-width: 700px) {
+      .shell { min-height: calc(100vh - 28px); gap: 11px; }
+      .sub { font-size: .82rem; max-width: 130px; }
+      .card { min-height: 500px; border-radius: 28px; }
+      .question { padding-top: 20px; min-height: 80px; }
+      .stage { min-height: 295px; padding: 0 12px; }
+      .answer-area { min-height: 90px; padding-bottom: 18px; }
+      footer { font-size: .8rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <h1>Shape Game</h1>
+      <div class="sub">Tap once to reveal. Tap again for the next question.</div>
+    </header>
+
+    <section class="card" id="card" role="button" tabindex="0" aria-label="Shape question. Tap to reveal the answer.">
+      <div class="question" id="question">What shape is this?</div>
+      <div class="stage">
+        <svg id="shapeSvg" viewBox="0 0 500 340" role="img" aria-label="A geometric shape"></svg>
+      </div>
+      <div class="answer-area">
+        <div>
+          <div id="answer">Square</div>
+          <div id="hint">Tap to reveal</div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <span id="progress">Shape 1 of 10</span>
+      <button class="restart" id="restart" type="button">New set</button>
+    </footer>
+  </main>
+
+  <script>
+    const SHAPES = [
+      { name: "hexagon", sides: 6, kind: "hexagon", rotations: [0, 0, 30] },
+      { name: "pentagon", sides: 5, kind: "pentagon", rotations: [0, -8, 8] },
+      { name: "rectangle", sides: 4, kind: "rectangle", rotations: [0, 0, 8, -8] },
+      { name: "square", sides: 4, kind: "square", rotations: [0, 0, 45] },
+      { name: "rhombus", sides: 4, kind: "rhombus", rotations: [0, 0, 8, -8] }
+    ];
+
+    const COLORS = ["#efbfd3", "#c9e7f5", "#d4ecd8", "#f6e3aa", "#d9cef1"];
+
+    const card = document.getElementById("card");
+    const questionEl = document.getElementById("question");
+    const answerEl = document.getElementById("answer");
+    const hintEl = document.getElementById("hint");
+    const svg = document.getElementById("shapeSvg");
+    const progressEl = document.getElementById("progress");
+    const restartButton = document.getElementById("restart");
+
+    let deck = [];
+    let index = 0;
+    let revealed = false;
+
+    function shuffle(items) {
+      const result = [...items];
+      for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+      }
+      return result;
+    }
+
+    function buildDeck() {
+      const identify = shuffle(SHAPES.map(shape => ({ type: "identify", shape })));
+      const sides = shuffle(SHAPES.map(shape => ({ type: "sides", shape })));
+      deck = [...identify, ...sides];
+      index = 0;
+      showCard();
+    }
+
+    function choose(items) {
+      return items[Math.floor(Math.random() * items.length)];
+    }
+
+    function polygonPoints(count, radius, cx = 250, cy = 170, startAngle = -90) {
+      const points = [];
+      for (let i = 0; i < count; i++) {
+        const angle = (startAngle + (360 / count) * i) * Math.PI / 180;
+        points.push(`${cx + radius * Math.cos(angle)},${cy + radius * Math.sin(angle)}`);
+      }
+      return points.join(" ");
+    }
+
+    function drawShape(shape) {
+      const fill = choose(COLORS);
+      const rotation = choose(shape.rotations);
+      let markup = "";
+
+      if (shape.kind === "hexagon") {
+        markup = `<polygon class="shape" fill="${fill}" points="${polygonPoints(6, 128, 250, 170, -90)}" />`;
+      } else if (shape.kind === "pentagon") {
+        markup = `<polygon class="shape" fill="${fill}" points="${polygonPoints(5, 132, 250, 174, -90)}" />`;
+      } else if (shape.kind === "rectangle") {
+        markup = `<rect class="shape" fill="${fill}" x="100" y="95" width="300" height="150" rx="7" />`;
+      } else if (shape.kind === "square") {
+        markup = `<rect class="shape" fill="${fill}" x="135" y="55" width="230" height="230" rx="7" />`;
+      } else if (shape.kind === "rhombus") {
+        markup = `<polygon class="shape" fill="${fill}" points="250,55 400,170 250,285 100,170" />`;
+      }
+
+      svg.innerHTML = `<g transform="rotate(${rotation} 250 170)">${markup}</g>`;
+    }
+
+    function cap(text) {
+      return text.charAt(0).toUpperCase() + text.slice(1);
+    }
+
+    function showCard() {
+      if (index >= deck.length) {
+        buildDeck();
+        return;
+      }
+
+      const item = deck[index];
+      revealed = false;
+      answerEl.classList.remove("show");
+      hintEl.textContent = "Tap to reveal";
+      drawShape(item.shape);
+
+      if (item.type === "identify") {
+        questionEl.textContent = "What shape is this?";
+        answerEl.textContent = cap(item.shape.name);
+      } else {
+        questionEl.textContent = `How many sides does a ${item.shape.name} have?`;
+        answerEl.textContent = `${item.shape.sides} sides`;
+      }
+
+      progressEl.textContent = `Question ${index + 1} of ${deck.length}`;
+      card.setAttribute("aria-label", `${questionEl.textContent} Tap to reveal the answer.`);
+    }
+
+    function advance() {
+      if (!revealed) {
+        revealed = true;
+        answerEl.classList.add("show");
+        hintEl.textContent = "Tap for the next question";
+        card.setAttribute("aria-label", `${questionEl.textContent} Answer: ${answerEl.textContent}. Tap for the next question.`);
+      } else {
+        index += 1;
+        showCard();
+      }
+    }
+
+    card.addEventListener("click", advance);
+    card.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " " || event.key === "ArrowRight") {
+        event.preventDefault();
+        advance();
+      }
+    });
+
+    restartButton.addEventListener("click", event => {
+      event.stopPropagation();
+      buildDeck();
+    });
+
+    buildDeck();
+  </script>
+</body>
+</html>
