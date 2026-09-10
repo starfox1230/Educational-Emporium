@@ -197,7 +197,7 @@
     </section>
 
     <footer>
-      <span id="progress">Shape 1 of 10</span>
+      <span id="progress">Shape 1 of 11</span>
       <button class="restart" id="restart" type="button">New set</button>
     </footer>
   </main>
@@ -207,9 +207,13 @@
       { name: "hexagon", sides: 6, kind: "hexagon", rotations: [0, 0, 30] },
       { name: "pentagon", sides: 5, kind: "pentagon", rotations: [0, -8, 8] },
       { name: "rectangle", sides: 4, kind: "rectangle", rotations: [0, 0, 8, -8] },
-      { name: "square", sides: 4, kind: "square", rotations: [0, 0, 45] },
+      { name: "square", sides: 4, kind: "square", rotations: [0, 0] },
       { name: "rhombus", sides: 4, kind: "rhombus", rotations: [0, 0, 8, -8] }
     ];
+
+    // A separate square question that is always rotated exactly 45° so one corner points straight down.
+    // It still reveals "Square" as the answer, reinforcing that rotation does not change the shape.
+    const DIAMOND_SQUARE = { name: "square", sides: 4, kind: "square", rotations: [45] };
 
     const COLORS = ["#efbfd3", "#c9e7f5", "#d4ecd8", "#f6e3aa", "#d9cef1"];
 
@@ -235,7 +239,10 @@
     }
 
     function buildDeck() {
-      const identify = shuffle(SHAPES.map(shape => ({ type: "identify", shape })));
+      const identify = shuffle([
+        ...SHAPES.map(shape => ({ type: "identify", shape })),
+        { type: "identify", shape: DIAMOND_SQUARE }
+      ]);
       const sides = shuffle(SHAPES.map(shape => ({ type: "sides", shape })));
       deck = [...identify, ...sides];
       index = 0;
