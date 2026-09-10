@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Tricky Words</title>
+  <style>
+    :root {
+      --ink: #2f2a3a;
+      --muted: #746d80;
+      --paper: #fffdf9;
+      --pink: #f3b7cf;
+      --pink-deep: #c95f8d;
+      --lavender: #d9ccf4;
+      --blue: #cce9f7;
+      --green: #d7efdc;
+      --yellow: #f7e6a9;
+      --line: #e8e0e8;
+      --shadow: 0 18px 55px rgba(58, 42, 68, 0.13);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: ui-rounded, "SF Pro Rounded", "Avenir Next", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 12%, rgba(243,183,207,.34), transparent 25%),
+        radial-gradient(circle at 88% 16%, rgba(204,233,247,.44), transparent 24%),
+        linear-gradient(145deg, #fffaf7, #fbf8ff 55%, #f7fcfb);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
+      user-select: none;
+    }
+
+    .shell {
+      width: min(1050px, 100%);
+      min-height: calc(100vh - 36px);
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 18px;
+    }
+
+    header {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 4px 4px 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: clamp(.95rem, 2vw, 1.1rem);
+      text-align: right;
+    }
+
+    .controls {
+      background: rgba(255,255,255,.72);
+      border: 1px solid rgba(232,224,232,.95);
+      border-radius: 24px;
+      padding: 14px;
+      box-shadow: 0 8px 28px rgba(58, 42, 68, .07);
+      backdrop-filter: blur(12px);
+    }
+
+    .unit-row {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .unit {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 16px;
+      min-height: 52px;
+      padding: 10px 8px;
+      font-weight: 800;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease, box-shadow .12s ease;
+    }
+
+    .unit:active { transform: scale(.97); }
+
+    .unit[data-unit="1"].on { background: #fbe4ee; border-color: #e69bbb; }
+    .unit[data-unit="2"].on { background: #eee8fb; border-color: #b7a3e3; }
+    .unit[data-unit="3"].on { background: #e6f4fb; border-color: #95cbe5; }
+    .unit[data-unit="4"].on { background: #e8f5e9; border-color: #9dcea4; }
+    .unit[data-unit="5"].on { background: #fbf2d1; border-color: #ddc875; }
+    .unit.all.on { background: #f0ecf5; border-color: #a99db5; }
+
+    .card {
+      width: 100%;
+      min-height: 380px;
+      border: 1px solid var(--line);
+      border-radius: 34px;
+      background: rgba(255,253,249,.94);
+      box-shadow: var(--shadow);
+      display: grid;
+      place-items: center;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      padding: 36px 24px;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .card::before,
+    .card::after {
+      content: "";
+      position: absolute;
+      width: 190px;
+      height: 190px;
+      border-radius: 50%;
+      filter: blur(1px);
+      opacity: .28;
+      pointer-events: none;
+    }
+
+    .card::before { background: var(--pink); top: -90px; left: -70px; }
+    .card::after { background: var(--blue); right: -70px; bottom: -95px; }
+
+    #word {
+      font-size: clamp(4.5rem, 16vw, 10rem);
+      font-weight: 850;
+      letter-spacing: -0.055em;
+      line-height: .95;
+      text-align: center;
+      z-index: 1;
+      word-break: break-word;
+    }
+
+    .empty {
+      font-size: clamp(2rem, 7vw, 4.5rem) !important;
+      color: var(--muted);
+      letter-spacing: -0.03em !important;
+    }
+
+    .tap-note {
+      position: absolute;
+      bottom: 18px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: .95rem;
+      font-weight: 650;
+      z-index: 1;
+    }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      color: var(--muted);
+      padding: 0 6px;
+      min-height: 30px;
+      font-size: .95rem;
+    }
+
+    #status { font-weight: 700; }
+
+    @media (max-width: 700px) {
+      .shell { min-height: calc(100vh - 28px); gap: 12px; }
+      header { align-items: start; }
+      .sub { font-size: .86rem; max-width: 145px; }
+      .controls { padding: 10px; border-radius: 19px; }
+      .unit-row { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .unit { min-height: 46px; padding: 8px 5px; font-size: .92rem; border-radius: 13px; }
+      .card { min-height: 330px; border-radius: 28px; }
+      footer { font-size: .82rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div>
+        <h1>Tricky Words</h1>
+      </div>
+      <div class="sub">Choose units, then tap the card.</div>
+    </header>
+
+    <section class="controls" aria-label="Choose tricky word units">
+      <div class="unit-row">
+        <button class="unit on" data-unit="1" aria-pressed="true">Unit 1</button>
+        <button class="unit" data-unit="2" aria-pressed="false">Unit 2</button>
+        <button class="unit" data-unit="3" aria-pressed="false">Unit 3</button>
+        <button class="unit" data-unit="4" aria-pressed="false">Unit 4</button>
+        <button class="unit" data-unit="5" aria-pressed="false">Unit 5</button>
+        <button class="unit all" data-unit="all" aria-pressed="false">All</button>
+      </div>
+    </section>
+
+    <section class="card" id="card" role="button" tabindex="0" aria-label="Show the next tricky word">
+      <div id="word">a</div>
+      <div class="tap-note" id="tapNote">Tap for another word</div>
+    </section>
+
+    <footer>
+      <span id="status">Unit 1 · 30 words</span>
+      <span>No repeats until the deck resets.</span>
+    </footer>
+  </main>
+
+  <script>
+    const WORDS = {
+      1: ["a", "I", "no", "so", "of", "is", "to", "all", "some", "from", "word", "are", "have", "were", "one", "once", "do", "two", "the", "who", "said", "says", "was", "when", "why", "where", "which", "what", "here", "there"],
+      2: ["he", "she", "be", "me", "we", "they", "their", "my", "by", "you", "your"],
+      3: ["should", "would", "because", "could", "down"],
+      4: ["today", "yesterday", "tomorrow"],
+      5: ["how", "picture", "coach"]
+    };
+
+    const selected = new Set([1]);
+    let deck = [];
+    let lastWord = null;
+
+    const card = document.getElementById("card");
+    const wordEl = document.getElementById("word");
+    const statusEl = document.getElementById("status");
+    const tapNote = document.getElementById("tapNote");
+    const unitButtons = [...document.querySelectorAll(".unit[data-unit]:not(.all)")];
+    const allButton = document.querySelector(".unit.all");
+
+    function shuffle(items) {
+      const result = [...items];
+      for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+      }
+      return result;
+    }
+
+    function pool() {
+      return [...selected].sort().flatMap(unit => WORDS[unit]);
+    }
+
+    function rebuildDeck() {
+      const words = pool();
+      deck = shuffle(words);
+      if (deck.length > 1 && deck[deck.length - 1] === lastWord) {
+        [deck[0], deck[deck.length - 1]] = [deck[deck.length - 1], deck[0]];
+      }
+    }
+
+    function refreshControls() {
+      unitButtons.forEach(button => {
+        const unit = Number(button.dataset.unit);
+        const on = selected.has(unit);
+        button.classList.toggle("on", on);
+        button.setAttribute("aria-pressed", String(on));
+      });
+      const allOn = selected.size === 5;
+      allButton.classList.toggle("on", allOn);
+      allButton.setAttribute("aria-pressed", String(allOn));
+
+      const units = [...selected].sort();
+      const count = pool().length;
+      if (!units.length) {
+        statusEl.textContent = "No units selected";
+      } else if (units.length === 5) {
+        statusEl.textContent = `All units · ${count} words`;
+      } else {
+        statusEl.textContent = `${units.map(n => `Unit ${n}`).join(" + ")} · ${count} words`;
+      }
+    }
+
+    function showNext() {
+      if (!selected.size) {
+        wordEl.textContent = "Choose a unit";
+        wordEl.classList.add("empty");
+        tapNote.textContent = "Use the buttons above";
+        return;
+      }
+
+      wordEl.classList.remove("empty");
+      tapNote.textContent = "Tap for another word";
+      if (!deck.length) rebuildDeck();
+      const next = deck.pop();
+      lastWord = next;
+      wordEl.textContent = next;
+    }
+
+    function selectionChanged() {
+      deck = [];
+      refreshControls();
+      showNext();
+    }
+
+    unitButtons.forEach(button => {
+      button.addEventListener("click", event => {
+        event.stopPropagation();
+        const unit = Number(button.dataset.unit);
+        selected.has(unit) ? selected.delete(unit) : selected.add(unit);
+        selectionChanged();
+      });
+    });
+
+    allButton.addEventListener("click", event => {
+      event.stopPropagation();
+      if (selected.size === 5) selected.clear();
+      else [1,2,3,4,5].forEach(unit => selected.add(unit));
+      selectionChanged();
+    });
+
+    card.addEventListener("click", showNext);
+    card.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " " || event.key === "ArrowRight") {
+        event.preventDefault();
+        showNext();
+      }
+    });
+
+    rebuildDeck();
+    showNext();
+    refreshControls();
+  </script>
+</body>
+</html>
