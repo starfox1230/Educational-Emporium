@@ -1,0 +1,11 @@
+{
+  "name": "Morning To-Do List",
+  "short_name": "Morning To-Do",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#111111",
+  "theme_color": "#ffffff",
+  "icons": []
+}
+
