@@ -106,9 +106,9 @@
     .add-symbol { padding-bottom: 8px; font-size: 2.4rem; }
     .add-result { display: grid; place-items: center; width: 49px; height: 49px; margin-bottom: 1px; border: 3px dashed var(--coral); border-radius: 9px; color: var(--coral); font-size: 2rem; }
     .measure { display: flex; align-items: end; justify-content: center; gap: 24px; min-height: 190px; }
-    .measure-object { width: 78px; border: 4px solid var(--ink); border-radius: 10px 10px 3px 3px; background: repeating-linear-gradient(0deg, #e8755f 0 20px, #ffad91 20px 24px); }
-    .unit-ruler { position: relative; width: 48px; height: 168px; border: 3px solid var(--blue-dark); border-radius: 4px; background: #f7e6ae; }
-    .unit-ruler::after { content: ""; position: absolute; inset: 0 0 0 12px; background: repeating-linear-gradient(0deg, transparent 0 21px, var(--blue-dark) 21px 24px); opacity: .75; }
+    .measure-object { width: 78px; border: 4px solid var(--ink); border-radius: 10px 10px 3px 3px; background: #e8755f; }
+    .unit-ruler { display: flex; flex-direction: column; width: 48px; border: 3px solid var(--blue-dark); border-radius: 4px; background: #f7e6ae; overflow: hidden; }
+    .unit-ruler span { flex: 1 1 0; min-height: 0; border-bottom: 3px solid var(--blue-dark); }
     .machine { display: grid; place-items: center; width: 170px; min-height: 170px; margin: auto; border: 5px solid var(--ink); border-radius: 48% 48% 20% 20%; background: #f5e7be; box-shadow: inset 0 -30px rgba(232, 117, 95, .12); }
     .machine-window { display: flex; flex-wrap: wrap; align-content: end; justify-content: center; gap: 8px; width: 118px; min-height: 100px; padding: 18px 10px 12px; border: 4px solid var(--ink); border-radius: 18px; background: #fff8e7; }
     .gum-piece { width: 23px; height: 23px; border: 2px solid var(--ink); border-radius: 50%; background: hsl(var(--gum-hue), 72%, 67%); }
@@ -239,6 +239,7 @@
       const groups = Math.floor(amount / 5), rest = amount % 5;
       return `<div class="tally-display" aria-label="${amount} tally marks">${Array.from({ length: groups }, () => '<span class="tally-set five"><i class="tally"></i><i class="tally"></i><i class="tally"></i><i class="tally"></i></span>').join('')}${rest ? `<span class="tally-set">${Array.from({ length: rest }, () => '<i class="tally"></i>').join('')}</span>` : ''}</div>`;
     }
+    function unitRuler(units) { return `<div class="unit-ruler" style="height:${units * 24}px" aria-label="measurement tool with ${units} units">${Array.from({ length: units }, () => '<span aria-hidden="true"></span>').join('')}</div>`; }
     function shapeSvg(is3d) { return is3d ? '<svg viewBox="0 0 180 180" aria-label="3D shape"><path d="M36 48 104 26l42 30-69 25Z" fill="#f5c85f" stroke="#182532" stroke-width="6"/><path d="M36 48v76l41 30V81Z" fill="#9ec9b9" stroke="#182532" stroke-width="6" stroke-linejoin="round"/><path d="m77 81 69-25v73l-69 25Z" fill="#e8755f" stroke="#182532" stroke-width="6" stroke-linejoin="round"/></svg>' : '<svg viewBox="0 0 180 180" aria-label="2D shape"><path d="M90 20 155 145H25Z" fill="#e8755f" stroke="#182532" stroke-width="6" stroke-linejoin="round"/></svg>'; }
 
     const generators = [
@@ -247,7 +248,7 @@
       { label: 'Bigger number', make() { let a = int(1, 10), b = int(1, 10); while (a === b) b = int(1, 10); const answer = Math.max(a, b); return { prompt: 'Which is bigger?', html: `<div class="sequence"><span>${a}</span><span style="font-size:2rem">or</span><span>${b}</span></div>${numericAnswer()}`, answer, signature: `bigger-${a}-${b}` }; } },
       { label: 'Number word', make() { const n = int(1, 9), correct = WORDS[n]; return { prompt: 'Which word?', html: `<div class="visual">${objects(pick(EMOJIS), n)}</div>${choices(WORDS.slice(1, 10), correct, value => `<span class="number-word" style="font-size:1.55rem">${value}</span>`)}`, answer: correct, signature: `word-${n}` }; } },
       { label: 'Missing number', make() { const n = int(2, 14); return { prompt: 'What is missing?', html: sequenceAnswer(n, n + 2), answer: n + 1, signature: `sequence-${n}` }; } },
-      { label: 'Measure', make() { const n = int(2, 7); return { prompt: 'How many units tall?', html: `<div class="measure"><div class="measure-object" style="height:${n * 24}px" aria-label="a standard bar"></div><div class="unit-ruler" aria-label="a ruler with equal units"></div></div>${numericAnswer()}`, answer: n, signature: `measure-${n}` }; } },
+      { label: 'Measure', make() { const n = int(2, 7); return { prompt: 'How many units tall?', html: `<div class="measure"><div class="measure-object" style="height:${n * 24}px" aria-label="an object to measure"></div>${unitRuler(n)}</div>${numericAnswer()}`, answer: n, signature: `measure-${n}` }; } },
       { label: 'Dots', make() { const n = int(6, 16); return { prompt: 'How many dots?', html: `<div class="visual">${dots(n)}</div>${numericAnswer()}`, answer: n, signature: `dots-${n}` }; } },
       { label: 'Tally marks', make() { const n = int(5, 14); return { prompt: 'How many?', html: `<div class="visual">${tallies(n)}</div>${numericAnswer()}`, answer: n, signature: `tally-${n}` }; } },
       { label: 'Add', make() { const a = int(0, 5), b = int(0, 5), answer = a + b; return { prompt: 'Add.', html: `<div class="add-visual">${addColumn(a)}<span class="add-symbol">+</span>${addColumn(b)}<span class="add-symbol">=</span><span class="add-result">?</span></div>${numericAnswer()}`, answer, signature: `add-${a}-${b}` }; } },
