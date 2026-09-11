@@ -78,12 +78,13 @@
     .tally-set.five::after { content: ""; position: absolute; left: -3px; top: 28px; width: 62px; height: 5px; border-radius: 3px; background: var(--coral); transform: rotate(-54deg); }
     .add-visual { display: flex; align-items: center; justify-content: center; gap: 15px; color: var(--ink); font-size: 2.8rem; font-weight: 900; }
     .add-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; width: 100px; font-size: 2.2rem; line-height: .9; }
-    .measure { display: flex; align-items: end; justify-content: center; gap: 20px; min-height: 180px; }
-    .measure-object { display: grid; place-items: center; width: 92px; height: 128px; border: 4px solid var(--ink); border-radius: 48% 48% 20% 20%; background: #ffe2c2; font-size: 3.4rem; }
-    .units { display: flex; flex-direction: column-reverse; gap: 3px; }
-    .unit { width: 30px; height: 25px; border: 2px solid var(--blue-dark); border-radius: 3px; background: var(--mint); }
-    .machine { display: grid; place-items: center; width: 170px; min-height: 170px; margin: auto; border: 5px solid var(--ink); border-radius: 48% 48% 20% 20%; background: #f5e7be; color: var(--coral); font-size: 4rem; font-weight: 900; box-shadow: inset 0 -30px rgba(232, 117, 95, .12); }
-    .machine-count { margin-top: 9px; color: var(--muted); font-size: 1rem; font-weight: 900; }
+    .measure { display: flex; align-items: end; justify-content: center; gap: 24px; min-height: 190px; }
+    .measure-object { width: 78px; border: 4px solid var(--ink); border-radius: 10px 10px 3px 3px; background: repeating-linear-gradient(0deg, #e8755f 0 20px, #ffad91 20px 24px); }
+    .unit-ruler { position: relative; width: 48px; height: 168px; border: 3px solid var(--blue-dark); border-radius: 4px; background: #f7e6ae; }
+    .unit-ruler::after { content: ""; position: absolute; inset: 0 0 0 12px; background: repeating-linear-gradient(0deg, transparent 0 21px, var(--blue-dark) 21px 24px); opacity: .75; }
+    .machine { display: grid; place-items: center; width: 170px; min-height: 170px; margin: auto; border: 5px solid var(--ink); border-radius: 48% 48% 20% 20%; background: #f5e7be; box-shadow: inset 0 -30px rgba(232, 117, 95, .12); }
+    .machine-window { display: flex; flex-wrap: wrap; align-content: end; justify-content: center; gap: 8px; width: 118px; min-height: 100px; padding: 18px 10px 12px; border: 4px solid var(--ink); border-radius: 18px; background: #fff8e7; }
+    .gum-piece { width: 23px; height: 23px; border: 2px solid var(--ink); border-radius: 50%; background: hsl(var(--gum-hue), 72%, 67%); }
     .mini-controls { display: flex; justify-content: center; gap: 14px; }
     .round-control { width: 58px; height: 48px; border: 2px solid var(--blue-dark); border-radius: 14px; background: #e8f2ee; color: var(--blue-dark); font-size: 1.8rem; font-weight: 900; }
     .bar-compare { display: flex; align-items: end; justify-content: center; gap: 42px; height: 190px; }
@@ -97,7 +98,6 @@
     .pencil-choice::before { content: ""; position: absolute; top: -18px; left: 4px; width: 21px; height: 18px; border: 3px solid var(--ink); border-bottom: 0; border-radius: 12px 12px 0 0; background: #e6c097; }
     .pencil-choice:nth-child(2n) { background: #ffd5c9; }
     .pencil-choice.selected { background: var(--coral); transform: translateY(-8px); }
-    .tap-count { margin-top: 8px; color: var(--blue-dark); font-size: 1.05rem; font-weight: 900; }
     .trace-guide { color: transparent; -webkit-text-stroke: 2px #94aaa3; font-family: Georgia, serif; font-size: clamp(3.3rem, 13vw, 6rem); font-weight: 900; letter-spacing: .03em; }
     .trace-pad { width: min(410px, 100%); height: 150px; border: 3px dashed var(--coral); border-radius: 18px; background: #fff8ee; touch-action: none; }
     .shape-visual { display: grid; place-items: center; min-height: 180px; }
@@ -108,9 +108,11 @@
     .part { display: grid; place-items: center; width: 94px; height: 64px; border: 3px solid var(--ink); border-radius: 18px; background: #e8f2ee; font-size: 2.4rem; font-weight: 900; }
     .feedback { min-height: 30px; margin-top: 18px; color: var(--good); font-size: 1rem; font-weight: 900; text-align: center; }
     .feedback.bad { color: var(--bad); }
-    .next { width: 100%; margin-top: 5px; padding: 16px 20px; border: 0; border-radius: 15px; background: var(--blue-dark); color: white; font-size: 1.1rem; font-weight: 900; box-shadow: 0 5px 0 #153c4a; transition: transform .15s ease, opacity .15s ease; }
-    .next:not(:disabled):hover { transform: translateY(-2px); }
-    .next:disabled { opacity: .38; cursor: not-allowed; box-shadow: none; }
+    .submit, .next { width: 100%; margin-top: 5px; padding: 16px 20px; border: 0; border-radius: 15px; color: white; font-size: 1.1rem; font-weight: 900; transition: transform .15s ease, opacity .15s ease; }
+    .submit { background: var(--coral); box-shadow: 0 5px 0 #bd5c49; }
+    .next { background: var(--blue-dark); box-shadow: 0 5px 0 #153c4a; }
+    .submit:not(:disabled):hover, .next:not(:disabled):hover { transform: translateY(-2px); }
+    .submit:disabled, .next:disabled { opacity: .38; cursor: not-allowed; box-shadow: none; }
     .hint { margin-top: 16px; color: var(--muted); font-size: .78rem; font-weight: 800; text-align: center; }
     .home-link { display: block; margin-top: 20px; color: var(--muted); font-size: .8rem; font-weight: 800; text-align: center; text-decoration: none; }
     .home-link:hover { color: var(--coral); }
@@ -142,6 +144,7 @@
         <h1 class="prompt" id="prompt">Let’s do one!</h1>
         <div class="problem" id="problem"></div>
         <div class="feedback" id="feedback"></div>
+        <button class="submit" id="submit" type="button" disabled>Submit</button>
         <button class="next" id="next" type="button" disabled>Next ➜</button>
         <div class="hint" aria-hidden="true">Tap an answer</div>
       </div>
@@ -175,14 +178,14 @@
       { label: 'Bigger number', make() { let a = int(1, 10), b = int(1, 10); while (a === b) b = int(1, 10); const answer = Math.max(a, b); return { prompt: 'Which is bigger?', html: choices([a, b], answer, value => `<span class="focus-number" style="font-size:3.6rem">${value}</span>`), answer, signature: `bigger-${a}-${b}` }; } },
       { label: 'Number word', make() { const n = int(1, 9), correct = WORDS[n], wrong = pick(WORDS.filter(word => word !== correct)); return { prompt: 'Which word?', html: `<div class="visual">${objects(pick(EMOJIS), n)}</div>${choices(shuffle([correct, wrong]), correct, value => `<span class="number-word" style="font-size:2rem">${value}</span>`)}`, answer: correct, signature: `word-${n}-${wrong}` }; } },
       { label: 'Missing number', make() { const n = int(2, 14); return { prompt: 'What is missing?', html: `<div class="sequence"><span>${n}</span><span class="blank">?</span><span>${n + 2}</span></div>${choices([n + 1, n + 3], n + 1)}`, answer: n + 1, signature: `sequence-${n}` }; } },
-      { label: 'Measure', make() { const n = int(2, 7); return { prompt: 'How many units tall?', html: `<div class="measure"><div class="measure-object">${pick(['🧸', '🦕', '🪁', '🖍️'])}</div><div class="units">${Array.from({ length: n }, () => '<span class="unit"></span>').join('')}</div></div>${choices([n, n + 1, Math.max(1, n - 1)], n)}`, answer: n, signature: `measure-${n}` }; } },
+      { label: 'Measure', make() { const n = int(2, 7); return { prompt: 'How many units tall?', html: `<div class="measure"><div class="measure-object" style="height:${n * 24}px" aria-label="a standard bar"></div><div class="unit-ruler" aria-label="a ruler with equal units"></div></div>${choices([n, n + 1, Math.max(1, n - 1)], n)}`, answer: n, signature: `measure-${n}` }; } },
       { label: 'Dots', make() { const n = int(6, 16); return { prompt: 'How many dots?', html: `<div class="visual">${dots(n)}</div>${choices(shuffle([n, n + 1, n - 1]), n)}`, answer: n, signature: `dots-${n}` }; } },
       { label: 'Tally marks', make() { const n = int(5, 14); return { prompt: 'How many?', html: `<div class="visual">${tallies(n)}</div>${choices(shuffle([n, n + 1, n - 1]), n)}`, answer: n, signature: `tally-${n}` }; } },
       { label: 'Add', make() { const a = int(0, 5), b = int(0, 5), answer = a + b; return { prompt: 'Add.', html: `<div class="add-visual"><span class="add-group">${'●'.repeat(a) || '—'}</span><b>+</b><span class="add-group">${'●'.repeat(b) || '—'}</span></div>${choices(shuffle([answer, answer + 1, Math.max(0, answer - 1)]), answer)}`, answer, signature: `add-${a}-${b}` }; } },
-      { label: 'Gum machine', make() { const target = int(5, 9); return { prompt: 'Make this many.', html: `<div class="visual"><div class="focus-number" style="font-size:5rem">${target}</div><div class="machine" id="machine" role="button" tabindex="0" aria-label="Add a gum piece">●</div><div class="machine-count"><span id="gum-count">0</span> / ${target}</div></div><div class="mini-controls"><button class="round-control" type="button" data-gum="remove" aria-label="Remove one gum piece">−</button><button class="round-control" type="button" data-gum="add" aria-label="Add one gum piece">＋</button></div>`, answer: target, mode: 'gum', signature: `gum-${target}` }; } },
+      { label: 'Gum machine', make() { const target = int(5, 9); return { prompt: 'Make this many.', html: `<div class="visual"><div class="focus-number" style="font-size:5rem">${target}</div><div class="machine" id="machine" role="button" tabindex="0" aria-label="Add a gum piece"><div class="machine-window" id="gum-display"></div></div></div><div class="mini-controls"><button class="round-control" type="button" data-gum="remove" aria-label="Remove one gum piece">−</button><button class="round-control" type="button" data-gum="add" aria-label="Add one gum piece">＋</button></div>`, answer: target, mode: 'gum', signature: `gum-${target}` }; } },
       { label: 'Number match', make() { const n = int(1, 9); return { prompt: 'Which number?', html: `<div class="number-word">${WORDS[n]}</div>${choices(shuffle([n, n + 1]), n)}`, answer: n, signature: `match-${n}` }; } },
       { label: 'Taller', make() { return { prompt: 'Which is taller?', html: '<div class="bar-compare"><button class="bar-choice" type="button" data-value="A"><span></span><b>A</b></button><button class="bar-choice" type="button" data-value="B"><span></span><b>B</b></button></div>', answer: 'B', mode: 'custom-choice', signature: `taller-${int(0, 999999)}` }; } },
-      { label: 'Pencils', make() { const target = int(2, 5); return { prompt: `Tap ${target}.`, html: `<div class="pencil-row">${Array.from({ length: 6 }, (_, i) => `<button class="pencil-choice" type="button" data-pencil="${i}" aria-label="Pencil ${i + 1}"></button>`).join('')}</div><div class="tap-count"><span id="pencil-count">0</span> / ${target}</div>`, answer: target, mode: 'pencils', signature: `pencils-${target}` }; } },
+      { label: 'Pencils', make() { const target = int(2, 5); return { prompt: `Tap ${target}.`, html: `<div class="pencil-row">${Array.from({ length: 6 }, (_, i) => `<button class="pencil-choice" type="button" data-pencil="${i}" aria-label="Pencil ${i + 1}"></button>`).join('')}</div>`, answer: target, mode: 'pencils', signature: `pencils-${target}` }; } },
       { label: 'Trace', make() { const n = int(1, 9); return { prompt: 'Trace.', html: `<div class="trace-guide">${WORDS[n]}</div><canvas class="trace-pad" id="trace-pad" width="600" height="220" aria-label="Trace here"></canvas>`, answer: WORDS[n], mode: 'trace', signature: `trace-${n}` }; } },
       { label: 'Middle number', make() { const n = int(0, 8); return { prompt: 'What is in the middle?', html: `<div class="sequence"><span>${n}</span><span class="blank">?</span><span>${n + 2}</span></div>${choices([n + 1, n + 2], n + 1)}`, answer: n + 1, signature: `middle-${n}` }; } },
       { label: '2D or 3D', make() { const is3d = random() > .5, answer = is3d ? '3D' : '2D'; return { prompt: '2D or 3D?', html: `<div class="shape-visual">${shapeSvg(is3d)}</div>${choices(['2D', '3D'], answer)}`, answer, signature: `shape-${is3d}` }; } },
@@ -201,58 +204,60 @@
 
     function setFeedback(message, bad = false) { $('feedback').textContent = message; $('feedback').classList.toggle('bad', bad); }
     function finish(correct) {
-      if (correct) { state.streak += 1; setFeedback('✓'); $('next').disabled = false; $('next').focus(); }
-      else { state.streak = 0; setFeedback('Try again', true); }
+      if (correct) { state.streak += 1; setFeedback('✓'); $('submit').disabled = true; $('next').disabled = false; $('next').focus(); }
       $('counter').textContent = `⭐ ${state.streak}`;
     }
+    function readyToSubmit() { $('submit').disabled = false; setFeedback(''); }
     function markChoices(container, value) {
-      const expected = String(state.current.answer);
       container.querySelectorAll('[data-value]').forEach(button => {
         button.classList.remove('selected', 'right', 'wrong');
         if (String(button.dataset.value) === String(value)) button.classList.add('selected');
       });
-      const chosen = String(value);
-      const correct = chosen === expected;
-      const selected = container.querySelector(`[data-value="${CSS.escape(String(value))}"]`);
-      if (selected) selected.classList.add(correct ? 'right' : 'wrong');
-      finish(correct);
+      state.current.selected = value;
+      readyToSubmit();
     }
     function setupTrace() {
       const canvas = $('trace-pad'), ctx = canvas.getContext('2d');
       ctx.lineWidth = 11; ctx.lineCap = 'round'; ctx.strokeStyle = '#e8755f';
       let drawing = false, drawn = false;
       const point = event => { const rect = canvas.getBoundingClientRect(); return { x: (event.clientX - rect.left) * canvas.width / rect.width, y: (event.clientY - rect.top) * canvas.height / rect.height }; };
-      canvas.addEventListener('pointerdown', event => { drawing = true; drawn = true; canvas.setPointerCapture(event.pointerId); const p = point(event); ctx.beginPath(); ctx.moveTo(p.x, p.y); });
+      canvas.addEventListener('pointerdown', event => { drawing = true; drawn = true; state.current.selected = true; readyToSubmit(); canvas.setPointerCapture(event.pointerId); const p = point(event); ctx.beginPath(); ctx.moveTo(p.x, p.y); });
       canvas.addEventListener('pointermove', event => { if (!drawing) return; const p = point(event); ctx.lineTo(p.x, p.y); ctx.stroke(); });
       canvas.addEventListener('pointerup', () => { drawing = false; });
-      state.current.checkTrace = () => finish(drawn);
     }
     function setupSpecial() {
       const type = state.current.mode;
       if (type === 'gum') {
         let count = 0;
-        const target = state.current.answer;
-        const update = () => { count = Math.max(0, Math.min(target, count)); $('gum-count').textContent = count; if (count === target) finish(true); };
+        const update = () => {
+          count = Math.max(0, Math.min(12, count));
+          $('gum-display').innerHTML = Array.from({ length: count }, (_, index) => `<span class="gum-piece" style="--gum-hue:${(index * 47) % 360}" aria-hidden="true"></span>`).join('');
+          state.current.selected = count;
+          if (count > 0) readyToSubmit();
+        };
         $('machine').addEventListener('click', () => { count += 1; update(); });
         $('machine').addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); count += 1; update(); } });
         document.querySelectorAll('[data-gum]').forEach(button => button.addEventListener('click', () => { count += button.dataset.gum === 'add' ? 1 : -1; update(); }));
       } else if (type === 'pencils') {
-        const target = state.current.answer;
-        const update = () => { const selected = document.querySelectorAll('.pencil-choice.selected').length; $('pencil-count').textContent = selected; if (selected === target) finish(true); };
-        document.querySelectorAll('.pencil-choice').forEach(button => button.addEventListener('click', () => { button.classList.toggle('selected'); update(); }));
-      } else if (type === 'trace') {
-        setupTrace();
-        const button = document.createElement('button'); button.className = 'round-control'; button.type = 'button'; button.textContent = '✓'; button.setAttribute('aria-label', 'Finish tracing'); button.style.margin = '5px auto 0';
-        button.addEventListener('click', () => state.current.checkTrace()); $('problem').appendChild(button);
-      }
+        document.querySelectorAll('.pencil-choice').forEach(button => button.addEventListener('click', () => { button.classList.toggle('selected'); state.current.selected = document.querySelectorAll('.pencil-choice.selected').length; if (state.current.selected > 0) readyToSubmit(); }));
+      } else if (type === 'trace') setupTrace();
+    }
+    function evaluate() {
+      const actual = state.current.selected;
+      const correct = state.current.mode === 'trace' ? Boolean(actual) : String(actual) === String(state.current.answer);
+      if (correct) { finish(true); return; }
+      setFeedback('Try again', true);
+      const selected = document.querySelector('[data-value].selected');
+      if (selected) { selected.classList.remove('selected'); selected.classList.add('wrong'); }
     }
     function render() {
       state.count += 1; state.current = uniqueProblem();
-      $('type-pill').textContent = state.current.label; $('prompt').textContent = state.current.prompt; $('problem').innerHTML = state.current.html; $('feedback').textContent = ''; $('feedback').classList.remove('bad'); $('next').disabled = true; $('counter').textContent = `⭐ ${state.streak}`; $('progress').style.width = `${Math.min(100, 10 + (state.count % 10) * 9)}%`;
+      $('type-pill').textContent = state.current.label; $('prompt').textContent = state.current.prompt; $('problem').innerHTML = state.current.html; $('feedback').textContent = ''; $('feedback').classList.remove('bad'); $('submit').disabled = true; $('next').disabled = true; $('counter').textContent = `⭐ ${state.streak}`; $('progress').style.width = `${Math.min(100, 10 + (state.count % 10) * 9)}%`;
       document.querySelectorAll('.choices').forEach(container => container.querySelectorAll('.answer-choice').forEach(button => button.addEventListener('click', () => markChoices(container, button.dataset.value))));
       if (state.current.mode === 'custom-choice') document.querySelectorAll('.bar-choice').forEach(button => button.addEventListener('click', () => markChoices(document.querySelector('.bar-compare'), button.dataset.value)));
       setupSpecial();
     }
+    $('submit').addEventListener('click', evaluate);
     $('next').addEventListener('click', render);
     document.addEventListener('keydown', event => { if (event.key === 'Enter' && !$('next').disabled) render(); });
     render();
