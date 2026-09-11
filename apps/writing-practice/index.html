@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Writing Practice</title>
+  <style>
+    :root {
+      --ink: #2f2a3a;
+      --muted: #746d80;
+      --paper: #fffdf9;
+      --pink: #f3b7cf;
+      --lavender: #d9ccf4;
+      --blue: #cce9f7;
+      --green: #d7efdc;
+      --yellow: #f7e6a9;
+      --line: #e8e0e8;
+      --shadow: 0 18px 55px rgba(58, 42, 68, 0.13);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: ui-rounded, "SF Pro Rounded", "Avenir Next", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 12%, rgba(243,183,207,.34), transparent 25%),
+        radial-gradient(circle at 88% 16%, rgba(204,233,247,.44), transparent 24%),
+        linear-gradient(145deg, #fffaf7, #fbf8ff 55%, #f7fcfb);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
+      user-select: none;
+    }
+
+    .shell {
+      width: min(1050px, 100%);
+      min-height: calc(100vh - 36px);
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 18px;
+    }
+
+    header {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 4px 4px 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: clamp(.95rem, 2vw, 1.1rem);
+      text-align: right;
+    }
+
+    .controls {
+      background: rgba(255,255,255,.72);
+      border: 1px solid rgba(232,224,232,.95);
+      border-radius: 24px;
+      padding: 14px;
+      box-shadow: 0 8px 28px rgba(58, 42, 68, .07);
+      backdrop-filter: blur(12px);
+    }
+
+    .choice-row {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .choice, .utility {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 16px;
+      min-height: 54px;
+      padding: 9px 6px;
+      font-weight: 850;
+      font-size: 1.35rem;
+      cursor: pointer;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease, box-shadow .12s ease;
+    }
+
+    .choice:active, .utility:active { transform: scale(.97); }
+
+    .choice.on:nth-child(4n+1) { background: #fbe4ee; border-color: #e69bbb; }
+    .choice.on:nth-child(4n+2) { background: #eee8fb; border-color: #b7a3e3; }
+    .choice.on:nth-child(4n+3) { background: #e6f4fb; border-color: #95cbe5; }
+    .choice.on:nth-child(4n) { background: #e8f5e9; border-color: #9dcea4; }
+
+    .utility {
+      font-size: .95rem;
+      font-weight: 800;
+      color: var(--muted);
+      background: #fbfafc;
+    }
+
+    .utility.all-on { background: #fbf2d1; border-color: #ddc875; color: var(--ink); }
+
+    .card {
+      width: 100%;
+      min-height: 380px;
+      border: 1px solid var(--line);
+      border-radius: 34px;
+      background: rgba(255,253,249,.94);
+      box-shadow: var(--shadow);
+      display: grid;
+      place-items: center;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      padding: 36px 24px;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .card::before,
+    .card::after {
+      content: "";
+      position: absolute;
+      width: 190px;
+      height: 190px;
+      border-radius: 50%;
+      opacity: .28;
+      pointer-events: none;
+    }
+
+    .card::before { background: var(--pink); top: -90px; left: -70px; }
+    .card::after { background: var(--blue); right: -70px; bottom: -95px; }
+
+    .prompt {
+      position: absolute;
+      top: 20px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: var(--muted);
+      font-weight: 750;
+      font-size: 1.05rem;
+      z-index: 1;
+    }
+
+    #character {
+      font-size: clamp(8rem, 28vw, 18rem);
+      font-weight: 800;
+      letter-spacing: -0.06em;
+      line-height: .9;
+      text-align: center;
+      z-index: 1;
+    }
+
+    .empty {
+      font-size: clamp(2rem, 7vw, 4.5rem) !important;
+      color: var(--muted);
+      letter-spacing: -0.03em !important;
+    }
+
+    .tap-note {
+      position: absolute;
+      bottom: 18px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: .95rem;
+      font-weight: 650;
+      z-index: 1;
+    }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      color: var(--muted);
+      padding: 0 6px;
+      min-height: 30px;
+      font-size: .95rem;
+    }
+
+    #status { font-weight: 700; }
+
+    @media (max-width: 760px) {
+      .shell { min-height: calc(100vh - 28px); gap: 12px; }
+      header { align-items: start; }
+      .sub { font-size: .86rem; max-width: 150px; }
+      .controls { padding: 10px; border-radius: 19px; }
+      .choice-row { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+      .choice, .utility { min-height: 48px; border-radius: 13px; }
+      .card { min-height: 330px; border-radius: 28px; }
+      footer { font-size: .82rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div><h1>Writing Practice</h1></div>
+      <div class="sub">Choose what to practice, then tap the card.</div>
+    </header>
+
+    <section class="controls" aria-label="Choose letters and numbers to practice">
+      <div class="choice-row" id="choiceRow">
+        <button class="choice on" data-value="L" aria-pressed="true">L</button>
+        <button class="choice on" data-value="7" aria-pressed="true">7</button>
+        <button class="choice on" data-value="9" aria-pressed="true">9</button>
+        <button class="choice on" data-value="p" aria-pressed="true">p</button>
+        <button class="choice on" data-value="q" aria-pressed="true">q</button>
+        <button class="choice on" data-value="b" aria-pressed="true">b</button>
+        <button class="choice on" data-value="d" aria-pressed="true">d</button>
+        <button class="choice on" data-value="6" aria-pressed="true">6</button>
+        <button class="choice on" data-value="4" aria-pressed="true">4</button>
+        <button class="choice on" data-value="5" aria-pressed="true">5</button>
+        <button class="choice on" data-value="s" aria-pressed="true">s</button>
+        <button class="choice on" data-value="2" aria-pressed="true">2</button>
+        <button class="utility all-on" id="allButton" type="button">All</button>
+        <button class="utility" id="clearButton" type="button">Clear</button>
+      </div>
+    </section>
+
+    <section class="card" id="card" role="button" tabindex="0" aria-label="Show the next writing practice character">
+      <div class="prompt">Write this</div>
+      <div id="character">L</div>
+      <div class="tap-note" id="tapNote">Tap for another</div>
+    </section>
+
+    <footer>
+      <span id="status">12 selected</span>
+      <span>No repeats until the deck resets.</span>
+    </footer>
+  </main>
+
+  <script>
+    const VALUES = ["L", "7", "9", "p", "q", "b", "d", "6", "4", "5", "s", "2"];
+    const selected = new Set(VALUES);
+    let deck = [];
+    let lastValue = null;
+
+    const card = document.getElementById("card");
+    const characterEl = document.getElementById("character");
+    const statusEl = document.getElementById("status");
+    const tapNote = document.getElementById("tapNote");
+    const choiceButtons = [...document.querySelectorAll(".choice")];
+    const allButton = document.getElementById("allButton");
+    const clearButton = document.getElementById("clearButton");
+
+    function shuffle(items) {
+      const result = [...items];
+      for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+      }
+      return result;
+    }
+
+    function rebuildDeck() {
+      deck = shuffle([...selected]);
+      if (deck.length > 1 && deck[deck.length - 1] === lastValue) {
+        [deck[0], deck[deck.length - 1]] = [deck[deck.length - 1], deck[0]];
+      }
+    }
+
+    function refreshControls() {
+      choiceButtons.forEach(button => {
+        const on = selected.has(button.dataset.value);
+        button.classList.toggle("on", on);
+        button.setAttribute("aria-pressed", String(on));
+      });
+      const allOn = selected.size === VALUES.length;
+      allButton.classList.toggle("all-on", allOn);
+      statusEl.textContent = selected.size === 1 ? "1 selected" : `${selected.size} selected`;
+    }
+
+    function showNext() {
+      if (!selected.size) {
+        characterEl.textContent = "Choose one";
+        characterEl.classList.add("empty");
+        tapNote.textContent = "Use the buttons above";
+        return;
+      }
+
+      characterEl.classList.remove("empty");
+      tapNote.textContent = "Tap for another";
+      if (!deck.length) rebuildDeck();
+      const next = deck.pop();
+      lastValue = next;
+      characterEl.textContent = next;
+    }
+
+    function selectionChanged() {
+      deck = [];
+      refreshControls();
+      showNext();
+    }
+
+    choiceButtons.forEach(button => {
+      button.addEventListener("click", event => {
+        event.stopPropagation();
+        const value = button.dataset.value;
+        selected.has(value) ? selected.delete(value) : selected.add(value);
+        selectionChanged();
+      });
+    });
+
+    allButton.addEventListener("click", event => {
+      event.stopPropagation();
+      VALUES.forEach(value => selected.add(value));
+      selectionChanged();
+    });
+
+    clearButton.addEventListener("click", event => {
+      event.stopPropagation();
+      selected.clear();
+      selectionChanged();
+    });
+
+    card.addEventListener("click", showNext);
+    card.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " " || event.key === "ArrowRight") {
+        event.preventDefault();
+        showNext();
+      }
+    });
+
+    rebuildDeck();
+    showNext();
+    refreshControls();
+  </script>
+</body>
+</html>
