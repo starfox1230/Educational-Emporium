@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="An infinitely generated kindergarten math review for September 7–11, 2026.">
+  <title>Spiral Math Review · September 7–11, 2026</title>
+  <style>
+    :root {
+      --ink: #1c2430;
+      --muted: #647083;
+      --paper: #fffdf7;
+      --paper-deep: #f7f0df;
+      --line: #d8d0bf;
+      --blue: #3c7a8e;
+      --blue-deep: #245263;
+      --coral: #e67b63;
+      --yellow: #f5c85f;
+      --mint: #9ec9b9;
+      --lavender: #b8a5d7;
+      --shadow: 0 18px 50px rgba(37, 52, 65, .13);
+      color-scheme: light;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 14% 8%, rgba(230, 123, 99, .14), transparent 28rem),
+        radial-gradient(circle at 90% 18%, rgba(158, 201, 185, .2), transparent 32rem),
+        #edf1ee;
+      font-family: "Trebuchet MS", "Avenir Next", system-ui, sans-serif;
+    }
+
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .shell { width: min(1500px, calc(100% - 32px)); margin: 0 auto; padding: 26px 0 48px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 18px; }
+    .crumb { color: var(--blue-deep); font-size: .8rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .emporium-link { color: var(--muted); text-decoration: none; font-size: .9rem; }
+    .emporium-link:hover { color: var(--coral); }
+
+    .intro {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 20px;
+      align-items: end;
+      margin-bottom: 20px;
+    }
+    h1 { margin: 0; color: var(--blue-deep); font-size: clamp(2rem, 4vw, 4.2rem); line-height: .94; letter-spacing: -.045em; }
+    .intro p { max-width: 680px; margin: 12px 0 0; color: var(--muted); font-size: 1.02rem; line-height: 1.5; }
+    .badge {
+      padding: 13px 17px;
+      border: 1px solid rgba(36, 82, 99, .2);
+      border-radius: 999px;
+      background: rgba(255, 253, 247, .7);
+      color: var(--blue-deep);
+      font-size: .84rem;
+      font-weight: 800;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .control-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid rgba(36, 82, 99, .18);
+      border-radius: 16px;
+      background: rgba(255, 253, 247, .83);
+      box-shadow: 0 8px 24px rgba(37, 52, 65, .07);
+      margin-bottom: 18px;
+    }
+    .control-bar label { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: .9rem; font-weight: 700; }
+    .seed-input { width: 150px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink); font-weight: 800; }
+    .primary, .quiet {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 15px;
+      font-weight: 900;
+      transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .primary { background: var(--coral); color: #fff; box-shadow: 0 5px 0 #bd5c49; }
+    .primary:hover { background: #d96d56; transform: translateY(-1px); box-shadow: 0 6px 0 #bd5c49; }
+    .quiet { background: #e3eee9; color: var(--blue-deep); }
+    .quiet:hover { background: #d4e6df; }
+    .score { margin-left: auto; color: var(--blue-deep); font-size: .94rem; font-weight: 900; }
+
+    .sheet {
+      position: relative;
+      overflow: hidden;
+      padding: clamp(18px, 3vw, 36px);
+      border: 1px solid #e0d7c4;
+      border-radius: 24px;
+      background:
+        linear-gradient(rgba(255,255,255,.3), rgba(255,255,255,.3)),
+        repeating-linear-gradient(0deg, transparent 0, transparent 31px, rgba(64, 96, 112, .045) 32px),
+        var(--paper);
+      box-shadow: var(--shadow);
+    }
+    .sheet::before, .sheet::after { content: ""; position: absolute; width: 150px; height: 150px; border-radius: 50%; pointer-events: none; filter: blur(1px); opacity: .33; }
+    .sheet::before { top: -70px; right: 12%; background: var(--yellow); }
+    .sheet::after { bottom: -90px; left: -30px; background: var(--mint); }
+    .sheet-head { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 20px; padding-bottom: 18px; border-bottom: 3px solid var(--ink); }
+    .name-line { display: flex; align-items: end; gap: 10px; color: var(--muted); font-size: .9rem; }
+    .name-line span { display: inline-block; width: min(190px, 20vw); border-bottom: 2px solid var(--ink); }
+    .sheet-title { text-align: center; }
+    .sheet-title h2 { margin: 0; font-size: clamp(1.25rem, 3vw, 2.7rem); letter-spacing: .08em; line-height: 1; }
+    .sheet-title p { margin: 7px 0 0; color: var(--coral); font-size: .82rem; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
+    .star { justify-self: end; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: var(--ink); color: var(--yellow); font-size: 1.45rem; transform: rotate(10deg); }
+
+    .week-grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin-top: 18px; border: 2px solid var(--ink); }
+    .day-column { min-width: 0; border-right: 1px solid var(--ink); }
+    .day-column:last-child { border-right: 0; }
+    .day-label { padding: 9px 8px; background: var(--blue-deep); color: #fff; text-align: center; font-size: .8rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+    .day-date { display: block; margin-top: 3px; color: #d9ecea; font-size: .72rem; font-weight: 700; letter-spacing: 0; text-transform: none; }
+    .exercise {
+      position: relative;
+      min-height: 158px;
+      padding: 12px 10px 10px;
+      border-top: 1px solid var(--line);
+      background: rgba(255, 253, 247, .76);
+    }
+    .exercise:first-of-type { border-top: 0; }
+    .prompt { margin: 0 0 10px; color: #343e4b; font-size: .78rem; font-weight: 900; line-height: 1.16; }
+    .prompt em { color: var(--coral); font-style: normal; }
+    .answer-box { width: 56px; padding: 6px 4px; border: 2px solid var(--ink); border-radius: 5px; background: #fff; color: var(--ink); font-size: 1.1rem; font-weight: 900; text-align: center; }
+    .answer-box.wide { width: 92px; }
+    .number-row { display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 13px; font-size: 1.45rem; font-weight: 900; }
+    .number-row .missing { display: inline-grid; place-items: center; width: 42px; height: 37px; border: 2px solid var(--ink); border-radius: 5px; background: #fff; }
+    .objects { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; min-height: 46px; margin: 7px auto 9px; max-width: 112px; font-size: 1.3rem; line-height: 1.1; }
+    .choices { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; margin-top: 9px; }
+    .choice { min-width: 41px; padding: 6px 8px; border: 2px solid var(--ink); border-radius: 999px; background: #fff; color: var(--ink); font-weight: 900; }
+    .choice:hover, .choice.selected { border-color: var(--coral); background: #fde4dc; }
+    .choice.correct { border-color: #4e8f70; background: #dff1e7; }
+    .choice.wrong { border-color: #b94949; background: #fae0e0; }
+    .inline-answer { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 10px; font-size: 1.25rem; font-weight: 900; }
+    .tiny-label { color: var(--muted); font-size: .7rem; font-weight: 800; }
+    .dots { display: grid; grid-template-columns: repeat(5, 14px); justify-content: center; gap: 5px; margin: 10px auto 8px; }
+    .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--ink); }
+    .tallies { display: flex; justify-content: center; align-items: end; gap: 6px; min-height: 42px; margin: 7px 0; }
+    .tally-set { position: relative; display: flex; gap: 3px; height: 36px; padding: 0 3px; border-bottom: 2px solid var(--ink); }
+    .tally { width: 3px; height: 32px; background: var(--ink); }
+    .tally-set.five::after { content: ""; position: absolute; left: -1px; top: 14px; width: 30px; height: 3px; background: var(--coral); transform: rotate(-58deg); }
+    .pencil-row { display: flex; justify-content: center; gap: 5px; margin: 14px 0 8px; }
+    .pencil { position: relative; width: 12px; height: 52px; border: 2px solid var(--ink); border-radius: 3px 3px 7px 7px; background: #f9ebe5; }
+    .pencil:nth-child(2n) { background: #e3eee9; }
+    .pencil::before { content: ""; position: absolute; top: -9px; left: 1px; width: 7px; height: 9px; border: 2px solid var(--ink); border-bottom: 0; border-radius: 7px 7px 0 0; background: #e7c5a0; }
+    .pencil.marked { background: var(--coral); }
+    .bar-compare { display: flex; align-items: end; justify-content: center; gap: 26px; height: 70px; margin: 9px 0 5px; }
+    .bar { width: 23px; border: 2px solid var(--ink); border-radius: 6px 6px 0 0; background: var(--mint); }
+    .bar.short { height: 38px; background: #f6d27c; }
+    .bar.tall { height: 64px; background: var(--coral); }
+    .gumball { display: grid; place-items: center; width: 76px; height: 76px; margin: 9px auto 3px; border: 3px solid var(--ink); border-radius: 48% 48% 45% 45%; background: #f6f0dc; font-size: 1.3rem; }
+    .shape { display: grid; place-items: center; height: 70px; margin: 3px 0; }
+    .shape svg { width: 70px; height: 70px; overflow: visible; }
+    .part-whole { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; max-width: 130px; margin: 10px auto 0; text-align: center; font-weight: 900; }
+    .part-whole div { padding: 6px 3px; border: 2px solid var(--ink); background: #fff; }
+    .part-whole .whole { grid-column: 1 / -1; border-color: var(--coral); background: #fff4ef; }
+    .trace { display: inline-block; margin: 12px auto 0; color: transparent; -webkit-text-stroke: 1px #7d8b97; font-size: 1.8rem; font-weight: 900; letter-spacing: .06em; }
+    .feedback { min-height: 16px; margin: 7px 0 0; color: #4e8f70; font-size: .7rem; font-weight: 900; text-align: center; }
+    .feedback.bad { color: #b94949; }
+
+    .footer-note { position: relative; z-index: 1; display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-top: 18px; color: var(--muted); font-size: .8rem; }
+    .footer-note strong { color: var(--blue-deep); }
+    .stamp { padding: 6px 10px; border: 2px dashed var(--coral); border-radius: 8px; color: var(--coral); font-size: .72rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; transform: rotate(-2deg); }
+    .toast { position: fixed; left: 50%; bottom: 22px; z-index: 5; padding: 12px 16px; border-radius: 999px; background: var(--ink); color: #fff; box-shadow: 0 10px 25px rgba(0,0,0,.2); font-size: .85rem; font-weight: 800; transform: translate(-50%, 130%); transition: transform .25s ease; }
+    .toast.show { transform: translate(-50%, 0); }
+
+    @media print {
+      @page { size: letter landscape; margin: .35in; }
+      body { background: #fff; }
+      .shell { width: 100%; padding: 0; }
+      .topbar, .intro, .control-bar, .footer-note, .toast { display: none !important; }
+      .sheet { padding: 0; border: 0; border-radius: 0; box-shadow: none; }
+      .sheet::before, .sheet::after { display: none; }
+      .sheet-head { padding-bottom: 8px; }
+      .week-grid { margin-top: 8px; }
+      .exercise { min-height: 126px; padding: 7px; }
+      .prompt { margin-bottom: 5px; font-size: .65rem; }
+      .objects { margin: 4px auto; }
+      .number-row { margin-top: 6px; }
+      .feedback { display: none; }
+    }
+
+    @media (max-width: 1050px) {
+      .week-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .day-column:nth-child(2) { border-right: 0; }
+      .day-column:nth-child(n+3) { border-top: 2px solid var(--ink); }
+      .day-column:nth-child(4) { border-right: 0; }
+    }
+    @media (max-width: 660px) {
+      .shell { width: min(100% - 20px, 520px); padding-top: 14px; }
+      .topbar, .intro { display: block; }
+      .emporium-link { display: inline-block; margin-top: 10px; }
+      .badge { display: inline-block; margin-top: 17px; }
+      .control-bar { align-items: stretch; }
+      .control-bar label { flex: 1 1 100%; justify-content: space-between; }
+      .seed-input { flex: 1; }
+      .score { width: 100%; margin-left: 0; }
+      .sheet { padding: 15px 10px 20px; border-radius: 16px; }
+      .sheet-head { grid-template-columns: 1fr auto; gap: 8px; }
+      .sheet-title { grid-column: 1 / -1; grid-row: 1; margin-bottom: 10px; }
+      .name-line { grid-column: 1; grid-row: 2; }
+      .star { grid-column: 2; grid-row: 2; }
+      .week-grid { grid-template-columns: 1fr; }
+      .day-column, .day-column:nth-child(2), .day-column:nth-child(4) { border-right: 0; border-top: 2px solid var(--ink); }
+      .day-column:first-child { border-top: 0; }
+      .exercise { min-height: 150px; padding-left: 14px; padding-right: 14px; }
+      .footer-note { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="topbar">
+      <div class="crumb">Educational Emporium · Math Studio</div>
+      <a class="emporium-link" href="../../index.html">← Back to the Emporium</a>
+    </div>
+
+    <section class="intro" aria-labelledby="page-title">
+      <div>
+        <h1 id="page-title">Spiral Math Review</h1>
+        <p>One fresh five-day review at a time. Every sheet keeps the familiar kindergarten practice mix while changing the numbers, pictures, and little math stories.</p>
+      </div>
+      <div class="badge">September 7–11, 2026 · Week 1</div>
+    </section>
+
+    <section class="control-bar" aria-label="Review controls">
+      <label for="seed">Sheet number <input class="seed-input" id="seed" type="number" min="1" max="999999" value="1047"></label>
+      <button class="primary" id="generate" type="button">Make a new review ✦</button>
+      <button class="quiet" id="check" type="button">Check my work</button>
+      <button class="quiet" id="print" type="button">Print sheet</button>
+      <div class="score" id="score" aria-live="polite">Ready for a new spiral.</div>
+    </section>
+
+    <section class="sheet" aria-label="Generated math review worksheet">
+      <header class="sheet-head">
+        <div class="name-line">Name <span aria-hidden="true"></span></div>
+        <div class="sheet-title"><h2>SPIRAL MATH REVIEW</h2><p id="sheet-label">September 7–11, 2026</p></div>
+        <div class="star" aria-label="Five star review">★</div>
+      </header>
+      <div class="week-grid" id="week-grid"></div>
+      <div class="footer-note"><span><strong>Keep spiraling:</strong> change the sheet number whenever you want another one.</span><span class="stamp">I can do math!</span></div>
+    </section>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const WEEK = [
+      { day: 'Day 1', date: 'Monday · Sep 7', accent: 'coral' },
+      { day: 'Day 2', date: 'Tuesday · Sep 8', accent: 'blue' },
+      { day: 'Day 3', date: 'Wednesday · Sep 9', accent: 'yellow' },
+      { day: 'Day 4', date: 'Thursday · Sep 10', accent: 'mint' },
+      { day: 'Day 5', date: 'Friday · Sep 11', accent: 'lavender' }
+    ];
+    const EMOJIS = ['🍎', '🦋', '🐸', '🌼', '🍓', '🚀', '🐳', '🧸', '🌈', '🍪'];
+    const NUMBER_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+    const SHAPES = ['circle', 'triangle', 'square', 'rectangle'];
+    const state = { seed: 1047, cards: [] };
+    let toastTimer;
+
+    function rngFor(seed) {
+      let value = (Number(seed) || 1) % 2147483647;
+      if (value <= 0) value += 2147483646;
+      return () => (value = value * 16807 % 2147483647) / 2147483647;
+    }
+    function int(rng, min, max) { return Math.floor(rng() * (max - min + 1)) + min; }
+    function pick(rng, list) { return list[int(rng, 0, list.length - 1)]; }
+    function shuffle(rng, list) { return [...list].sort(() => rng() - .5); }
+    function esc(value) { return String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char])); }
+    function objectRow(emoji, amount) { return `<div class="objects" aria-label="${amount} ${emoji}">${Array.from({ length: amount }, () => `<span>${emoji}</span>`).join('')}</div>`; }
+    function dots(amount) { return `<div class="dots" aria-label="${amount} dots">${Array.from({ length: amount }, () => '<span class="dot"></span>').join('')}</div>`; }
+    function tallies(amount) {
+      const groups = Math.floor(amount / 5), rest = amount % 5;
+      return `<div class="tallies" aria-label="${amount} tally marks">${Array.from({ length: groups }, () => '<span class="tally-set five"><i class="tally"></i><i class="tally"></i><i class="tally"></i><i class="tally"></i></span>').join('')}${rest ? `<span class="tally-set">${Array.from({ length: rest }, () => '<i class="tally"></i>').join('')}</span>` : ''}</div>`;
+    }
+    function shapeSvg(shape) {
+      const shapes = {
+        circle: '<circle cx="45" cy="45" r="26" fill="#f5c85f" stroke="#1c2430" stroke-width="4"/>',
+        triangle: '<path d="M45 15 75 73H15Z" fill="#e67b63" stroke="#1c2430" stroke-width="4" stroke-linejoin="round"/>',
+        square: '<rect x="19" y="19" width="52" height="52" rx="4" fill="#9ec9b9" stroke="#1c2430" stroke-width="4"/>',
+        rectangle: '<rect x="12" y="25" width="66" height="40" rx="4" fill="#b8a5d7" stroke="#1c2430" stroke-width="4"/>'
+      };
+      return `<svg viewBox="0 0 90 90" aria-label="${shape}">${shapes[shape]}</svg>`;
+    }
+    function choiceButtons(values, answer, kind = '') {
+      return `<div class="choices" data-answer="${esc(answer)}">${values.map(value => `<button class="choice ${kind}" type="button" data-value="${esc(value)}">${esc(value)}</button>`).join('')}</div>`;
+    }
+    function inputAnswer(answer, wide = false) { return `<input class="answer-box${wide ? ' wide' : ''}" type="text" inputmode="numeric" data-answer="${esc(answer)}" aria-label="Your answer">`; }
+
+    function makeCard(type, rng, index) {
+      const id = `card-${index}`;
+      let prompt = '', content = '', answer = '';
+      if (type === 'before-after') {
+        const middle = int(rng, 3, 15); answer = `${middle - 1},${middle + 1}`;
+        prompt = 'Write the missing numbers.';
+        content = `<div class="number-row"><span class="missing">${inputAnswer(middle - 1)}</span><strong>${middle}</strong><span class="missing">${inputAnswer(middle + 1)}</span></div><div class="tiny-label" style="text-align:center;margin-top:5px">before &nbsp;&nbsp;&nbsp; after</div>`;
+      } else if (type === 'count-objects') {
+        const amount = int(rng, 3, 9), emoji = pick(rng, EMOJIS); answer = String(amount);
+        prompt = 'How many do you see?'; content = `${objectRow(emoji, amount)}<div class="inline-answer">${inputAnswer(answer)}</div>`;
+      } else if (type === 'bigger') {
+        const a = int(rng, 1, 9), b = int(rng, 1, 9); answer = String(Math.max(a, b));
+        prompt = 'Circle the bigger number.'; content = choiceButtons([a, b], answer);
+      } else if (type === 'number-word') {
+        const amount = int(rng, 1, 9), options = shuffle(rng, [NUMBER_WORDS[amount], pick(rng, NUMBER_WORDS.filter(word => word !== NUMBER_WORDS[amount]))]).slice(0, 2); answer = NUMBER_WORDS[amount];
+        prompt = 'Circle the correct number word.'; content = `${objectRow(pick(rng, EMOJIS), amount)}${choiceButtons(options, answer)}`;
+      } else if (type === 'sequence') {
+        const start = int(rng, 2, 13); answer = String(start + 1); prompt = 'Write the missing number.'; content = `<div class="number-row"><strong>${start}</strong><span class="missing">${inputAnswer(answer)}</span><strong>${start + 2}</strong></div>`;
+      } else if (type === 'measure') {
+        const amount = int(rng, 2, 8); answer = String(amount); prompt = 'Measure the picture.'; content = `<div style="text-align:center;font-size:2.8rem;margin:2px 0 4px">${pick(rng, ['🖍️', '🧸', '🪁', '🦕'])}</div><div class="inline-answer">${inputAnswer(answer)} <span class="tiny-label">units</span></div>`;
+      } else if (type === 'dots') {
+        const amount = int(rng, 8, 18); answer = String(amount); prompt = 'How many dots do you see?'; content = `${dots(amount)}<div class="inline-answer">${inputAnswer(answer)}</div>`;
+      } else if (type === 'tally') {
+        const amount = int(rng, 6, 14); answer = String(amount); prompt = 'How many tally marks?'; content = `${tallies(amount)}<div class="inline-answer">${inputAnswer(answer)}</div>`;
+      } else if (type === 'addition') {
+        const a = int(rng, 1, 5), b = int(rng, 1, 5); answer = String(a + b); prompt = 'Add.'; content = `${objectRow('●', a)}<div class="inline-answer">${a} + ${b} = ${inputAnswer(answer)}</div>`;
+      } else if (type === 'draw') {
+        const amount = int(rng, 5, 9); answer = String(amount); prompt = `Draw ${amount} pieces of gum.`; content = `<div class="gumball" aria-hidden="true">${Array.from({ length: 5 }, () => '·').join(' ')}</div><div class="inline-answer"><span class="tiny-label">I drew</span> ${inputAnswer(answer)} <span class="tiny-label">pieces</span></div>`;
+      } else if (type === 'color-number') {
+        const answerNumber = int(rng, 2, 9); answer = String(answerNumber); prompt = 'Color the correct number.'; content = `<div style="text-align:center;font-family:Georgia,serif;font-size:1.8rem;font-weight:900;margin:16px 0 10px">${NUMBER_WORDS[answerNumber]}</div>${choiceButtons([answerNumber, answerNumber + 1], answer)}`;
+      } else if (type === 'taller') {
+        const answerSide = rng() > .5 ? 'tall' : 'short'; answer = answerSide === 'tall' ? 'left' : 'right'; prompt = 'Circle the object that is taller.'; content = `<div class="bar-compare"><span class="bar ${answerSide}"></span><span class="bar ${answerSide === 'tall' ? 'short' : 'tall'}"></span></div>${choiceButtons(['left', 'right'], answer)}`;
+      } else if (type === 'pencils') {
+        const amount = int(rng, 2, 5); answer = String(amount); prompt = `Color ${amount} pencils.`; content = `<div class="pencil-row">${Array.from({ length: 6 }, (_, i) => `<span class="pencil${i < amount ? ' marked' : ''}"></span>`).join('')}</div>${choiceButtons([amount, amount + 1], answer)}`;
+      } else if (type === 'trace-word') {
+        const amount = int(rng, 1, 9); answer = NUMBER_WORDS[amount]; prompt = 'Trace the number word.'; content = `<div style="text-align:center"><span class="trace">${NUMBER_WORDS[amount]}</span></div><div class="inline-answer">${inputAnswer(answer, true)}</div>`;
+      } else if (type === 'bubble') {
+        const low = int(rng, 0, 7), high = low + 2; answer = String(low + 1); prompt = 'Write the missing number.'; content = `<div class="number-row"><strong>${low}</strong><span class="missing">${inputAnswer(answer)}</span><strong>${high}</strong></div>`;
+      } else if (type === 'shape') {
+        const answerShape = pick(rng, SHAPES); answer = '2D'; prompt = 'Is this shape 2D or 3D?'; content = `<div class="shape">${shapeSvg(answerShape)}</div>${choiceButtons(['2D', '3D'], answer)}`;
+      } else if (type === 'part-whole') {
+        const a = int(rng, 1, 5), b = int(rng, 1, 5); answer = String(a + b); prompt = 'Write the missing whole.'; content = `<div class="part-whole"><div class="whole">Whole: ${inputAnswer(answer)}</div><div>Part<br><strong>${a}</strong></div><div>Part<br><strong>${b}</strong></div></div>`;
+      } else if (type === 'greater') {
+        const a = int(rng, 1, 9), b = int(rng, 1, 9); answer = String(Math.max(a, b)); prompt = 'Circle the number that is greater.'; content = choiceButtons([a, b], answer);
+      } else if (type === 'addition-dots') {
+        const a = int(rng, 1, 4), b = int(rng, 1, 4); answer = String(a + b); prompt = 'Add the dots.'; content = `<div style="display:flex;justify-content:center;gap:7px;align-items:center;margin:12px 0 2px"><span>${'●'.repeat(a)}</span><b>+</b><span>${'●'.repeat(b)}</span></div><div class="inline-answer">${inputAnswer(answer)}</div>`;
+      }
+      return `<article class="exercise" data-card-id="${id}" data-answer="${esc(answer)}"><p class="prompt">${prompt}</p>${content}<div class="feedback" aria-live="polite"></div></article>`;
+    }
+
+    const TYPES = [
+      ['before-after', 'count-objects', 'bigger', 'number-word', 'sequence'],
+      ['measure', 'dots', 'tally', 'sequence', 'count-objects'],
+      ['addition', 'draw', 'color-number', 'taller', 'sequence'],
+      ['pencils', 'trace-word', 'bubble', 'shape', 'sequence'],
+      ['count-objects', 'part-whole', 'greater', 'addition-dots', 'sequence']
+    ];
+
+    function render(seed) {
+      const rng = rngFor(seed);
+      state.seed = seed;
+      state.cards = [];
+      const grid = document.getElementById('week-grid');
+      grid.innerHTML = WEEK.map((day, dayIndex) => {
+        const cards = TYPES[dayIndex].map((type, exerciseIndex) => {
+          const index = dayIndex * 5 + exerciseIndex;
+          state.cards.push({ id: `card-${index}`, type });
+          return makeCard(type, rng, index);
+        }).join('');
+        return `<section class="day-column" aria-labelledby="day-${dayIndex}"><div class="day-label" id="day-${dayIndex}">${day.day}<span class="day-date">${day.date}</span></div>${cards}</section>`;
+      }).join('');
+      document.getElementById('seed').value = seed;
+      document.getElementById('score').textContent = `Sheet ${seed} · 25 tiny math moments`;
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2400);
+    }
+    function markChoice(button) {
+      const choices = button.closest('.choices');
+      choices.querySelectorAll('.choice').forEach(item => item.classList.remove('selected', 'correct', 'wrong'));
+      button.classList.add('selected');
+      choices.dataset.value = button.dataset.value;
+    }
+    function normalize(value) { return String(value || '').trim().toLowerCase().replace(/\s+/g, ''); }
+    function checkWork() {
+      const cards = [...document.querySelectorAll('.exercise')];
+      let complete = 0, correct = 0;
+      cards.forEach(card => {
+        const expected = normalize(card.dataset.answer);
+        const input = card.querySelector('input');
+        const choices = card.querySelector('.choices');
+        const feedback = card.querySelector('.feedback');
+        const inputValues = [...card.querySelectorAll('input')].map(item => normalize(item.value));
+        const actual = inputValues.length > 1 ? inputValues.join(',') : inputValues[0] || normalize(choices?.dataset.value);
+        const answered = Boolean(actual);
+        if (answered) complete += 1;
+        const isCorrect = answered && actual === expected;
+        if (isCorrect) correct += 1;
+        feedback.textContent = !answered ? '' : isCorrect ? 'Nice work!' : 'Try again';
+        feedback.classList.toggle('bad', answered && !isCorrect);
+        if (choices) {
+          choices.querySelectorAll('.choice').forEach(choice => {
+            choice.classList.toggle('correct', answered && normalize(choice.dataset.value) === expected);
+            choice.classList.toggle('wrong', choice.classList.contains('selected') && !isCorrect);
+          });
+        }
+      });
+      document.getElementById('score').textContent = complete ? `${correct} correct · ${complete} answered · ${25 - complete} to go` : 'Start with any box — you can do it!';
+      showToast(complete === 25 && correct === 25 ? 'Perfect spiral! ⭐' : `${correct} correct so far.`);
+    }
+
+    document.getElementById('generate').addEventListener('click', () => {
+      const current = Number(document.getElementById('seed').value) || state.seed;
+      const next = current >= 999999 ? 1 : current + 1;
+      render(next);
+      showToast(`New review ${next} is ready.`);
+    });
+    document.getElementById('check').addEventListener('click', checkWork);
+    document.getElementById('print').addEventListener('click', () => window.print());
+    document.getElementById('seed').addEventListener('change', event => render(Math.max(1, Math.min(999999, Number(event.target.value) || 1))));
+    document.getElementById('week-grid').addEventListener('click', event => {
+      if (event.target.matches('.choice')) markChoice(event.target);
+    });
+    render(state.seed);
+  </script>
+</body>
+</html>
+
