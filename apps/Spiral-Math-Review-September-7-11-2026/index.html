@@ -4,6 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="description" content="One-at-a-time infinite kindergarten math practice for September 7–11, 2026.">
+  <meta name="theme-color" content="#2f7185">
+  <meta name="apple-mobile-web-app-title" content="Spiral Math">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./spiral-math-review-icon.svg">
+  <link rel="icon" href="./spiral-math-review-icon.svg" type="image/svg+xml">
   <title>Spiral Math Review · September 7–11, 2026</title>
   <style>
     :root {
@@ -41,7 +47,7 @@
     .app-shell { width: min(720px, calc(100% - 28px)); margin: 0 auto; padding: 22px 0 38px; }
     .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 24px; }
     .brand { display: flex; align-items: center; gap: 10px; color: var(--blue-dark); font-weight: 900; letter-spacing: .04em; }
-    .brand-mark { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 13px; background: var(--coral); color: white; font-size: 1.35rem; transform: rotate(-6deg); }
+    .brand-mark { display: block; width: 42px; height: 42px; border-radius: 13px; box-shadow: 0 5px 12px rgba(32, 84, 102, .18); }
     .week { color: var(--muted); font-size: .78rem; font-weight: 800; text-align: right; }
     .week strong { display: block; color: var(--blue-dark); font-size: .92rem; }
     .topbar-actions { display: flex; align-items: center; gap: 10px; }
@@ -177,7 +183,7 @@
   <main class="app-shell">
     <a class="back" href="../../index.html">← Educational Emporium</a>
     <header class="topbar">
-      <div class="brand"><span class="brand-mark">✦</span><span>Spiral Math</span></div>
+      <div class="brand"><img class="brand-mark" src="./spiral-math-review-icon.svg" alt="Spiral Math Review logo"><span>Spiral Math Review</span></div>
       <div class="topbar-actions">
         <div class="week"><strong>Sep 7–11, 2026</strong><span id="done-count">Done: 0</span></div>
         <button class="settings-button" id="settings-button" type="button" aria-label="Open settings" title="Settings">⚙</button>

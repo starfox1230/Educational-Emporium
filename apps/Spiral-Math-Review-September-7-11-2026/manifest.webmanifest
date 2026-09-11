@@ -1,0 +1,19 @@
+{
+  "name": "Spiral Math Review · September 7–11, 2026",
+  "short_name": "Spiral Math",
+  "description": "One-at-a-time infinite kindergarten math practice.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#eef3ef",
+  "theme_color": "#2f7185",
+  "icons": [
+    {
+      "src": "./spiral-math-review-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
+
