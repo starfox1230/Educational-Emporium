@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="description" content="One-at-a-time infinite kindergarten math practice for September 7–11, 2026.">
   <title>Spiral Math Review · September 7–11, 2026</title>
   <style>
@@ -20,7 +20,8 @@
       --bad: #c4514f;
     }
 
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; touch-action: manipulation; }
+    html, body { overflow: hidden; }
     body {
       margin: 0;
       min-width: 320px;
@@ -31,6 +32,10 @@
         radial-gradient(circle at 92% 85%, rgba(166, 210, 193, .32), transparent 28rem),
         #eef3ef;
       font-family: "Trebuchet MS", "Avenir Next", system-ui, sans-serif;
+      touch-action: manipulation;
+      overscroll-behavior: none;
+      -webkit-user-select: none;
+      user-select: none;
     }
     button { font: inherit; cursor: pointer; }
     .app-shell { width: min(720px, calc(100% - 28px)); margin: 0 auto; padding: 22px 0 38px; }
@@ -125,10 +130,11 @@
     .key.utility { background: #f2eee4; color: var(--muted); font-size: 1rem; }
     .shape-visual { display: grid; place-items: center; min-height: 180px; }
     .shape-visual svg { width: 180px; height: 180px; }
-    .part-whole { display: flex; flex-direction: column; align-items: center; gap: 12px; }
-    .whole { display: grid; place-items: center; width: 140px; height: 74px; border: 4px dashed var(--coral); border-radius: 18px; color: var(--coral); font-size: 3.5rem; font-weight: 900; }
-    .parts { display: flex; gap: 18px; }
-    .part { display: grid; place-items: center; width: 94px; height: 64px; border: 3px solid var(--ink); border-radius: 18px; background: #e8f2ee; font-size: 2.4rem; font-weight: 900; }
+    .part-whole { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .whole-parts { display: flex; align-items: center; gap: 14px; color: var(--ink); font-size: 2.8rem; font-weight: 900; }
+    .whole-parts span { display: grid; place-items: center; width: 64px; height: 58px; border: 3px solid var(--ink); border-radius: 14px; background: #e8f2ee; }
+    .whole-equals { color: var(--muted); font-size: 2rem; font-weight: 900; }
+    .whole { display: grid; place-items: center; width: 118px; height: 68px; border: 4px dashed var(--coral); border-radius: 16px; color: var(--coral); font-size: 3.2rem; font-weight: 900; }
     .feedback { min-height: 30px; margin-top: 18px; color: var(--good); font-size: 1rem; font-weight: 900; text-align: center; }
     .feedback.bad { color: var(--bad); }
     .submit, .next { width: 100%; margin-top: 5px; padding: 16px 20px; border: 0; border-radius: 15px; color: white; font-size: 1.1rem; font-weight: 900; transition: transform .15s ease, opacity .15s ease; }
@@ -141,13 +147,28 @@
     .home-link:hover { color: var(--coral); }
     @keyframes wobble { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
     @media (max-width: 520px) {
-      .app-shell { width: min(100% - 18px, 480px); padding-top: 12px; }
-      .topbar { margin-bottom: 18px; }
+      .app-shell { display: flex; width: min(100% - 18px, 480px); height: 100dvh; min-height: 0; flex-direction: column; padding-top: 10px; padding-bottom: 10px; overflow: hidden; }
+      .topbar { flex: 0 0 auto; margin-bottom: 10px; }
       .brand { font-size: .92rem; }
       .brand-mark { width: 34px; height: 34px; }
-      .card-inner { padding: 22px 16px 20px; }
-      .problem { min-height: 280px; }
-      .answer-choice { min-width: 82px; min-height: 67px; }
+      .practice-card { flex: 1 1 auto; min-height: 0; }
+      .card-inner { display: flex; min-height: 0; height: 100%; flex-direction: column; padding: 14px 12px 12px; }
+      .prompt { min-height: 34px; margin: 12px 0 8px; font-size: 1.3rem; }
+      .problem { min-height: 0; flex: 1 1 auto; gap: 10px; overflow: hidden; }
+      .answer-choice { min-width: 68px; min-height: 52px; padding: 8px 12px; font-size: 1.6rem; }
+      .keypad { gap: 5px; }
+      .key { min-height: 37px; }
+      .number-answer { width: 68px; height: 57px; font-size: 2rem; }
+      .add-dots { min-height: 45px; width: 58px; font-size: 1.35rem; }
+      .add-number { min-width: 36px; padding: 3px 6px; font-size: 1.65rem; }
+      .add-symbol { padding-bottom: 5px; font-size: 1.9rem; }
+      .add-result { width: 39px; height: 39px; font-size: 1.6rem; }
+      .measure { min-height: 150px; }
+      .measure-object { max-height: 144px; }
+      .unit-ruler { height: 144px; }
+      .submit, .next { padding: 11px 16px; font-size: 1rem; }
+      .feedback { min-height: 22px; margin-top: 8px; }
+      .hint, .home-link { display: none; }
       .bar-compare { gap: 27px; }
     }
   </style>
@@ -231,7 +252,7 @@
       { label: 'Trace', make() { const n = int(1, 9); return { prompt: 'Trace.', html: `<div class="trace-guide">${WORDS[n]}</div><canvas class="trace-pad" id="trace-pad" width="600" height="220" aria-label="Trace here"></canvas>`, answer: WORDS[n], mode: 'trace', signature: `trace-${n}` }; } },
       { label: 'Middle number', make() { const n = int(0, 8); return { prompt: 'What is in the middle?', html: sequenceAnswer(n, n + 2), answer: n + 1, signature: `middle-${n}` }; } },
       { label: '2D or 3D', make() { const is3d = random() > .5, answer = is3d ? '3D' : '2D'; return { prompt: '2D or 3D?', html: `<div class="shape-visual">${shapeSvg(is3d)}</div>${choices(['2D', '3D'], answer)}`, answer, signature: `shape-${is3d}` }; } },
-      { label: 'Part + part', make() { const a = int(1, 5), b = int(1, 5), answer = a + b; return { prompt: 'What is the whole?', html: `<div class="part-whole"><div class="whole"><input class="number-answer" id="numeric-answer" type="text" inputmode="none" readonly aria-label="Whole"></div><div class="parts"><div class="part">${a}</div><div class="part">${b}</div></div></div>${keypadMarkup()}`, answer, signature: `whole-${a}-${b}` }; } },
+      { label: 'Part + part', make() { const a = int(1, 5), b = int(1, 5), answer = a + b; return { prompt: 'What is the whole?', html: `<div class="part-whole"><div class="whole-parts"><span>${a}</span><b>+</b><span>${b}</span></div><div class="whole-equals">=</div><div class="whole"><input class="number-answer" id="numeric-answer" type="text" inputmode="none" readonly aria-label="Whole"></div></div>${keypadMarkup()}`, answer, signature: `whole-${a}-${b}` }; } },
       { label: 'Greater number', make() { let a = int(1, 9), b = int(1, 9); while (a === b) b = int(1, 9); const answer = Math.max(a, b); return { prompt: 'Which is greater?', html: `<div class="sequence"><span>${a}</span><span style="font-size:2rem">or</span><span>${b}</span></div>${numericAnswer()}`, answer, signature: `greater-${a}-${b}` }; } }
     ];
 
