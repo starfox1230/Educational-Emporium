@@ -76,8 +76,12 @@
     .tally-set { position: relative; display: flex; gap: 5px; height: 66px; padding: 0 5px; border-bottom: 3px solid var(--ink); }
     .tally { width: 5px; height: 58px; border-radius: 2px; background: var(--ink); }
     .tally-set.five::after { content: ""; position: absolute; left: -3px; top: 28px; width: 62px; height: 5px; border-radius: 3px; background: var(--coral); transform: rotate(-54deg); }
-    .add-visual { display: flex; align-items: center; justify-content: center; gap: 15px; color: var(--ink); font-size: 2.8rem; font-weight: 900; }
-    .add-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; width: 100px; font-size: 2.2rem; line-height: .9; }
+    .add-visual { display: flex; align-items: end; justify-content: center; gap: 13px; color: var(--ink); font-size: 2.8rem; font-weight: 900; }
+    .add-column { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .add-dots { display: flex; flex-wrap: wrap; align-content: end; justify-content: center; gap: 5px; width: 74px; min-height: 61px; color: var(--blue-dark); font-size: 1.7rem; line-height: 1; }
+    .add-number { min-width: 42px; padding: 4px 8px; border: 3px solid var(--ink); border-radius: 8px; background: #fff; font-size: 2.1rem; line-height: 1; text-align: center; }
+    .add-symbol { padding-bottom: 8px; font-size: 2.4rem; }
+    .add-result { display: grid; place-items: center; width: 49px; height: 49px; margin-bottom: 1px; border: 3px dashed var(--coral); border-radius: 9px; color: var(--coral); font-size: 2rem; }
     .measure { display: flex; align-items: end; justify-content: center; gap: 24px; min-height: 190px; }
     .measure-object { width: 78px; border: 4px solid var(--ink); border-radius: 10px 10px 3px 3px; background: repeating-linear-gradient(0deg, #e8755f 0 20px, #ffad91 20px 24px); }
     .unit-ruler { position: relative; width: 48px; height: 168px; border: 3px solid var(--blue-dark); border-radius: 4px; background: #f7e6ae; }
@@ -100,6 +104,13 @@
     .pencil-choice.selected { background: var(--coral); transform: translateY(-8px); }
     .trace-guide { color: transparent; -webkit-text-stroke: 2px #94aaa3; font-family: Georgia, serif; font-size: clamp(3.3rem, 13vw, 6rem); font-weight: 900; letter-spacing: .03em; }
     .trace-pad { width: min(410px, 100%); height: 150px; border: 3px dashed var(--coral); border-radius: 18px; background: #fff8ee; touch-action: none; }
+    .number-answer-wrap { display: grid; justify-items: center; gap: 14px; width: 100%; }
+    .number-answer { width: 78px; height: 70px; padding: 5px; border: 4px solid var(--ink); border-radius: 12px; background: white; color: var(--ink); font-size: 2.5rem; font-weight: 900; text-align: center; }
+    .number-answer:focus { outline: 4px solid rgba(232, 117, 95, .35); }
+    .keypad { display: grid; grid-template-columns: repeat(4, minmax(48px, 64px)); justify-content: center; gap: 8px; }
+    .key { min-height: 48px; border: 2px solid var(--blue-dark); border-radius: 11px; background: #e8f2ee; color: var(--blue-dark); font-size: 1.3rem; font-weight: 900; }
+    .key:hover, .key:focus-visible { border-color: var(--coral); background: #fff1eb; outline: none; }
+    .key.utility { background: #f2eee4; color: var(--muted); font-size: 1rem; }
     .shape-visual { display: grid; place-items: center; min-height: 180px; }
     .shape-visual svg { width: 180px; height: 180px; }
     .part-whole { display: flex; flex-direction: column; align-items: center; gap: 12px; }
@@ -165,6 +176,10 @@
     function esc(value) { return String(value).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])); }
     function objects(emoji, amount) { return `<div class="objects" aria-label="${amount} objects">${Array.from({ length: amount }, () => `<span>${emoji}</span>`).join('')}</div>`; }
     function choices(values, answer, display = value => value) { return `<div class="choices" data-answer="${esc(answer)}">${values.map(value => `<button class="answer-choice" type="button" data-value="${esc(value)}">${display(value)}</button>`).join('')}</div>`; }
+    function keypadMarkup() { return `<div class="keypad" aria-label="Number keypad">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map(number => `<button class="key" type="button" data-key="${number}">${number}</button>`).join('')}<button class="key utility" type="button" data-key="clear">Clear</button><button class="key utility" type="button" data-key="backspace" aria-label="Delete last number">⌫</button></div>`; }
+    function numericAnswer() { return `<div class="number-answer-wrap"><input class="number-answer" id="numeric-answer" type="text" inputmode="none" readonly aria-label="Your answer">${keypadMarkup()}</div>`; }
+    function sequenceAnswer(left, right) { return `<div class="sequence"><span>${left}</span><input class="number-answer" id="numeric-answer" type="text" inputmode="none" readonly aria-label="Missing number"><span>${right}</span></div>${keypadMarkup()}`; }
+    function addColumn(number) { return `<div class="add-column"><div class="add-dots" aria-label="${number} dots above ${number}">${'●'.repeat(number)}</div><div class="add-number">${number}</div></div>`; }
     function dots(amount) { return `<div class="dot-field" aria-label="${amount} dots">${Array.from({ length: amount }, () => '<span class="dot"></span>').join('')}</div>`; }
     function tallies(amount) {
       const groups = Math.floor(amount / 5), rest = amount % 5;
@@ -173,24 +188,24 @@
     function shapeSvg(is3d) { return is3d ? '<svg viewBox="0 0 180 180" aria-label="3D shape"><path d="M36 48 104 26l42 30-69 25Z" fill="#f5c85f" stroke="#182532" stroke-width="6"/><path d="M36 48v76l41 30V81Z" fill="#9ec9b9" stroke="#182532" stroke-width="6" stroke-linejoin="round"/><path d="m77 81 69-25v73l-69 25Z" fill="#e8755f" stroke="#182532" stroke-width="6" stroke-linejoin="round"/></svg>' : '<svg viewBox="0 0 180 180" aria-label="2D shape"><path d="M90 20 155 145H25Z" fill="#e8755f" stroke="#182532" stroke-width="6" stroke-linejoin="round"/></svg>'; }
 
     const generators = [
-      { label: 'Before / after', make() { const n = int(2, 15), before = random() > .5, answer = before ? n - 1 : n + 1; return { prompt: `What comes ${before ? 'before' : 'after'}?`, html: `<div class="visual"><div class="focus-number">${n}</div><div class="direction">${before ? '←' : '→'}</div></div>${choices([answer, before ? n + 1 : n - 1], answer)}`, answer, signature: `before-after-${n}-${before}` }; } },
-      { label: 'Count', make() { const n = int(2, 10), emoji = pick(EMOJIS), options = shuffle([n, n + 1, Math.max(1, n - 1)]); return { prompt: 'How many?', html: `<div class="visual">${objects(emoji, n)}</div>${choices(options, n)}`, answer: n, signature: `count-${emoji}-${n}` }; } },
-      { label: 'Bigger number', make() { let a = int(1, 10), b = int(1, 10); while (a === b) b = int(1, 10); const answer = Math.max(a, b); return { prompt: 'Which is bigger?', html: choices([a, b], answer, value => `<span class="focus-number" style="font-size:3.6rem">${value}</span>`), answer, signature: `bigger-${a}-${b}` }; } },
-      { label: 'Number word', make() { const n = int(1, 9), correct = WORDS[n], wrong = pick(WORDS.filter(word => word !== correct)); return { prompt: 'Which word?', html: `<div class="visual">${objects(pick(EMOJIS), n)}</div>${choices(shuffle([correct, wrong]), correct, value => `<span class="number-word" style="font-size:2rem">${value}</span>`)}`, answer: correct, signature: `word-${n}-${wrong}` }; } },
-      { label: 'Missing number', make() { const n = int(2, 14); return { prompt: 'What is missing?', html: `<div class="sequence"><span>${n}</span><span class="blank">?</span><span>${n + 2}</span></div>${choices([n + 1, n + 3], n + 1)}`, answer: n + 1, signature: `sequence-${n}` }; } },
-      { label: 'Measure', make() { const n = int(2, 7); return { prompt: 'How many units tall?', html: `<div class="measure"><div class="measure-object" style="height:${n * 24}px" aria-label="a standard bar"></div><div class="unit-ruler" aria-label="a ruler with equal units"></div></div>${choices([n, n + 1, Math.max(1, n - 1)], n)}`, answer: n, signature: `measure-${n}` }; } },
-      { label: 'Dots', make() { const n = int(6, 16); return { prompt: 'How many dots?', html: `<div class="visual">${dots(n)}</div>${choices(shuffle([n, n + 1, n - 1]), n)}`, answer: n, signature: `dots-${n}` }; } },
-      { label: 'Tally marks', make() { const n = int(5, 14); return { prompt: 'How many?', html: `<div class="visual">${tallies(n)}</div>${choices(shuffle([n, n + 1, n - 1]), n)}`, answer: n, signature: `tally-${n}` }; } },
-      { label: 'Add', make() { const a = int(0, 5), b = int(0, 5), answer = a + b; return { prompt: 'Add.', html: `<div class="add-visual"><span class="add-group">${'●'.repeat(a) || '—'}</span><b>+</b><span class="add-group">${'●'.repeat(b) || '—'}</span></div>${choices(shuffle([answer, answer + 1, Math.max(0, answer - 1)]), answer)}`, answer, signature: `add-${a}-${b}` }; } },
+      { label: 'Before / after', make() { const n = int(2, 15), before = random() > .5, answer = before ? n - 1 : n + 1; return { prompt: `What comes ${before ? 'before' : 'after'}?`, html: `<div class="visual"><div class="focus-number">${n}</div><div class="direction">${before ? '←' : '→'}</div></div>${numericAnswer()}`, answer, signature: `before-after-${n}-${before}` }; } },
+      { label: 'Count', make() { const n = int(2, 10), emoji = pick(EMOJIS); return { prompt: 'How many?', html: `<div class="visual">${objects(emoji, n)}</div>${numericAnswer()}`, answer: n, signature: `count-${emoji}-${n}` }; } },
+      { label: 'Bigger number', make() { let a = int(1, 10), b = int(1, 10); while (a === b) b = int(1, 10); const answer = Math.max(a, b); return { prompt: 'Which is bigger?', html: `<div class="sequence"><span>${a}</span><span style="font-size:2rem">or</span><span>${b}</span></div>${numericAnswer()}`, answer, signature: `bigger-${a}-${b}` }; } },
+      { label: 'Number word', make() { const n = int(1, 9), correct = WORDS[n]; return { prompt: 'Which word?', html: `<div class="visual">${objects(pick(EMOJIS), n)}</div>${choices(WORDS.slice(1, 10), correct, value => `<span class="number-word" style="font-size:1.55rem">${value}</span>`)}`, answer: correct, signature: `word-${n}` }; } },
+      { label: 'Missing number', make() { const n = int(2, 14); return { prompt: 'What is missing?', html: sequenceAnswer(n, n + 2), answer: n + 1, signature: `sequence-${n}` }; } },
+      { label: 'Measure', make() { const n = int(2, 7); return { prompt: 'How many units tall?', html: `<div class="measure"><div class="measure-object" style="height:${n * 24}px" aria-label="a standard bar"></div><div class="unit-ruler" aria-label="a ruler with equal units"></div></div>${numericAnswer()}`, answer: n, signature: `measure-${n}` }; } },
+      { label: 'Dots', make() { const n = int(6, 16); return { prompt: 'How many dots?', html: `<div class="visual">${dots(n)}</div>${numericAnswer()}`, answer: n, signature: `dots-${n}` }; } },
+      { label: 'Tally marks', make() { const n = int(5, 14); return { prompt: 'How many?', html: `<div class="visual">${tallies(n)}</div>${numericAnswer()}`, answer: n, signature: `tally-${n}` }; } },
+      { label: 'Add', make() { const a = int(0, 5), b = int(0, 5), answer = a + b; return { prompt: 'Add.', html: `<div class="add-visual">${addColumn(a)}<span class="add-symbol">+</span>${addColumn(b)}<span class="add-symbol">=</span><span class="add-result">?</span></div>${numericAnswer()}`, answer, signature: `add-${a}-${b}` }; } },
       { label: 'Gum machine', make() { const target = int(5, 9); return { prompt: 'Make this many.', html: `<div class="visual"><div class="focus-number" style="font-size:5rem">${target}</div><div class="machine" id="machine" role="button" tabindex="0" aria-label="Add a gum piece"><div class="machine-window" id="gum-display"></div></div></div><div class="mini-controls"><button class="round-control" type="button" data-gum="remove" aria-label="Remove one gum piece">−</button><button class="round-control" type="button" data-gum="add" aria-label="Add one gum piece">＋</button></div>`, answer: target, mode: 'gum', signature: `gum-${target}` }; } },
-      { label: 'Number match', make() { const n = int(1, 9); return { prompt: 'Which number?', html: `<div class="number-word">${WORDS[n]}</div>${choices(shuffle([n, n + 1]), n)}`, answer: n, signature: `match-${n}` }; } },
+      { label: 'Number match', make() { const n = int(1, 9); return { prompt: 'Which number?', html: `<div class="number-word">${WORDS[n]}</div>${numericAnswer()}`, answer: n, signature: `match-${n}` }; } },
       { label: 'Taller', make() { return { prompt: 'Which is taller?', html: '<div class="bar-compare"><button class="bar-choice" type="button" data-value="A"><span></span><b>A</b></button><button class="bar-choice" type="button" data-value="B"><span></span><b>B</b></button></div>', answer: 'B', mode: 'custom-choice', signature: `taller-${int(0, 999999)}` }; } },
       { label: 'Pencils', make() { const target = int(2, 5); return { prompt: `Tap ${target}.`, html: `<div class="pencil-row">${Array.from({ length: 6 }, (_, i) => `<button class="pencil-choice" type="button" data-pencil="${i}" aria-label="Pencil ${i + 1}"></button>`).join('')}</div>`, answer: target, mode: 'pencils', signature: `pencils-${target}` }; } },
       { label: 'Trace', make() { const n = int(1, 9); return { prompt: 'Trace.', html: `<div class="trace-guide">${WORDS[n]}</div><canvas class="trace-pad" id="trace-pad" width="600" height="220" aria-label="Trace here"></canvas>`, answer: WORDS[n], mode: 'trace', signature: `trace-${n}` }; } },
-      { label: 'Middle number', make() { const n = int(0, 8); return { prompt: 'What is in the middle?', html: `<div class="sequence"><span>${n}</span><span class="blank">?</span><span>${n + 2}</span></div>${choices([n + 1, n + 2], n + 1)}`, answer: n + 1, signature: `middle-${n}` }; } },
+      { label: 'Middle number', make() { const n = int(0, 8); return { prompt: 'What is in the middle?', html: sequenceAnswer(n, n + 2), answer: n + 1, signature: `middle-${n}` }; } },
       { label: '2D or 3D', make() { const is3d = random() > .5, answer = is3d ? '3D' : '2D'; return { prompt: '2D or 3D?', html: `<div class="shape-visual">${shapeSvg(is3d)}</div>${choices(['2D', '3D'], answer)}`, answer, signature: `shape-${is3d}` }; } },
-      { label: 'Part + part', make() { const a = int(1, 5), b = int(1, 5), answer = a + b; return { prompt: 'What is the whole?', html: `<div class="part-whole"><div class="whole">?</div><div class="parts"><div class="part">${a}</div><div class="part">${b}</div></div></div>${choices(shuffle([answer, answer + 1, Math.max(1, answer - 1)]), answer)}`, answer, signature: `whole-${a}-${b}` }; } },
-      { label: 'Greater number', make() { let a = int(1, 9), b = int(1, 9); while (a === b) b = int(1, 9); const answer = Math.max(a, b); return { prompt: 'Which is greater?', html: choices([a, b], answer, value => `<span class="focus-number" style="font-size:3.6rem">${value}</span>`), answer, signature: `greater-${a}-${b}` }; } }
+      { label: 'Part + part', make() { const a = int(1, 5), b = int(1, 5), answer = a + b; return { prompt: 'What is the whole?', html: `<div class="part-whole"><div class="whole"><input class="number-answer" id="numeric-answer" type="text" inputmode="none" readonly aria-label="Whole"></div><div class="parts"><div class="part">${a}</div><div class="part">${b}</div></div></div>${keypadMarkup()}`, answer, signature: `whole-${a}-${b}` }; } },
+      { label: 'Greater number', make() { let a = int(1, 9), b = int(1, 9); while (a === b) b = int(1, 9); const answer = Math.max(a, b); return { prompt: 'Which is greater?', html: `<div class="sequence"><span>${a}</span><span style="font-size:2rem">or</span><span>${b}</span></div>${numericAnswer()}`, answer, signature: `greater-${a}-${b}` }; } }
     ];
 
     function uniqueProblem() {
@@ -215,6 +230,19 @@
       });
       state.current.selected = value;
       readyToSubmit();
+    }
+    function setupKeypad() {
+      const input = $('numeric-answer');
+      if (!input) return;
+      document.querySelectorAll('.key').forEach(button => button.addEventListener('click', () => {
+        const key = button.dataset.key;
+        if (key === 'clear') input.value = '';
+        else if (key === 'backspace') input.value = input.value.slice(0, -1);
+        else if (input.value.length < 2) input.value += key;
+        state.current.selected = input.value;
+        if (input.value) readyToSubmit();
+        else $('submit').disabled = true;
+      }));
     }
     function setupTrace() {
       const canvas = $('trace-pad'), ctx = canvas.getContext('2d');
@@ -255,6 +283,7 @@
       $('type-pill').textContent = state.current.label; $('prompt').textContent = state.current.prompt; $('problem').innerHTML = state.current.html; $('feedback').textContent = ''; $('feedback').classList.remove('bad'); $('submit').disabled = true; $('next').disabled = true; $('counter').textContent = `⭐ ${state.streak}`; $('progress').style.width = `${Math.min(100, 10 + (state.count % 10) * 9)}%`;
       document.querySelectorAll('.choices').forEach(container => container.querySelectorAll('.answer-choice').forEach(button => button.addEventListener('click', () => markChoices(container, button.dataset.value))));
       if (state.current.mode === 'custom-choice') document.querySelectorAll('.bar-choice').forEach(button => button.addEventListener('click', () => markChoices(document.querySelector('.bar-compare'), button.dataset.value)));
+      setupKeypad();
       setupSpecial();
     }
     $('submit').addEventListener('click', evaluate);
