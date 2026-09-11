@@ -39,6 +39,18 @@
     .brand-mark { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 13px; background: var(--coral); color: white; font-size: 1.35rem; transform: rotate(-6deg); }
     .week { color: var(--muted); font-size: .78rem; font-weight: 800; text-align: right; }
     .week strong { display: block; color: var(--blue-dark); font-size: .92rem; }
+    .topbar-actions { display: flex; align-items: center; gap: 10px; }
+    .settings-button { display: grid; place-items: center; width: 42px; height: 42px; border: 2px solid var(--line); border-radius: 13px; background: var(--paper); color: var(--blue-dark); font-size: 1.3rem; font-weight: 900; }
+    .settings-button:hover, .settings-button:focus-visible { border-color: var(--coral); background: #fff1eb; outline: none; }
+    .settings-dialog { width: min(330px, calc(100% - 30px)); padding: 0; border: 0; border-radius: 22px; background: var(--paper); color: var(--ink); box-shadow: 0 22px 60px rgba(31, 56, 64, .25); }
+    .settings-dialog::backdrop { background: rgba(24, 37, 50, .35); }
+    .settings-content { padding: 24px; }
+    .settings-content h2 { margin: 0 0 18px; color: var(--blue-dark); font-size: 1.35rem; }
+    .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; border-top: 1px solid var(--line); color: var(--muted); font-size: .95rem; font-weight: 800; }
+    .settings-total { color: var(--blue-dark); font-size: 1.6rem; }
+    .reset-button, .close-button { width: 100%; padding: 12px 14px; border-radius: 11px; font-weight: 900; }
+    .reset-button { border: 2px solid #e6b9ad; background: #fff0eb; color: var(--bad); }
+    .close-button { margin-top: 10px; border: 0; background: var(--blue-dark); color: white; }
     .back { display: inline-block; margin: 0 0 18px; color: var(--muted); font-size: .8rem; font-weight: 800; text-decoration: none; }
     .back:hover { color: var(--coral); }
 
@@ -145,8 +157,20 @@
     <a class="back" href="../../index.html">← Educational Emporium</a>
     <header class="topbar">
       <div class="brand"><span class="brand-mark">✦</span><span>Spiral Math</span></div>
-      <div class="week"><strong>Sep 7–11, 2026</strong><span>one at a time</span></div>
+      <div class="topbar-actions">
+        <div class="week"><strong>Sep 7–11, 2026</strong><span id="done-count">Done: 0</span></div>
+        <button class="settings-button" id="settings-button" type="button" aria-label="Open settings" title="Settings">⚙</button>
+      </div>
     </header>
+
+    <dialog class="settings-dialog" id="settings-dialog" aria-labelledby="settings-title">
+      <div class="settings-content">
+        <h2 id="settings-title">Settings</h2>
+        <div class="settings-row"><span>Exercises done</span><strong class="settings-total" id="settings-total">0</strong></div>
+        <button class="reset-button" id="reset-progress" type="button">Reset progress</button>
+        <button class="close-button" id="close-settings" type="button">Close</button>
+      </div>
+    </dialog>
 
     <section class="practice-card" aria-live="polite">
       <div class="progress-bar"><span id="progress"></span></div>
@@ -166,8 +190,11 @@
   <script>
     const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
     const EMOJIS = ['🍎', '🦋', '🐸', '🌼', '🍓', '🚀', '🐳', '🧸', '🌈', '🍪'];
-    const state = { count: 0, streak: 0, current: null, history: new Set(), rng: Math.random() * 2147483646 };
     const $ = (id) => document.getElementById(id);
+    const PROGRESS_KEY = 'educational-emporium:spiral-math:completed-v1';
+    function loadCompleted() { try { return Math.max(0, Number(localStorage.getItem(PROGRESS_KEY)) || 0); } catch { return 0; } }
+    function saveCompleted(value) { try { localStorage.setItem(PROGRESS_KEY, String(value)); } catch { /* The practice still works without storage. */ } }
+    const state = { count: 0, streak: 0, totalDone: loadCompleted(), current: null, history: new Set(), rng: Math.random() * 2147483646 };
 
     function random() { state.rng = state.rng * 16807 % 2147483647; return state.rng / 2147483647; }
     function int(min, max) { return Math.floor(random() * (max - min + 1)) + min; }
@@ -218,8 +245,13 @@
     }
 
     function setFeedback(message, bad = false) { $('feedback').textContent = message; $('feedback').classList.toggle('bad', bad); }
+    function updateCompleted() { $('done-count').textContent = `Done: ${state.totalDone}`; $('settings-total').textContent = state.totalDone; }
     function finish(correct) {
-      if (correct) { state.streak += 1; setFeedback('✓'); $('submit').disabled = true; $('next').disabled = false; $('next').focus(); }
+      if (correct) {
+        state.streak += 1;
+        if (!state.current.completed) { state.current.completed = true; state.totalDone += 1; saveCompleted(state.totalDone); updateCompleted(); }
+        setFeedback('✓'); $('submit').disabled = true; $('next').disabled = false; $('next').focus();
+      }
       $('counter').textContent = `⭐ ${state.streak}`;
     }
     function readyToSubmit() { $('submit').disabled = false; setFeedback(''); }
@@ -288,7 +320,14 @@
     }
     $('submit').addEventListener('click', evaluate);
     $('next').addEventListener('click', render);
+    $('settings-button').addEventListener('click', () => $('settings-dialog').showModal());
+    $('close-settings').addEventListener('click', () => $('settings-dialog').close());
+    $('settings-dialog').addEventListener('click', event => { if (event.target === $('settings-dialog')) $('settings-dialog').close(); });
+    $('reset-progress').addEventListener('click', () => {
+      if (window.confirm('Reset all completed exercises?')) { state.totalDone = 0; saveCompleted(0); updateCompleted(); $('settings-dialog').close(); }
+    });
     document.addEventListener('keydown', event => { if (event.key === 'Enter' && !$('next').disabled) render(); });
+    updateCompleted();
     render();
   </script>
 </body>
