@@ -143,6 +143,22 @@
     .whole { display: grid; place-items: center; width: 118px; height: 68px; border: 4px dashed var(--coral); border-radius: 16px; color: var(--coral); font-size: 3.2rem; font-weight: 900; }
     .feedback { min-height: 30px; margin-top: 18px; color: var(--good); font-size: 1rem; font-weight: 900; text-align: center; }
     .feedback.bad { color: var(--bad); }
+    .celebration { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; pointer-events: none; background: rgba(255, 255, 255, .16); opacity: 0; visibility: hidden; transition: opacity .18s ease, visibility .18s ease; }
+    .celebration.show { opacity: 1; visibility: visible; }
+    .celebration-burst { position: relative; width: 250px; height: 250px; display: grid; place-items: center; }
+    .celebration-check { display: grid; place-items: center; width: 112px; height: 112px; border: 9px solid white; border-radius: 50%; background: var(--good); color: white; box-shadow: 0 12px 28px rgba(78, 153, 117, .34); font-size: 4.8rem; line-height: 1; animation: celebration-pop .48s cubic-bezier(.2, 1.45, .45, 1) both; }
+    .celebration-message { position: absolute; top: calc(50% + 76px); padding: 8px 16px; border-radius: 999px; background: white; color: var(--good); box-shadow: 0 6px 18px rgba(24, 37, 50, .14); font-size: 1.05rem; font-weight: 900; white-space: nowrap; animation: celebration-rise .4s .1s ease-out both; }
+    .confetti-layer { position: absolute; inset: 0; }
+    .confetti-piece { position: absolute; top: 50%; left: 50%; width: 12px; height: 18px; border-radius: 3px; background: var(--confetti-color); opacity: 0; animation: confetti-burst 1.05s var(--confetti-delay) cubic-bezier(.16, .72, .22, 1) both; }
+    .confetti-piece.circle { width: 13px; height: 13px; border-radius: 50%; }
+    .confetti-piece.pill { width: 9px; height: 22px; border-radius: 999px; }
+    @keyframes celebration-pop { 0% { transform: scale(.25) rotate(-12deg); opacity: 0; } 65% { transform: scale(1.08) rotate(3deg); opacity: 1; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+    @keyframes celebration-rise { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes confetti-burst { 0% { transform: translate(-50%, -50%) scale(.25) rotate(0); opacity: 0; } 14% { opacity: 1; } 100% { transform: translate(calc(-50% + var(--confetti-x)), calc(-50% + var(--confetti-y))) rotate(var(--confetti-rotation)); opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) {
+      .celebration-check, .celebration-message, .confetti-piece { animation: none; }
+      .confetti-piece { opacity: 0; }
+    }
     .submit, .next { width: 100%; margin-top: 5px; padding: 16px 20px; border: 0; border-radius: 15px; color: white; font-size: 1.1rem; font-weight: 900; transition: transform .15s ease, opacity .15s ease; }
     .submit { background: var(--coral); box-shadow: 0 5px 0 #bd5c49; }
     .next { background: var(--blue-dark); box-shadow: 0 5px 0 #153c4a; }
@@ -213,6 +229,13 @@
     </section>
     <a class="home-link" href="../../index.html">Back to all learning games</a>
   </main>
+  <div class="celebration" id="celebration" aria-hidden="true">
+    <div class="celebration-burst" aria-live="polite">
+      <div class="confetti-layer" id="confetti-layer"></div>
+      <div class="celebration-check" aria-label="Correct">✓</div>
+      <div class="celebration-message">Great job!</div>
+    </div>
+  </div>
 
   <script>
     const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
@@ -221,7 +244,7 @@
     const PROGRESS_KEY = 'educational-emporium:spiral-math:completed-v1';
     function loadCompleted() { try { return Math.max(0, Number(localStorage.getItem(PROGRESS_KEY)) || 0); } catch { return 0; } }
     function saveCompleted(value) { try { localStorage.setItem(PROGRESS_KEY, String(value)); } catch { /* The practice still works without storage. */ } }
-    const state = { count: 0, streak: 0, totalDone: loadCompleted(), current: null, history: new Set(), rng: Math.random() * 2147483646 };
+    const state = { count: 0, streak: 0, totalDone: loadCompleted(), current: null, history: new Set(), rng: Math.random() * 2147483646, celebrationTimer: null };
 
     function random() { state.rng = state.rng * 16807 % 2147483647; return state.rng / 2147483647; }
     function int(min, max) { return Math.floor(random() * (max - min + 1)) + min; }
@@ -274,11 +297,36 @@
 
     function setFeedback(message, bad = false) { $('feedback').textContent = message; $('feedback').classList.toggle('bad', bad); }
     function updateCompleted() { $('done-count').textContent = `Done: ${state.totalDone}`; $('settings-total').textContent = state.totalDone; }
+    function hideCelebration() {
+      const celebration = $('celebration');
+      celebration.classList.remove('show');
+      celebration.setAttribute('aria-hidden', 'true');
+      clearTimeout(state.celebrationTimer);
+    }
+    function celebrate() {
+      const colors = ['#e8755f', '#f5c85f', '#2f7185', '#4e9975', '#a6d2c1'];
+      const shapes = ['square', 'circle', 'pill'];
+      const pieces = Array.from({ length: 28 }, (_, index) => {
+        const angle = (index / 28) * Math.PI * 2 + random() * .18;
+        const distance = int(92, 174);
+        const x = Math.cos(angle) * distance;
+        const y = Math.sin(angle) * distance;
+        return `<span class="confetti-piece ${shapes[index % shapes.length]}" style="--confetti-x:${x.toFixed(0)}px;--confetti-y:${y.toFixed(0)}px;--confetti-rotation:${int(-260, 260)}deg;--confetti-delay:${(random() * .08).toFixed(2)}s;--confetti-color:${colors[index % colors.length]}"></span>`;
+      }).join('');
+      $('confetti-layer').innerHTML = pieces;
+      const celebration = $('celebration');
+      celebration.classList.remove('show');
+      void celebration.offsetWidth;
+      celebration.classList.add('show');
+      celebration.setAttribute('aria-hidden', 'false');
+      clearTimeout(state.celebrationTimer);
+      state.celebrationTimer = setTimeout(hideCelebration, 1500);
+    }
     function finish(correct) {
       if (correct) {
         state.streak += 1;
         if (!state.current.completed) { state.current.completed = true; state.totalDone += 1; saveCompleted(state.totalDone); updateCompleted(); }
-        setFeedback('✓'); $('submit').disabled = true; $('next').disabled = false; $('next').focus();
+        setFeedback('Correct!'); celebrate(); $('submit').disabled = true; $('next').disabled = false; $('next').focus();
       }
       $('counter').textContent = `⭐ ${state.streak}`;
     }
@@ -339,6 +387,7 @@
       if (selected) { selected.classList.remove('selected'); selected.classList.add('wrong'); }
     }
     function render() {
+      hideCelebration();
       state.count += 1; state.current = uniqueProblem();
       $('type-pill').textContent = state.current.label; $('prompt').textContent = state.current.prompt; $('problem').innerHTML = state.current.html; $('feedback').textContent = ''; $('feedback').classList.remove('bad'); $('submit').disabled = true; $('next').disabled = true; $('counter').textContent = `⭐ ${state.streak}`; $('progress').style.width = `${Math.min(100, 10 + (state.count % 10) * 9)}%`;
       document.querySelectorAll('.choices').forEach(container => container.querySelectorAll('.answer-choice').forEach(button => button.addEventListener('click', () => markChoices(container, button.dataset.value))));
