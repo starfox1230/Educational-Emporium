@@ -42,6 +42,9 @@
     :root {
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left: env(safe-area-inset-left, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
+      --app-height: 100vh;
       --brand: #26c6da;
       --brand-light: #80deea;
       --brand-dark: #00acc1;
@@ -59,30 +62,39 @@
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html,body{height:100%;overflow:hidden;font-family:'Poppins',sans-serif;color:var(--fg);
-    -webkit-tap-highlight-color:transparent;touch-action:none;
+    -webkit-tap-highlight-color:transparent;touch-action:manipulation;
     -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
     overscroll-behavior: none;
 }
-    body { background-color: var(--bg); }
+    @supports (height: 100dvh) {
+      :root { --app-height: 100dvh; }
+    }
+    body {
+      background-color: var(--bg);
+      height: var(--app-height);
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      -webkit-text-size-adjust: 100%;
+    }
     #confetti-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1000}
 
   .top-bar {
-    position: fixed;
-    top: 0;
-    left: 0;
+    position: relative;
+    grid-row: 1;
     width: 100%;
     height: auto;
     min-height: 70px;
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 60px minmax(0, 1fr);
+    gap: 8px;
     align-items: center; /* Vertically center all items */
-    justify-content: space-between;
-    padding: 10px 10px 0 16px; /* Consistent padding */
-    padding-top: calc(10px + var(--safe-top)); /* Keep this for pushing content down */
+    padding: calc(10px + var(--safe-top)) calc(10px + var(--safe-right)) 10px calc(16px + var(--safe-left));
     z-index: 50;
   }
 
     #score {
-      font-size: 1.1rem;
+      justify-self: start;
+      font-size: clamp(0.85rem, 3vw, 1.1rem);
       font-weight: 600;
       background-color: rgba(255,255,255,0.7);
       padding: 8px 12px;
@@ -91,12 +103,8 @@
       /* margin-top: 10px;  <-- REMOVED */
     }
     #timer-wrapper {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
       width: 60px;
       height: 60px;
-      top: calc(5px + var(--safe-top)); /* Use safe-top here */
     }
     #circular-timer { width: 100%; height: 100%; }
 
@@ -106,16 +114,19 @@
       flex-direction: column;
       align-items: flex-end;
       gap: 0.3rem;
-      /* padding-top: 10px; <-- REMOVED */
-      padding-right: 10px; 
+      justify-self: end;
+      width: 100%;
+      max-width: 165px;
+      min-width: 0;
     }
 
     /* Shared styles for top bar control buttons */
     #word-list-open-btn,
     #toggle-minigames-btn,
+    #edit-minigames-btn,
     #toggle-background-btn {
         padding: 0.4rem 0.8rem;
-        font-size: 0.8rem;
+        font-size: clamp(0.7rem, 2.4vw, 0.8rem);
         font-weight: 600;
         background-color: var(--btn-bg);
         border: 2px solid var(--btn-border);
@@ -124,7 +135,8 @@
         box-shadow: 0 2px 4px var(--shadow-color);
         text-align: center;
         line-height: 1.2;
-        width: 165px; /* Consistent width */
+        width: 100%;
+        overflow-wrap: anywhere;
     }
     
     #word-list-open-btn {
@@ -341,9 +353,7 @@
         color: #888;
     }
     .word-list-done-btn {
-        position: absolute;
-        right: 1rem;
-        bottom: calc(1rem + var(--safe-bottom));
+        flex-shrink: 0;
         padding: 0.5rem 1rem;
         background-color: var(--brand);
         color: white;
@@ -357,13 +367,14 @@
     .word-list-done-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 12px var(--shadow-color); }
     .word-list-done-btn:active { transform: translateY(0); box-shadow: 0 3px 6px var(--shadow-color); }
 
-    #quiz-container{ display:flex;justify-content:center;align-items:center; min-height: 30vh; padding:1rem; margin-top: 80px; /* Increased to clear taller top-bar */ height: calc(100vh - 80px - 70px); }
-    #listen-pick-word-area { display: flex; justify-content: center; align-items: center; width: 100%; }
+    /* Let the bars reserve their actual height, including iPhone safe areas. */
+    #quiz-container{ grid-row: 2; display:flex;justify-content:center;align-items:center; min-height: 0; min-width: 0; padding:1rem calc(1rem + var(--safe-right)) 1rem calc(1rem + var(--safe-left)); overflow-y: auto; }
+    #listen-pick-word-area { display: flex; justify-content: center; align-items: center; width: 100%; gap: 1rem; }
     #read-pick-sound-area { display: none; flex-direction: column; justify-content: center; align-items: center; width: 100%; gap: 1.5rem; }
-    .word-display-box { background: var(--btn-bg); border: 3px solid var(--brand-dark); border-radius: var(--btn-radius); padding: 1.5rem 2rem; font-size: 2.5rem; font-weight: 600; color: var(--fg); min-width: 200px; text-align: center; box-shadow: 0 4px 8px var(--shadow-color); }
-    #sound-choices-container { display: flex; justify-content: center; gap: 1rem; }
+    .word-display-box { background: var(--btn-bg); border: 3px solid var(--brand-dark); border-radius: var(--btn-radius); padding: 1.5rem 2rem; font-size: clamp(1.8rem, 6vw, 2.5rem); font-weight: 600; color: var(--fg); min-width: 0; max-width: 100%; overflow-wrap: anywhere; text-align: center; box-shadow: 0 4px 8px var(--shadow-color); }
+    #sound-choices-container { display: flex; justify-content: center; gap: 1rem; width: 100%; }
 
-    .choice-btn{ flex:1; min-width: 120px; max-width: 200px; margin:0 .75rem;padding:1.2rem; font-size:1.8rem; font-weight: 600; background:var(--btn-bg);border:2px solid var(--btn-border);border-radius:var(--btn-radius); transition:background var(--transition),transform var(--transition), box-shadow var(--transition), border-color var(--transition); touch-action:manipulation; cursor:pointer; box-shadow: 0 4px 6px var(--shadow-color); }
+    .choice-btn{ flex:1; min-width: 0; max-width: 200px; margin:0;padding:clamp(0.75rem, 3vw, 1.2rem); font-size:clamp(1.35rem, 4.8vw, 1.8rem); overflow-wrap:anywhere; font-weight: 600; background:var(--btn-bg);border:2px solid var(--btn-border);border-radius:var(--btn-radius); transition:background var(--transition),transform var(--transition), box-shadow var(--transition), border-color var(--transition); touch-action:manipulation; cursor:pointer; box-shadow: 0 4px 6px var(--shadow-color); }
     .choice-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 10px var(--shadow-color); }
     .choice-btn:active{transform:scale(0.96); box-shadow: 0 2px 4px var(--shadow-color);}
     .choice-btn.correct { background-color: var(--correct-bg) !important; border-color: green !important; }
@@ -380,12 +391,12 @@
     #submit-answer-btn:active { transform: scale(0.98); }
     #submit-answer-btn:disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; }
 
-    #controls{ position: fixed; bottom: 0; left: 0; width: 100%; display:flex;justify-content:space-around; align-items:center; padding:0.5rem 1rem; padding-bottom: calc(10px + var(--safe-bottom)); height: 70px; background-color: rgba(255,255,255,0.3); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 50; }
+    #controls{ position: relative; grid-row: 3; width: 100%; display:flex;justify-content:space-around; align-items:center; flex-wrap:wrap; gap:0.5rem; padding:0.5rem calc(1rem + var(--safe-right)) calc(10px + var(--safe-bottom)) calc(1rem + var(--safe-left)); min-height: calc(70px + var(--safe-bottom)); background-color: rgba(255,255,255,0.3); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 50; }
     #timer-display{ padding:.6rem 1rem;background:var(--btn-bg);border:2px solid var(--btn-border);border-radius:var(--btn-radius); font-weight:600;cursor:pointer; box-shadow: 0 2px 4px var(--shadow-color); font-size: 0.9rem; }
     #listen-btn, #mode-toggle-btn { font-size:1.5rem; background:none;border:none;cursor:pointer;outline:none; padding: 0.5rem; transition: transform 0.2s; color: var(--brand-dark); font-weight: 600; }
     #mode-toggle-btn { font-size: 0.9rem; padding: 0.6rem 0.8rem; background-color: var(--btn-bg); border: 2px solid var(--btn-border); border-radius: var(--btn-radius); box-shadow: 0 2px 4px var(--shadow-color); }
     #listen-btn:active, #mode-toggle-btn:active {transform: scale(0.9);}
-    #timer-select{ position:absolute;bottom: calc(70px + 0.5rem); right:1rem;font-size:1rem;padding:.3rem .5rem;display:none; border-radius: 8px; border: 1px solid var(--btn-border); box-shadow: 0 2px 5px var(--shadow-color); }
+    #timer-select{ position:absolute;bottom: calc(100% + 0.5rem); left:calc(1rem + var(--safe-left)); max-width:calc(100% - 2rem - var(--safe-left) - var(--safe-right)); font-size:1rem;padding:.3rem .5rem;display:none; border-radius: 8px; border: 1px solid var(--btn-border); box-shadow: 0 2px 5px var(--shadow-color); }
     #mascot-container { position: fixed; bottom: 1rem; left: 1rem; width: 100px; height: 100px; z-index: 5; pointer-events: none; }
     #mascot-container lottie-player { width: 100%; height: 100%; }
     .floating-effect { position: fixed; padding: 0.5rem 1rem; color: white; border-radius: 20px; font-weight: bold; font-size: 1.2em; z-index: 1200; pointer-events: none; text-align: center; }
@@ -810,7 +821,63 @@
         z-index: -1; /* Place it behind the emojis */
         animation: redFlashAnimation 0.3s ease-out;
     }
+
+    /* Full-screen dialogs share the same safe, visible viewport as the quiz. */
+    .word-list-modal-overlay,
+    #word-customization-modal,
+    .generic-modal-overlay {
+        height: var(--app-height);
+        padding: calc(1rem + var(--safe-top)) calc(1rem + var(--safe-right)) calc(1rem + var(--safe-bottom)) calc(1rem + var(--safe-left));
+    }
+    .word-list-modal-content,
+    .modal-content,
+    .generic-modal-content {
+        width: 100%;
+        min-height: 0;
+        max-height: 100%;
+    }
+    .modal-content,
+    .generic-modal-content {
+        overflow-y: auto;
+        touch-action: pan-y;
+    }
+    .word-list-tree,
+    #modal-word-list {
+        min-height: 0;
+        touch-action: pan-y;
+        -webkit-overflow-scrolling: touch;
+    }
+    #modal-word-list { flex-shrink: 0; max-height: 40dvh; }
+    .word-list-modal-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+    .modal-header,
+    .modal-actions .io-buttons { flex-wrap: wrap; gap: 0.5rem; }
+    #modal-level-selector,
+    #paste-json-textarea { font-size: 1rem; }
+    #listen-pick-word-area,
+    #read-pick-sound-area { margin-block: auto; flex-shrink: 0; }
+    #minigame-area {
+        top: var(--safe-top);
+        left: var(--safe-left);
+        right: var(--safe-right);
+        width: auto;
+        height: calc(var(--app-height) - var(--safe-top) - var(--safe-bottom));
+        touch-action: none;
+    }
+    @media (max-height: 500px) and (min-width: 600px) {
+        .top-bar { grid-template-columns: auto 60px minmax(0, 1fr); gap: 1rem; }
+        #controls-RHS-container { flex-direction: row; max-width: 540px; }
+        #controls-RHS-container > button { flex: 1; min-width: 0; }
+        #read-pick-sound-area { gap: 0.65rem; }
+        .word-display-box { padding: 0.6rem 1rem; }
+        .sound-btn { padding: 0.5rem 1rem !important; }
+    }
   </style>
+  <link rel="stylesheet" href="mini-games.css">
 </head>
 <body>
 <canvas id="confetti-canvas"></canvas>
@@ -824,6 +891,7 @@
             <span class="badge" id="word-count-badge">0</span>
         </button>
         <button id="toggle-minigames-btn">Mini-Games: Off</button>
+        <button id="edit-minigames-btn" type="button">Edit Game Lineup</button>
         <button id="toggle-background-btn">Background: Animated</button>
     </div>
   </div>
@@ -921,7 +989,7 @@
   <div id="minigame-config-modal" class="generic-modal-overlay">
     <div class="generic-modal-content minigame-config-content" role="dialog" aria-modal="true" aria-labelledby="minigame-config-title">
       <h3 id="minigame-config-title">Mini-Game Lineup</h3>
-      <p>Choose which mini-games are available and arrange the order they'll appear.</p>
+      <p>Pick your favorites, put them in order, and save your own lineups.</p>
       <div class="minigame-interval-control">
         <label class="minigame-interval-label" for="minigame-interval-input">Mini-Game Interval</label>
         <div class="minigame-interval-input-row">
@@ -933,8 +1001,8 @@
       <div id="minigame-config-list" class="minigame-config-list"></div>
       <p id="minigame-config-empty-state" class="minigame-config-empty">No mini-games selected. Add some from the library below!</p>
       <div class="generic-modal-actions">
-        <button id="minigame-config-reset-btn" type="button">Reset to Default</button>
-        <button id="minigame-config-close-btn" type="button" class="cancel-btn">Done</button>
+        <button id="minigame-config-reset-btn" type="button">All games</button>
+        <button id="minigame-config-close-btn" type="button">Done</button>
       </div>
     </div>
   </div>
@@ -960,10 +1028,11 @@
       <!-- Mini-game content will be injected here by JS -->
   </div>
 
-  <div id="controls"> <div id="timer-display">10s ⏱️</div> <button id="mode-toggle-btn">Mode: Listen</button> <button id="listen-btn">🔊</button> </div>
-  <select id="timer-select"></select>
+  <div id="controls"> <div id="timer-display">10s ⏱️</div> <button id="mode-toggle-btn">Mode: Listen</button> <button id="listen-btn">🔊</button> <select id="timer-select"></select> </div>
   <div id="mascot-container"> <lottie-player src="https://lottie.host/449f9829-8f92-4a63-85a2-def249781a91/p021aHdt2x.json" background="transparent" speed="1" loop autoplay></lottie-player> </div>
 
+  <script src="fun-minigames.js"></script>
+  <script src="minigame-lineups.js"></script>
   <script>
     
     // --- WEB AUDIO API (UNCHANGED) ---
@@ -1688,6 +1757,8 @@
     let availableMiniGames = [];
     let currentMiniGameIdx = 0;
     let miniGameOrder = [];
+    let miniGameLineupEditor = null;
+    let miniGamePreview = null;
     let miniGameInterval = DEFAULT_MINI_GAME_INTERVAL;
     let miniGameHoldTimeout = null;
     let miniGameHoldTriggered = false;
@@ -2800,6 +2871,7 @@ const MINI_GAME_LIBRARY = [
         { id: 'balloonPop', label: BalloonPopGame.name, game: BalloonPopGame },
         { id: 'puppyZoomies', label: PuppyZoomiesGame.name, game: PuppyZoomiesGame },
         { id: 'catchTheStar', label: CatchTheStarGame.name, game: CatchTheStarGame },
+        ...SIGHT_WORDS_EXTRA_GAMES,
     ];
     const MINI_GAME_CONFIG_KEY = 'miniGameOrder';
     const MINI_GAME_INTERVAL_KEY = 'miniGameInterval';
@@ -2812,12 +2884,8 @@ const MINI_GAME_LIBRARY = [
             const parsed = JSON.parse(stored);
             const ids = Array.isArray(parsed) ? parsed : (parsed && Array.isArray(parsed.order) ? parsed.order : []);
             const filtered = ids.filter(id => MINI_GAME_LIBRARY.some(game => game.id === id));
-            MINI_GAME_LIBRARY.forEach(game => {
-                if (!filtered.includes(game.id)) {
-                    filtered.push(game.id);
-                }
-            });
-            return filtered.length ? filtered : fallback;
+            // Preserve exactly the chosen games, including an empty lineup.
+            return Array.isArray(parsed) || Array.isArray(parsed?.order) ? filtered : fallback;
         } catch (error) {
             console.warn('Failed to parse mini-game order from storage', error);
             return fallback;
@@ -2857,6 +2925,7 @@ const MINI_GAME_LIBRARY = [
         }
         miniGameIntervalInput.value = miniGameInterval.toString();
         persistMiniGameInterval(miniGameInterval);
+        miniGameLineupEditor?.syncInterval();
     }
 
     function rebuildAvailableMiniGames() {
@@ -2880,240 +2949,72 @@ const MINI_GAME_LIBRARY = [
             toggleMiniGamesBtn.textContent = `Mini-Games: ${miniGamesEnabled ? 'On' : 'Off'} (${selectedCount})`;
         }
         toggleMiniGamesBtn.classList.toggle('active-minigame-toggle', miniGamesEnabled && selectedCount > 0);
-        toggleMiniGamesBtn.title = 'Tap to toggle mini-games. Press and hold to choose and reorder them.';
+        toggleMiniGamesBtn.title = 'Tap to turn mini-games on or off. Use Edit Game Lineup to choose games.';
     }
 
     function populateMiniGameConfigList() {
-        if (!miniGameConfigList) { return; }
-        miniGameConfigList.innerHTML = '';
+        miniGameLineupEditor?.render();
+    }
 
-        const totalCounts = miniGameOrder.reduce((acc, id) => {
-            acc[id] = (acc[id] || 0) + 1;
-            return acc;
-        }, {});
-
-        const lineupSection = document.createElement('div');
-        lineupSection.className = 'minigame-lineup-section';
-
-        const lineupHeader = document.createElement('div');
-        lineupHeader.className = 'minigame-config-section-header';
-        const lineupTitle = document.createElement('h4');
-        lineupTitle.textContent = 'Current Lineup';
-        const lineupSubtitle = document.createElement('p');
-        lineupSubtitle.textContent = 'Use the arrows to reorder, + to duplicate, and ✕ to remove a copy.';
-        lineupHeader.appendChild(lineupTitle);
-        lineupHeader.appendChild(lineupSubtitle);
-
-        const lineupList = document.createElement('div');
-        lineupList.className = 'minigame-lineup-list';
-
-        if (miniGameOrder.length === 0) {
-            const emptyMessage = document.createElement('p');
-            emptyMessage.className = 'minigame-lineup-empty';
-            emptyMessage.textContent = 'No mini-games yet. Add some from the library below!';
-            lineupList.appendChild(emptyMessage);
-        } else {
-            const runningCounts = {};
-            miniGameOrder.forEach((id, index) => {
-                const entry = MINI_GAME_LIBRARY.find(game => game.id === id);
-                if (!entry) { return; }
-
-                runningCounts[id] = (runningCounts[id] || 0) + 1;
-                const copyIndex = runningCounts[id];
-                const totalCopies = totalCounts[id] || 1;
-
-                const card = document.createElement('div');
-                card.className = 'minigame-lineup-card';
-
-                const headerRow = document.createElement('div');
-                headerRow.className = 'minigame-lineup-card-header';
-
-                const titleWrap = document.createElement('div');
-                titleWrap.className = 'minigame-lineup-title';
-
-                const slotBadge = document.createElement('span');
-                slotBadge.className = 'minigame-slot-badge';
-                slotBadge.textContent = `#${index + 1}`;
-
-                const nameSpan = document.createElement('span');
-                nameSpan.className = 'minigame-lineup-name';
-                nameSpan.textContent = entry.label;
-
-                titleWrap.appendChild(slotBadge);
-                titleWrap.appendChild(nameSpan);
-
-                if (totalCopies > 1) {
-                    const copyBadge = document.createElement('span');
-                    copyBadge.className = 'minigame-copy-badge';
-                    copyBadge.textContent = `Copy ${copyIndex} of ${totalCopies}`;
-                    titleWrap.appendChild(copyBadge);
-                }
-
-                const controls = document.createElement('div');
-                controls.className = 'minigame-lineup-controls';
-
-                const upBtn = document.createElement('button');
-                upBtn.type = 'button';
-                upBtn.textContent = '▲';
-                upBtn.title = 'Move up';
-                upBtn.disabled = index === 0;
-                upBtn.addEventListener('click', () => moveMiniGameInstance(index, -1));
-
-                const downBtn = document.createElement('button');
-                downBtn.type = 'button';
-                downBtn.textContent = '▼';
-                downBtn.title = 'Move down';
-                downBtn.disabled = index === miniGameOrder.length - 1;
-                downBtn.addEventListener('click', () => moveMiniGameInstance(index, 1));
-
-                const duplicateBtn = document.createElement('button');
-                duplicateBtn.type = 'button';
-                duplicateBtn.textContent = '+';
-                duplicateBtn.title = 'Add another copy after this';
-                duplicateBtn.addEventListener('click', () => addMiniGameInstance(id, index + 1));
-
-                const removeBtn = document.createElement('button');
-                removeBtn.type = 'button';
-                removeBtn.textContent = '✕';
-                removeBtn.title = 'Remove this copy';
-                removeBtn.addEventListener('click', () => removeMiniGameInstance(index, id));
-
-                controls.appendChild(upBtn);
-                controls.appendChild(downBtn);
-                controls.appendChild(duplicateBtn);
-                controls.appendChild(removeBtn);
-
-                headerRow.appendChild(titleWrap);
-                headerRow.appendChild(controls);
-
-                card.appendChild(headerRow);
-                lineupList.appendChild(card);
-            });
-        }
-
-        lineupSection.appendChild(lineupHeader);
-        lineupSection.appendChild(lineupList);
-        miniGameConfigList.appendChild(lineupSection);
-
-        const librarySection = document.createElement('div');
-        librarySection.className = 'minigame-library-section';
-
-        const libraryHeader = document.createElement('div');
-        libraryHeader.className = 'minigame-config-section-header';
-        const libraryTitle = document.createElement('h4');
-        libraryTitle.textContent = 'Mini-Game Library';
-        const librarySubtitle = document.createElement('p');
-        librarySubtitle.textContent = 'Add games to the lineup or remove all copies.';
-        libraryHeader.appendChild(libraryTitle);
-        libraryHeader.appendChild(librarySubtitle);
-
-        const libraryList = document.createElement('div');
-        libraryList.className = 'minigame-library-list';
-
-        MINI_GAME_LIBRARY.forEach(game => {
-            const item = document.createElement('div');
-            item.className = 'minigame-library-item';
-
-            const nameWrap = document.createElement('div');
-            nameWrap.className = 'minigame-library-name';
-            nameWrap.textContent = game.label;
-
-            const count = totalCounts[game.id] || 0;
-            if (count > 0) {
-                const countBadge = document.createElement('span');
-                countBadge.className = 'minigame-library-count';
-                countBadge.textContent = `${count} in lineup`;
-                nameWrap.appendChild(countBadge);
-            }
-
-            const actions = document.createElement('div');
-            actions.className = 'minigame-library-actions';
-
-            const addBtn = document.createElement('button');
-            addBtn.type = 'button';
-            addBtn.textContent = count > 0 ? 'Add Copy' : 'Add';
-            addBtn.addEventListener('click', () => addMiniGameInstance(game.id, miniGameOrder.length));
-            actions.appendChild(addBtn);
-
-            if (count > 0) {
-                const removeAllBtn = document.createElement('button');
-                removeAllBtn.type = 'button';
-                removeAllBtn.className = 'secondary';
-                removeAllBtn.textContent = 'Remove All';
-                removeAllBtn.addEventListener('click', () => removeAllMiniGameInstances(game.id));
-                actions.appendChild(removeAllBtn);
-            }
-
-            item.appendChild(nameWrap);
-            item.appendChild(actions);
-            libraryList.appendChild(item);
-        });
-
-        librarySection.appendChild(libraryHeader);
-        librarySection.appendChild(libraryList);
-        miniGameConfigList.appendChild(librarySection);
-
-        if (miniGameConfigEmptyState) {
-            miniGameConfigEmptyState.classList.toggle('visible', miniGameOrder.length === 0);
-        }
+    function setMiniGameLineup(order) {
+        miniGameOrder = [...order];
+        saveMiniGameOrder(miniGameOrder);
+        rebuildAvailableMiniGames();
+        updateMiniGameToggleUI();
     }
 
     function openMiniGameConfigModal() {
-        if (!miniGameConfigModal) { return; }
+        if (!miniGameConfigModal || isMiniGameActive) return;
+        clearTimeout(questionTimeoutId);
+        if (circleTimerInstance) circleTimerInstance.stop();
         populateMiniGameConfigList();
-        if (miniGameIntervalInput) {
-            miniGameIntervalInput.value = miniGameInterval.toString();
-        }
+        miniGameIntervalInput.value = miniGameInterval.toString();
         miniGameConfigModal.classList.add('visible');
-        requestAnimationFrame(() => {
-            if (miniGameConfigCloseBtn) { miniGameConfigCloseBtn.focus(); }
-        });
+        requestAnimationFrame(() => miniGameConfigCloseBtn.focus({ preventScroll: true }));
     }
 
     function closeMiniGameConfigModal() {
-        if (!miniGameConfigModal) { return; }
+        commitMiniGameIntervalFromInput();
+        miniGameLineupEditor?.cancelDrag();
+        miniGameConfigModal.classList.remove('visible');
+        if (!isMiniGameActive) nextQ();
+        document.getElementById('edit-minigames-btn').focus({ preventScroll: true });
+    }
+
+    function previewMiniGame(entry) {
+        if (miniGamePreview || isMiniGameActive) return;
         commitMiniGameIntervalFromInput();
         miniGameConfigModal.classList.remove('visible');
-    }
-
-    function addMiniGameInstance(id, insertIndex) {
-        const index = Math.min(Math.max(insertIndex, 0), miniGameOrder.length);
-        miniGameOrder.splice(index, 0, id);
-        saveMiniGameOrder(miniGameOrder);
-        rebuildAvailableMiniGames();
-        updateMiniGameToggleUI();
-        populateMiniGameConfigList();
-    }
-
-    function removeMiniGameInstance(positionIndex, id) {
-        if (positionIndex < 0 || positionIndex >= miniGameOrder.length) { return; }
-        miniGameOrder.splice(positionIndex, 1);
-        saveMiniGameOrder(miniGameOrder);
-        rebuildAvailableMiniGames();
-        updateMiniGameToggleUI();
-        populateMiniGameConfigList();
-    }
-
-    function removeAllMiniGameInstances(id) {
-        const filteredOrder = miniGameOrder.filter(entry => entry !== id);
-        if (filteredOrder.length === miniGameOrder.length) { return; }
-        miniGameOrder = filteredOrder;
-        saveMiniGameOrder(miniGameOrder);
-        rebuildAvailableMiniGames();
-        updateMiniGameToggleUI();
-        populateMiniGameConfigList();
-    }
-
-    function moveMiniGameInstance(positionIndex, delta) {
-        const newIndex = positionIndex + delta;
-        if (positionIndex < 0 || positionIndex >= miniGameOrder.length) { return; }
-        if (newIndex < 0 || newIndex >= miniGameOrder.length) { return; }
-        const [entry] = miniGameOrder.splice(positionIndex, 1);
-        miniGameOrder.splice(newIndex, 0, entry);
-        saveMiniGameOrder(miniGameOrder);
-        rebuildAvailableMiniGames();
-        updateMiniGameToggleUI();
-        populateMiniGameConfigList();
+        miniGameLineupEditor?.cancelDrag();
+        clearTimeout(questionTimeoutId);
+        if (circleTimerInstance) circleTimerInstance.stop();
+        isMiniGameActive = true;
+        updateBackgroundState();
+        miniGameArea.classList.add('active', 'is-preview');
+        const back = document.createElement('button');
+        back.id = 'minigame-preview-back';
+        back.type = 'button';
+        back.textContent = '← Back to lineup';
+        document.body.appendChild(back);
+        let finished = false;
+        const finish = () => {
+            if (finished) return;
+            finished = true;
+            // Legacy games call their callback from destroy(); suppress it here.
+            entry.game.onCompleteCallback = null;
+            entry.game.destroy();
+            miniGameArea.replaceChildren();
+            miniGameArea.classList.remove('active', 'is-preview');
+            back.remove();
+            miniGamePreview = null;
+            isMiniGameActive = false;
+            updateBackgroundState();
+            openMiniGameConfigModal();
+        };
+        miniGamePreview = { finish };
+        back.addEventListener('click', finish);
+        entry.game.start(miniGameArea, finish);
+        back.focus({ preventScroll: true });
     }
 
     function setupMiniGameHoldInteraction() {
@@ -3147,6 +3048,20 @@ const MINI_GAME_LIBRARY = [
         saveMiniGameOrder(miniGameOrder);
         rebuildAvailableMiniGames();
         updateMiniGameToggleUI();
+        miniGameLineupEditor = createSightWordsLineupEditor({
+            library: MINI_GAME_LIBRARY,
+            host: miniGameConfigList,
+            getOrder: () => miniGameOrder,
+            setOrder: setMiniGameLineup,
+            getInterval: () => miniGameInterval,
+            setInterval: value => {
+                miniGameInterval = value;
+                persistMiniGameInterval(value);
+                miniGameIntervalInput.value = value.toString();
+            },
+            preview: previewMiniGame,
+        });
+        document.getElementById('edit-minigames-btn').addEventListener('click', openMiniGameConfigModal);
 
         if (miniGameIntervalInput) {
             miniGameIntervalInput.value = miniGameInterval.toString();
@@ -3172,7 +3087,7 @@ const MINI_GAME_LIBRARY = [
             if (!availableMiniGames.length) {
                 miniGamesEnabled = false;
                 localStorage.setItem('miniGamesEnabled', 'false');
-                showFloatingMessage("No mini-games selected. Press and hold the button to choose!", "var(--brand-dark)");
+                openMiniGameConfigModal();
                 updateMiniGameToggleUI();
                 return;
             }
@@ -3191,16 +3106,7 @@ const MINI_GAME_LIBRARY = [
 
         if (miniGameConfigResetBtn) {
             miniGameConfigResetBtn.addEventListener('click', () => {
-                miniGameOrder = MINI_GAME_LIBRARY.map(game => game.id);
-                saveMiniGameOrder(miniGameOrder);
-                rebuildAvailableMiniGames();
-                updateMiniGameToggleUI();
-                populateMiniGameConfigList();
-                miniGameInterval = DEFAULT_MINI_GAME_INTERVAL;
-                persistMiniGameInterval(miniGameInterval);
-                if (miniGameIntervalInput) {
-                    miniGameIntervalInput.value = miniGameInterval.toString();
-                }
+                miniGameLineupEditor.addAll();
             });
         }
 
@@ -3213,6 +3119,7 @@ const MINI_GAME_LIBRARY = [
         }
 
         document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && miniGamePreview) { miniGamePreview.finish(); return; }
             if (event.key === 'Escape' && miniGameConfigModal && miniGameConfigModal.classList.contains('visible')) {
                 closeMiniGameConfigModal();
             }

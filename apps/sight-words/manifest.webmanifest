@@ -1,8 +1,8 @@
 {
   "name": "Sight Words Quiz Deluxe",
   "short_name": "Sight Words",
-  "start_url": "/index.html",
-  "scope": "/",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#f4f6f8",
   "theme_color": "#f4f6f8",
