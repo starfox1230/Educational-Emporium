@@ -46,17 +46,26 @@ async function lineupChecks(page) {
   await addGame(page,'monsterMatch');
   await addGame(page,'musicMaker');
   await page.getByRole('tab',{name:/My lineup/}).click();
-  await page.getByLabel('Position of Music Maker, copy 3',{exact:true}).selectOption('0');
-  assert.deepEqual(await order(page),['musicMaker','rocketLaunch','monsterMatch']);
-  await page.locator('.lineup-order-card').nth(1).getByRole('button',{name:'＋ Copy',exact:true}).click();
-  assert.deepEqual(await order(page),['musicMaker','rocketLaunch','rocketLaunch','monsterMatch']);
-  await page.locator('.lineup-order-card').nth(1).getByRole('button',{name:'Remove',exact:true}).click();
-  assert.deepEqual(await order(page),['musicMaker','rocketLaunch','monsterMatch']);
-  const first=page.locator('.lineup-drag-handle').first();
-  const a=await first.boundingBox(), b=await page.locator('.lineup-order-card').last().boundingBox();
+  await page.getByRole('tab',{name:/Browse games/}).click();
+  await addGame(page,'rocketLaunch');
+  await page.getByRole('tab',{name:/My lineup/}).click();
+  assert.deepEqual(await order(page),['rocketLaunch','monsterMatch','musicMaker','rocketLaunch']);
+  assert.equal(await page.locator('.lineup-order-card select').count(),0,'no position menus');
+  assert.equal(await page.locator('.lineup-order-card button').count(),8,'only a grip and remove button per row');
+  // Drag a duplicate by its own row index; observe the live gap before dropping.
+  const last=page.locator('.lineup-drag-handle').last();
+  const a=await last.boundingBox(), b=await page.locator('.lineup-order-card').first().boundingBox();
   await page.mouse.move(a.x+a.width/2,a.y+a.height/2);await page.mouse.down();
-  await page.mouse.move(b.x+b.width/2,b.y+b.height/2,{steps:12});await page.mouse.up();
-  assert.deepEqual(await order(page),['rocketLaunch','monsterMatch','musicMaker'],'pointer reorder');
+  assert.equal(await page.locator('.lineup-drag-ghost').count(),1);
+  assert.equal(await page.locator('.lineup-drop-slot').count(),1);
+  await page.mouse.move(b.x+25,b.y+4,{steps:12});await page.waitForTimeout(120);
+  assert.equal(await page.locator('.lineup-drop-slot').evaluate(e=>e.nextElementSibling.dataset.index),'0','visible insertion gap');
+  assert.deepEqual(await order(page),['rocketLaunch','monsterMatch','musicMaker','rocketLaunch'],'drag preview must not save early');
+  await page.mouse.up();await page.waitForTimeout(160);
+  assert.equal(await page.locator('.lineup-drag-ghost').count(),0);
+  assert.deepEqual(await order(page),['rocketLaunch','rocketLaunch','monsterMatch','musicMaker'],'pointer reorder');
+  await page.locator('.lineup-order-card').first().locator('.lineup-row-remove').click();
+  assert.deepEqual(await order(page),['rocketLaunch','monsterMatch','musicMaker']);
   await page.locator('.lineup-drag-handle').last().press('ArrowUp');
   assert.deepEqual(await order(page),['rocketLaunch','musicMaker','monsterMatch'],'keyboard reorder');
   await saveName(page,'Family Favorites');
@@ -73,34 +82,34 @@ async function lineupChecks(page) {
   await page.getByRole('tab',{name:/Browse games/}).click();
   await page.locator('.lineup-category').selectOption('all');
   for(const id of ['rocketLaunch','catRescue']) {
-    await page.locator(`.lineup-library-card[data-game-id="${id}"]`).getByRole('button',{name:'Try it',exact:true}).click();
+    await page.locator(`.lineup-library-card[data-game-id="${id}"]`).getByRole('button',{name:/^Try /}).click();
     await page.locator('#minigame-preview-back').click();
     assert.equal(await page.locator('#minigame-preview-back').count(),0);
   }
   assert.deepEqual(await page.evaluate(()=>({score,index:currentMiniGameIdx,order:[...miniGameOrder]})),before);
   await page.getByRole('tab',{name:/My lineup/}).click();
-  await page.locator('.lineup-order-card').first().getByRole('button',{name:'Remove',exact:true}).click();
+  await page.locator('.lineup-order-card').first().locator('.lineup-row-remove').click();
   await named(page,'↶ Undo').click();
   assert.deepEqual(await order(page),before.order);
+  if(!await page.locator('#lineup-save-menu').evaluate(e=>e.open)) await page.locator('#lineup-save-menu summary').click();
   await named(page,'Clear lineup').click();
   await page.reload({waitUntil:'load'});
   assert.deepEqual(await order(page),[],'empty lineup must survive reload');
   await openEditor(page);
   assert.equal(await page.locator('.lineup-saved-select').inputValue(),favoriteId);
+  await page.locator('#lineup-save-menu summary').click();
   await named(page,'All games').click();
   assert.equal((await order(page)).length,32);
   await named(page,'↶ Undo').click();assert.deepEqual(await order(page),[]);
-  await page.locator('#lineup-save-menu summary').click();
   await named(page,'Delete saved lineup').click();
   assert.equal(await page.locator('.lineup-saved-select option').count(),2);
   await named(page,'↶ Undo').click();
   assert.equal(await page.locator('.lineup-saved-select option').count(),3);
   await page.getByRole('tab',{name:/Browse games/}).click();
-  await page.locator('.lineup-quick summary').click();
-  await named(page,'Think & create').click();
-  assert.deepEqual(await order(page),['monsterMatch','musicMaker','treasureTrail','gardenGrow','robotBuilder','shapeSorter']);
+  await page.locator('#lineup-save-menu summary').click();
+  await addGame(page,'monsterMatch');await addGame(page,'musicMaker');await addGame(page,'treasureTrail');
   await page.reload({waitUntil:'load'});
-  assert.deepEqual(await order(page),['monsterMatch','musicMaker','treasureTrail','gardenGrow','robotBuilder','shapeSorter']);
+  assert.deepEqual(await order(page),['monsterMatch','musicMaker','treasureTrail']);
   console.log('PASS named lineups, migration, duplicates, drag, keyboard, search, undo, presets, preview, reload');
 }
 async function start(page,id,random=0.1,duration=20000) {
@@ -124,6 +133,8 @@ async function editorLayoutChecks(page,engine) {
     await page.addStyleTag({content:`:root{--safe-top:${c.top}px;--safe-bottom:${c.bottom}px;--safe-left:${c.side}px;--safe-right:${c.side}px;}`});
     await openEditor(page);
     await safeBounds(page,'.minigame-config-content',c.width,c.height,c);
+    const rows=page.locator('.lineup-order-card');
+    assert(await rows.evaluateAll(rows=>rows.every(r=>r.getBoundingClientRect().height<=58)),'each game must fit on one compact line');
     assert(await page.locator('.lineup-content').evaluate(e=>e.clientHeight)>=80,'editor needs a usable scroll area');
     assert(await page.locator('.minigame-config-content').evaluate(e=>e.scrollWidth<=e.clientWidth),'editor horizontal overflow');
     if(engine==='webkit' && c.width===390 && process.env.SIGHT_WORDS_SCREENSHOTS) {
@@ -137,6 +148,59 @@ async function editorLayoutChecks(page,engine) {
     await page.locator('#minigame-config-close-btn').click();
   }
   console.log('PASS editor safe areas, narrow portrait, landscape, reachable Done button');
+}
+async function touchReorderChecks(page) {
+  await page.setViewportSize({width:390,height:844});
+  await page.addStyleTag({content:':root{--safe-top:47px;--safe-bottom:34px;--safe-left:0px;--safe-right:0px;}'});
+  await openEditor(page);
+  await page.locator('#lineup-save-menu summary').click();
+  await named(page,'All games').click();
+  await page.locator('#lineup-save-menu summary').click();
+  await page.locator('.lineup-content').evaluate(e=>e.scrollTop=0);
+  const original=await order(page);
+  const cdp=await page.context().newCDPSession(page);
+  async function touch(type,x,y) {
+    await cdp.send('Input.dispatchTouchEvent',{type,touchPoints:type==='touchEnd'||type==='touchCancel'?[]:[{x,y,id:0,radiusX:5,radiusY:5,force:1}]});
+  }
+  try {
+    const handle=await page.locator('.lineup-drag-handle').first().boundingBox();
+    const area=await page.locator('.lineup-content').boundingBox();
+    const x=handle.x+handle.width/2, y=handle.y+handle.height/2;
+    await touch('touchStart',x,y);
+    assert.equal(await page.locator('.lineup-drag-ghost').count(),1);
+    for(let i=1;i<=12;i++) {await touch('touchMove',x,y+(area.y+area.height-6-y)*i/12);await page.waitForTimeout(16);}
+    // Hold at the edge: the list must keep scrolling without further finger moves.
+    const beforeScroll=await page.locator('.lineup-content').evaluate(e=>e.scrollTop);
+    await page.waitForTimeout(3300);
+    const afterScroll=await page.locator('.lineup-content').evaluate(e=>e.scrollTop);
+    assert(afterScroll>beforeScroll+500,'continuous edge auto-scroll');
+    assert.deepEqual(await order(page),original,'touch preview must not save early');
+    assert.equal(await page.locator('.lineup-drop-slot').evaluate(e=>e.nextElementSibling),null,'gap follows the finger to the end');
+    if(process.env.SIGHT_WORDS_SCREENSHOTS) await page.screenshot({path:path.join(process.env.SIGHT_WORDS_SCREENSHOTS,'minigame-touch-drag.png')});
+    await touch('touchEnd');await page.waitForTimeout(200);
+    const moved=[...original.slice(1),original[0]];
+    assert.deepEqual(await order(page),moved,'touch drop saves exact order');
+    assert.equal(await page.locator('.lineup-drag-ghost,.lineup-drop-slot').count(),0);
+    // Swiping a game name should scroll naturally, rather than start another drag.
+    await page.locator('.lineup-content').evaluate(e=>e.scrollTop=0);
+    const name=await page.locator('.lineup-game-name').first().boundingBox();
+    await touch('touchStart',name.x+name.width/2,name.y+name.height/2);
+    for(let i=1;i<=10;i++) {await touch('touchMove',name.x+name.width/2,name.y+name.height/2-i*14);await page.waitForTimeout(20);}
+    await touch('touchEnd');await page.waitForTimeout(200);
+    assert(await page.locator('.lineup-content').evaluate(e=>e.scrollTop)>50,'ordinary row swipes scroll the list');
+    assert.equal(await page.locator('.lineup-drag-ghost').count(),0);
+    assert.deepEqual(await order(page),moved);
+    // OS cancellation or switching away must restore the old order and clear overlays.
+    await page.locator('.lineup-content').evaluate(e=>e.scrollTop=0);
+    const first=await page.locator('.lineup-drag-handle').first().boundingBox();
+    await touch('touchStart',first.x+22,first.y+22);
+    await touch('touchMove',first.x+22,first.y+160);
+    await page.waitForTimeout(100);await touch('touchCancel');
+    assert.deepEqual(await order(page),moved,'cancelled touch does not save');
+    assert.equal(await page.locator('.lineup-drag-ghost,.lineup-drop-slot').count(),0);
+    await page.locator('#minigame-config-close-btn').click();
+  } finally {await cdp.detach();}
+  console.log('PASS native touch drag, live gap, edge auto-scroll, ordinary swipes, cancellation, cleanup');
 }
 async function interact(page,id) {
   if(['rainbowPainter','robotBuilder','cookieChef','pizzaParty'].includes(id)) {
@@ -250,6 +314,7 @@ async function quizIntegrationChecks(page) {
       });
       await page.goto(`http://127.0.0.1:${server.address().port}/index.html`,{waitUntil:'load'});
       await lineupChecks(page);await editorLayoutChecks(page,engine);
+      if(engine==='chromium') await touchReorderChecks(page);
       if(!process.argv.includes('--lineups-only')) {await gameChecks(page);await quizIntegrationChecks(page);}
       assert.deepEqual(errors,[],`${engine}: browser errors`);
       console.log(`PASS ${engine}: all mini-game and lineup checks`);

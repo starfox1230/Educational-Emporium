@@ -988,8 +988,7 @@
 
   <div id="minigame-config-modal" class="generic-modal-overlay">
     <div class="generic-modal-content minigame-config-content" role="dialog" aria-modal="true" aria-labelledby="minigame-config-title">
-      <h3 id="minigame-config-title">Mini-Game Lineup</h3>
-      <p>Pick your favorites, put them in order, and save your own lineups.</p>
+      <h3 id="minigame-config-title">Game lineup</h3>
       <div class="minigame-interval-control">
         <label class="minigame-interval-label" for="minigame-interval-input">Mini-Game Interval</label>
         <div class="minigame-interval-input-row">
@@ -2963,11 +2962,12 @@ const MINI_GAME_LIBRARY = [
         updateMiniGameToggleUI();
     }
 
-    function openMiniGameConfigModal() {
+    function openMiniGameConfigModal(returnFromPreview = false) {
         if (!miniGameConfigModal || isMiniGameActive) return;
         clearTimeout(questionTimeoutId);
         if (circleTimerInstance) circleTimerInstance.stop();
-        populateMiniGameConfigList();
+        if (returnFromPreview) populateMiniGameConfigList();
+        else miniGameLineupEditor?.open();
         miniGameIntervalInput.value = miniGameInterval.toString();
         miniGameConfigModal.classList.add('visible');
         requestAnimationFrame(() => miniGameConfigCloseBtn.focus({ preventScroll: true }));
@@ -3009,7 +3009,7 @@ const MINI_GAME_LIBRARY = [
             miniGamePreview = null;
             isMiniGameActive = false;
             updateBackgroundState();
-            openMiniGameConfigModal();
+            openMiniGameConfigModal(true);
         };
         miniGamePreview = { finish };
         back.addEventListener('click', finish);
@@ -3051,6 +3051,8 @@ const MINI_GAME_LIBRARY = [
         miniGameLineupEditor = createSightWordsLineupEditor({
             library: MINI_GAME_LIBRARY,
             host: miniGameConfigList,
+            intervalControl: miniGameIntervalInput.closest('.minigame-interval-control'),
+            allGamesButton: miniGameConfigResetBtn,
             getOrder: () => miniGameOrder,
             setOrder: setMiniGameLineup,
             getInterval: () => miniGameInterval,
@@ -3061,7 +3063,7 @@ const MINI_GAME_LIBRARY = [
             },
             preview: previewMiniGame,
         });
-        document.getElementById('edit-minigames-btn').addEventListener('click', openMiniGameConfigModal);
+        document.getElementById('edit-minigames-btn').addEventListener('click', () => openMiniGameConfigModal());
 
         if (miniGameIntervalInput) {
             miniGameIntervalInput.value = miniGameInterval.toString();

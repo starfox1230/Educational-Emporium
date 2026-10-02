@@ -42,54 +42,57 @@
 #minigame-preview-back { position: fixed; bottom: calc(10px + var(--safe-bottom)); left: calc(10px + var(--safe-left)); z-index: 2100; min-height: 44px; padding: 8px 14px; border: 2px solid #fff; border-radius: 12px; background: #18345b; color: #fff; font: inherit; }
 #minigame-area.is-preview { padding-bottom: 58px; }
 
-/* The editor keeps only the active tab visible, with its own large scroll area. */
-.generic-modal-content.minigame-config-content { max-width: 820px; height: min(900px, 100%); padding: 16px; display: flex; flex-direction: column; overflow: hidden; gap: 8px; }
-.minigame-config-content > h3 { margin: 0; font-size: 1.15rem; }
-.minigame-config-content > p { margin: 0; font-size: 0.8rem; }
-.minigame-config-content .minigame-interval-control { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px; padding: 6px 10px; margin: 0; flex-shrink: 0; }
-.minigame-config-content .minigame-interval-label { font-size: 0.8rem; }
-.minigame-config-content .minigame-interval-hint { display: none; }
-.minigame-config-content #minigame-interval-input { width: 55px; min-height: 44px; padding: 4px; }
-.minigame-config-content .minigame-interval-units { font-size: 0.8rem; }
-.minigame-config-content .minigame-config-list { display: flex; flex-direction: column; flex: 1; min-height: 0; max-height: none; overflow: hidden; gap: 6px; margin: 0; }
-.minigame-config-content .generic-modal-actions { flex-shrink: 0; gap: 8px; }
-.minigame-config-content .generic-modal-actions button { min-height: 44px; font: inherit; padding: 8px 16px; }
+/* Compact rows leave room to see and rearrange a whole lineup on a phone. */
+.generic-modal-content.minigame-config-content { max-width: 640px; height: min(900px, 100%); padding: 12px; display: flex; flex-direction: column; overflow: hidden; gap: 8px; }
+.minigame-config-content > h3 { margin: 0; font-size: 1.1rem; }
+.minigame-config-content .minigame-config-list { display: flex; flex-direction: column; flex: 1; min-height: 0; max-height: none; overflow: hidden; gap: 8px; margin: 0; }
+.minigame-config-content .generic-modal-actions { flex-shrink: 0; }
+.minigame-config-content .generic-modal-actions button { width: 100%; min-height: 44px; font: inherit; padding: 8px; }
 .minigame-config-content .minigame-config-empty { display: none; }
-.lineup-tools { display: flex; align-items: flex-end; gap: 8px; }
-.lineup-saved-label { flex: 1; min-width: 0; font-size: 0.75rem; font-weight: 600; color: #32656f; }
+.lineup-tools { display: flex; align-items: center; gap: 8px; }
+.lineup-saved-label { flex: 1; min-width: 0; }
 .lineup-saved-select { display: block; width: 100%; }
 .minigame-config-content input, .minigame-config-content select { font: inherit; font-size: 16px; min-height: 44px; min-width: 0; padding: 6px 8px; border: 1px solid #bccfd3; border-radius: 10px; background: #fff; color: #18345b; }
-.lineup-manage { padding: 8px; border: 1px solid #cde4e8; border-radius: 12px; margin-bottom: 10px; background: #f3fafb; }
-.lineup-manage summary { cursor: pointer; min-height: 36px; font-size: 0.85rem; font-weight: 600; }
-.lineup-name { width: 100%; margin: 8px 0; }
-.lineup-save-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.lineup-manage { border: 1px solid #d6e4e7; border-radius: 10px; margin-bottom: 8px; background: #f8fbfc; }
+.lineup-manage summary { cursor: pointer; padding: 11px 10px; min-height: 44px; font-size: 0.8rem; color: #537079; }
+.lineup-name { width: calc(100% - 16px); margin: 0 8px 8px; }
+.lineup-save-actions { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 8px 8px; }
+.lineup-manage .minigame-interval-control { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px; margin: 0; border: 0; border-top: 1px solid #d6e4e7; border-radius: 0; background: transparent; }
+.lineup-manage .minigame-interval-label, .lineup-manage .minigame-interval-units { font-size: 0.8rem; }
+.lineup-manage .minigame-interval-hint { display: none; }
+.lineup-manage #minigame-interval-input { width: 56px; min-height: 44px; padding: 4px; }
 .lineup-tabs { display: flex; gap: 6px; }
-.lineup-tab { flex: 1; min-width: 0; min-height: 44px; border: 1px solid #b4d5dc; border-radius: 12px; font: inherit; font-size: 0.85rem; background: #f4f6f8; color: #32656f; cursor: pointer; }
+.lineup-tab { flex: 1; min-width: 0; min-height: 44px; border: 1px solid #b4d5dc; border-radius: 10px; font: inherit; font-size: 0.85rem; background: #f4f6f8; color: #32656f; cursor: pointer; }
 .lineup-tab[aria-selected="true"] { color: #fff; background: #007e91; border-color: #007e91; font-weight: 600; }
 .lineup-filters { display: flex; gap: 6px; }
 .lineup-search { flex: 1; width: 50%; }
 .lineup-category { width: 42%; }
-.lineup-toolbar { display: flex; flex-wrap: wrap; gap: 6px; }
+.lineup-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .lineup-button { min-height: 44px; min-width: 44px; padding: 6px 10px; font: inherit; font-size: 0.78rem; font-weight: 600; cursor: pointer; border: 1px solid #b4d5dc; border-radius: 10px; background: #fff; color: #007386; }
 .lineup-button:disabled { opacity: 0.4; cursor: default; }
-.minigame-config-content .lineup-status { flex-shrink: 0; margin: 0; color: #32656f; font-size: 0.75rem; min-height: 1.5em; }
-.lineup-content { flex: 1; min-height: 80px; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; padding: 4px 4px 12px; }
-.minigame-config-content .lineup-help { font-size: 0.78rem; margin: 0 0 10px; color: #555; }
-.lineup-order-card, .lineup-library-card { background: #f6fafb; border: 1px solid #cde4e8; border-radius: 14px; padding: 10px; margin-bottom: 8px; }
-.lineup-order-header { display: flex; align-items: center; gap: 8px; }
-.lineup-order-header h4 { flex: 1; font-size: 0.9rem; min-width: 0; overflow-wrap: anywhere; }
-.lineup-drag-handle { width: 44px; height: 44px; flex-shrink: 0; border: 1px solid #cde4e8; background: #fff; border-radius: 10px; font-size: 1.7rem; cursor: grab; touch-action: none; color: #007386; }
-.lineup-position { min-width: 24px; text-align: center; border-radius: 50%; font-size: 0.85rem; font-weight: 600; color: #007386; }
-.lineup-card-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-.lineup-position-select { max-width: 130px; font-size: 0.8rem !important; }
-.lineup-library-text h4 { font-size: 0.95rem; color: #18345b; }
-.minigame-config-content .lineup-library-text p { font-size: 0.8rem; margin: 4px 0; color: #555; }
-.lineup-try { background: #e1f4e5; border-color: #94c99f; color: #296936; }
-.lineup-starters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
-.minigame-config-content .lineup-starters p { flex-basis: 100%; font-size: 0.78rem; margin: 0; }
-.lineup-empty { padding: 20px 8px; text-align: center; }
-.lineup-order-card.is-moving { opacity: 0.55; }
-.lineup-order-card.is-drop-target { outline: 3px solid #26c6da; outline-offset: -3px; }
+.lineup-status { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px !important; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.lineup-content { position: relative; flex: 1; min-height: 80px; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; padding: 2px 2px 10px; scrollbar-gutter: stable; }
+.lineup-help { font-size: 0.8rem; color: #607680; }
+.lineup-sort-list { display: flex; flex-direction: column; gap: 6px; }
+.lineup-order-card, .lineup-library-card { flex-shrink: 0; display: flex; align-items: center; gap: 4px; height: 56px; padding: 0 4px; border: 1px solid #d6e4e7; border-radius: 12px; background: #fff; color: #18345b; }
+.lineup-order-card { position: relative; }
+.lineup-drag-handle { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 48px; padding: 0; border: 0; background: transparent; border-radius: 8px; cursor: grab; touch-action: none; color: #7c979f; font: inherit; }
+.lineup-grip { font-size: 1.65rem; }
+.lineup-position { flex-shrink: 0; min-width: 20px; font-size: 0.75rem; text-align: center; color: #81959d; }
+.lineup-game-name { flex: 1; min-width: 0; font-size: 0.85rem; font-weight: 600; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.lineup-row-remove { flex-shrink: 0; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: #9baeb4; font-size: 1.5rem; cursor: pointer; touch-action: manipulation; }
+.lineup-row-remove:hover { color: #b54c4c; background: #fff1f1; }
+.lineup-drop-slot { flex-shrink: 0; box-sizing: border-box; border: 2px dashed #26c6da; border-radius: 12px; background: #e9f9fc; }
+.lineup-drag-ghost { position: fixed; margin: 0; z-index: 10000; pointer-events: none; box-shadow: 0 10px 24px #18345b35; border-color: #26c6da; background: #fff; opacity: 0.96; font-family: 'Poppins', sans-serif; will-change: transform; }
+.is-sorting .lineup-content { scroll-behavior: auto; }
+.lineup-library-card { margin-bottom: 6px; }
+.lineup-library-text { display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0; padding-left: 6px; }
+.lineup-library-text h4 { min-width: 0; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lineup-count { color: #007386; font-size: 0.75rem; }
+.lineup-card-actions { display: flex; flex-shrink: 0; gap: 4px; }
+.lineup-card-actions .lineup-button { padding: 0; font-size: 1.2rem; }
+.lineup-try { color: #4b9c66; border-color: transparent; background: transparent; }
+.lineup-empty { padding: 20px 8px; text-align: center; font-size: 0.85rem; }
 .minigame-config-content [hidden] { display: none !important; }
 .minigame-config-content button:focus-visible, .minigame-config-content select:focus-visible { outline: 3px solid #007e91; outline-offset: 2px; }
 
