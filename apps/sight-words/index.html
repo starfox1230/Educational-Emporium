@@ -12,6 +12,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Sight Words">
+  <script>
+    // Older iOS home-screen shortcuts expose this flag instead of display-mode.
+    if (navigator.standalone === true) document.documentElement.classList.add('home-screen-app');
+  </script>
   
   <!-- Optional but recommended: matches your palette -->
   <meta name="theme-color" content="#f4f6f8">
@@ -61,7 +65,7 @@
       --pastel-green-bg: #c9e4c5;
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html,body{height:100%;overflow:hidden;font-family:'Poppins',sans-serif;color:var(--fg);
+    html,body{height:var(--app-height);overflow:hidden;font-family:'Poppins',sans-serif;color:var(--fg);
     -webkit-tap-highlight-color:transparent;touch-action:manipulation;
     -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
     overscroll-behavior: none;
@@ -69,6 +73,14 @@
     @supports (height: 100dvh) {
       :root { --app-height: 100dvh; }
     }
+    /* iOS standalone can subtract the status-bar inset from dvh, leaving a
+       visible gap below the controls. With no browser toolbar, vh includes
+       the full screen, including the area behind the home indicator.
+       https://bugs.webkit.org/show_bug.cgi?id=254868 */
+    @media (display-mode: standalone), (display-mode: fullscreen) {
+      :root { --app-height: 100vh; }
+    }
+    :root.home-screen-app { --app-height: 100vh; }
     body {
       background-color: var(--bg);
       height: var(--app-height);
