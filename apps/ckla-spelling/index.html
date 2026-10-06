@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#fff8ed">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Sound Garden">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>Sound Garden · CKLA Spelling</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script>if(navigator.standalone===true)document.documentElement.classList.add('home-screen-app');</script>
+</head>
+<body>
+  <script>document.addEventListener('contextmenu',event=>{if(!event.target.closest('textarea'))event.preventDefault()});document.addEventListener('selectstart',event=>{if(!event.target.closest('textarea'))event.preventDefault()});</script>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#home" aria-label="Sound Garden home"><span class="brand-mark">✿</span><span>sound garden<small>CKLA spelling practice</small></span></a>
+      <button class="parent-button" id="parentToggle" type="button"><span aria-hidden="true">⚙</span><span class="parent-label">Grown-ups</span></button>
+    </header>
+
+    <main id="homeView">
+      <section class="welcome">
+        <div><p class="eyebrow">A little practice goes a long way</p><h1>Let’s grow some<br><em>word power.</em></h1><p class="intro">Listen, think about the sounds, and spell it your way.</p></div>
+        <div class="garden-art" aria-hidden="true"><span class="sun">☀</span><span class="flower flower-a">✿</span><span class="flower flower-b">✿</span><span class="flower flower-c">✿</span><span class="leaf">⌁</span></div>
+      </section>
+
+      <section class="unit-section" aria-labelledby="unit-title">
+        <div class="section-heading"><div><p class="eyebrow">Your learning path</p><h2 id="unit-title">Pick a unit</h2></div><span class="path-note">One step at a time 🌱</span></div>
+        <div id="unitPicker" class="unit-picker" role="tablist" aria-label="CKLA Grade 1 units"></div>
+        <article class="unit-card" id="unitCard"></article>
+      </section>
+
+      <section class="practice-section" aria-labelledby="practice-title">
+        <div class="section-heading"><div><p class="eyebrow">Ready when you are</p><h2 id="practice-title">Choose your practice</h2></div></div>
+        <div class="mode-grid">
+          <button class="mode-card mode-word" id="startWords" type="button"><span class="mode-icon">🔊</span><span class="mode-copy"><strong>Word garden</strong><small>Hear a word. Spell it with your letter garden.</small></span><span class="mode-arrow">↗</span></button>
+          <button class="mode-card mode-sentence" id="startSentences" type="button"><span class="mode-icon">📝</span><span class="mode-copy"><strong>Sentence meadow</strong><small>Listen to a sentence and write what you hear.</small></span><span class="mode-arrow">↗</span></button>
+          <button class="mode-card mode-review" id="startTricky" type="button"><span class="mode-icon">✨</span><span class="mode-copy"><strong>Tricky word trail</strong><small>Practice the words that need a little extra memory.</small></span><span class="mode-arrow">↗</span></button>
+          <button class="mode-card mode-list" id="startWeekly" type="button"><span class="mode-icon">📚</span><span class="mode-copy"><strong>My spelling list</strong><small>Practice the exact words your grown-up added.</small></span><span class="mode-arrow">↗</span></button>
+        </div>
+      </section>
+      <footer class="home-footer"><span>Made for little learners, with room to grow.</span><span class="footer-flower">✿</span></footer>
+    </main>
+
+    <main id="gameView" class="game-view" hidden>
+      <div class="game-top"><button id="leaveGame" class="back-button" type="button" aria-label="Back to garden">←</button><div class="game-progress-wrap"><div class="game-progress-label"><span id="gameModeLabel">Word garden</span><span id="progressLabel">1 of 10</span></div><div class="progress-track"><span id="progressFill"></span></div></div><span class="streak-pill" id="streakPill">✦ 0</span></div>
+      <section class="game-card" aria-live="polite">
+        <div class="listen-orb" id="listenOrb"><span>🔈</span><i></i></div>
+        <p class="listen-hint" id="listenHint">Listen carefully. You can replay it anytime.</p>
+        <button id="replayWord" class="replay-button" type="button"><span aria-hidden="true">▶</span> Hear it again</button>
+        <div class="answer-area" id="answerArea" aria-label="Your spelling"></div>
+        <p class="game-feedback" id="gameFeedback" aria-live="assertive">Tap the letters to spell the word.</p>
+      </section>
+      <section class="keyboard" aria-label="Spelling keyboard" id="keyboard"></section>
+      <div class="game-actions"><button class="clear-button" id="clearAnswer" type="button">⌫ Clear</button><button class="check-button" id="checkAnswer" type="button">Check my spelling <span>→</span></button></div>
+      <div class="celebrate" id="celebrate" hidden><span class="celebrate-star">✦</span><strong>Lovely spelling!</strong><span id="celebrateWord"></span><button id="nextWord" type="button">Next word <span>→</span></button></div>
+    </main>
+
+    <section id="parentView" class="parent-view" hidden>
+      <div class="parent-heading"><button class="back-button" id="closeParent" type="button" aria-label="Back to practice">←</button><div><p class="eyebrow">For your grown-up</p><h1>Make it your list.</h1></div></div>
+      <p class="parent-intro">Add the exact spelling words from your child’s weekly CKLA sheet. They stay on this device. The practice game keeps the spelling hidden while your child listens.</p>
+      <section class="parent-panel"><div class="panel-title"><span class="panel-icon">📖</span><div><h2>Unit <span id="parentUnitNumber">1</span> word list</h2><p id="parentUnitTitle"></p></div></div><label for="customWords">One word on each line. Add a comma and a short clue if helpful.</label><textarea id="customWords" rows="7" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="flag, a word with fl&#10;chest&#10;brush"></textarea><div class="parent-actions"><button id="saveWords" class="check-button" type="button">Save this list</button><button id="clearWords" class="clear-button" type="button">Clear list</button></div><p class="saved-note" id="savedNote" aria-live="polite"></p></section>
+      <section class="parent-panel"><div class="panel-title"><span class="panel-icon">🌼</span><div><h2>What this unit grows</h2><p>Skill families included in practice</p></div></div><div id="patternsList" class="pattern-list"></div></section>
+      <section class="parent-panel parent-note"><strong>A note about CKLA lists</strong><p>Units 1–2 build spelling by sound and pattern. Starting in Unit 3, weekly spelling words are assigned. Lists can vary across CKLA editions and classrooms, so enter the words from your child’s own sheet here.</p><a href="https://www.coreknowledge.org/download-free-curriculum/" target="_blank" rel="noreferrer">Explore Core Knowledge’s free curriculum ↗</a></section>
+      <button class="close-parent-bottom" id="closeParentBottom" type="button">Back to the garden</button>
+    </section>
+  </div>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+  <script>if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));document.addEventListener('dblclick',event=>event.preventDefault(),{passive:false});</script>
+</body>
+</html>
