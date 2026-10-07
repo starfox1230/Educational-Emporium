@@ -4,6 +4,7 @@ import {build} from 'esbuild';
 const source=path.resolve('../../archives/fluenta-sites');
 let page=fs.readFileSync(path.join(source,'app/page.tsx'),'utf8');
 page=page.split('\n').filter(line=>!line.includes('const [syncStatus,')&&!line.includes('// Load the shared source')&&!line.includes('// Debounce writes')&&!line.includes('fetch("/api/state")')&&!line.includes('if (!cloudReady)')).join('\n');
+page=page.replaceAll('sync-\u0024{syncStatus}', 'synced');
 page=page.replace(/const syncLabel = [^;]+;/,'const syncLabel = "Saved on this device";');
 page=page.replace('Your preferences stay on this device in local mode. Cloud sync and sign-in are ready for the next backend pass.','Cards, reviews and preferences are saved in this browser on this device. This static version does not sync across devices.');
 fs.mkdirSync('src',{recursive:true});fs.writeFileSync('src/page.tsx',page);
