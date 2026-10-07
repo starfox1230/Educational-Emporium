@@ -1,0 +1,265 @@
+/* Function-first mobile pass: keep the review action fixed and thumb-friendly. */
+.home-view .due-kicker,
+.home-view .due-sub,
+.review-shell .rating-hint,
+.settings-footnote {
+  display: none;
+}
+
+.home-view .momentum-block,
+.home-view .progress-line,
+.home-view .deck-rate,
+.home-view .stat-up {
+  display: none;
+}
+
+.home-view .eyebrow {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.home-view .hero-row {
+  min-height: 92px;
+}
+
+.home-view .hero-row h1 {
+  font-size: 30px;
+  margin: 3px 0 6px;
+}
+
+.home-view .hero-copy {
+  max-width: 190px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.home-view .due-card {
+  padding-top: 16px;
+}
+
+.home-view .due-card .primary-button {
+  margin-top: 16px;
+}
+
+.review-shell {
+  background: #0c1118;
+}
+
+.review-topbar {
+  min-height: 62px;
+  padding: 14px 16px;
+}
+
+.review-stage {
+  padding: 18px 16px 88px;
+  gap: 0;
+}
+
+.review-visual-row {
+  width: 100%;
+  min-height: 104px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px 8px;
+  flex: none;
+}
+
+.timer-orbit {
+  width: 64px;
+  height: 64px;
+  margin: 0;
+  border: 0;
+  background: conic-gradient(var(--lime) 0deg 360deg, rgba(255, 255, 255, 0.08) 360deg);
+  box-shadow: 0 0 0 1px rgba(105, 212, 223, 0.18), 0 0 20px rgba(105, 212, 223, 0.1);
+  z-index: 2;
+}
+
+.review-visual-row .timer-orbit {
+  position: relative;
+  top: auto;
+  right: auto;
+  margin-left: auto;
+}
+
+.timer-orbit::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  background: #101720;
+}
+
+.timer-orbit span {
+  position: relative;
+  z-index: 2;
+}
+
+.timer-orbit i {
+  inset: 0;
+  width: auto;
+  height: auto;
+  border: 0;
+  background: transparent;
+  z-index: 3;
+}
+
+.review-card {
+  min-height: 0;
+  flex: 1;
+  padding: 18px;
+  border-radius: 20px;
+}
+
+.question-text {
+  margin-top: 42px;
+  font-size: 28px;
+}
+
+.reveal-button,
+.rating-area {
+  height: 82px;
+  min-height: 82px;
+  margin-top: 12px;
+}
+
+.reveal-button {
+  flex: none;
+}
+
+.rating-area {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.rating-grid {
+  height: 82px;
+}
+
+.rating-button {
+  min-height: 82px;
+}
+
+.review-footer {
+  bottom: 12px;
+  left: 16px;
+  right: 16px;
+}
+
+.review-reactor {
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  width: 104px;
+  height: 104px;
+  opacity: 1;
+  z-index: 2;
+  flex: none;
+  pointer-events: none;
+}
+
+.review-reactor .reactor {
+  transform: scale(0.73);
+  transform-origin: center;
+}
+
+.review-reactor .reactor-ring-one {
+  animation: review-orbit 11s linear infinite;
+}
+
+.review-reactor .reactor-ring-two {
+  animation: review-orbit-reverse 8s linear infinite;
+}
+
+.review-reactor .reactor-halo {
+  animation: review-halo 2.8s ease-in-out infinite;
+}
+
+.review-reactor .reactor-core {
+  animation: review-breathe 2.8s ease-in-out infinite;
+}
+
+.review-reactor .satellite {
+  left: 50%;
+  top: 50%;
+  right: auto;
+  bottom: auto;
+  animation: review-satellite 7s linear infinite;
+  transform-origin: 0 0;
+}
+
+.review-reactor .satellite-two {
+  animation-delay: -2.3s;
+}
+
+.review-reactor .satellite-three {
+  animation-delay: -4.6s;
+}
+
+.review-reactor .reactor-event-success .reactor-core,
+.review-reactor .reactor-event-reveal .reactor-core,
+.review-reactor .reactor-event-milestone .reactor-core,
+.review-reactor .reactor-event-failed .reactor-core,
+.review-reactor .reactor-event-timeout .reactor-core,
+.review-reactor .reactor-event-boost .reactor-core {
+  animation: review-event-pulse 620ms cubic-bezier(.2,.8,.2,1);
+}
+
+.review-reactor.visible {
+  opacity: 1;
+}
+
+@keyframes review-orbit {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes review-orbit-reverse {
+  to { transform: rotate(-360deg); }
+}
+
+@keyframes review-halo {
+  50% { transform: scale(1.18); opacity: .9; }
+}
+
+@keyframes review-breathe {
+  50% { transform: scale(1.06); filter: brightness(1.14); }
+}
+
+@keyframes review-event-pulse {
+  0% { transform: scale(.8); filter: brightness(1); }
+  45% { transform: scale(1.2); filter: brightness(1.65); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+@keyframes review-satellite {
+  from { transform: rotate(0deg) translateY(-48px); }
+  to { transform: rotate(360deg) translateY(-48px); }
+}
+
+@media (max-width: 360px) {
+  .review-stage {
+    padding-inline: 12px;
+  }
+
+  .review-visual-row {
+    min-height: 96px;
+  }
+
+  .review-card {
+    padding: 16px;
+  }
+
+  .question-text {
+    font-size: 26px;
+  }
+
+  .rating-button strong {
+    font-size: 10px;
+  }
+
+  .rating-button span {
+    font-size: 9px;
+  }
+}

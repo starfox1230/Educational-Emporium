@@ -1,0 +1,8 @@
+.brand-logo {
+  width: 27px;
+  height: 27px;
+  display: block;
+  border-radius: 9px;
+  background: center / cover no-repeat url("/icon-192.png");
+  box-shadow: 0 0 16px rgba(255, 126, 79, 0.18);
+}

@@ -1,0 +1,43 @@
+.review-card[role="button"] {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.review-card[role="button"]:focus-visible {
+  outline: 2px solid var(--lime);
+  outline-offset: 4px;
+}
+
+.review-card-flash-good {
+  animation: review-card-good-pulse 120ms ease-out both;
+}
+
+.review-card-flash-again {
+  animation: review-card-again-pulse 120ms ease-out both;
+}
+
+@keyframes review-card-good-pulse {
+  50% {
+    background: linear-gradient(150deg, rgba(76, 173, 119, 0.86), rgba(21, 77, 57, 0.96));
+    border-color: rgba(153, 255, 177, 0.8);
+    box-shadow: 0 0 0 4px rgba(121, 239, 151, 0.16), 0 0 42px rgba(96, 220, 127, 0.4);
+    transform: scale(1.012);
+  }
+}
+
+@keyframes review-card-again-pulse {
+  50% {
+    background: linear-gradient(150deg, rgba(173, 76, 82, 0.86), rgba(77, 26, 40, 0.96));
+    border-color: rgba(255, 151, 151, 0.82);
+    box-shadow: 0 0 0 4px rgba(255, 116, 116, 0.14), 0 0 42px rgba(242, 74, 92, 0.38);
+    transform: scale(1.012);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .review-card-flash-good,
+  .review-card-flash-again {
+    animation: none;
+  }
+}

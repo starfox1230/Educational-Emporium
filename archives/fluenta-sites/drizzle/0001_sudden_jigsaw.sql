@@ -1,0 +1,1 @@
+ALTER TABLE `cards` ADD `fsrs` text DEFAULT '{}' NOT NULL;
