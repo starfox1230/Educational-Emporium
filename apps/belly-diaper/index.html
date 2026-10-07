@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#fff8f2">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='20' fill='%23fff0f6'/%3E%3Ctext x='12' y='47' font-size='43' font-family='Arial,sans-serif' font-weight='700' fill='%23f33b91'%3Eb%3C/text%3E%3C/svg%3E">
+  <title>Belly Diaper</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #342d32;
+      --muted: #8e858b;
+      --pink: #f33b91;
+      --pink-soft: #fff0f6;
+      --green: #79cf36;
+      --green-soft: #f2fae9;
+      --paper: #fffdfa;
+      --line: #f0e9e5;
+      --shadow: 0 12px 34px rgba(96, 71, 77, .09);
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { width: 100%; height: 100%; height: 100dvh; margin: 0; overflow: hidden; overscroll-behavior: none; touch-action: manipulation; }
+    body { color: var(--ink); background: #fff8f2; font-family: ui-rounded, "SF Pro Rounded", "Nunito", "Trebuchet MS", system-ui, sans-serif; user-select: none; -webkit-user-select: none; }
+    button { color: inherit; font: inherit; touch-action: manipulation; cursor: pointer; }
+    .app { width: min(100%, 600px); height: 100%; height: 100dvh; margin: 0 auto; display: flex; flex-direction: column; padding: max(12px, env(safe-area-inset-top)) 18px max(12px, env(safe-area-inset-bottom)); }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 58px; }
+    .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .brand-mark { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 15px; background: linear-gradient(145deg, #ffe4ef, #eff9e7); font-size: 23px; }
+    h1 { margin: 0; font-size: clamp(19px, 5vw, 23px); line-height: 1.05; letter-spacing: -.045em; }
+    .subtitle { margin-top: 4px; color: var(--muted); font-size: 11px; font-weight: 650; letter-spacing: .09em; text-transform: uppercase; }
+    .mode-switch { display: flex; align-items: center; gap: 2px; padding: 4px; border: 1px solid #eee4df; border-radius: 999px; background: #fff; box-shadow: 0 3px 10px #5545340b; }
+    .mode-switch button { border: 0; border-radius: 999px; padding: 9px 11px; color: #82777e; background: transparent; font-size: 12px; font-weight: 750; white-space: nowrap; }
+    .mode-switch button[aria-pressed="true"] { color: var(--ink); background: #f7efeb; }
+    main { display: flex; flex: 1; min-height: 0; flex-direction: column; padding: 13px 0 0; }
+    .scorebar { display: flex; align-items: center; justify-content: space-between; padding: 0 3px 12px; }
+    .score-label { color: var(--muted); font-size: 12px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+    .score { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 800; }
+    .score .star { color: #f2b741; font-size: 20px; }
+    .track { position: relative; display: grid; flex: 1; min-height: 220px; place-items: center; overflow: hidden; border: 1px solid #f0e8e3; border-radius: 30px; background: linear-gradient(180deg, #fff 0%, #fffaf6 100%); box-shadow: var(--shadow); isolation: isolate; }
+    .track::before { content: ""; position: absolute; top: 15%; bottom: 15%; left: 50%; width: 1px; background: linear-gradient(transparent, #f3ece7 24%, #f3ece7 76%, transparent); z-index: -1; }
+    .sun { position: absolute; top: 25px; right: 27px; width: 44px; height: 44px; border-radius: 50%; background: #fff1cb; opacity: .75; }
+    .cloud { position: absolute; top: 57px; left: 25px; color: #eae3df; font-size: 26px; }
+    .ground { position: absolute; right: 22px; bottom: 25%; left: 22px; height: 2px; border-radius: 3px; background: #f1e8e1; }
+    .walker { position: absolute; z-index: 2; bottom: calc(25% + 1px); left: 0; width: clamp(136px, 42vw, 188px); height: clamp(205px, 52vw, 255px); transform: translateX(-150%); transform-origin: center bottom; }
+    .walker.walking { animation: stroll 6.1s linear forwards; }
+    .walker svg { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 6px 5px rgba(68, 49, 49, .06)); }
+    .walker.walking svg .leg { transform-box: view-box; }
+    .walker.walking[data-letter="b"] svg .leg-a { transform-origin: 72px 203px; animation: leg-swing .28s ease-in-out infinite alternate; }
+    .walker.walking[data-letter="b"] svg .leg-b { transform-origin: 80px 203px; animation: leg-swing .28s ease-in-out infinite alternate-reverse; }
+    .walker.walking[data-letter="d"] svg .leg-a { transform-origin: 112px 203px; animation: leg-swing .28s ease-in-out infinite alternate; }
+    .walker.walking[data-letter="d"] svg .leg-b { transform-origin: 120px 203px; animation: leg-swing .28s ease-in-out infinite alternate-reverse; }
+    @keyframes stroll { from { transform: translateX(-150%) rotate(-2deg); } 15% { transform: translateX(-110%) rotate(1deg); } 50% { transform: translateX(115%) rotate(-1deg); } 85% { transform: translateX(350%) rotate(1deg); } to { transform: translateX(590%) rotate(0); } }
+    @keyframes leg-swing { from { transform: rotate(-26deg); } to { transform: rotate(26deg); } }
+    .walker.pop { animation: pop .34s cubic-bezier(.2, .9, .3, 1.3); }
+    @keyframes pop { 50% { scale: 1.13; } }
+    .prompt { position: absolute; z-index: 3; top: 19px; left: 50%; width: max-content; max-width: calc(100% - 100px); transform: translateX(-50%); padding: 9px 14px; border: 1px solid #f2eae6; border-radius: 999px; background: #ffffffed; color: #746970; box-shadow: 0 4px 14px #4631320b; font-size: 12px; font-weight: 750; text-align: center; }
+    .feedback { position: absolute; z-index: 4; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(.9); padding: 12px 20px; border-radius: 18px; opacity: 0; pointer-events: none; font-size: 24px; font-weight: 900; transition: opacity .16s, transform .16s; white-space: nowrap; }
+    .feedback.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    .feedback.good { color: #397b25; background: #f1fbe9; }
+    .feedback.try { color: #b95766; background: #fff0f1; }
+    .welcome { position: absolute; z-index: 5; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 27px; background: #fffdfaef; text-align: center; transition: opacity .25s, visibility .25s; }
+    .welcome.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .welcome-characters { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .mini-character { display: grid; width: 64px; height: 64px; place-items: center; border-radius: 22px; font-size: 38px; font-weight: 850; line-height: 1; }
+    .mini-character.b { color: var(--pink); background: var(--pink-soft); }
+    .mini-character.d { color: var(--green); background: var(--green-soft); }
+    .welcome h2 { margin: 0; font-size: 29px; letter-spacing: -.05em; }
+    .welcome p { max-width: 270px; margin: 10px 0 20px; color: #786d73; font-size: 15px; line-height: 1.5; }
+    .start { min-height: 52px; padding: 0 26px; border: 0; border-radius: 17px; background: var(--ink); color: white; box-shadow: 0 6px 0 #211c20; font-size: 16px; font-weight: 850; }
+    .start:active, .answer:active { transform: translateY(2px) scale(.98); }
+    .controls { padding-top: 14px; }
+    .answer-row { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+    .answer { display: flex; min-height: clamp(70px, 12vh, 94px); align-items: center; justify-content: center; gap: 10px; border: 1.5px solid transparent; border-radius: 22px; box-shadow: 0 5px 0 #0000000b; font-size: clamp(16px, 4.5vw, 20px); font-weight: 850; transition: transform .1s, opacity .15s; }
+    .answer.left { border-color: #fbd7e7; background: var(--pink-soft); color: #bb286a; }
+    .answer.right { border-color: #dceecf; background: var(--green-soft); color: #4b8525; }
+    .answer:disabled { opacity: .62; }
+    .answer .icon { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 12px; background: #ffffffba; font-size: 19px; }
+    .helper { display: flex; justify-content: center; gap: 6px; margin: 12px 0 0; color: #968b91; font-size: 11px; font-weight: 650; text-align: center; }
+    .helper .dot { color: #d3c5be; }
+    @media (max-height: 680px) { .app { padding-top: max(6px, env(safe-area-inset-top)); padding-bottom: max(7px, env(safe-area-inset-bottom)); } header { min-height: 51px; } .brand-mark { width: 37px; height: 37px; border-radius: 13px; } main { padding-top: 5px; } .scorebar { padding-bottom: 7px; } .controls { padding-top: 9px; } .helper { margin-top: 7px; } .walker { height: min(45vh, 205px); } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } .walker.walking { animation-duration: 10s; } .walker.walking svg .leg { animation: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <header>
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">🅱️</div>
+        <div><h1>Belly Diaper</h1><div class="subtitle">Say it. Spot it. Smile.</div></div>
+      </div>
+      <div class="mode-switch" role="group" aria-label="Character style">
+        <button type="button" id="sillyMode" aria-pressed="true">Silly</button>
+        <button type="button" id="plainMode" aria-pressed="false">Letters</button>
+      </div>
+    </header>
+    <main>
+      <div class="scorebar"><span class="score-label">Your stars</span><span class="score"><span class="star" aria-hidden="true">★</span><span id="score">0</span></span></div>
+      <section class="track" id="track" aria-label="Letter crossing game">
+        <div class="sun" aria-hidden="true"></div><div class="cloud" aria-hidden="true">☁</div><div class="ground" aria-hidden="true"></div>
+        <div class="prompt" id="prompt">Who is it? Say B or D!</div>
+        <div class="walker" id="walker" aria-hidden="true"></div>
+        <div class="feedback" id="feedback" aria-live="polite"></div>
+        <div class="welcome" id="welcome">
+          <div class="welcome-characters" aria-hidden="true"><div class="mini-character b">b</div><div class="mini-character d">d</div></div>
+          <h2>Ready to spot it?</h2>
+          <p>A letter will walk by. Let your little learner say <strong>B</strong> or <strong>D</strong>, then tap your answer.</p>
+          <button class="start" id="start" type="button">Let’s play!</button>
+        </div>
+      </section>
+      <div class="controls">
+        <div class="answer-row" role="group" aria-label="Adult answer buttons">
+          <button class="answer left" id="wrong" type="button"><span class="icon" aria-hidden="true">↶</span><span>Not quite</span></button>
+          <button class="answer right" id="right" type="button"><span class="icon" aria-hidden="true">✓</span><span>That’s right!</span></button>
+        </div>
+        <p class="helper"><span>Left side = not quite</span><span class="dot">•</span><span>Right side = that's right</span></p>
+      </div>
+    </main>
+  </div>
+  <script>
+    (() => {
+      const walker = document.getElementById('walker');
+      const track = document.getElementById('track');
+      const welcome = document.getElementById('welcome');
+      const feedback = document.getElementById('feedback');
+      const prompt = document.getElementById('prompt');
+      const score = document.getElementById('score');
+      const wrongButton = document.getElementById('wrong');
+      const rightButton = document.getElementById('right');
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      let current = 'b';
+      let mode = 'silly';
+      let playing = false;
+      let answered = true;
+      let points = 0;
+      let roundTimer;
+      let nextTimer;
+
+      const characters = {
+        b: `<svg viewBox="0 0 170 245" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pink letter b with a belly">
+          <g fill="none" stroke="#f33b91" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M72 88V202" stroke-width="17"/><path d="M72 160c0-23 18-40 40-40s40 17 40 40-18 40-40 40-40-17-40-40Z" stroke-width="12"/>
+          </g>
+          <circle cx="72" cy="55" r="27" fill="#fffdfa" stroke="#493f43" stroke-width="2"/>
+          <circle cx="62" cy="55" r="2.6" fill="#342d32"/><circle cx="80" cy="55" r="2.6" fill="#342d32"/><path d="M66 64q6 5 12 0" fill="none" stroke="#342d32" stroke-width="2" stroke-linecap="round"/>
+          <path d="M80 107l19 8m-19-1 22 0" stroke="#493f43" stroke-width="1.5" stroke-linecap="round"/>
+          <g class="leg leg-a"><path d="M72 203 66 229" stroke="#493f43" stroke-width="2" stroke-linecap="round"/><ellipse cx="64" cy="232" rx="8" ry="4" fill="#342d32"/></g>
+          <g class="leg leg-b"><path d="m80 203 9 26" stroke="#493f43" stroke-width="2" stroke-linecap="round"/><ellipse cx="91" cy="232" rx="8" ry="4" fill="#342d32"/></g>
+          </svg>`,
+        d: `<svg viewBox="0 0 170 245" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Green letter d wearing a diaper">
+          <g fill="none" stroke="#79cf36" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M112 88v114" stroke-width="17"/><path d="M112 160c0-23-18-40-40-40s-40 17-40 40 18 40 40 40 40-17 40-40Z" stroke-width="12"/>
+          </g>
+          <circle cx="112" cy="55" r="27" fill="#fffdfa" stroke="#493f43" stroke-width="2"/>
+          <circle cx="102" cy="55" r="2.6" fill="#342d32"/><circle cx="120" cy="55" r="2.6" fill="#342d32"/><path d="M106 64q6 5 12 0" fill="none" stroke="#342d32" stroke-width="2" stroke-linecap="round"/>
+          <path d="M120 108 138 114m-17-1 21-1" stroke="#493f43" stroke-width="1.5" stroke-linecap="round"/>
+          <g class="leg leg-a"><path d="m112 203-6 26" stroke="#493f43" stroke-width="2" stroke-linecap="round"/><ellipse cx="104" cy="232" rx="8" ry="4" fill="#342d32"/></g>
+          <g class="leg leg-b"><path d="m120 203 9 26" stroke="#493f43" stroke-width="2" stroke-linecap="round"/><ellipse cx="131" cy="232" rx="8" ry="4" fill="#342d32"/></g>
+          <path d="m23 163-5-3m7 14-7 0m10 12-5 4" stroke="#a86d35" stroke-width="3" stroke-linecap="round"/>
+          </svg>`
+      };
+
+      function renderCharacter() {
+        walker.dataset.letter = current;
+        if (mode === 'plain') {
+          walker.innerHTML = `<div style="display:grid;place-items:center;width:100%;height:100%;color:${current === 'b' ? 'var(--pink)' : 'var(--green)'};font-size:clamp(170px,54vw,225px);font-weight:750;line-height:1;letter-spacing:-.1em;padding-right:.1em">${current}</div>`;
+          walker.setAttribute('aria-label', `Letter ${current.toUpperCase()}`);
+        } else {
+          walker.innerHTML = characters[current];
+          walker.setAttribute('aria-label', current === 'b' ? 'Pink b with a belly' : 'Green d wearing a diaper');
+        }
+      }
+      function nextLetter() {
+        current = Math.random() < .5 ? 'b' : 'd';
+        renderCharacter();
+        answered = false;
+        feedback.className = 'feedback';
+        prompt.textContent = mode === 'silly' ? 'Who is it? Say B or D!' : 'Which letter? Say B or D!';
+        walker.classList.remove('walking', 'pop');
+        void walker.offsetWidth;
+        walker.classList.add('walking');
+        const duration = reducedMotion.matches ? 10000 : 6100;
+        clearTimeout(roundTimer);
+        roundTimer = setTimeout(() => { if (!answered && playing) settle(null); }, duration);
+      }
+      function settle(isCorrect) {
+        if (answered || !playing) return;
+        answered = true;
+        clearTimeout(roundTimer);
+        walker.classList.remove('walking');
+        walker.classList.add('pop');
+        feedback.textContent = isCorrect === null ? 'Next one!' : isCorrect ? 'You got it! ⭐' : 'Good try! 💛';
+        feedback.className = `feedback show ${isCorrect ? 'good' : 'try'}`;
+        if (isCorrect) { points += 1; score.textContent = points; }
+        prompt.textContent = isCorrect === null ? 'Keep listening!' : isCorrect ? 'Lovely listening!' : 'Let’s try another!';
+        clearTimeout(nextTimer);
+        nextTimer = setTimeout(() => { if (playing) nextLetter(); }, isCorrect === null ? 550 : 850);
+      }
+      function begin() {
+        clearTimeout(nextTimer);
+        playing = true;
+        welcome.classList.add('hidden');
+        nextLetter();
+      }
+      document.getElementById('start').addEventListener('click', begin);
+      wrongButton.addEventListener('click', () => settle(false));
+      rightButton.addEventListener('click', () => settle(true));
+      document.getElementById('sillyMode').addEventListener('click', () => {
+        mode = 'silly';
+        document.getElementById('sillyMode').setAttribute('aria-pressed', 'true');
+        document.getElementById('plainMode').setAttribute('aria-pressed', 'false');
+        if (playing && !answered) { clearTimeout(roundTimer); nextLetter(); }
+        else renderCharacter();
+      });
+      document.getElementById('plainMode').addEventListener('click', () => {
+        mode = 'plain';
+        document.getElementById('plainMode').setAttribute('aria-pressed', 'true');
+        document.getElementById('sillyMode').setAttribute('aria-pressed', 'false');
+        if (playing && !answered) { clearTimeout(roundTimer); nextLetter(); }
+        else renderCharacter();
+      });
+      track.addEventListener('pointerup', event => {
+        if (!playing || answered || event.target.closest('button, .welcome')) return;
+        settle(event.clientX >= window.innerWidth / 2);
+      });
+      renderCharacter();
+    })();
+  </script>
+</body>
+</html>
+
