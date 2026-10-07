@@ -1,0 +1,51 @@
+.incorrect-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 28px;
+  color: #a92d38;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.incorrect-message::before {
+  content: "✕";
+  display: grid;
+  flex: 0 0 23px;
+  width: 23px;
+  height: 23px;
+  place-items: center;
+  border-radius: 50%;
+  background: #ffe1e2;
+  color: #b62936;
+  font-size: 14px;
+}
+
+.incorrect-answer .answer-tile.filled {
+  border-color: #d75961;
+  background: #ffebeb;
+  color: #a92d38;
+}
+
+.celebrate.incorrect-result {
+  background: #fff3f3ee;
+}
+
+.incorrect-result .celebrate-star {
+  color: #d43e45;
+}
+
+.incorrect-result strong {
+  color: #a9323d;
+}
+
+.incorrect-result > span:nth-of-type(2) {
+  color: #9c4148;
+  font-weight: 700;
+}
+
+.incorrect-result button {
+  background: #b9474f;
+}
+

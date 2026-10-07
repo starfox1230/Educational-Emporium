@@ -81,11 +81,15 @@
     $("streakPill").textContent = `✦ ${state.streak}`;
     $("gameFeedback").textContent = state.mode === "sentences" ? "Tap the letters, spaces, and punctuation you hear." : "Tap the letters to spell the word.";
     $("gameFeedback").className = "game-feedback";
-    $("celebrate").hidden = true; $("checkAnswer").disabled = false;
+    $("celebrate").hidden = true; $("celebrate").classList.remove("incorrect-result");
+    $("celebrate").querySelector(".celebrate-star").textContent = "✦";
+    $("celebrate").querySelector("strong").textContent = "Lovely spelling!";
+    $("checkAnswer").disabled = false;
     drawAnswer();
     if (announce) { setTimeout(() => speak(item.word), 180); }
   }
   function drawAnswer() {
+    $("answerArea").classList.remove("incorrect-answer");
     const value = state.typed;
     const capacity = state.mode === "sentences" ? Math.max(activeItem()?.word.length || 0, value.length + 2) : Math.max(activeItem()?.word.length || 0, value.length + 1);
     $("answerArea").innerHTML = Array.from({ length: Math.min(capacity, state.mode === "sentences" ? 54 : 24) }, (_, i) => {
@@ -125,11 +129,16 @@
       if (navigator.vibrate) navigator.vibrate(16);
     } else {
       state.errors++; state.streak = 0; $("streakPill").textContent = "✦ 0";
+      $("answerArea").classList.add("incorrect-answer");
       if (state.errors >= 3) {
-        $("gameFeedback").textContent = `The word was “${activeItem().word}”. Let’s keep growing!`; $("gameFeedback").className = "game-feedback gentle-message";
-        $("celebrateWord").textContent = activeItem().word; $("celebrate").querySelector("strong").textContent = "Keep on growing!"; $("celebrate").hidden = false; $("checkAnswer").disabled = true;
+        $("gameFeedback").textContent = "Not quite. The correct spelling is shown below."; $("gameFeedback").className = "game-feedback incorrect-message";
+        $("celebrate").classList.add("incorrect-result");
+        $("celebrate").querySelector(".celebrate-star").textContent = "✕";
+        $("celebrate").querySelector("strong").textContent = "Not quite";
+        $("celebrateWord").textContent = `The word was “${activeItem().word}”.`;
+        $("celebrate").hidden = false; $("checkAnswer").disabled = true;
       } else {
-        $("gameFeedback").textContent = "Not quite yet. Listen again and try another way."; $("gameFeedback").className = "game-feedback gentle-message";
+        $("gameFeedback").textContent = "Not quite. Listen again, then change your spelling."; $("gameFeedback").className = "game-feedback incorrect-message";
         if (navigator.vibrate) navigator.vibrate([12, 26, 12]);
       }
     }
@@ -177,3 +186,4 @@
   document.addEventListener("keyup", (event) => { if (event.key === "Shift" && state.shift) { state.shift = false; drawKeyboard(); } });
   renderHome();
 })();
+

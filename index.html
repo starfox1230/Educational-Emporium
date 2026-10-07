@@ -96,6 +96,64 @@
       box-shadow: 0 4px 10px var(--shadow-color);
     }
 
+    .app-search {
+      width: calc(100% - 32px);
+      max-width: 520px;
+      margin: 14px auto 4px;
+    }
+
+    .app-search label {
+      display: block;
+      margin: 0 0 6px 3px;
+      color: var(--text-medium);
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .app-search-box {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 46px;
+      padding: 0 13px;
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 3px 8px var(--shadow-color);
+      color: var(--text-medium);
+    }
+
+    .app-search-box input {
+      width: 100%;
+      min-width: 0;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--text-light);
+      font: inherit;
+      font-size: 0.9rem;
+    }
+
+    .app-search-box input::placeholder { color: #ad929e; }
+
+    .app-search-clear {
+      width: 30px;
+      height: 30px;
+      border: 0;
+      border-radius: 50%;
+      background: var(--bg-dark);
+      color: var(--text-medium);
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+
+    .app-search-status {
+      min-height: 16px;
+      margin: 5px 3px 0;
+      color: var(--text-medium);
+      font-size: 0.7rem;
+    }
+
     .app-list {
       display: flex;
       overflow-x: auto;
@@ -589,6 +647,11 @@
       <button class="view-toggle active" data-view="all">All Apps</button>
       <button class="view-toggle" data-view="favorites">Favorites ★</button>
     </div>
+    <div class="app-search">
+      <label for="app-search-input">Find an app</label>
+      <div class="app-search-box"><span aria-hidden="true">⌕</span><input id="app-search-input" type="search" placeholder="Search the library" autocomplete="off"><button id="app-search-clear" class="app-search-clear" type="button" aria-label="Clear search" hidden>×</button></div>
+      <p id="app-search-status" class="app-search-status" aria-live="polite"></p>
+    </div>
     <ul class="app-list">
       <li><a href="apps/fluenta/index.html" class="app-link"><span class="emoji">🇪🇸</span><span class="text">fluenta · Spanish that sticks</span></a></li>
       <li><a href="apps/Matilda-Math/index.html" class="app-link app-matilda-math"><span class="emoji">✦➕</span><span class="text">Matilda Math</span></a></li>
@@ -613,11 +676,9 @@
       <li><a href="apps/Coloring_16_bit/index.html" class="app-link app-coloring-16-bit"><span class="emoji">🎨</span><span class="text">Coloring 16 Bit</span></a></li>
       <li><a href="apps/Tic-Tac-Toe/index.html" class="app-link app-radionuclides"><span class="emoji">#️⃣</span><span class="text">Tic-Tac-Toe</span></a></li>
       <li><a href="apps/Countries/index.html" class="app-link app-countries"><span class="emoji">🌎</span><span class="text">Countries</span></a></li>
-      <li><a href="apps/belly-diaper/index.html" class="app-link"><span class="emoji">🅱️</span><span class="text">Belly Diaper</span></a></li>
       <li><a href="apps/b-vs-d/index.html" class="app-link"><span class="emoji">⚽️ 🐕</span><span class="text">b vs d</span></a></li>
       <li><a href="apps/teens/index.html" class="app-link app-countries"><span class="emoji">🧮</span><span class="text">Teens</span></a></li>
       <li><a href="apps/sight-words/index.html" class="app-link"><span class="emoji">👁️</span><span class="text">Sight Words</span></a></li>
-      <li><a href="apps/ckla-spelling/index.html" class="app-link"><span class="emoji">🌼</span><span class="text">Sound Garden · CKLA Spelling</span></a></li>
       <li><a href="apps/b-vs-d-v20/index.html" class="app-link"><span class="emoji">🍉</span><span class="text">b vs d v2.0</span></a></li>
       <li><a href="apps/minedigger/index.html" class="app-link"><span class="emoji">⛏️</span><span class="text">MineDigger</span></a></li>
       <li><a href="apps/numbers-1-30/index.html" class="app-link"><span class="emoji">3️⃣0️⃣</span><span class="text">Numbers 1-30</span></a></li>
@@ -688,6 +749,9 @@
           <span class="text">Spiral Math Review · Sep 7–11, 2026</span>
         </a>
       </li>
+
+      <li><a href="apps/belly-diaper/index.html" class="app-link"><span class="emoji">🅱️</span><span class="text">Belly Diaper</span></a></li>
+      <li><a href="apps/ckla-spelling/index.html" class="app-link"><span class="emoji">🌼</span><span class="text">Sound Garden · CKLA Spelling</span></a></li>
 
       <!-- ADD NEW APPS ABOVE THIS LINE -->
       <!-- 🍀🎊🐞🐞🐞🎊🎊🎊🐞🐰🐰🐞 -->
@@ -981,6 +1045,9 @@
         const appListContainer = document.querySelector('.app-list');
         const allAppListItems = document.querySelectorAll('.app-list li');
         const viewToggles = document.querySelectorAll('.view-toggle');
+        const appSearchInput = document.getElementById('app-search-input');
+        const appSearchClear = document.getElementById('app-search-clear');
+        const appSearchStatus = document.getElementById('app-search-status');
         const VIEW_STORAGE_KEY = 'appListViewPreference';
         let favorites = JSON.parse(localStorage.getItem('favoriteApps')) || [];
         let currentView = null;
@@ -1022,28 +1089,29 @@
                 starElement.innerHTML = '★';
             }
             localStorage.setItem('favoriteApps', JSON.stringify(favorites));
-
-            const favoritesViewActive = document.querySelector('.view-toggle[data-view="favorites"]').classList.contains('active');
-            if (favoritesViewActive && isFavorited) {
-                starElement.closest('li').classList.add('hidden');
-            }
+            applyFilters();
         }
 
-        function filterView(view) {
-            if (view === 'favorites') {
-                allAppListItems.forEach(li => {
-                    const appIdentifier = li.querySelector('a')?.getAttribute('href');
-                    if (appIdentifier && !favorites.includes(appIdentifier)) {
-                        li.classList.add('hidden');
-                    } else {
-                        li.classList.remove('hidden');
-                    }
-                });
-            } else {
-                allAppListItems.forEach(li => {
-                    li.classList.remove('hidden');
-                });
-            }
+        function applyFilters() {
+            const query = appSearchInput.value.trim().toLocaleLowerCase();
+            const favoritesOnly = currentView === 'favorites';
+            let visibleCount = 0;
+
+            allAppListItems.forEach(li => {
+                const link = li.querySelector('a');
+                const appIdentifier = link?.getAttribute('href');
+                const appName = (link?.querySelector('.text')?.textContent || link?.textContent || '').trim().toLocaleLowerCase();
+                const matchesSearch = !query || appName.includes(query);
+                const matchesView = !favoritesOnly || favorites.includes(appIdentifier);
+                const visible = matchesSearch && matchesView;
+                li.classList.toggle('hidden', !visible);
+                if (visible) visibleCount++;
+            });
+
+            appSearchClear.hidden = !appSearchInput.value;
+            appSearchStatus.textContent = query && visibleCount === 0
+                ? `No apps found for “${appSearchInput.value.trim()}”.`
+                : `${visibleCount} ${visibleCount === 1 ? 'app' : 'apps'}${favoritesOnly ? ' in favorites' : ''}${query ? ` matching “${appSearchInput.value.trim()}”` : ''}.`;
         }
 
         function setActiveView(view, { persist = true } = {}) {
@@ -1067,7 +1135,7 @@
                 }
             });
 
-            filterView(normalizedView);
+            applyFilters();
 
             if (persist) {
                 localStorage.setItem(VIEW_STORAGE_KEY, normalizedView);
@@ -1079,6 +1147,16 @@
                 const view = toggle.getAttribute('data-view');
                 setActiveView(view);
             });
+        });
+
+        appSearchInput.addEventListener('input', () => {
+            appListContainer.scrollLeft = 0;
+            applyFilters();
+        });
+        appSearchClear.addEventListener('click', () => {
+            appSearchInput.value = '';
+            applyFilters();
+            appSearchInput.focus();
         });
 
         let isDown = false;
@@ -1117,4 +1195,5 @@
   </script>
 </body>
 </html>
+
 
