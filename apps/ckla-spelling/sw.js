@@ -1,4 +1,4 @@
-const CACHE = "sound-garden-1.0.2";
+const CACHE = "sound-garden-1.0.3";
 const FILES = ["./", "./index.html", "./style.css", "./feedback.css", "./data.js", "./app.js", "./manifest.webmanifest", "./icon.svg"];
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(FILES)).then(() => self.skipWaiting()));
@@ -13,4 +13,5 @@ self.addEventListener("fetch", (event) => {
     return response;
   }).catch(() => caches.match("./index.html"))));
 });
+
 

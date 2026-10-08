@@ -51,9 +51,10 @@
     <main id="gameView" class="game-view" hidden>
       <div class="game-top"><button id="leaveGame" class="back-button" type="button" aria-label="Back to garden">←</button><div class="game-progress-wrap"><div class="game-progress-label"><span id="gameModeLabel">Word garden</span><span id="progressLabel">1 of 10</span></div><div class="progress-track"><span id="progressFill"></span></div></div><span class="streak-pill" id="streakPill">✦ 0</span></div>
       <section class="game-card" aria-live="polite">
-        <div class="listen-orb" id="listenOrb"><span>🔈</span><i></i></div>
+        <button id="replayWord" class="listen-orb replay-orb" type="button" aria-label="Hear it again">
+          <span aria-hidden="true">🔈</span><i></i><small>Hear it again</small>
+        </button>
         <p class="listen-hint" id="listenHint">Listen carefully. You can replay it anytime.</p>
-        <button id="replayWord" class="replay-button" type="button"><span aria-hidden="true">▶</span> Hear it again</button>
         <div class="answer-area" id="answerArea" aria-label="Your spelling"></div>
         <p class="game-feedback" id="gameFeedback" aria-live="assertive">Tap the letters to spell the word.</p>
       </section>
@@ -76,4 +77,5 @@
   <script>if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));document.addEventListener('dblclick',event=>event.preventDefault(),{passive:false});</script>
 </body>
 </html>
+
 
