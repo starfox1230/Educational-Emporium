@@ -91,8 +91,9 @@
   function drawAnswer() {
     $("answerArea").classList.remove("incorrect-answer");
     const value = state.typed;
-    const capacity = state.mode === "sentences" ? Math.max(activeItem()?.word.length || 0, value.length + 2) : Math.max(activeItem()?.word.length || 0, value.length + 1);
-    $("answerArea").innerHTML = Array.from({ length: Math.min(capacity, state.mode === "sentences" ? 54 : 24) }, (_, i) => {
+    const maxLength = state.mode === "sentences" ? 54 : 24;
+    const capacity = Math.min(value.length + 1, maxLength + 1);
+    $("answerArea").innerHTML = Array.from({ length: capacity }, (_, i) => {
       const character = value[i];
       return `<span class="answer-tile ${character ? "filled" : ""}">${character === " " ? " " : escapeHtml(character || "")}</span>`;
     }).join("");
@@ -186,4 +187,5 @@
   document.addEventListener("keyup", (event) => { if (event.key === "Shift" && state.shift) { state.shift = false; drawKeyboard(); } });
   renderHome();
 })();
+
 
