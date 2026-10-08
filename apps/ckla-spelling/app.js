@@ -4,6 +4,10 @@
   const state = { unit: 0, screen: "home", mode: "words", rounds: [], round: 0, typed: "", errors: 0, streak: 0, shift: false, stars: 0, stats: {} };
   const $ = (id) => document.getElementById(id);
   let saved = readSaved();
+  let audioManifest = {};
+  const promptAudio = new Audio();
+
+  fetch("./audio/manifest.json").then((response) => response.ok ? response.json() : {}).then((manifest) => { audioManifest = manifest.items || {}; }).catch(() => {});
 
   function readSaved() {
     try { return JSON.parse(localStorage.getItem(storageKey)) || { lists: {}, stats: {} }; }
@@ -44,12 +48,20 @@
       return { word: word.trim(), hint: rest.join(",").trim() };
     }).filter((item) => /^[a-zA-Z][a-zA-Z'-]*$/.test(item.word));
   }
-  function speak(text) {
+  function browserSpeak(text) {
     if (!("speechSynthesis" in window)) { $("gameFeedback").textContent = "Audio isn’t available on this device yet. Ask a grown-up to check sound settings."; return; }
-    window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US"; utterance.rate = state.mode === "sentences" ? 0.78 : 0.8; utterance.pitch = 1.04;
     window.speechSynthesis.speak(utterance);
+  }
+  function speak(text) {
+    window.speechSynthesis?.cancel();
+    promptAudio.pause(); promptAudio.currentTime = 0;
+    const key = text.trim().toLocaleLowerCase().replace(/\s+/g, " ");
+    const clip = audioManifest[key];
+    if (!clip) { browserSpeak(text); return; }
+    promptAudio.src = `./audio/${clip}.mp3`;
+    promptAudio.play().catch(() => browserSpeak(text));
   }
   function startGame(mode) {
     state.mode = mode; state.round = 0; state.errors = 0; state.streak = 0; state.typed = ""; state.shift = false;
@@ -153,7 +165,7 @@
     $("celebrate").hidden = false; $("celebrate").querySelector("strong").textContent = "Lovely work!"; $("celebrateWord").textContent = "Your garden is growing."; $("nextWord").textContent = "Practice again";
   }
   function leaveGame() {
-    window.speechSynthesis?.cancel(); state.screen = "home";
+    window.speechSynthesis?.cancel(); promptAudio.pause(); promptAudio.currentTime = 0; state.screen = "home";
     $("gameView").hidden = true; $("homeView").hidden = false; $("replayWord").hidden = false; $("checkAnswer").hidden = false; $("nextWord").innerHTML = "Next word <span>→</span>";
     $("keyboard").hidden = false; $("clearAnswer").hidden = false;
     $("celebrate").querySelector("strong").textContent = "Lovely spelling!"; renderHome(); window.scrollTo(0, 0);

@@ -4,3 +4,4 @@
 @media(max-height:690px) and (max-width:560px){.game-card{min-height:145px}.listen-orb{width:59px;height:59px;font-size:22px;margin-bottom:11px}.listen-hint{font-size:13px}.key{height:39px}.keyboard{gap:5px;margin-top:3px}.game-actions .check-button{padding-top:11px;padding-bottom:11px}}
 @media(min-width:700px){.app-shell{padding-bottom:46px}.welcome{min-height:230px}.welcome h1{font-size:52px}.mode-card{padding:15px 17px}.keyboard{gap:8px}.key{height:53px}}
 
+.voice-disclosure{display:block;margin:-6px 0 9px;font-size:9px;color:#9aa396}
