@@ -11,9 +11,11 @@ A phone-first spelling practice app for CKLA Grade 1 Skills. Children hear a wor
 
 The included cold words and sentences are original examples, not a reproduction of CKLA assessment or teacher-guide lists. CKLA editions and classroom weekly lists can differ. A grown-up can enter the assigned list for a unit in **Grown-ups**. Unit progression and tricky-word scope are based on the CKLA Grade 1 context shared with this project.
 
+Built-in words and sentences use prerecorded AI-generated speech from OpenAI's GPT-Realtime-2.1 Mini model with the Marin voice. Custom grown-up lists use the device's browser speech voice. Audio clips load as needed and are cached by the service worker after they are played.
+
 ## Run it
 
-Open `index.html` in a browser. The web speech voice is supplied by the device or browser. To install it on an iPhone, open the hosted page in Safari and choose **Share → Add to Home Screen**. The service worker caches the app shell for offline launch; speech synthesis needs the browser's speech support.
+Open `index.html` in a browser. To install it on an iPhone, open the hosted page in Safari and choose **Share → Add to Home Screen**. The service worker caches the app shell for offline launch; built-in audio is cached as each clip is played.
 
 ## References
 
