@@ -160,7 +160,7 @@
   }
   function nextWord() {
     if (state.screen === "done") { leaveGame(); return; }
-    state.round++; $("listenOrb").classList.remove("listening"); showRound(true);
+    state.round++; $("replayWord").classList.remove("listening"); showRound(true);
   }
 
   $("parentToggle").addEventListener("click", showParent);
@@ -187,5 +187,6 @@
   document.addEventListener("keyup", (event) => { if (event.key === "Shift" && state.shift) { state.shift = false; drawKeyboard(); } });
   renderHome();
 })();
+
 
 
