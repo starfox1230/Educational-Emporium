@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f5ff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="ABC Word Sort">
+  <title>ABC Word Sort · Educational Emporium</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap');
+    :root {
+      color-scheme: light;
+      --ink: #30294c; --muted: #706987; --purple: #7561d2; --purple-dark: #5744b6;
+      --pale: #f2eeff; --line: #dfd9f5; --teal: #208c79; --paper: #fff;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; overscroll-behavior: none; }
+    body {
+      font-family: Nunito, ui-rounded, system-ui, -apple-system, sans-serif;
+      color: var(--ink); background: radial-gradient(circle at 8% 8%, #fff5cf, transparent 32%),
+      radial-gradient(circle at 95% 87%, #e0f8f2, transparent 35%), #f7f5ff;
+      -webkit-font-smoothing: antialiased; user-select: none; -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+    button, a { font: inherit; -webkit-tap-highlight-color: transparent; }
+    button { cursor: pointer; }
+    button:focus-visible, a:focus-visible, .tile:focus-visible { outline: 3px solid #f4ad48; outline-offset: 3px; }
+    .shell {
+      height: 100vh; height: 100dvh; width: min(100%, 740px); margin: 0 auto;
+      display: flex; flex-direction: column; min-height: 0;
+      padding: max(10px, env(safe-area-inset-top)) max(13px, env(safe-area-inset-right))
+      max(10px, env(safe-area-inset-bottom)) max(13px, env(safe-area-inset-left)); gap: clamp(7px, 1.35vh, 14px);
+    }
+    .topbar { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 35px; }
+    .back {
+      text-decoration: none; color: var(--muted); font-weight: 900; font-size: .82rem;
+      padding: 7px 10px; border-radius: 12px; background: #ffffffa8; border: 1px solid #e9e3f8;
+    }
+    .score { display: flex; align-items: center; gap: 8px; font-weight: 900; font-size: .88rem; color: #776029; }
+    .score-pill { border: 1px solid #f1e4aa; background: #fff5cf; padding: 6px 10px; border-radius: 30px; }
+    .heading { flex: 0 0 auto; text-align: center; }
+    h1 { margin: 0; font-size: clamp(1.65rem, 4.7vh, 2.6rem); line-height: 1.08; letter-spacing: -.055em; font-weight: 900; }
+    .heading p { margin: 3px 0 0; color: var(--muted); font-size: clamp(.8rem, 1.65vh, 1rem); font-weight: 800; }
+    .levels { display: flex; gap: 5px; flex: 0 0 auto; background: #ebe6fa; border-radius: 16px; padding: 4px; align-self: center; width: min(100%, 430px); }
+    .level {
+      flex: 1; min-width: 0; min-height: 37px; padding: 5px 6px;
+      border-radius: 12px; border: 0; background: transparent; color: #69607f; font-weight: 900; font-size: clamp(.8rem, 2vw, .96rem);
+      transition: background .15s, color .15s, box-shadow .15s;
+    }
+    .level[aria-pressed="true"] { background: white; color: var(--purple-dark); box-shadow: 0 2px 7px #5548a21c; }
+    .board {
+      flex: 1 1 auto; min-height: 0; max-height: 570px; display: flex; flex-direction: column;
+      align-self: stretch; width: 100%; border: 2px solid #e4ddfa; background: #fff;
+      border-radius: 24px; box-shadow: 0 12px 32px #463a9512;
+      padding: clamp(10px, 2vh, 19px);
+    }
+    .boardtop { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex: 0 0 auto; margin-bottom: clamp(7px, 1.5vh, 14px); }
+    .boardtop strong { font-size: clamp(.9rem, 2vh, 1.03rem); font-weight: 900; }
+    .round { color: #8578af; background: #f6f2ff; border-radius: 20px; padding: 5px 10px; font-size: .77rem; font-weight: 900; }
+    .word-list { list-style: none; padding: 0; margin: 0 auto; width: min(100%, 530px); flex: 1 1 auto; min-height: 0; display: grid; grid-template-rows: repeat(var(--count, 3), minmax(0, 1fr)); gap: clamp(5px, 1vh, 10px); }
+    .tile {
+      min-height: 0; display: flex; align-items: center; gap: 12px; border-radius: 15px;
+      border: 2px solid #dad2f4; background: #faf8ff; box-shadow: 0 3px 0 #eae5fa;
+      color: var(--ink); padding: 4px clamp(10px, 2vw, 17px); cursor: grab;
+      touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+      transition: background .14s, border-color .14s, box-shadow .14s;
+      position: relative;
+    }
+    .tile:active { cursor: grabbing; }
+    .tile.selected { border-color: var(--purple); background: #efe9ff; box-shadow: 0 0 0 3px #cabfff; }
+    .tile.drag-source { opacity: .24; border-style: dashed; }
+    .tile.solved { border-color: #b4e7d5; background: #edfbf5; box-shadow: 0 2px 0 #cfecdf; }
+    .place {
+      background: #e7defb; color: #5546a3; width: clamp(27px, 5vh, 39px); height: clamp(27px, 5vh, 39px);
+      border-radius: 12px; font-size: clamp(.95rem, 2vh, 1.2rem); display: grid; place-items: center;
+      font-weight: 900; flex: 0 0 auto;
+    }
+    .tile.solved .place { background: #cdefdf; color: #137b63; }
+    .word { flex: 1; text-align: center; font-size: clamp(1.32rem, 3.9vh, 2rem); font-weight: 900; letter-spacing: .01em; line-height: 1; pointer-events: none; }
+    .handle { color: #b3a7df; font-size: clamp(1.25rem, 3vh, 1.75rem); font-weight: 900; letter-spacing: -6px; padding-right: 6px; flex: 0 0 auto; pointer-events: none; }
+    .tile.solved .handle { color: #2b9a79; letter-spacing: 0; padding-right: 0; }
+    .instruction { text-align: center; color: #8980a2; font-size: clamp(.68rem, 1.5vh, .84rem); font-weight: 800; padding-top: clamp(6px, 1.3vh, 12px); flex: 0 0 auto; }
+    .feedback { flex: 0 0 auto; min-height: 30px; text-align: center; display: grid; place-items: center; font-weight: 900; font-size: clamp(.83rem, 1.7vh, 1rem); color: var(--muted); }
+    .feedback.wrong { color: #ac624a; }
+    .feedback.right { color: var(--teal); font-size: clamp(1rem, 2.15vh, 1.2rem); }
+    .actions { display: flex; gap: 9px; width: 100%; flex: 0 0 auto; min-height: clamp(47px, 7vh, 62px); }
+    .actions button { border-radius: 16px; border: 0; font-weight: 900; min-height: 47px; transition: transform .12s, background .12s; }
+    .actions button:active { transform: scale(.98); }
+    .secondary { width: 34%; max-width: 190px; background: #eae6f7; color: #645784; font-size: clamp(.82rem, 2vw, 1rem); }
+    .primary { flex: 1; background: var(--purple); color: white; box-shadow: 0 5px 0 #5544b0; font-size: clamp(.97rem, 2.4vw, 1.2rem); }
+    .primary:disabled { opacity: .65; }
+    .primary.success { background: #168d75; box-shadow: 0 5px 0 #096c58; }
+    .confetti { pointer-events: none; position: fixed; inset: 0; overflow: hidden; z-index: 30; }
+    .confetti i { position: absolute; top: -25px; display: block; width: 9px; height: 15px; border-radius: 3px; opacity: 0; animation: shower 1.5s ease-in forwards; }
+    @keyframes shower { 0% { transform: translate3d(0,-15px,0) rotate(0); opacity: 1; } 85% { opacity: 1; } 100% { transform: translate3d(var(--drift),110vh,0) rotate(var(--spin)); opacity: 0; } }
+    .float-tile { position: fixed; z-index: 25; pointer-events: none; margin: 0; opacity: .96; background: #ede7ff; box-shadow: 0 16px 34px #3d317a45; border-color: #9281dc; transform: rotate(-1deg) scale(1.025); }
+    @media (max-height: 630px) {
+      .shell { gap: 5px; padding-top: max(5px, env(safe-area-inset-top)); padding-bottom: max(5px, env(safe-area-inset-bottom)); }
+      .topbar { min-height: 29px; } .heading p { font-size: .75rem; }
+      .levels { padding: 3px; } .level { min-height: 31px; }
+      .board { border-radius: 17px; padding: 9px; }
+      .boardtop { margin-bottom: 5px; } .instruction { padding-top: 5px; }
+      .feedback { min-height: 25px; } .actions { min-height: 43px; } .actions button { min-height: 42px; border-radius: 12px; }
+      .tile { border-radius: 11px; }
+    }
+    @media (max-height: 420px) {
+      .heading p, .instruction { display: none; }
+      h1 { font-size: 1.25rem; }
+      .levels { width: min(100%, 350px); }
+      .level { min-height: 28px; }
+      .boardtop strong { font-size: .8rem; }
+      .feedback { font-size: .76rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="back" href="../../index.html" aria-label="Back to Educational Emporium">← Library</a>
+      <div class="score"><span class="score-pill">⭐ <span id="stars">0</span> stars</span><span class="score-pill">🔥 <span id="streak">0</span></span></div>
+    </header>
+    <div class="heading"><h1>ABC Word Sort</h1><p>Put the words in alphabetical order!</p></div>
+    <nav class="levels" aria-label="Choose difficulty">
+      <button class="level" type="button" data-level="easy" aria-pressed="true">Easy · 3</button>
+      <button class="level" type="button" data-level="medium" aria-pressed="false">Medium · 4</button>
+      <button class="level" type="button" data-level="tricky" aria-pressed="false">Tricky · 5</button>
+    </nav>
+    <section class="board" aria-label="Sort the words">
+      <div class="boardtop"><strong>First → Last (A to Z)</strong><span class="round" id="round">Round 1</span></div>
+      <ol class="word-list" id="words" aria-label="Drag words into ABC order"></ol>
+      <p class="instruction" id="instruction">↕ Drag to move · Or tap two words to swap</p>
+    </section>
+    <div class="feedback" role="status" aria-live="polite" id="feedback">Drag words to put them in ABC order.</div>
+    <div class="actions">
+      <button class="secondary" id="newWords" type="button">↻ New words</button>
+      <button class="primary" id="grade" type="button">Check my order ✓</button>
+    </div>
+  </main>
+  <div class="confetti" id="confetti" aria-hidden="true"></div>
+  <script>
+    (function () {
+      'use strict';
+      const BANK = {
+        easy: [
+          ['apple','dog','sun'],['cake','fish','moon'],['ball','nest','rain'],
+          ['cat','fox','milk'],['egg','hat','pig'],['boat','kite','tree'],
+          ['bear','lion','zebra'],['ant','duck','owl'],['grape','pen','yak'],
+          ['book','jam','van'],['cloud','frog','star'],['ice','leaf','top']
+        ],
+        medium: [
+          ['apple','ant','bear','boat'],['fish','frog','goat','grape'],
+          ['rain','rabbit','sun','sock'],['ball','bat','cake','car'],
+          ['duck','dog','kite','king'],['leaf','lion','moon','mouse'],
+          ['hat','hen','pen','pig'],['star','stop','tree','train'],
+          ['bell','bed','cup','cat'],['sand','seal','book','boat'],
+          ['zip','zoo','yarn','yak'],['rock','rope','jam','jet']
+        ],
+        tricky: [
+          ['cat','cap','can','car','cake'],['ball','bat','bag','bad','bank'],
+          ['star','stop','step','stick','stone'],['bear','beach','bean','beak','bed'],
+          ['fish','fin','fire','fit','five'],['book','boot','boom','boat','bone'],
+          ['rain','rail','raise','race','rack'],['pan','pat','pay','pad','pal'],
+          ['frog','from','front','frost','frame'],['light','line','lion','lip','list'],
+          ['tree','train','trap','track','trade'],['smile','small','smell','smoke','smooth']
+        ]
+      };
+      const list = document.getElementById('words');
+      const feedback = document.getElementById('feedback');
+      const grade = document.getElementById('grade');
+      const newWords = document.getElementById('newWords');
+      const confetti = document.getElementById('confetti');
+      const roundLabel = document.getElementById('round');
+      const starLabel = document.getElementById('stars');
+      const streakLabel = document.getElementById('streak');
+      const instruction = document.getElementById('instruction');
+      let level = 'easy', words = [], round = 0, solved = false, selected = null, active = null;
+      let stars = 0, streak = 0;
+      const lastPuzzle = { easy: -1, medium: -1, tricky: -1 };
+      try {
+        const saved = JSON.parse(localStorage.getItem('educational-emporium-abc-sort') || '{}');
+        stars = Number.isInteger(saved.stars) && saved.stars >= 0 ? saved.stars : 0;
+      } catch (_) {}
+      starLabel.textContent = stars;
+      const random = (n) => Math.floor(Math.random() * n);
+      function shuffle(items) {
+        const copy = items.slice();
+        for (let i = copy.length - 1; i > 0; i--) {
+          const j = random(i + 1), temp = copy[i]; copy[i] = copy[j]; copy[j] = temp;
+        }
+        return copy;
+      }
+      function sortedCopy(items) { return items.slice().sort((a,b) => a.localeCompare(b,'en')); }
+      function message(text, type) {
+        feedback.textContent = text;
+        feedback.className = 'feedback' + (type ? ' ' + type : '');
+      }
+      function clearChoice() {
+        if (selected) selected.classList.remove('selected');
+        selected = null;
+      }
+      function clearError() {
+        if (!solved) message('Great! Keep sorting, then check.', '');
+      }
+      function updateNumbers() {
+        Array.from(list.children).forEach((item, index) => {
+          item.querySelector('.place').textContent = index + 1;
+          item.setAttribute('aria-label', item.dataset.word + ', position ' + (index + 1) + ' of ' + list.children.length + '. Drag to move, tap to swap, or use arrow keys.');
+        });
+      }
+      function readOrder() { words = Array.from(list.children, item => item.dataset.word); }
+      function render() {
+        list.replaceChildren();
+        list.style.setProperty('--count', words.length);
+        words.forEach((word) => {
+          const tile = document.createElement('li');
+          tile.className = 'tile';
+          tile.tabIndex = 0;
+          tile.setAttribute('role', 'button');
+          tile.dataset.word = word;
+          const place = document.createElement('span'); place.className = 'place'; place.setAttribute('aria-hidden','true');
+          const wordSpan = document.createElement('span'); wordSpan.className = 'word'; wordSpan.textContent = word;
+          const handle = document.createElement('span'); handle.className = 'handle'; handle.textContent = '⋮⋮'; handle.setAttribute('aria-hidden','true');
+          tile.append(place, wordSpan, handle); list.append(tile);
+        });
+        updateNumbers();
+      }
+      function nextRound() {
+        if (active) endPointer(null, true);
+        clearChoice(); solved = false;
+        confetti.replaceChildren();
+        const options = BANK[level]; let index = random(options.length);
+        if (options.length > 1 && index === lastPuzzle[level]) index = (index + 1 + random(options.length - 1)) % options.length;
+        lastPuzzle[level] = index;
+        words = shuffle(options[index]);
+        const alphabetized = sortedCopy(words);
+        if (words.every((word, i) => word === alphabetized[i])) {
+          const swap = words[0]; words[0] = words[1]; words[1] = swap;
+        }
+        round += 1; roundLabel.textContent = 'Round ' + round;
+        grade.textContent = 'Check my order ✓'; grade.classList.remove('success');
+        newWords.hidden = false; instruction.textContent = '↕ Drag to move · Or tap two words to swap';
+        render(); message('Drag words to put them in ABC order.', '');
+      }
+      function changed() {
+        readOrder(); updateNumbers(); clearChoice(); clearError();
+      }
+      function swapTiles(a,b) {
+        if (a === b) return;
+        const items = Array.from(list.children);
+        const i = items.indexOf(a), j = items.indexOf(b);
+        if (i < 0 || j < 0) return;
+        items[i] = b; items[j] = a; list.replaceChildren(...items);
+        changed();
+      }
+      function tapTile(tile) {
+        if (solved) return;
+        if (!selected) {
+          selected = tile; tile.classList.add('selected');
+          message('Now tap where "' + tile.dataset.word + '" should go.', '');
+        } else if (selected === tile) {
+          clearChoice(); message('Drag words to put them in ABC order.', '');
+        } else { swapTiles(selected,tile); }
+      }
+      function makeGhost(pointer) {
+        const rect = active.tile.getBoundingClientRect();
+        active.offsetX = pointer.clientX - rect.left;
+        active.offsetY = pointer.clientY - rect.top;
+        active.ghost = active.tile.cloneNode(true);
+        active.ghost.classList.remove('selected');
+        active.ghost.classList.add('float-tile');
+        active.ghost.removeAttribute('tabindex');
+        active.ghost.setAttribute('aria-hidden','true');
+        active.ghost.style.width = rect.width + 'px';
+        active.ghost.style.height = rect.height + 'px';
+        document.body.appendChild(active.ghost);
+        active.tile.classList.add('drag-source');
+        clearChoice();
+        moveGhost(pointer);
+      }
+      function moveGhost(pointer) {
+        if (!active || !active.ghost) return;
+        active.ghost.style.left = (pointer.clientX - active.offsetX) + 'px';
+        active.ghost.style.top = (pointer.clientY - active.offsetY) + 'px';
+      }
+      function endPointer(event, cancelled) {
+        if (!active) return;
+        const current = active;
+        active = null;
+        if (event && list.hasPointerCapture && list.hasPointerCapture(event.pointerId)) {
+          try { list.releasePointerCapture(event.pointerId); } catch (_) {}
+        }
+        if (current.ghost) current.ghost.remove();
+        current.tile.classList.remove('drag-source');
+        if (current.dragging) changed();
+        else if (!cancelled) tapTile(current.tile);
+      }
+      list.addEventListener('pointerdown', (event) => {
+        const tile = event.target.closest('.tile');
+        if (!tile || solved || active || (event.pointerType === 'mouse' && event.button !== 0)) return;
+        event.preventDefault();
+        tile.focus({preventScroll:true});
+        active = {tile, pointerId:event.pointerId, startX:event.clientX, startY:event.clientY,
+          dragging:false, ghost:null, offsetX:0, offsetY:0};
+        try { list.setPointerCapture(event.pointerId); } catch (_) {}
+      });
+      list.addEventListener('pointermove', (event) => {
+        if (!active || event.pointerId !== active.pointerId) return;
+        const distance = Math.hypot(event.clientX - active.startX, event.clientY - active.startY);
+        if (!active.dragging && distance < 8) return;
+        event.preventDefault();
+        if (!active.dragging) { active.dragging = true; makeGhost(event); }
+        moveGhost(event);
+        const tile = active.tile;
+        const others = Array.from(list.children).filter(item => item !== tile);
+        const before = others.find(item => event.clientY < item.getBoundingClientRect().top + item.getBoundingClientRect().height / 2);
+        if (before) list.insertBefore(tile,before);
+        else list.appendChild(tile);
+        updateNumbers();
+      });
+      list.addEventListener('pointerup', event => { if (active && active.pointerId === event.pointerId) endPointer(event,false); });
+      list.addEventListener('pointercancel', event => { if (active && active.pointerId === event.pointerId) endPointer(event,true); });
+      list.addEventListener('lostpointercapture', () => { if (active) endPointer(null,true); });
+      list.addEventListener('contextmenu', event => event.preventDefault());
+      list.addEventListener('keydown', event => {
+        const tile = event.target.closest('.tile');
+        if (!tile || solved) return;
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault(); tapTile(tile);
+        } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+          event.preventDefault();
+          const items = Array.from(list.children), index = items.indexOf(tile);
+          const other = items[index + (event.key === 'ArrowUp' ? -1 : 1)];
+          if (other) { swapTiles(tile,other); tile.focus({preventScroll:true}); }
+        }
+      });
+      function celebrate() {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const colors = ['#f0b34d','#8167d7','#5bc5aa','#f58baa','#9ac6fb'];
+        for (let i = 0; i < 42; i++) {
+          const piece = document.createElement('i');
+          piece.style.left = random(100) + '%';
+          piece.style.backgroundColor = colors[i % colors.length];
+          piece.style.setProperty('--drift',(random(210)-105) + 'px');
+          piece.style.setProperty('--spin',(random(800)-400) + 'deg');
+          piece.style.animationDelay = (random(420)/1000) + 's';
+          confetti.appendChild(piece);
+        }
+        setTimeout(() => confetti.replaceChildren(), 2000);
+      }
+      grade.addEventListener('click', () => {
+        if (solved) { nextRound(); return; }
+        clearChoice();
+        readOrder();
+        if (words.every((word,i) => word === sortedCopy(words)[i])) {
+          solved = true; stars += 1; streak += 1;
+          starLabel.textContent = stars; streakLabel.textContent = streak;
+          try { localStorage.setItem('educational-emporium-abc-sort', JSON.stringify({stars})); } catch (_) {}
+          Array.from(list.children).forEach(tile => {
+            tile.classList.add('solved');
+            const handle = tile.querySelector('.handle'); handle.textContent = '✓';
+          });
+          message('🎉 Perfect ABC order! You earned a star! ⭐', 'right');
+          grade.textContent = 'Next round →'; grade.classList.add('success');
+          newWords.hidden = true;
+          instruction.textContent = 'Fantastic sorting!';
+          celebrate();
+        } else {
+          message('Almost! Try moving the words, then check again.', 'wrong');
+        }
+      });
+      newWords.addEventListener('click', nextRound);
+      document.querySelectorAll('.level').forEach(button => button.addEventListener('click', () => {
+        if (level === button.dataset.level) return;
+        level = button.dataset.level;
+        document.querySelectorAll('.level').forEach(item => item.setAttribute('aria-pressed',String(item === button)));
+        streak = 0; streakLabel.textContent = streak;
+        round = 0; nextRound();
+      }));
+      nextRound();
+    })();
+  </script>
+</body>
+</html>
