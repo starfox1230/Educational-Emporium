@@ -58,13 +58,13 @@
     .boardtop { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex: 0 0 auto; margin-bottom: clamp(7px, 1.5vh, 14px); }
     .boardtop strong { font-size: clamp(.9rem, 2vh, 1.03rem); font-weight: 900; }
     .round { color: #8578af; background: #f6f2ff; border-radius: 20px; padding: 5px 10px; font-size: .77rem; font-weight: 900; }
-    .word-list { list-style: none; padding: 0; margin: 0 auto; width: min(100%, 530px); flex: 1 1 auto; min-height: 0; display: grid; grid-template-rows: repeat(var(--count, 3), minmax(0, 1fr)); gap: clamp(5px, 1vh, 10px); }
+    .word-list { position: relative; list-style: none; padding: 0; margin: 0 auto; width: min(100%, 530px); flex: 1 1 auto; min-height: 0; display: grid; grid-template-rows: repeat(var(--count, 3), minmax(0, 1fr)); gap: clamp(5px, 1vh, 10px); }
     .tile {
       min-height: 0; display: flex; align-items: center; gap: 12px; border-radius: 15px;
       border: 2px solid #dad2f4; background: #faf8ff; box-shadow: 0 3px 0 #eae5fa;
       color: var(--ink); padding: 4px clamp(10px, 2vw, 17px); cursor: grab;
       touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
-      transition: background .14s, border-color .14s, box-shadow .14s;
+      transition: background .14s, border-color .14s, box-shadow .14s; will-change: transform;
       position: relative;
     }
     .tile:active { cursor: grabbing; }
@@ -132,7 +132,7 @@
     <section class="board" aria-label="Sort the words">
       <div class="boardtop"><strong>First → Last (A to Z)</strong><span class="round" id="round">Round 1</span></div>
       <ol class="word-list" id="words" aria-label="Drag words into ABC order"></ol>
-      <p class="instruction" id="instruction">↕ Drag to move · Or tap two words to swap</p>
+      <p class="instruction" id="instruction">↕ Drag across words to shift them · Or tap two to swap</p>
     </section>
     <div class="feedback" role="status" aria-live="polite" id="feedback">Drag words to put them in ABC order.</div>
     <div class="actions">
@@ -242,18 +242,42 @@
         }
         round += 1; roundLabel.textContent = 'Round ' + round;
         grade.textContent = 'Check my order ✓'; grade.classList.remove('success');
-        newWords.hidden = false; instruction.textContent = '↕ Drag to move · Or tap two words to swap';
+        newWords.hidden = false; instruction.textContent = '↕ Drag across words to shift them · Or tap two to swap';
         render(); message('Drag words to put them in ABC order.', '');
       }
       function changed() {
         readOrder(); updateNumbers(); clearChoice(); clearError();
+      }
+      // Keep the displaced words sliding smoothly as the player drags past them.
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      function animateReorder(changeOrder) {
+        const tiles = Array.from(list.children);
+        const from = new Map(tiles.map(tile => [tile, tile.getBoundingClientRect()]));
+        // Continue from the neighbors' visible positions during rapid dragging.
+        tiles.forEach(tile => tile.getAnimations().forEach(animation => animation.cancel()));
+        changeOrder();
+        if (reduceMotion.matches) return;
+        tiles.forEach(tile => {
+          if (active && tile === active.tile) return;
+          const oldRect = from.get(tile);
+          const newRect = tile.getBoundingClientRect();
+          const dx = oldRect.left - newRect.left;
+          const dy = oldRect.top - newRect.top;
+          if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+          tile.animate(
+            [{transform: 'translate3d(' + dx + 'px,' + dy + 'px,0)'},
+             {transform: 'translate3d(0,0,0)'}],
+            {duration: 190, easing: 'cubic-bezier(.22,1,.36,1)'}
+          );
+        });
       }
       function swapTiles(a,b) {
         if (a === b) return;
         const items = Array.from(list.children);
         const i = items.indexOf(a), j = items.indexOf(b);
         if (i < 0 || j < 0) return;
-        items[i] = b; items[j] = a; list.replaceChildren(...items);
+        items[i] = b; items[j] = a;
+        animateReorder(() => list.replaceChildren(...items));
         changed();
       }
       function tapTile(tile) {
@@ -315,11 +339,25 @@
         if (!active.dragging) { active.dragging = true; makeGhost(event); }
         moveGhost(event);
         const tile = active.tile;
-        const others = Array.from(list.children).filter(item => item !== tile);
-        const before = others.find(item => event.clientY < item.getBoundingClientRect().top + item.getBoundingClientRect().height / 2);
-        if (before) list.insertBefore(tile,before);
-        else list.appendChild(tile);
-        updateNumbers();
+        // Use the dragged card's center, not the fingertip. offsetTop is the
+        // layout position, unaffected by the neighboring tiles' animations.
+        const center = event.clientY - active.offsetY + tile.offsetHeight / 2
+          - list.getBoundingClientRect().top;
+        let moved = false;
+        for (let steps = 0; steps < list.children.length; steps++) {
+          const tiles = Array.from(list.children);
+          const index = tiles.indexOf(tile);
+          const previous = tiles[index - 1], next = tiles[index + 1];
+          // Shift as soon as the card enters 18% of the neighboring slot.
+          if (next && center > next.offsetTop + next.offsetHeight * .18) {
+            animateReorder(() => list.insertBefore(tile, next.nextSibling));
+            moved = true;
+          } else if (previous && center < previous.offsetTop + previous.offsetHeight * .82) {
+            animateReorder(() => list.insertBefore(tile, previous));
+            moved = true;
+          } else break;
+        }
+        if (moved) updateNumbers();
       });
       list.addEventListener('pointerup', event => { if (active && active.pointerId === event.pointerId) endPointer(event,false); });
       list.addEventListener('pointercancel', event => { if (active && active.pointerId === event.pointerId) endPointer(event,true); });
