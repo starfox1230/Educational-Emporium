@@ -1,13 +1,13 @@
 const tracks = [
-  { title: 'Choose to Serve the Lord', match: ['choose to serve the lord'] },
-  { title: "I'll Walk with You", match: ['ill walk with you', 'i will walk with you'] },
-  { title: 'Holy Places', match: ['holy places'] },
-  { title: "I'm Trying to Be Like Jesus", match: ['im trying to be like jesus'] },
-  { title: "I Feel My Savior's Love", match: ['i feel my saviors love'] },
-  { title: 'My Heavenly Father Loves Me', match: ['my heavenly father loves me'] },
-  { title: 'Kindness Begins with Me', match: ['kindness begins with me'] },
-  { title: "I'll Walk with Jesus", match: ['ill walk with jesus', 'i will walk with jesus'] },
-].map((track) => ({ ...track, file: null, url: null, checked: true }));
+  { title: 'Choose to Serve the Lord', src: 'audio/01-choose-to-serve-the-lord.m4a' },
+  { title: "I'll Walk with You", src: 'audio/02-ill-walk-with-you.m4a' },
+  { title: 'Holy Places', src: 'audio/03-holy-places.m4a' },
+  { title: "I'm Trying to Be Like Jesus", src: 'audio/04-im-trying-to-be-like-jesus.m4a' },
+  { title: "I Feel My Savior's Love", src: 'audio/05-i-feel-my-saviors-love.m4a' },
+  { title: 'My Heavenly Father Loves Me', src: 'audio/06-my-heavenly-father-loves-me.m4a' },
+  { title: 'Kindness Begins with Me', src: 'audio/07-kindness-begins-with-me.m4a' },
+  { title: "I Will Walk with Jesus", src: 'audio/08-i-will-walk-with-jesus.m4a' },
+].map((track) => ({ ...track, url: track.src, checked: true }));
 
 const audio = document.querySelector('#audio');
 const songsEl = document.querySelector('#songs');
@@ -16,18 +16,12 @@ const playButton = document.querySelector('#play');
 const playGlyph = document.querySelector('#playGlyph');
 const seek = document.querySelector('#seek');
 let currentIndex = -1;
-let objectUrls = [];
-let startAfterFilesPicked = false;
-
-function normalize(value) {
-  return value.toLowerCase().replace(/['’]/g, '').replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
-}
 
 function renderList() {
   songsEl.replaceChildren();
   tracks.forEach((track, index) => {
     const row = document.createElement('li');
-    row.className = `song${track.file ? '' : ' unavailable'}`;
+    row.className = 'song';
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.className = 'song-check';
@@ -55,7 +49,7 @@ function renderList() {
     mark.textContent = index === currentIndex && !audio.paused ? '♪' : '';
     row.append(checkbox, title, mark);
     row.addEventListener('click', (event) => {
-      if (event.target === checkbox || !track.checked || !track.file) return;
+      if (event.target === checkbox || !track.checked) return;
       void playTrack(index);
     });
     songsEl.append(row);
@@ -72,9 +66,9 @@ function updateCount() {
 function nextPlayable(from, direction = 1) {
   for (let step = 1; step <= tracks.length; step += 1) {
     const index = (from + direction * step + tracks.length * 2) % tracks.length;
-    if (tracks[index].checked && tracks[index].file) return index;
+    if (tracks[index].checked && tracks[index].url) return index;
   }
-  if (from >= 0 && tracks[from].checked && tracks[from].file) return from;
+  if (from >= 0 && tracks[from].checked && tracks[from].url) return from;
   return -1;
 }
 
@@ -97,38 +91,12 @@ async function playTrack(index) {
   playButton.disabled = false;
   renderList();
   updateMediaSession();
-  try {
-    await audio.play();
+  audio.play().then(() => {
     statusEl.textContent = 'Now playing';
-  } catch {
-    statusEl.textContent = 'Tap play to start';
-  }
-}
-
-document.querySelector('#files').addEventListener('change', (event) => {
-  objectUrls.forEach(URL.revokeObjectURL);
-  objectUrls = [];
-  tracks.forEach((track) => { track.file = null; track.url = null; });
-  const files = [...event.target.files].filter((file) => file.type.startsWith('audio/') || /\.(m4a|mp3|mp4|wav|aac|ogg)$/i.test(file.name));
-  const normalizedFiles = files.map((file) => ({ file, name: normalize(file.name.replace(/\.[^.]+$/, '')) }));
-  tracks.forEach((track) => {
-    const match = normalizedFiles.find(({ name }) => track.match.some((key) => name.includes(key)));
-    if (match) {
-      track.file = match.file;
-      track.url = URL.createObjectURL(match.file);
-      objectUrls.push(track.url);
-    }
+  }).catch(() => {
+    statusEl.textContent = 'Add song files to audio/';
   });
-  const loaded = tracks.filter((track) => track.file).length;
-  statusEl.textContent = loaded === tracks.length ? 'All songs ready' : `${loaded} of ${tracks.length} songs found`;
-  if (loaded) document.querySelector('#currentTitle').textContent = 'Ready when you are';
-  renderList();
-  if (loaded && startAfterFilesPicked) {
-    startAfterFilesPicked = false;
-    void playTrack(tracks.findIndex((track) => track.checked && track.file));
-  }
-});
-document.querySelector('#files').addEventListener('cancel', () => { startAfterFilesPicked = false; });
+}
 
 document.querySelector('#selectAll').addEventListener('click', () => {
   const allChecked = tracks.every((track) => track.checked);
@@ -142,15 +110,9 @@ document.querySelector('#selectAll').addEventListener('click', () => {
 });
 
 playButton.addEventListener('click', () => {
-  if (!tracks.some((track) => track.file)) {
-    startAfterFilesPicked = true;
-    statusEl.textContent = 'Select songs from this device';
-    document.querySelector('#files').click();
-    return;
-  }
   if (audio.paused) {
     if (currentIndex < 0 || !tracks[currentIndex]?.checked) {
-      const first = tracks.findIndex((track) => track.checked && track.file);
+      const first = tracks.findIndex((track) => track.checked && track.url);
       void playTrack(first);
     } else void audio.play();
   } else audio.pause();
@@ -178,4 +140,5 @@ function formatTime(seconds) {
 }
 
 updateCount();
+
 
