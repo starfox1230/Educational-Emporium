@@ -19,7 +19,7 @@ let currentIndex = -1;
 let objectUrls = [];
 
 function normalize(value) {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
+  return value.toLowerCase().replace(/['’]/g, '').replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
 }
 
 function renderList() {
@@ -78,7 +78,7 @@ function nextPlayable(from, direction = 1) {
 }
 
 function updateMediaSession() {
-  if (!('mediaSession' in navigator) || currentIndex < 0) return;
+  if (!('mediaSession' in navigator) || typeof MediaMetadata === 'undefined' || currentIndex < 0) return;
   const track = tracks[currentIndex];
   navigator.mediaSession.metadata = new MediaMetadata({ title: track.title, artist: 'Primary Songs', album: 'Primary Program Practice' });
   navigator.mediaSession.setActionHandler('play', () => { void audio.play(); });
@@ -155,7 +155,9 @@ audio.addEventListener('timeupdate', () => {
   seek.style.setProperty('--progress', `${seek.value / 10}%`);
   document.querySelector('#elapsed').textContent = formatTime(audio.currentTime);
   document.querySelector('#duration').textContent = formatTime(duration);
-  if ('mediaSession' in navigator && duration) navigator.mediaSession.setPositionState({ duration, playbackRate: audio.playbackRate, position: audio.currentTime });
+  if ('mediaSession' in navigator && typeof navigator.mediaSession.setPositionState === 'function' && duration) {
+    navigator.mediaSession.setPositionState({ duration, playbackRate: audio.playbackRate, position: audio.currentTime });
+  }
 });
 seek.addEventListener('input', () => { if (Number.isFinite(audio.duration)) audio.currentTime = (Number(seek.value) / 1000) * audio.duration; });
 
@@ -165,3 +167,4 @@ function formatTime(seconds) {
 }
 
 updateCount();
+
