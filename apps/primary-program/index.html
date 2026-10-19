@@ -29,7 +29,7 @@
         </svg>
       </div>
       <h1>Primary songs</h1>
-      <p id="status" aria-live="polite">Choose the songs on your device</p>
+      <p id="status" aria-live="polite">Choose songs on this device</p>
       <label class="choose" for="files">Choose songs <span aria-hidden="true">＋</span></label>
       <input id="files" type="file" accept="audio/*,.m4a,.mp3,.mp4,.wav" multiple>
     </section>
@@ -45,7 +45,7 @@
       <div class="times"><span id="elapsed">0:00</span><span id="duration">0:00</span></div>
       <div class="buttons">
         <button id="previous" class="side-button" type="button" aria-label="Previous song">⏮</button>
-        <button id="play" class="play-button" type="button" aria-label="Play" disabled><span id="playGlyph">▶</span></button>
+        <button id="play" class="play-button" type="button" aria-label="Choose songs to play"><span id="playGlyph">▶</span></button>
         <button id="next" class="side-button" type="button" aria-label="Next song">⏭</button>
       </div>
       <div class="loop-note"><span class="loop-icon">↻</span> <span id="loopCount">8 songs · loops</span></div>
@@ -55,3 +55,4 @@
   <script src="app.js" defer></script>
 </body>
 </html>
+
