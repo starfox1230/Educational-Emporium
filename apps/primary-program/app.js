@@ -1,6 +1,6 @@
 const tracks = [
   { title: 'Choose to Serve the Lord', match: ['choose to serve the lord'] },
-  { title: 'I Will Walk with You', match: ['ill walk with you', 'i will walk with you'] },
+  { title: "I'll Walk with You", match: ['ill walk with you', 'i will walk with you'] },
   { title: 'Holy Places', match: ['holy places'] },
   { title: "I'm Trying to Be Like Jesus", match: ['im trying to be like jesus'] },
   { title: "I Feel My Savior's Love", match: ['i feel my saviors love'] },
@@ -17,6 +17,7 @@ const playGlyph = document.querySelector('#playGlyph');
 const seek = document.querySelector('#seek');
 let currentIndex = -1;
 let objectUrls = [];
+let startAfterFilesPicked = false;
 
 function normalize(value) {
   return value.toLowerCase().replace(/['’]/g, '').replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
@@ -120,10 +121,14 @@ document.querySelector('#files').addEventListener('change', (event) => {
   });
   const loaded = tracks.filter((track) => track.file).length;
   statusEl.textContent = loaded === tracks.length ? 'All songs ready' : `${loaded} of ${tracks.length} songs found`;
-  playButton.disabled = loaded === 0;
   if (loaded) document.querySelector('#currentTitle').textContent = 'Ready when you are';
   renderList();
+  if (loaded && startAfterFilesPicked) {
+    startAfterFilesPicked = false;
+    void playTrack(tracks.findIndex((track) => track.checked && track.file));
+  }
 });
+document.querySelector('#files').addEventListener('cancel', () => { startAfterFilesPicked = false; });
 
 document.querySelector('#selectAll').addEventListener('click', () => {
   const allChecked = tracks.every((track) => track.checked);
@@ -137,6 +142,12 @@ document.querySelector('#selectAll').addEventListener('click', () => {
 });
 
 playButton.addEventListener('click', () => {
+  if (!tracks.some((track) => track.file)) {
+    startAfterFilesPicked = true;
+    statusEl.textContent = 'Select songs from this device';
+    document.querySelector('#files').click();
+    return;
+  }
   if (audio.paused) {
     if (currentIndex < 0 || !tracks[currentIndex]?.checked) {
       const first = tracks.findIndex((track) => track.checked && track.file);
